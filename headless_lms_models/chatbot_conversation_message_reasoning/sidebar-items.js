@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["delete","get_by_id","get_by_message_id","insert"],"struct":["ChatbotConversationMessageReasoning"]};

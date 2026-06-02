@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AzureLLMToolDefinition","LLMToolParamType","LLMToolType"],"fn":["get_chatbot_tool","get_chatbot_tool_definitions"],"mod":["custom_tools","provider_tools"],"struct":["AzureLLMFunctionToolDefinition","LLMToolParamProperties","LLMToolParams","ToolProperties"],"trait":["ChatbotTool"]};

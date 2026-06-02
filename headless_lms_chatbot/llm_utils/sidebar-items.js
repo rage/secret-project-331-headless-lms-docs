@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MessageContent"],"fn":["build_llm_headers","estimate_tokens","get_params_for_model","make_blocking_llm_request","make_llm_request","make_streaming_llm_request","model_is_thinking","parse_text_completion","process_llm_response"],"struct":["APIInputMessage","APIOutputMessage","APITool","APIToolCall","AzureCompletionRequest","LLMResponse"]};

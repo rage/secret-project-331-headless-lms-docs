@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["azure_ai_search"]};

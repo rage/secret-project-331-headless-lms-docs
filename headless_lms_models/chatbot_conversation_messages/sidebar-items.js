@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Message"],"fn":["delete","delete_message_fields","get_by_conversation_id","get_message_fields","insert","insert_for_conversation_user_and_configuration","message_row_to_message","update"],"struct":["ChatbotConversationMessage","ChatbotConversationMessageRow"]};
