@@ -286,8 +286,8 @@ budget</a> is not reset. Furthermore, if a worker thread uses the lifo slot
 three times in a row, it is temporarily disabled until the worker thread has
 scheduled a task that didn’t come from the lifo slot. The lifo slot can be
 disabled using the <a href="../../../re_exports/tokio/runtime/struct.Builder.html#structfield.disable_lifo_slot" title="field headless_lms_models::re_exports::tokio::runtime::Builder::disable_lifo_slot"><code>disable_lifo_slot</code></a> setting. The lifo slot is separate
-from the local queue, and is stolen from by other worker threads only when
-a worker’s local queue has been drained.</p>
+from the local queue, so other worker threads cannot steal the task in the
+lifo slot.</p>
 <p>When a task is woken from a thread that is not a worker thread, then the
 task is placed in the global queue.</p>
 <h2 id="performance-tuning"><a class="doc-anchor" href="#performance-tuning">§</a>Performance tuning</h2><h3 id="file-descriptor-table-pre-warming"><a class="doc-anchor" href="#file-descriptor-table-pre-warming">§</a>File descriptor table pre-warming</h3>

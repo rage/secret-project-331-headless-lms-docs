@@ -24,7 +24,7 @@
 <a href=#24 id=24 data-nosnippet>24</a>        <span class="string">"
 <a href=#25 id=25 data-nosnippet>25</a>INSERT INTO users (id, email_domain)
 <a href=#26 id=26 data-nosnippet>26</a>VALUES ($1, $2)
-<a href=#27 id=27 data-nosnippet>27</a>RETURNING id
+<a href=#27 id=27 data-nosnippet>27</a>RETURNING *
 <a href=#28 id=28 data-nosnippet>28</a>"</span>,
 <a href=#29 id=29 data-nosnippet>29</a>        pkey_policy.into_uuid(),
 <a href=#30 id=30 data-nosnippet>30</a>        email_domain
@@ -185,7 +185,7 @@
 <a href=#185 id=185 data-nosnippet>185</a>) -&gt; ModelResult&lt;Vec&lt;Uuid&gt;&gt; {
 <a href=#186 id=186 data-nosnippet>186</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
 <a href=#187 id=187 data-nosnippet>187</a>        <span class="string">"
-<a href=#188 id=188 data-nosnippet>188</a>SELECT id
+<a href=#188 id=188 data-nosnippet>188</a>SELECT *
 <a href=#189 id=189 data-nosnippet>189</a>FROM users
 <a href=#190 id=190 data-nosnippet>190</a>WHERE upstream_id IN (
 <a href=#191 id=191 data-nosnippet>191</a>    SELECT UNNEST($1::integer [])

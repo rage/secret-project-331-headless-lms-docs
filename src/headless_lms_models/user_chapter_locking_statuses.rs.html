@@ -37,7 +37,7 @@
 <a href=#37 id=37 data-nosnippet>37</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
 <a href=#38 id=38 data-nosnippet>38</a>        UserChapterLockingStatus,
 <a href=#39 id=39 data-nosnippet>39</a>        <span class="string">r#"
-<a href=#40 id=40 data-nosnippet>40</a>SELECT id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#40 id=40 data-nosnippet>40</a>SELECT *
 <a href=#41 id=41 data-nosnippet>41</a>FROM user_chapter_locking_statuses
 <a href=#42 id=42 data-nosnippet>42</a>WHERE user_id = $1
 <a href=#43 id=43 data-nosnippet>43</a>  AND chapter_id = $2
@@ -150,7 +150,7 @@
 <a href=#150 id=150 data-nosnippet>150</a>VALUES ($1, $2, $3, 'unlocked'::chapter_locking_status, NULL)
 <a href=#151 id=151 data-nosnippet>151</a>ON CONFLICT ON CONSTRAINT idx_user_chapter_locking_statuses_user_chapter_active DO UPDATE
 <a href=#152 id=152 data-nosnippet>152</a>SET status = 'unlocked'::chapter_locking_status, deleted_at = NULL
-<a href=#153 id=153 data-nosnippet>153</a>RETURNING id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#153 id=153 data-nosnippet>153</a>RETURNING *
 <a href=#154 id=154 data-nosnippet>154</a>        "#</span>,
 <a href=#155 id=155 data-nosnippet>155</a>        user_id,
 <a href=#156 id=156 data-nosnippet>156</a>        chapter_id,
@@ -178,7 +178,7 @@
 <a href=#178 id=178 data-nosnippet>178</a>VALUES ($1, $2, $3, 'completed_and_locked'::chapter_locking_status, NULL)
 <a href=#179 id=179 data-nosnippet>179</a>ON CONFLICT ON CONSTRAINT idx_user_chapter_locking_statuses_user_chapter_active DO UPDATE
 <a href=#180 id=180 data-nosnippet>180</a>SET status = 'completed_and_locked'::chapter_locking_status, deleted_at = NULL
-<a href=#181 id=181 data-nosnippet>181</a>RETURNING id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#181 id=181 data-nosnippet>181</a>RETURNING *
 <a href=#182 id=182 data-nosnippet>182</a>        "#</span>,
 <a href=#183 id=183 data-nosnippet>183</a>        user_id,
 <a href=#184 id=184 data-nosnippet>184</a>        chapter_id,
@@ -207,7 +207,7 @@
 <a href=#207 id=207 data-nosnippet>207</a>VALUES ($1, $2, $3, $4, NULL)
 <a href=#208 id=208 data-nosnippet>208</a>ON CONFLICT ON CONSTRAINT idx_user_chapter_locking_statuses_user_chapter_active DO UPDATE
 <a href=#209 id=209 data-nosnippet>209</a>SET status = $4, deleted_at = NULL
-<a href=#210 id=210 data-nosnippet>210</a>RETURNING id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#210 id=210 data-nosnippet>210</a>RETURNING *
 <a href=#211 id=211 data-nosnippet>211</a>        "#</span>,
 <a href=#212 id=212 data-nosnippet>212</a>        user_id,
 <a href=#213 id=213 data-nosnippet>213</a>        chapter_id,
@@ -263,7 +263,7 @@
 <a href=#263 id=263 data-nosnippet>263</a>        <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
 <a href=#264 id=264 data-nosnippet>264</a>            UserChapterLockingStatus,
 <a href=#265 id=265 data-nosnippet>265</a>            <span class="string">r#"
-<a href=#266 id=266 data-nosnippet>266</a>SELECT id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#266 id=266 data-nosnippet>266</a>SELECT *
 <a href=#267 id=267 data-nosnippet>267</a>FROM user_chapter_locking_statuses
 <a href=#268 id=268 data-nosnippet>268</a>WHERE user_id = $1
 <a href=#269 id=269 data-nosnippet>269</a>  AND course_id = $2
@@ -305,7 +305,7 @@
 <a href=#305 id=305 data-nosnippet>305</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
 <a href=#306 id=306 data-nosnippet>306</a>        UserChapterLockingStatus,
 <a href=#307 id=307 data-nosnippet>307</a>        <span class="string">r#"
-<a href=#308 id=308 data-nosnippet>308</a>SELECT id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#308 id=308 data-nosnippet>308</a>SELECT *
 <a href=#309 id=309 data-nosnippet>309</a>FROM user_chapter_locking_statuses
 <a href=#310 id=310 data-nosnippet>310</a>WHERE course_id = $1
 <a href=#311 id=311 data-nosnippet>311</a>  AND deleted_at IS NULL
@@ -331,7 +331,7 @@
 <a href=#331 id=331 data-nosnippet>331</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
 <a href=#332 id=332 data-nosnippet>332</a>        UserChapterLockingStatus,
 <a href=#333 id=333 data-nosnippet>333</a>        <span class="string">r#"
-<a href=#334 id=334 data-nosnippet>334</a>SELECT id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#334 id=334 data-nosnippet>334</a>SELECT *
 <a href=#335 id=335 data-nosnippet>335</a>FROM user_chapter_locking_statuses
 <a href=#336 id=336 data-nosnippet>336</a>WHERE user_id = $1
 <a href=#337 id=337 data-nosnippet>337</a>  AND course_id = $2
@@ -361,7 +361,7 @@
 <a href=#361 id=361 data-nosnippet>361</a>INSERT INTO user_chapter_locking_statuses (user_id, chapter_id, course_id, status, deleted_at)
 <a href=#362 id=362 data-nosnippet>362</a>VALUES ($1, $2, $3, 'not_unlocked_yet'::chapter_locking_status, NULL)
 <a href=#363 id=363 data-nosnippet>363</a>ON CONFLICT (user_id, chapter_id, deleted_at) DO NOTHING
-<a href=#364 id=364 data-nosnippet>364</a>RETURNING id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#364 id=364 data-nosnippet>364</a>RETURNING *
 <a href=#365 id=365 data-nosnippet>365</a>        "#</span>,
 <a href=#366 id=366 data-nosnippet>366</a>        user_id,
 <a href=#367 id=367 data-nosnippet>367</a>        chapter_id,
@@ -377,7 +377,7 @@
 <a href=#377 id=377 data-nosnippet>377</a>    <span class="kw">let </span>retrieved = <span class="macro">sqlx::query_as!</span>(
 <a href=#378 id=378 data-nosnippet>378</a>        UserChapterLockingStatus,
 <a href=#379 id=379 data-nosnippet>379</a>        <span class="string">r#"
-<a href=#380 id=380 data-nosnippet>380</a>SELECT id, created_at, updated_at, deleted_at, user_id, chapter_id, course_id, status as "status: ChapterLockingStatus"
+<a href=#380 id=380 data-nosnippet>380</a>SELECT *
 <a href=#381 id=381 data-nosnippet>381</a>FROM user_chapter_locking_statuses
 <a href=#382 id=382 data-nosnippet>382</a>WHERE user_id = $1
 <a href=#383 id=383 data-nosnippet>383</a>  AND chapter_id = $2

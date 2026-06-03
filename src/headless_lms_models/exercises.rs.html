@@ -242,7 +242,7 @@
 <a href=#242 id=242 data-nosnippet>242</a>    exercise_language_group_id
 <a href=#243 id=243 data-nosnippet>243</a>  )
 <a href=#244 id=244 data-nosnippet>244</a>VALUES ($1, $2, $3, $4, $5, $6, $7)
-<a href=#245 id=245 data-nosnippet>245</a>RETURNING id
+<a href=#245 id=245 data-nosnippet>245</a>RETURNING *
 <a href=#246 id=246 data-nosnippet>246</a>        "</span>,
 <a href=#247 id=247 data-nosnippet>247</a>        pkey_policy.into_uuid(),
 <a href=#248 id=248 data-nosnippet>248</a>        course_id,
@@ -346,7 +346,7 @@
 <a href=#346 id=346 data-nosnippet>346</a>        e.name as exercise_name,
 <a href=#347 id=347 data-nosnippet>347</a>        e.score_maximum,
 <a href=#348 id=348 data-nosnippet>348</a>        ues.score_given,
-<a href=#349 id=349 data-nosnippet>349</a>        tgd.teacher_decision as "teacher_decision: _",
+<a href=#349 id=349 data-nosnippet>349</a>        tgd.teacher_decision,
 <a href=#350 id=350 data-nosnippet>350</a>        ess.id as submission_id,
 <a href=#351 id=351 data-nosnippet>351</a>        ess.updated_at
 <a href=#352 id=352 data-nosnippet>352</a>        FROM exercises e
@@ -744,7 +744,7 @@
 <a href=#744 id=744 data-nosnippet>744</a>SET deleted_at = now()
 <a href=#745 id=745 data-nosnippet>745</a>WHERE page_id = $1
 <a href=#746 id=746 data-nosnippet>746</a>AND deleted_at IS NULL
-<a href=#747 id=747 data-nosnippet>747</a>RETURNING id;
+<a href=#747 id=747 data-nosnippet>747</a>RETURNING *;
 <a href=#748 id=748 data-nosnippet>748</a>        "</span>,
 <a href=#749 id=749 data-nosnippet>749</a>        page_id
 <a href=#750 id=750 data-nosnippet>750</a>    )
@@ -793,7 +793,7 @@
 <a href=#793 id=793 data-nosnippet>793</a>  needs_peer_review = $2,
 <a href=#794 id=794 data-nosnippet>794</a>  needs_self_review = $3
 <a href=#795 id=795 data-nosnippet>795</a>WHERE id = $4
-<a href=#796 id=796 data-nosnippet>796</a>RETURNING id;
+<a href=#796 id=796 data-nosnippet>796</a>RETURNING *;
 <a href=#797 id=797 data-nosnippet>797</a>        "</span>,
 <a href=#798 id=798 data-nosnippet>798</a>        use_course_default_peer_or_self_review_config,
 <a href=#799 id=799 data-nosnippet>799</a>        needs_peer_review,

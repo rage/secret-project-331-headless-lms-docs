@@ -119,7 +119,7 @@
 <a href=#119 id=119 data-nosnippet>119</a>              COALESCE(
 <a href=#120 id=120 data-nosnippet>120</a>                array_agg(DISTINCT s.scope ORDER BY s.scope) FILTER (WHERE s.scope IS NOT NULL),
 <a href=#121 id=121 data-nosnippet>121</a>                '{}'::text[]
-<a href=#122 id=122 data-nosnippet>122</a>              ) AS "scopes!: Vec&lt;String&gt;"
+<a href=#122 id=122 data-nosnippet>122</a>              ) AS "scopes!"
 <a href=#123 id=123 data-nosnippet>123</a>            FROM oauth_user_client_scopes ucs
 <a href=#124 id=124 data-nosnippet>124</a>            JOIN oauth_clients c ON c.id = ucs.client_id
 <a href=#125 id=125 data-nosnippet>125</a>            LEFT JOIN LATERAL unnest(ucs.scopes) AS s(scope) ON TRUE

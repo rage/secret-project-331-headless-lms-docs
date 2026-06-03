@@ -106,7 +106,7 @@
 <a href=#106 id=106 data-nosnippet>106</a>  user_details.first_name,
 <a href=#107 id=107 data-nosnippet>107</a>  user_details.last_name,
 <a href=#108 id=108 data-nosnippet>108</a>  user_details.email,
-<a href=#109 id=109 data-nosnippet>109</a>  role AS "role!: UserRole"
+<a href=#109 id=109 data-nosnippet>109</a>  role AS "role!"
 <a href=#110 id=110 data-nosnippet>110</a>FROM users
 <a href=#111 id=111 data-nosnippet>111</a>  JOIN roles ON users.id = roles.user_id
 <a href=#112 id=112 data-nosnippet>112</a>  JOIN user_details ON users.id = user_details.user_id
@@ -125,7 +125,7 @@
 <a href=#125 id=125 data-nosnippet>125</a>  user_details.first_name,
 <a href=#126 id=126 data-nosnippet>126</a>  user_details.last_name,
 <a href=#127 id=127 data-nosnippet>127</a>  user_details.email,
-<a href=#128 id=128 data-nosnippet>128</a>  role AS "role: UserRole"
+<a href=#128 id=128 data-nosnippet>128</a>  role
 <a href=#129 id=129 data-nosnippet>129</a>FROM users
 <a href=#130 id=130 data-nosnippet>130</a>  JOIN roles ON users.id = roles.user_id
 <a href=#131 id=131 data-nosnippet>131</a>  JOIN user_details ON users.id = user_details.user_id
@@ -145,7 +145,7 @@
 <a href=#145 id=145 data-nosnippet>145</a>  user_details.first_name,
 <a href=#146 id=146 data-nosnippet>146</a>  user_details.last_name,
 <a href=#147 id=147 data-nosnippet>147</a>  user_details.email,
-<a href=#148 id=148 data-nosnippet>148</a>  role AS "role: UserRole"
+<a href=#148 id=148 data-nosnippet>148</a>  role
 <a href=#149 id=149 data-nosnippet>149</a>FROM users
 <a href=#150 id=150 data-nosnippet>150</a>  JOIN roles ON users.id = roles.user_id
 <a href=#151 id=151 data-nosnippet>151</a>  JOIN user_details ON users.id = user_details.user_id
@@ -165,7 +165,7 @@
 <a href=#165 id=165 data-nosnippet>165</a>  user_details.first_name,
 <a href=#166 id=166 data-nosnippet>166</a>  user_details.last_name,
 <a href=#167 id=167 data-nosnippet>167</a>  user_details.email,
-<a href=#168 id=168 data-nosnippet>168</a>  role AS "role: UserRole"
+<a href=#168 id=168 data-nosnippet>168</a>  role
 <a href=#169 id=169 data-nosnippet>169</a>FROM users
 <a href=#170 id=170 data-nosnippet>170</a>  JOIN roles ON users.id = roles.user_id
 <a href=#171 id=171 data-nosnippet>171</a>  JOIN user_details ON users.id = user_details.user_id
@@ -185,7 +185,7 @@
 <a href=#185 id=185 data-nosnippet>185</a>  user_details.first_name,
 <a href=#186 id=186 data-nosnippet>186</a>  user_details.last_name,
 <a href=#187 id=187 data-nosnippet>187</a>  user_details.email,
-<a href=#188 id=188 data-nosnippet>188</a>  role AS "role: UserRole"
+<a href=#188 id=188 data-nosnippet>188</a>  role
 <a href=#189 id=189 data-nosnippet>189</a>FROM users
 <a href=#190 id=190 data-nosnippet>190</a>  JOIN roles ON users.id = roles.user_id
 <a href=#191 id=191 data-nosnippet>191</a>  JOIN user_details ON users.id = user_details.user_id
@@ -213,7 +213,7 @@
 <a href=#213 id=213 data-nosnippet>213</a>                <span class="string">"
 <a href=#214 id=214 data-nosnippet>214</a>INSERT INTO roles (user_id, role, is_global)
 <a href=#215 id=215 data-nosnippet>215</a>VALUES ($1, $2, True)
-<a href=#216 id=216 data-nosnippet>216</a>RETURNING id
+<a href=#216 id=216 data-nosnippet>216</a>RETURNING *
 <a href=#217 id=217 data-nosnippet>217</a>"</span>,
 <a href=#218 id=218 data-nosnippet>218</a>                user_id,
 <a href=#219 id=219 data-nosnippet>219</a>                role <span class="kw">as </span>UserRole
@@ -227,7 +227,7 @@
 <a href=#227 id=227 data-nosnippet>227</a>                <span class="string">"
 <a href=#228 id=228 data-nosnippet>228</a>INSERT INTO roles (user_id, role, organization_id)
 <a href=#229 id=229 data-nosnippet>229</a>VALUES ($1, $2, $3)
-<a href=#230 id=230 data-nosnippet>230</a>RETURNING id
+<a href=#230 id=230 data-nosnippet>230</a>RETURNING *
 <a href=#231 id=231 data-nosnippet>231</a>"</span>,
 <a href=#232 id=232 data-nosnippet>232</a>                user_id,
 <a href=#233 id=233 data-nosnippet>233</a>                role <span class="kw">as </span>UserRole,
@@ -242,7 +242,7 @@
 <a href=#242 id=242 data-nosnippet>242</a>                <span class="string">"
 <a href=#243 id=243 data-nosnippet>243</a>INSERT INTO roles (user_id, role, course_id)
 <a href=#244 id=244 data-nosnippet>244</a>VALUES ($1, $2, $3)
-<a href=#245 id=245 data-nosnippet>245</a>RETURNING id
+<a href=#245 id=245 data-nosnippet>245</a>RETURNING *
 <a href=#246 id=246 data-nosnippet>246</a>"</span>,
 <a href=#247 id=247 data-nosnippet>247</a>                user_id,
 <a href=#248 id=248 data-nosnippet>248</a>                role <span class="kw">as </span>UserRole,
@@ -257,7 +257,7 @@
 <a href=#257 id=257 data-nosnippet>257</a>                <span class="string">"
 <a href=#258 id=258 data-nosnippet>258</a>INSERT INTO roles (user_id, role, course_instance_id)
 <a href=#259 id=259 data-nosnippet>259</a>VALUES ($1, $2, $3)
-<a href=#260 id=260 data-nosnippet>260</a>RETURNING id
+<a href=#260 id=260 data-nosnippet>260</a>RETURNING *
 <a href=#261 id=261 data-nosnippet>261</a>"</span>,
 <a href=#262 id=262 data-nosnippet>262</a>                user_id,
 <a href=#263 id=263 data-nosnippet>263</a>                role <span class="kw">as </span>UserRole,
@@ -272,7 +272,7 @@
 <a href=#272 id=272 data-nosnippet>272</a>                <span class="string">"
 <a href=#273 id=273 data-nosnippet>273</a>INSERT INTO roles (user_id, role, exam_id)
 <a href=#274 id=274 data-nosnippet>274</a>VALUES ($1, $2, $3)
-<a href=#275 id=275 data-nosnippet>275</a>RETURNING id
+<a href=#275 id=275 data-nosnippet>275</a>RETURNING *
 <a href=#276 id=276 data-nosnippet>276</a>"</span>,
 <a href=#277 id=277 data-nosnippet>277</a>                user_id,
 <a href=#278 id=278 data-nosnippet>278</a>                role <span class="kw">as </span>UserRole,
@@ -389,7 +389,7 @@
 <a href=#389 id=389 data-nosnippet>389</a>  course_id,
 <a href=#390 id=390 data-nosnippet>390</a>  course_instance_id,
 <a href=#391 id=391 data-nosnippet>391</a>  exam_id,
-<a href=#392 id=392 data-nosnippet>392</a>  role AS "role: UserRole",
+<a href=#392 id=392 data-nosnippet>392</a>  role,
 <a href=#393 id=393 data-nosnippet>393</a>  user_id
 <a href=#394 id=394 data-nosnippet>394</a>FROM roles
 <a href=#395 id=395 data-nosnippet>395</a>WHERE user_id = $1
@@ -415,7 +415,7 @@
 <a href=#415 id=415 data-nosnippet>415</a>  course_id,
 <a href=#416 id=416 data-nosnippet>416</a>  course_instance_id,
 <a href=#417 id=417 data-nosnippet>417</a>  exam_id,
-<a href=#418 id=418 data-nosnippet>418</a>  role AS "role: UserRole",
+<a href=#418 id=418 data-nosnippet>418</a>  role,
 <a href=#419 id=419 data-nosnippet>419</a>  user_id
 <a href=#420 id=420 data-nosnippet>420</a>FROM roles
 <a href=#421 id=421 data-nosnippet>421</a>WHERE user_id = $1
@@ -454,7 +454,7 @@
 <a href=#454 id=454 data-nosnippet>454</a>  course_id,
 <a href=#455 id=455 data-nosnippet>455</a>  course_instance_id,
 <a href=#456 id=456 data-nosnippet>456</a>  exam_id,
-<a href=#457 id=457 data-nosnippet>457</a>  role AS "role: UserRole",
+<a href=#457 id=457 data-nosnippet>457</a>  role,
 <a href=#458 id=458 data-nosnippet>458</a>  user_id
 <a href=#459 id=459 data-nosnippet>459</a>FROM roles
 <a href=#460 id=460 data-nosnippet>460</a>WHERE (
@@ -502,7 +502,7 @@
 <a href=#502 id=502 data-nosnippet>502</a>  course_id,
 <a href=#503 id=503 data-nosnippet>503</a>  course_instance_id,
 <a href=#504 id=504 data-nosnippet>504</a>  exam_id,
-<a href=#505 id=505 data-nosnippet>505</a>  role AS "role: UserRole",
+<a href=#505 id=505 data-nosnippet>505</a>  role,
 <a href=#506 id=506 data-nosnippet>506</a>  user_id
 <a href=#507 id=507 data-nosnippet>507</a>FROM roles
 <a href=#508 id=508 data-nosnippet>508</a>WHERE (

@@ -35,7 +35,7 @@
 <a href=#35 id=35 data-nosnippet>35</a>    number_data
 <a href=#36 id=36 data-nosnippet>36</a>  )
 <a href=#37 id=37 data-nosnippet>37</a>VALUES ($1, $2, $3, $4, $5)
-<a href=#38 id=38 data-nosnippet>38</a>RETURNING id
+<a href=#38 id=38 data-nosnippet>38</a>RETURNING *
 <a href=#39 id=39 data-nosnippet>39</a>        "</span>,
 <a href=#40 id=40 data-nosnippet>40</a>        pkey_policy.into_uuid(),
 <a href=#41 id=41 data-nosnippet>41</a>        peer_or_self_review_question_id,
@@ -183,7 +183,7 @@
 <a href=#183 id=183 data-nosnippet>183</a>  questions.id AS peer_or_self_review_question_id,
 <a href=#184 id=184 data-nosnippet>184</a>  questions.order_number,
 <a href=#185 id=185 data-nosnippet>185</a>  questions.question,
-<a href=#186 id=186 data-nosnippet>186</a>  questions.question_type AS "question_type: PeerOrSelfReviewQuestionType",
+<a href=#186 id=186 data-nosnippet>186</a>  questions.question_type,
 <a href=#187 id=187 data-nosnippet>187</a>  questions.answer_required,
 <a href=#188 id=188 data-nosnippet>188</a>  submissions.id AS peer_or_self_review_submission_id
 <a href=#189 id=189 data-nosnippet>189</a>FROM peer_or_self_review_question_submissions answers
@@ -243,7 +243,7 @@
 <a href=#243 id=243 data-nosnippet>243</a>  questions.id AS peer_or_self_review_question_id,
 <a href=#244 id=244 data-nosnippet>244</a>  questions.order_number,
 <a href=#245 id=245 data-nosnippet>245</a>  questions.question,
-<a href=#246 id=246 data-nosnippet>246</a>  questions.question_type AS "question_type: PeerOrSelfReviewQuestionType",
+<a href=#246 id=246 data-nosnippet>246</a>  questions.question_type,
 <a href=#247 id=247 data-nosnippet>247</a>  questions.answer_required,
 <a href=#248 id=248 data-nosnippet>248</a>  submissions.id AS peer_or_self_review_submission_id
 <a href=#249 id=249 data-nosnippet>249</a>FROM peer_or_self_review_question_submissions answers
