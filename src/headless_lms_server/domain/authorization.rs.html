@@ -379,7 +379,7 @@
 <a href=#379 id=379 data-nosnippet>379</a>    <span class="comment">// If auth header correct one, grant access
 <a href=#380 id=380 data-nosnippet>380</a>    </span><span class="kw">if </span>constant_time_eq_str(
 <a href=#381 id=381 data-nosnippet>381</a>        auth_header,
-<a href=#382 id=382 data-nosnippet>382</a>        tmc_server_secret_for_communicating_to_secret_project.as_str(),
+<a href=#382 id=382 data-nosnippet>382</a>        tmc_server_secret_for_communicating_to_secret_project.expose_secret(),
 <a href=#383 id=383 data-nosnippet>383</a>    ) {
 <a href=#384 id=384 data-nosnippet>384</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(skip_authorize());
 <a href=#385 id=385 data-nosnippet>385</a>    }
@@ -757,7 +757,7 @@
 <a href=#757 id=757 data-nosnippet>757</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
 <a href=#758 id=758 data-nosnippet>758</a>    client: <span class="kw-2">&amp;</span>OAuthClient,
 <a href=#759 id=759 data-nosnippet>759</a>    email: String,
-<a href=#760 id=760 data-nosnippet>760</a>    password: String,
+<a href=#760 id=760 data-nosnippet>760</a>    password: SecretString,
 <a href=#761 id=761 data-nosnippet>761</a>    tmc_client: <span class="kw-2">&amp;</span>TmcClient,
 <a href=#762 id=762 data-nosnippet>762</a>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;(User, SecretString)&gt;&gt; {
 <a href=#763 id=763 data-nosnippet>763</a>    <span class="macro">info!</span>(<span class="string">"Attempting to authenticate user with TMC"</span>);
@@ -802,131 +802,131 @@
 <a href=#802 id=802 data-nosnippet>802</a></span><span class="kw">pub async fn </span>exchange_password_with_tmc(
 <a href=#803 id=803 data-nosnippet>803</a>    client: <span class="kw-2">&amp;</span>OAuthClient,
 <a href=#804 id=804 data-nosnippet>804</a>    email: String,
-<a href=#805 id=805 data-nosnippet>805</a>    password: String,
+<a href=#805 id=805 data-nosnippet>805</a>    password: SecretString,
 <a href=#806 id=806 data-nosnippet>806</a>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;SecretString&gt;&gt; {
 <a href=#807 id=807 data-nosnippet>807</a>    <span class="kw">let </span>token_result = client
 <a href=#808 id=808 data-nosnippet>808</a>        .exchange_password(
 <a href=#809 id=809 data-nosnippet>809</a>            <span class="kw-2">&amp;</span>ResourceOwnerUsername::new(email),
-<a href=#810 id=810 data-nosnippet>810</a>            <span class="kw-2">&amp;</span>ResourceOwnerPassword::new(password),
-<a href=#811 id=811 data-nosnippet>811</a>        )
-<a href=#812 id=812 data-nosnippet>812</a>        .request_async(<span class="kw-2">&amp;</span>async_http_client_with_headers)
-<a href=#813 id=813 data-nosnippet>813</a>        .<span class="kw">await</span>;
-<a href=#814 id=814 data-nosnippet>814</a>    <span class="kw">match </span>token_result {
-<a href=#815 id=815 data-nosnippet>815</a>        <span class="prelude-val">Ok</span>(token) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(SecretString::new(
-<a href=#816 id=816 data-nosnippet>816</a>            token.access_token().secret().to_owned().into(),
-<a href=#817 id=817 data-nosnippet>817</a>        ))),
-<a href=#818 id=818 data-nosnippet>818</a>        <span class="prelude-val">Err</span>(RequestTokenError::ServerResponse(server_response)) =&gt; {
-<a href=#819 id=819 data-nosnippet>819</a>            <span class="kw">let </span>error = server_response.error();
-<a href=#820 id=820 data-nosnippet>820</a>            <span class="kw">let </span>error_description = server_response.error_description();
-<a href=#821 id=821 data-nosnippet>821</a>            <span class="kw">let </span>error_uri = server_response.error_uri();
-<a href=#822 id=822 data-nosnippet>822</a>
-<a href=#823 id=823 data-nosnippet>823</a>            <span class="comment">// Only return Ok(None) for InvalidGrant errors (wrong email/password)
-<a href=#824 id=824 data-nosnippet>824</a>            </span><span class="kw">if let </span>oauth2::basic::BasicErrorResponseType::InvalidGrant = error {
-<a href=#825 id=825 data-nosnippet>825</a>                <span class="macro">warn!</span>(
-<a href=#826 id=826 data-nosnippet>826</a>                    <span class="question-mark">?</span>error_description,
-<a href=#827 id=827 data-nosnippet>827</a>                    <span class="question-mark">?</span>error_uri,
-<a href=#828 id=828 data-nosnippet>828</a>                    <span class="string">"TMC did not accept the credentials: {}"</span>,
-<a href=#829 id=829 data-nosnippet>829</a>                    error
-<a href=#830 id=830 data-nosnippet>830</a>                );
-<a href=#831 id=831 data-nosnippet>831</a>                <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-<a href=#832 id=832 data-nosnippet>832</a>            } <span class="kw">else </span>{
-<a href=#833 id=833 data-nosnippet>833</a>                <span class="comment">// For all other error types, return an error
-<a href=#834 id=834 data-nosnippet>834</a>                </span><span class="macro">error!</span>(
-<a href=#835 id=835 data-nosnippet>835</a>                    <span class="question-mark">?</span>error_description,
-<a href=#836 id=836 data-nosnippet>836</a>                    <span class="question-mark">?</span>error_uri,
-<a href=#837 id=837 data-nosnippet>837</a>                    <span class="string">"TMC authentication error: {}"</span>,
-<a href=#838 id=838 data-nosnippet>838</a>                    error
-<a href=#839 id=839 data-nosnippet>839</a>                );
-<a href=#840 id=840 data-nosnippet>840</a>                <span class="prelude-val">Err</span>(<span class="macro">anyhow::anyhow!</span>(<span class="string">"Authentication error: {}"</span>, error))
-<a href=#841 id=841 data-nosnippet>841</a>            }
-<a href=#842 id=842 data-nosnippet>842</a>        }
-<a href=#843 id=843 data-nosnippet>843</a>        <span class="prelude-val">Err</span>(e) =&gt; {
-<a href=#844 id=844 data-nosnippet>844</a>            <span class="macro">error!</span>(<span class="string">"Failed to exchange password with TMC: {}"</span>, e);
-<a href=#845 id=845 data-nosnippet>845</a>            <span class="prelude-val">Err</span>(e.into())
-<a href=#846 id=846 data-nosnippet>846</a>        }
-<a href=#847 id=847 data-nosnippet>847</a>    }
-<a href=#848 id=848 data-nosnippet>848</a>}
-<a href=#849 id=849 data-nosnippet>849</a>
-<a href=#850 id=850 data-nosnippet>850</a><span class="doccomment">/// Fetches the mooc.fi UUID for a user by their upstream ID using the TMC access token.
-<a href=#851 id=851 data-nosnippet>851</a></span><span class="kw">async fn </span>fetch_moocfi_id_by_upstream_id(
-<a href=#852 id=852 data-nosnippet>852</a>    tmc_access_token: <span class="kw-2">&amp;</span>str,
-<a href=#853 id=853 data-nosnippet>853</a>    upstream_id: i32,
-<a href=#854 id=854 data-nosnippet>854</a>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;&gt; {
-<a href=#855 id=855 data-nosnippet>855</a>    <span class="macro">info!</span>(<span class="string">"Fetching mooc.fi UUID for upstream user id {}"</span>, upstream_id);
-<a href=#856 id=856 data-nosnippet>856</a>
-<a href=#857 id=857 data-nosnippet>857</a>    <span class="kw">let </span>res = REQWEST_CLIENT
-<a href=#858 id=858 data-nosnippet>858</a>        .post(MOOCFI_GRAPHQL_URL)
-<a href=#859 id=859 data-nosnippet>859</a>        .header(reqwest::header::CONTENT_TYPE, <span class="string">"application/json"</span>)
-<a href=#860 id=860 data-nosnippet>860</a>        .header(reqwest::header::ACCEPT, <span class="string">"application/json"</span>)
-<a href=#861 id=861 data-nosnippet>861</a>        .bearer_auth(tmc_access_token)
-<a href=#862 id=862 data-nosnippet>862</a>        .json(<span class="kw-2">&amp;</span>GraphQLRequest {
-<a href=#863 id=863 data-nosnippet>863</a>            query: <span class="string">r#"
-<a href=#864 id=864 data-nosnippet>864</a>query ($upstreamId: Int) {
-<a href=#865 id=865 data-nosnippet>865</a>  user(upstream_id: $upstreamId) {
-<a href=#866 id=866 data-nosnippet>866</a>    id
-<a href=#867 id=867 data-nosnippet>867</a>  }
-<a href=#868 id=868 data-nosnippet>868</a>}"#</span>,
-<a href=#869 id=869 data-nosnippet>869</a>            variables: <span class="prelude-val">Some</span>(<span class="macro">json!</span>({ <span class="string">"upstreamId"</span>: upstream_id })),
-<a href=#870 id=870 data-nosnippet>870</a>        })
-<a href=#871 id=871 data-nosnippet>871</a>        .send()
-<a href=#872 id=872 data-nosnippet>872</a>        .<span class="kw">await</span>;
-<a href=#873 id=873 data-nosnippet>873</a>
-<a href=#874 id=874 data-nosnippet>874</a>    <span class="kw">match </span>res {
-<a href=#875 id=875 data-nosnippet>875</a>        <span class="prelude-val">Ok</span>(response) =&gt; {
-<a href=#876 id=876 data-nosnippet>876</a>            <span class="kw">if </span>!response.status().is_success() {
-<a href=#877 id=877 data-nosnippet>877</a>                <span class="macro">debug!</span>(
-<a href=#878 id=878 data-nosnippet>878</a>                    <span class="string">"Failed to fetch mooc.fi user with status {}. Will generate new UUID instead."</span>,
-<a href=#879 id=879 data-nosnippet>879</a>                    response.status()
-<a href=#880 id=880 data-nosnippet>880</a>                );
-<a href=#881 id=881 data-nosnippet>881</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-<a href=#882 id=882 data-nosnippet>882</a>            }
-<a href=#883 id=883 data-nosnippet>883</a>
-<a href=#884 id=884 data-nosnippet>884</a>            <span class="kw">match </span>response.json::&lt;MoocfiUserResponse&gt;().<span class="kw">await </span>{
-<a href=#885 id=885 data-nosnippet>885</a>                <span class="prelude-val">Ok</span>(current_user_response) =&gt; {
-<a href=#886 id=886 data-nosnippet>886</a>                    <span class="macro">info!</span>(
-<a href=#887 id=887 data-nosnippet>887</a>                        <span class="string">"Successfully fetched mooc.fi UUID {} for upstream id {}"</span>,
-<a href=#888 id=888 data-nosnippet>888</a>                        current_user_response.data.user.id, upstream_id
-<a href=#889 id=889 data-nosnippet>889</a>                    );
-<a href=#890 id=890 data-nosnippet>890</a>                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(current_user_response.data.user.id))
-<a href=#891 id=891 data-nosnippet>891</a>                }
-<a href=#892 id=892 data-nosnippet>892</a>                <span class="prelude-val">Err</span>(e) =&gt; {
-<a href=#893 id=893 data-nosnippet>893</a>                    <span class="macro">debug!</span>(
-<a href=#894 id=894 data-nosnippet>894</a>                        <span class="string">"Failed to parse mooc.fi response: {}. Will generate new UUID instead."</span>,
-<a href=#895 id=895 data-nosnippet>895</a>                        e
-<a href=#896 id=896 data-nosnippet>896</a>                    );
-<a href=#897 id=897 data-nosnippet>897</a>                    <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-<a href=#898 id=898 data-nosnippet>898</a>                }
-<a href=#899 id=899 data-nosnippet>899</a>            }
-<a href=#900 id=900 data-nosnippet>900</a>        }
-<a href=#901 id=901 data-nosnippet>901</a>        <span class="prelude-val">Err</span>(e) =&gt; {
-<a href=#902 id=902 data-nosnippet>902</a>            <span class="macro">debug!</span>(
-<a href=#903 id=903 data-nosnippet>903</a>                <span class="string">"Failed to fetch from mooc.fi: {}. Will generate new UUID instead."</span>,
-<a href=#904 id=904 data-nosnippet>904</a>                e
-<a href=#905 id=905 data-nosnippet>905</a>            );
-<a href=#906 id=906 data-nosnippet>906</a>            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-<a href=#907 id=907 data-nosnippet>907</a>        }
-<a href=#908 id=908 data-nosnippet>908</a>    }
-<a href=#909 id=909 data-nosnippet>909</a>}
-<a href=#910 id=910 data-nosnippet>910</a>
-<a href=#911 id=911 data-nosnippet>911</a><span class="kw">pub async fn </span>get_or_create_user_from_tmc_mooc_fi_response(
-<a href=#912 id=912 data-nosnippet>912</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#913 id=913 data-nosnippet>913</a>    tmc_mooc_fi_user: TMCUser,
-<a href=#914 id=914 data-nosnippet>914</a>    tmc_access_token: <span class="kw-2">&amp;</span>SecretString,
-<a href=#915 id=915 data-nosnippet>915</a>) -&gt; anyhow::Result&lt;User&gt; {
-<a href=#916 id=916 data-nosnippet>916</a>    <span class="kw">let </span>TMCUser {
-<a href=#917 id=917 data-nosnippet>917</a>        id: upstream_id,
-<a href=#918 id=918 data-nosnippet>918</a>        email,
-<a href=#919 id=919 data-nosnippet>919</a>        courses_mooc_fi_user_id: moocfi_id,
-<a href=#920 id=920 data-nosnippet>920</a>        user_field,
-<a href=#921 id=921 data-nosnippet>921</a>        ..
-<a href=#922 id=922 data-nosnippet>922</a>    } = tmc_mooc_fi_user;
-<a href=#923 id=923 data-nosnippet>923</a>
-<a href=#924 id=924 data-nosnippet>924</a>    <span class="comment">// If moocfi_id is None, try to fetch it from mooc.fi before generating a new UUID
-<a href=#925 id=925 data-nosnippet>925</a>    </span><span class="kw">let </span>id = <span class="kw">match </span>moocfi_id {
-<a href=#926 id=926 data-nosnippet>926</a>        <span class="prelude-val">Some</span>(id) =&gt; id,
-<a href=#927 id=927 data-nosnippet>927</a>        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>fetch_moocfi_id_by_upstream_id(tmc_access_token.expose_secret(), upstream_id)
-<a href=#928 id=928 data-nosnippet>928</a>            .<span class="kw">await</span><span class="question-mark">?
-<a href=#929 id=929 data-nosnippet>929</a>        </span>{
+<a href=#810 id=810 data-nosnippet>810</a>            <span class="comment">// Exposed only here, at the OAuth2 client boundary.
+<a href=#811 id=811 data-nosnippet>811</a>            </span><span class="kw-2">&amp;</span>ResourceOwnerPassword::new(password.expose_secret().to_string()),
+<a href=#812 id=812 data-nosnippet>812</a>        )
+<a href=#813 id=813 data-nosnippet>813</a>        .request_async(<span class="kw-2">&amp;</span>async_http_client_with_headers)
+<a href=#814 id=814 data-nosnippet>814</a>        .<span class="kw">await</span>;
+<a href=#815 id=815 data-nosnippet>815</a>    <span class="kw">match </span>token_result {
+<a href=#816 id=816 data-nosnippet>816</a>        <span class="prelude-val">Ok</span>(token) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(SecretString::new(
+<a href=#817 id=817 data-nosnippet>817</a>            token.access_token().secret().to_owned().into(),
+<a href=#818 id=818 data-nosnippet>818</a>        ))),
+<a href=#819 id=819 data-nosnippet>819</a>        <span class="prelude-val">Err</span>(RequestTokenError::ServerResponse(server_response)) =&gt; {
+<a href=#820 id=820 data-nosnippet>820</a>            <span class="kw">let </span>error = server_response.error();
+<a href=#821 id=821 data-nosnippet>821</a>            <span class="kw">let </span>error_description = server_response.error_description();
+<a href=#822 id=822 data-nosnippet>822</a>            <span class="kw">let </span>error_uri = server_response.error_uri();
+<a href=#823 id=823 data-nosnippet>823</a>
+<a href=#824 id=824 data-nosnippet>824</a>            <span class="comment">// Only return Ok(None) for InvalidGrant errors (wrong email/password)
+<a href=#825 id=825 data-nosnippet>825</a>            </span><span class="kw">if let </span>oauth2::basic::BasicErrorResponseType::InvalidGrant = error {
+<a href=#826 id=826 data-nosnippet>826</a>                <span class="macro">warn!</span>(
+<a href=#827 id=827 data-nosnippet>827</a>                    <span class="question-mark">?</span>error_description,
+<a href=#828 id=828 data-nosnippet>828</a>                    <span class="question-mark">?</span>error_uri,
+<a href=#829 id=829 data-nosnippet>829</a>                    <span class="string">"TMC did not accept the credentials: {}"</span>,
+<a href=#830 id=830 data-nosnippet>830</a>                    error
+<a href=#831 id=831 data-nosnippet>831</a>                );
+<a href=#832 id=832 data-nosnippet>832</a>                <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
+<a href=#833 id=833 data-nosnippet>833</a>            } <span class="kw">else </span>{
+<a href=#834 id=834 data-nosnippet>834</a>                <span class="comment">// For all other error types, return an error
+<a href=#835 id=835 data-nosnippet>835</a>                </span><span class="macro">error!</span>(
+<a href=#836 id=836 data-nosnippet>836</a>                    <span class="question-mark">?</span>error_description,
+<a href=#837 id=837 data-nosnippet>837</a>                    <span class="question-mark">?</span>error_uri,
+<a href=#838 id=838 data-nosnippet>838</a>                    <span class="string">"TMC authentication error: {}"</span>,
+<a href=#839 id=839 data-nosnippet>839</a>                    error
+<a href=#840 id=840 data-nosnippet>840</a>                );
+<a href=#841 id=841 data-nosnippet>841</a>                <span class="prelude-val">Err</span>(<span class="macro">anyhow::anyhow!</span>(<span class="string">"Authentication error: {}"</span>, error))
+<a href=#842 id=842 data-nosnippet>842</a>            }
+<a href=#843 id=843 data-nosnippet>843</a>        }
+<a href=#844 id=844 data-nosnippet>844</a>        <span class="prelude-val">Err</span>(e) =&gt; {
+<a href=#845 id=845 data-nosnippet>845</a>            <span class="macro">error!</span>(<span class="string">"Failed to exchange password with TMC: {}"</span>, e);
+<a href=#846 id=846 data-nosnippet>846</a>            <span class="prelude-val">Err</span>(e.into())
+<a href=#847 id=847 data-nosnippet>847</a>        }
+<a href=#848 id=848 data-nosnippet>848</a>    }
+<a href=#849 id=849 data-nosnippet>849</a>}
+<a href=#850 id=850 data-nosnippet>850</a>
+<a href=#851 id=851 data-nosnippet>851</a><span class="doccomment">/// Fetches the mooc.fi UUID for a user by their upstream ID using the TMC access token.
+<a href=#852 id=852 data-nosnippet>852</a></span><span class="kw">async fn </span>fetch_moocfi_id_by_upstream_id(
+<a href=#853 id=853 data-nosnippet>853</a>    tmc_access_token: <span class="kw-2">&amp;</span>SecretString,
+<a href=#854 id=854 data-nosnippet>854</a>    upstream_id: i32,
+<a href=#855 id=855 data-nosnippet>855</a>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;&gt; {
+<a href=#856 id=856 data-nosnippet>856</a>    <span class="macro">info!</span>(<span class="string">"Fetching mooc.fi UUID for upstream user id {}"</span>, upstream_id);
+<a href=#857 id=857 data-nosnippet>857</a>
+<a href=#858 id=858 data-nosnippet>858</a>    <span class="kw">let </span>res = REQWEST_CLIENT
+<a href=#859 id=859 data-nosnippet>859</a>        .post(MOOCFI_GRAPHQL_URL)
+<a href=#860 id=860 data-nosnippet>860</a>        .header(reqwest::header::CONTENT_TYPE, <span class="string">"application/json"</span>)
+<a href=#861 id=861 data-nosnippet>861</a>        .header(reqwest::header::ACCEPT, <span class="string">"application/json"</span>)
+<a href=#862 id=862 data-nosnippet>862</a>        <span class="comment">// Exposed only here, where the bearer token header is built.
+<a href=#863 id=863 data-nosnippet>863</a>        </span>.bearer_auth(tmc_access_token.expose_secret())
+<a href=#864 id=864 data-nosnippet>864</a>        .json(<span class="kw-2">&amp;</span>GraphQLRequest {
+<a href=#865 id=865 data-nosnippet>865</a>            query: <span class="string">r#"
+<a href=#866 id=866 data-nosnippet>866</a>query ($upstreamId: Int) {
+<a href=#867 id=867 data-nosnippet>867</a>  user(upstream_id: $upstreamId) {
+<a href=#868 id=868 data-nosnippet>868</a>    id
+<a href=#869 id=869 data-nosnippet>869</a>  }
+<a href=#870 id=870 data-nosnippet>870</a>}"#</span>,
+<a href=#871 id=871 data-nosnippet>871</a>            variables: <span class="prelude-val">Some</span>(<span class="macro">json!</span>({ <span class="string">"upstreamId"</span>: upstream_id })),
+<a href=#872 id=872 data-nosnippet>872</a>        })
+<a href=#873 id=873 data-nosnippet>873</a>        .send()
+<a href=#874 id=874 data-nosnippet>874</a>        .<span class="kw">await</span>;
+<a href=#875 id=875 data-nosnippet>875</a>
+<a href=#876 id=876 data-nosnippet>876</a>    <span class="kw">match </span>res {
+<a href=#877 id=877 data-nosnippet>877</a>        <span class="prelude-val">Ok</span>(response) =&gt; {
+<a href=#878 id=878 data-nosnippet>878</a>            <span class="kw">if </span>!response.status().is_success() {
+<a href=#879 id=879 data-nosnippet>879</a>                <span class="macro">debug!</span>(
+<a href=#880 id=880 data-nosnippet>880</a>                    <span class="string">"Failed to fetch mooc.fi user with status {}. Will generate new UUID instead."</span>,
+<a href=#881 id=881 data-nosnippet>881</a>                    response.status()
+<a href=#882 id=882 data-nosnippet>882</a>                );
+<a href=#883 id=883 data-nosnippet>883</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+<a href=#884 id=884 data-nosnippet>884</a>            }
+<a href=#885 id=885 data-nosnippet>885</a>
+<a href=#886 id=886 data-nosnippet>886</a>            <span class="kw">match </span>response.json::&lt;MoocfiUserResponse&gt;().<span class="kw">await </span>{
+<a href=#887 id=887 data-nosnippet>887</a>                <span class="prelude-val">Ok</span>(current_user_response) =&gt; {
+<a href=#888 id=888 data-nosnippet>888</a>                    <span class="macro">info!</span>(
+<a href=#889 id=889 data-nosnippet>889</a>                        <span class="string">"Successfully fetched mooc.fi UUID {} for upstream id {}"</span>,
+<a href=#890 id=890 data-nosnippet>890</a>                        current_user_response.data.user.id, upstream_id
+<a href=#891 id=891 data-nosnippet>891</a>                    );
+<a href=#892 id=892 data-nosnippet>892</a>                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(current_user_response.data.user.id))
+<a href=#893 id=893 data-nosnippet>893</a>                }
+<a href=#894 id=894 data-nosnippet>894</a>                <span class="prelude-val">Err</span>(e) =&gt; {
+<a href=#895 id=895 data-nosnippet>895</a>                    <span class="macro">debug!</span>(
+<a href=#896 id=896 data-nosnippet>896</a>                        <span class="string">"Failed to parse mooc.fi response: {}. Will generate new UUID instead."</span>,
+<a href=#897 id=897 data-nosnippet>897</a>                        e
+<a href=#898 id=898 data-nosnippet>898</a>                    );
+<a href=#899 id=899 data-nosnippet>899</a>                    <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
+<a href=#900 id=900 data-nosnippet>900</a>                }
+<a href=#901 id=901 data-nosnippet>901</a>            }
+<a href=#902 id=902 data-nosnippet>902</a>        }
+<a href=#903 id=903 data-nosnippet>903</a>        <span class="prelude-val">Err</span>(e) =&gt; {
+<a href=#904 id=904 data-nosnippet>904</a>            <span class="macro">debug!</span>(
+<a href=#905 id=905 data-nosnippet>905</a>                <span class="string">"Failed to fetch from mooc.fi: {}. Will generate new UUID instead."</span>,
+<a href=#906 id=906 data-nosnippet>906</a>                e
+<a href=#907 id=907 data-nosnippet>907</a>            );
+<a href=#908 id=908 data-nosnippet>908</a>            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
+<a href=#909 id=909 data-nosnippet>909</a>        }
+<a href=#910 id=910 data-nosnippet>910</a>    }
+<a href=#911 id=911 data-nosnippet>911</a>}
+<a href=#912 id=912 data-nosnippet>912</a>
+<a href=#913 id=913 data-nosnippet>913</a><span class="kw">pub async fn </span>get_or_create_user_from_tmc_mooc_fi_response(
+<a href=#914 id=914 data-nosnippet>914</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#915 id=915 data-nosnippet>915</a>    tmc_mooc_fi_user: TMCUser,
+<a href=#916 id=916 data-nosnippet>916</a>    tmc_access_token: <span class="kw-2">&amp;</span>SecretString,
+<a href=#917 id=917 data-nosnippet>917</a>) -&gt; anyhow::Result&lt;User&gt; {
+<a href=#918 id=918 data-nosnippet>918</a>    <span class="kw">let </span>TMCUser {
+<a href=#919 id=919 data-nosnippet>919</a>        id: upstream_id,
+<a href=#920 id=920 data-nosnippet>920</a>        email,
+<a href=#921 id=921 data-nosnippet>921</a>        courses_mooc_fi_user_id: moocfi_id,
+<a href=#922 id=922 data-nosnippet>922</a>        user_field,
+<a href=#923 id=923 data-nosnippet>923</a>        ..
+<a href=#924 id=924 data-nosnippet>924</a>    } = tmc_mooc_fi_user;
+<a href=#925 id=925 data-nosnippet>925</a>
+<a href=#926 id=926 data-nosnippet>926</a>    <span class="comment">// If moocfi_id is None, try to fetch it from mooc.fi before generating a new UUID
+<a href=#927 id=927 data-nosnippet>927</a>    </span><span class="kw">let </span>id = <span class="kw">match </span>moocfi_id {
+<a href=#928 id=928 data-nosnippet>928</a>        <span class="prelude-val">Some</span>(id) =&gt; id,
+<a href=#929 id=929 data-nosnippet>929</a>        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>fetch_moocfi_id_by_upstream_id(tmc_access_token, upstream_id).<span class="kw">await</span><span class="question-mark">? </span>{
 <a href=#930 id=930 data-nosnippet>930</a>            <span class="prelude-val">Some</span>(fetched_id) =&gt; {
 <a href=#931 id=931 data-nosnippet>931</a>                <span class="macro">info!</span>(<span class="string">"Successfully fetched mooc.fi UUID {} for user"</span>, fetched_id);
 <a href=#932 id=932 data-nosnippet>932</a>                fetched_id
@@ -971,273 +971,278 @@
 <a href=#971 id=971 data-nosnippet>971</a></span><span class="kw">pub async fn </span>authenticate_test_user(
 <a href=#972 id=972 data-nosnippet>972</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
 <a href=#973 id=973 data-nosnippet>973</a>    email: <span class="kw-2">&amp;</span>str,
-<a href=#974 id=974 data-nosnippet>974</a>    password: <span class="kw-2">&amp;</span>str,
+<a href=#974 id=974 data-nosnippet>974</a>    password: <span class="kw-2">&amp;</span>SecretString,
 <a href=#975 id=975 data-nosnippet>975</a>    application_configuration: <span class="kw-2">&amp;</span>ApplicationConfiguration,
 <a href=#976 id=976 data-nosnippet>976</a>) -&gt; anyhow::Result&lt;bool&gt; {
 <a href=#977 id=977 data-nosnippet>977</a>    <span class="comment">// Sanity check to ensure this is not called outside of test mode. The whole application configuration is passed to this function instead of just the boolean to make mistakes harder.
 <a href=#978 id=978 data-nosnippet>978</a>    </span><span class="macro">assert!</span>(application_configuration.test_mode);
 <a href=#979 id=979 data-nosnippet>979</a>
-<a href=#980 id=980 data-nosnippet>980</a>    <span class="kw">let </span>_user = <span class="kw">if </span>email == <span class="string">"admin@example.com" </span>&amp;&amp; password == <span class="string">"admin" </span>{
-<a href=#981 id=981 data-nosnippet>981</a>        models::users::get_by_email(conn, <span class="string">"admin@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#982 id=982 data-nosnippet>982</a>    </span>} <span class="kw">else if </span>email == <span class="string">"teacher@example.com" </span>&amp;&amp; password == <span class="string">"teacher" </span>{
-<a href=#983 id=983 data-nosnippet>983</a>        models::users::get_by_email(conn, <span class="string">"teacher@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#984 id=984 data-nosnippet>984</a>    </span>} <span class="kw">else if </span>email == <span class="string">"language.teacher@example.com" </span>&amp;&amp; password == <span class="string">"language.teacher" </span>{
-<a href=#985 id=985 data-nosnippet>985</a>        models::users::get_by_email(conn, <span class="string">"language.teacher@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#986 id=986 data-nosnippet>986</a>    </span>} <span class="kw">else if </span>email == <span class="string">"material.viewer@example.com" </span>&amp;&amp; password == <span class="string">"material.viewer" </span>{
-<a href=#987 id=987 data-nosnippet>987</a>        models::users::get_by_email(conn, <span class="string">"material.viewer@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#988 id=988 data-nosnippet>988</a>    </span>} <span class="kw">else if </span>email == <span class="string">"user@example.com" </span>&amp;&amp; password == <span class="string">"user" </span>{
-<a href=#989 id=989 data-nosnippet>989</a>        models::users::get_by_email(conn, <span class="string">"user@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#990 id=990 data-nosnippet>990</a>    </span>} <span class="kw">else if </span>email == <span class="string">"assistant@example.com" </span>&amp;&amp; password == <span class="string">"assistant" </span>{
-<a href=#991 id=991 data-nosnippet>991</a>        models::users::get_by_email(conn, <span class="string">"assistant@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#992 id=992 data-nosnippet>992</a>    </span>} <span class="kw">else if </span>email == <span class="string">"creator@example.com" </span>&amp;&amp; password == <span class="string">"creator" </span>{
-<a href=#993 id=993 data-nosnippet>993</a>        models::users::get_by_email(conn, <span class="string">"creator@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#994 id=994 data-nosnippet>994</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student1@example.com" </span>&amp;&amp; password == <span class="string">"student1" </span>{
-<a href=#995 id=995 data-nosnippet>995</a>        models::users::get_by_email(conn, <span class="string">"student1@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#996 id=996 data-nosnippet>996</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student2@example.com" </span>&amp;&amp; password == <span class="string">"student2" </span>{
-<a href=#997 id=997 data-nosnippet>997</a>        models::users::get_by_email(conn, <span class="string">"student2@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#998 id=998 data-nosnippet>998</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student3@example.com" </span>&amp;&amp; password == <span class="string">"student3" </span>{
-<a href=#999 id=999 data-nosnippet>999</a>        models::users::get_by_email(conn, <span class="string">"student3@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1000 id=1000 data-nosnippet>1000</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student4@example.com" </span>&amp;&amp; password == <span class="string">"student4" </span>{
-<a href=#1001 id=1001 data-nosnippet>1001</a>        models::users::get_by_email(conn, <span class="string">"student4@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1002 id=1002 data-nosnippet>1002</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student5@example.com" </span>&amp;&amp; password == <span class="string">"student5" </span>{
-<a href=#1003 id=1003 data-nosnippet>1003</a>        models::users::get_by_email(conn, <span class="string">"student5@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1004 id=1004 data-nosnippet>1004</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student6@example.com" </span>&amp;&amp; password == <span class="string">"student6" </span>{
-<a href=#1005 id=1005 data-nosnippet>1005</a>        models::users::get_by_email(conn, <span class="string">"student6@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1006 id=1006 data-nosnippet>1006</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student7@example.com" </span>&amp;&amp; password == <span class="string">"student7" </span>{
-<a href=#1007 id=1007 data-nosnippet>1007</a>        models::users::get_by_email(conn, <span class="string">"student7@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1008 id=1008 data-nosnippet>1008</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student8@example.com" </span>&amp;&amp; password == <span class="string">"student8" </span>{
-<a href=#1009 id=1009 data-nosnippet>1009</a>        models::users::get_by_email(conn, <span class="string">"student8@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1010 id=1010 data-nosnippet>1010</a>    </span>} <span class="kw">else if </span>email == <span class="string">"teaching-and-learning-services@example.com"
-<a href=#1011 id=1011 data-nosnippet>1011</a>        </span>&amp;&amp; password == <span class="string">"teaching-and-learning-services"
-<a href=#1012 id=1012 data-nosnippet>1012</a>    </span>{
-<a href=#1013 id=1013 data-nosnippet>1013</a>        models::users::get_by_email(conn, <span class="string">"teaching-and-learning-services@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1014 id=1014 data-nosnippet>1014</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student-without-research-consent@example.com"
-<a href=#1015 id=1015 data-nosnippet>1015</a>        </span>&amp;&amp; password == <span class="string">"student-without-research-consent"
-<a href=#1016 id=1016 data-nosnippet>1016</a>    </span>{
-<a href=#1017 id=1017 data-nosnippet>1017</a>        models::users::get_by_email(conn, <span class="string">"student-without-research-consent@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1018 id=1018 data-nosnippet>1018</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student-without-country@example.com"
-<a href=#1019 id=1019 data-nosnippet>1019</a>        </span>&amp;&amp; password == <span class="string">"student-without-country"
-<a href=#1020 id=1020 data-nosnippet>1020</a>    </span>{
-<a href=#1021 id=1021 data-nosnippet>1021</a>        models::users::get_by_email(conn, <span class="string">"student-without-country@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1022 id=1022 data-nosnippet>1022</a>    </span>} <span class="kw">else if </span>email == <span class="string">"langs@example.com" </span>&amp;&amp; password == <span class="string">"langs" </span>{
-<a href=#1023 id=1023 data-nosnippet>1023</a>        models::users::get_by_email(conn, <span class="string">"langs@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1024 id=1024 data-nosnippet>1024</a>    </span>} <span class="kw">else if </span>email == <span class="string">"sign-up-user@example.com" </span>&amp;&amp; password == <span class="string">"sign-up-user" </span>{
-<a href=#1025 id=1025 data-nosnippet>1025</a>        models::users::get_by_email(conn, <span class="string">"sign-up-user@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
-<a href=#1026 id=1026 data-nosnippet>1026</a>    </span>} <span class="kw">else </span>{
-<a href=#1027 id=1027 data-nosnippet>1027</a>        <span class="macro">info!</span>(<span class="string">"Authentication failed: incorrect test credentials"</span>);
-<a href=#1028 id=1028 data-nosnippet>1028</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
-<a href=#1029 id=1029 data-nosnippet>1029</a>    };
-<a href=#1030 id=1030 data-nosnippet>1030</a>    <span class="macro">info!</span>(<span class="string">"Successfully authenticated test user {}"</span>, email);
-<a href=#1031 id=1031 data-nosnippet>1031</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-<a href=#1032 id=1032 data-nosnippet>1032</a>}
-<a href=#1033 id=1033 data-nosnippet>1033</a>
-<a href=#1034 id=1034 data-nosnippet>1034</a><span class="comment">// Only used for testing, not to use in production.
-<a href=#1035 id=1035 data-nosnippet>1035</a></span><span class="kw">pub async fn </span>authenticate_test_token(
-<a href=#1036 id=1036 data-nosnippet>1036</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#1037 id=1037 data-nosnippet>1037</a>    _token: <span class="kw-2">&amp;</span>SecretString,
-<a href=#1038 id=1038 data-nosnippet>1038</a>    application_configuration: <span class="kw-2">&amp;</span>ApplicationConfiguration,
-<a href=#1039 id=1039 data-nosnippet>1039</a>) -&gt; anyhow::Result&lt;User&gt; {
-<a href=#1040 id=1040 data-nosnippet>1040</a>    <span class="comment">// Sanity check to ensure this is not called outside of test mode. The whole application configuration is passed to this function instead of just the boolean to make mistakes harder.
-<a href=#1041 id=1041 data-nosnippet>1041</a>    </span><span class="macro">assert!</span>(application_configuration.test_mode);
-<a href=#1042 id=1042 data-nosnippet>1042</a>    <span class="comment">// TODO: this has never worked
-<a href=#1043 id=1043 data-nosnippet>1043</a>    </span><span class="kw">let </span>user = models::users::get_by_email(conn, <span class="string">"TODO"</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#1044 id=1044 data-nosnippet>1044</a>    <span class="prelude-val">Ok</span>(user)
-<a href=#1045 id=1045 data-nosnippet>1045</a>}
-<a href=#1046 id=1046 data-nosnippet>1046</a>
-<a href=#1047 id=1047 data-nosnippet>1047</a><span class="doccomment">/**
-<a href=#1048 id=1048 data-nosnippet>1048</a> Gets the rate limit protection API key from environment variables and converts it to a header value.
-<a href=#1049 id=1049 data-nosnippet>1049</a> This key is used to bypass rate limiting when making requests to TMC server.
-<a href=#1050 id=1050 data-nosnippet>1050</a>*/
-<a href=#1051 id=1051 data-nosnippet>1051</a></span><span class="kw">fn </span>get_ratelimit_api_key() -&gt; <span class="prelude-ty">Result</span>&lt;reqwest::header::HeaderValue, HttpClientError&lt;reqwest::Error&gt;&gt;
-<a href=#1052 id=1052 data-nosnippet>1052</a>{
-<a href=#1053 id=1053 data-nosnippet>1053</a>    <span class="kw">let </span>key = server_runtime_config()
-<a href=#1054 id=1054 data-nosnippet>1054</a>        .ratelimit_protection_safe_api_key
-<a href=#1055 id=1055 data-nosnippet>1055</a>        .clone();
-<a href=#1056 id=1056 data-nosnippet>1056</a>    <span class="macro">debug!</span>(<span class="string">"Using ratelimit API key from runtime config"</span>);
-<a href=#1057 id=1057 data-nosnippet>1057</a>
-<a href=#1058 id=1058 data-nosnippet>1058</a>    key.parse::&lt;reqwest::header::HeaderValue&gt;().map_err(|err| {
-<a href=#1059 id=1059 data-nosnippet>1059</a>        <span class="macro">error!</span>(<span class="string">"Invalid RATELIMIT API key format: {}"</span>, err);
-<a href=#1060 id=1060 data-nosnippet>1060</a>        HttpClientError::Other(<span class="string">"Invalid RATELIMIT API key."</span>.to_string())
-<a href=#1061 id=1061 data-nosnippet>1061</a>    })
-<a href=#1062 id=1062 data-nosnippet>1062</a>}
-<a href=#1063 id=1063 data-nosnippet>1063</a>
-<a href=#1064 id=1064 data-nosnippet>1064</a><span class="doccomment">/**
-<a href=#1065 id=1065 data-nosnippet>1065</a> HTTP Client used only for authenticating with TMC server. This function:
-<a href=#1066 id=1066 data-nosnippet>1066</a> 1. Ensures TMC server does not rate limit auth requests from backend by adding a special header
-<a href=#1067 id=1067 data-nosnippet>1067</a> 2. Converts between oauth2 crate's internal http types and our reqwest types:
-<a href=#1068 id=1068 data-nosnippet>1068</a>    - Converts oauth2::HttpRequest to a reqwest::Request
-<a href=#1069 id=1069 data-nosnippet>1069</a>    - Makes the request using our REQWEST_CLIENT
-<a href=#1070 id=1070 data-nosnippet>1070</a>    - Converts the reqwest::Response back to oauth2::HttpResponse
-<a href=#1071 id=1071 data-nosnippet>1071</a>*/
-<a href=#1072 id=1072 data-nosnippet>1072</a></span><span class="kw">async fn </span>async_http_client_with_headers(
-<a href=#1073 id=1073 data-nosnippet>1073</a>    oauth_request: oauth2::HttpRequest,
-<a href=#1074 id=1074 data-nosnippet>1074</a>) -&gt; <span class="prelude-ty">Result</span>&lt;oauth2::HttpResponse, HttpClientError&lt;reqwest::Error&gt;&gt; {
-<a href=#1075 id=1075 data-nosnippet>1075</a>    <span class="macro">debug!</span>(<span class="string">"Making OAuth request to TMC server"</span>);
-<a href=#1076 id=1076 data-nosnippet>1076</a>
-<a href=#1077 id=1077 data-nosnippet>1077</a>    <span class="kw">if </span><span class="macro">log::log_enabled!</span>(log::Level::Trace) {
-<a href=#1078 id=1078 data-nosnippet>1078</a>        <span class="comment">// Only log the URL path, not query parameters which may contain credentials
-<a href=#1079 id=1079 data-nosnippet>1079</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(url) = oauth_request.uri().to_string().parse::&lt;reqwest::Url&gt;() {
-<a href=#1080 id=1080 data-nosnippet>1080</a>            <span class="macro">trace!</span>(<span class="string">"OAuth request path: {}"</span>, url.path());
-<a href=#1081 id=1081 data-nosnippet>1081</a>        }
-<a href=#1082 id=1082 data-nosnippet>1082</a>    }
-<a href=#1083 id=1083 data-nosnippet>1083</a>
-<a href=#1084 id=1084 data-nosnippet>1084</a>    <span class="kw">let </span>parsed_key = get_ratelimit_api_key()<span class="question-mark">?</span>;
-<a href=#1085 id=1085 data-nosnippet>1085</a>
-<a href=#1086 id=1086 data-nosnippet>1086</a>    <span class="macro">debug!</span>(<span class="string">"Building request to TMC server"</span>);
-<a href=#1087 id=1087 data-nosnippet>1087</a>    <span class="kw">let </span>request = REQWEST_CLIENT
-<a href=#1088 id=1088 data-nosnippet>1088</a>        .request(
-<a href=#1089 id=1089 data-nosnippet>1089</a>            oauth_request.method().clone(),
-<a href=#1090 id=1090 data-nosnippet>1090</a>            oauth_request
-<a href=#1091 id=1091 data-nosnippet>1091</a>                .uri()
-<a href=#1092 id=1092 data-nosnippet>1092</a>                .to_string()
-<a href=#1093 id=1093 data-nosnippet>1093</a>                .parse::&lt;reqwest::Url&gt;()
-<a href=#1094 id=1094 data-nosnippet>1094</a>                .map_err(|e| HttpClientError::Other(<span class="macro">format!</span>(<span class="string">"Invalid URL: {}"</span>, e)))<span class="question-mark">?</span>,
-<a href=#1095 id=1095 data-nosnippet>1095</a>        )
-<a href=#1096 id=1096 data-nosnippet>1096</a>        .headers(oauth_request.headers().clone())
-<a href=#1097 id=1097 data-nosnippet>1097</a>        .version(oauth_request.version())
-<a href=#1098 id=1098 data-nosnippet>1098</a>        .header(<span class="string">"RATELIMIT-PROTECTION-SAFE-API-KEY"</span>, parsed_key)
-<a href=#1099 id=1099 data-nosnippet>1099</a>        .body(oauth_request.body().to_vec());
-<a href=#1100 id=1100 data-nosnippet>1100</a>
-<a href=#1101 id=1101 data-nosnippet>1101</a>    <span class="macro">debug!</span>(<span class="string">"Sending request to TMC server"</span>);
-<a href=#1102 id=1102 data-nosnippet>1102</a>    <span class="kw">let </span>response = request
-<a href=#1103 id=1103 data-nosnippet>1103</a>        .send()
-<a href=#1104 id=1104 data-nosnippet>1104</a>        .<span class="kw">await
-<a href=#1105 id=1105 data-nosnippet>1105</a>        </span>.map_err(|e| HttpClientError::Other(<span class="macro">format!</span>(<span class="string">"Failed to execute request: {}"</span>, e)))<span class="question-mark">?</span>;
-<a href=#1106 id=1106 data-nosnippet>1106</a>
-<a href=#1107 id=1107 data-nosnippet>1107</a>    <span class="comment">// Log response status and version, but not headers or body which may contain tokens
-<a href=#1108 id=1108 data-nosnippet>1108</a>    </span><span class="macro">debug!</span>(
-<a href=#1109 id=1109 data-nosnippet>1109</a>        <span class="string">"Received response from TMC server - Status: {}, Version: {:?}"</span>,
-<a href=#1110 id=1110 data-nosnippet>1110</a>        response.status(),
-<a href=#1111 id=1111 data-nosnippet>1111</a>        response.version()
-<a href=#1112 id=1112 data-nosnippet>1112</a>    );
-<a href=#1113 id=1113 data-nosnippet>1113</a>
-<a href=#1114 id=1114 data-nosnippet>1114</a>    <span class="kw">let </span>status = response.status();
-<a href=#1115 id=1115 data-nosnippet>1115</a>    <span class="kw">let </span>version = response.version();
-<a href=#1116 id=1116 data-nosnippet>1116</a>    <span class="kw">let </span>headers = response.headers().clone();
-<a href=#1117 id=1117 data-nosnippet>1117</a>
-<a href=#1118 id=1118 data-nosnippet>1118</a>    <span class="macro">debug!</span>(<span class="string">"Reading response body"</span>);
-<a href=#1119 id=1119 data-nosnippet>1119</a>    <span class="kw">let </span>body_bytes = response
-<a href=#1120 id=1120 data-nosnippet>1120</a>        .bytes()
-<a href=#1121 id=1121 data-nosnippet>1121</a>        .<span class="kw">await
-<a href=#1122 id=1122 data-nosnippet>1122</a>        </span>.map_err(|e| HttpClientError::Other(<span class="macro">format!</span>(<span class="string">"Failed to read response body: {}"</span>, e)))<span class="question-mark">?
-<a href=#1123 id=1123 data-nosnippet>1123</a>        </span>.to_vec();
-<a href=#1124 id=1124 data-nosnippet>1124</a>
-<a href=#1125 id=1125 data-nosnippet>1125</a>    <span class="macro">debug!</span>(<span class="string">"Building OAuth response"</span>);
-<a href=#1126 id=1126 data-nosnippet>1126</a>    <span class="kw">let </span><span class="kw-2">mut </span>builder = oauth2::http::Response::builder()
-<a href=#1127 id=1127 data-nosnippet>1127</a>        .status(status)
-<a href=#1128 id=1128 data-nosnippet>1128</a>        .version(version);
+<a href=#980 id=980 data-nosnippet>980</a>    <span class="comment">// Test-only seeded credentials; exposed once here for the literal comparisons below.
+<a href=#981 id=981 data-nosnippet>981</a>    </span><span class="kw">let </span>password = password.expose_secret();
+<a href=#982 id=982 data-nosnippet>982</a>
+<a href=#983 id=983 data-nosnippet>983</a>    <span class="kw">let </span>_user = <span class="kw">if </span>email == <span class="string">"admin@example.com" </span>&amp;&amp; password == <span class="string">"admin" </span>{
+<a href=#984 id=984 data-nosnippet>984</a>        models::users::get_by_email(conn, <span class="string">"admin@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#985 id=985 data-nosnippet>985</a>    </span>} <span class="kw">else if </span>email == <span class="string">"teacher@example.com" </span>&amp;&amp; password == <span class="string">"teacher" </span>{
+<a href=#986 id=986 data-nosnippet>986</a>        models::users::get_by_email(conn, <span class="string">"teacher@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#987 id=987 data-nosnippet>987</a>    </span>} <span class="kw">else if </span>email == <span class="string">"language.teacher@example.com" </span>&amp;&amp; password == <span class="string">"language.teacher" </span>{
+<a href=#988 id=988 data-nosnippet>988</a>        models::users::get_by_email(conn, <span class="string">"language.teacher@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#989 id=989 data-nosnippet>989</a>    </span>} <span class="kw">else if </span>email == <span class="string">"material.viewer@example.com" </span>&amp;&amp; password == <span class="string">"material.viewer" </span>{
+<a href=#990 id=990 data-nosnippet>990</a>        models::users::get_by_email(conn, <span class="string">"material.viewer@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#991 id=991 data-nosnippet>991</a>    </span>} <span class="kw">else if </span>email == <span class="string">"user@example.com" </span>&amp;&amp; password == <span class="string">"user" </span>{
+<a href=#992 id=992 data-nosnippet>992</a>        models::users::get_by_email(conn, <span class="string">"user@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#993 id=993 data-nosnippet>993</a>    </span>} <span class="kw">else if </span>email == <span class="string">"assistant@example.com" </span>&amp;&amp; password == <span class="string">"assistant" </span>{
+<a href=#994 id=994 data-nosnippet>994</a>        models::users::get_by_email(conn, <span class="string">"assistant@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#995 id=995 data-nosnippet>995</a>    </span>} <span class="kw">else if </span>email == <span class="string">"creator@example.com" </span>&amp;&amp; password == <span class="string">"creator" </span>{
+<a href=#996 id=996 data-nosnippet>996</a>        models::users::get_by_email(conn, <span class="string">"creator@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#997 id=997 data-nosnippet>997</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student1@example.com" </span>&amp;&amp; password == <span class="string">"student1" </span>{
+<a href=#998 id=998 data-nosnippet>998</a>        models::users::get_by_email(conn, <span class="string">"student1@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#999 id=999 data-nosnippet>999</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student2@example.com" </span>&amp;&amp; password == <span class="string">"student2" </span>{
+<a href=#1000 id=1000 data-nosnippet>1000</a>        models::users::get_by_email(conn, <span class="string">"student2@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1001 id=1001 data-nosnippet>1001</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student3@example.com" </span>&amp;&amp; password == <span class="string">"student3" </span>{
+<a href=#1002 id=1002 data-nosnippet>1002</a>        models::users::get_by_email(conn, <span class="string">"student3@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1003 id=1003 data-nosnippet>1003</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student4@example.com" </span>&amp;&amp; password == <span class="string">"student4" </span>{
+<a href=#1004 id=1004 data-nosnippet>1004</a>        models::users::get_by_email(conn, <span class="string">"student4@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1005 id=1005 data-nosnippet>1005</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student5@example.com" </span>&amp;&amp; password == <span class="string">"student5" </span>{
+<a href=#1006 id=1006 data-nosnippet>1006</a>        models::users::get_by_email(conn, <span class="string">"student5@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1007 id=1007 data-nosnippet>1007</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student6@example.com" </span>&amp;&amp; password == <span class="string">"student6" </span>{
+<a href=#1008 id=1008 data-nosnippet>1008</a>        models::users::get_by_email(conn, <span class="string">"student6@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1009 id=1009 data-nosnippet>1009</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student7@example.com" </span>&amp;&amp; password == <span class="string">"student7" </span>{
+<a href=#1010 id=1010 data-nosnippet>1010</a>        models::users::get_by_email(conn, <span class="string">"student7@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1011 id=1011 data-nosnippet>1011</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student8@example.com" </span>&amp;&amp; password == <span class="string">"student8" </span>{
+<a href=#1012 id=1012 data-nosnippet>1012</a>        models::users::get_by_email(conn, <span class="string">"student8@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1013 id=1013 data-nosnippet>1013</a>    </span>} <span class="kw">else if </span>email == <span class="string">"teaching-and-learning-services@example.com"
+<a href=#1014 id=1014 data-nosnippet>1014</a>        </span>&amp;&amp; password == <span class="string">"teaching-and-learning-services"
+<a href=#1015 id=1015 data-nosnippet>1015</a>    </span>{
+<a href=#1016 id=1016 data-nosnippet>1016</a>        models::users::get_by_email(conn, <span class="string">"teaching-and-learning-services@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1017 id=1017 data-nosnippet>1017</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student-without-research-consent@example.com"
+<a href=#1018 id=1018 data-nosnippet>1018</a>        </span>&amp;&amp; password == <span class="string">"student-without-research-consent"
+<a href=#1019 id=1019 data-nosnippet>1019</a>    </span>{
+<a href=#1020 id=1020 data-nosnippet>1020</a>        models::users::get_by_email(conn, <span class="string">"student-without-research-consent@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1021 id=1021 data-nosnippet>1021</a>    </span>} <span class="kw">else if </span>email == <span class="string">"student-without-country@example.com"
+<a href=#1022 id=1022 data-nosnippet>1022</a>        </span>&amp;&amp; password == <span class="string">"student-without-country"
+<a href=#1023 id=1023 data-nosnippet>1023</a>    </span>{
+<a href=#1024 id=1024 data-nosnippet>1024</a>        models::users::get_by_email(conn, <span class="string">"student-without-country@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1025 id=1025 data-nosnippet>1025</a>    </span>} <span class="kw">else if </span>email == <span class="string">"langs@example.com" </span>&amp;&amp; password == <span class="string">"langs" </span>{
+<a href=#1026 id=1026 data-nosnippet>1026</a>        models::users::get_by_email(conn, <span class="string">"langs@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1027 id=1027 data-nosnippet>1027</a>    </span>} <span class="kw">else if </span>email == <span class="string">"sign-up-user@example.com" </span>&amp;&amp; password == <span class="string">"sign-up-user" </span>{
+<a href=#1028 id=1028 data-nosnippet>1028</a>        models::users::get_by_email(conn, <span class="string">"sign-up-user@example.com"</span>).<span class="kw">await</span><span class="question-mark">?
+<a href=#1029 id=1029 data-nosnippet>1029</a>    </span>} <span class="kw">else </span>{
+<a href=#1030 id=1030 data-nosnippet>1030</a>        <span class="macro">info!</span>(<span class="string">"Authentication failed: incorrect test credentials"</span>);
+<a href=#1031 id=1031 data-nosnippet>1031</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+<a href=#1032 id=1032 data-nosnippet>1032</a>    };
+<a href=#1033 id=1033 data-nosnippet>1033</a>    <span class="macro">info!</span>(<span class="string">"Successfully authenticated test user {}"</span>, email);
+<a href=#1034 id=1034 data-nosnippet>1034</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+<a href=#1035 id=1035 data-nosnippet>1035</a>}
+<a href=#1036 id=1036 data-nosnippet>1036</a>
+<a href=#1037 id=1037 data-nosnippet>1037</a><span class="comment">// Only used for testing, not to use in production.
+<a href=#1038 id=1038 data-nosnippet>1038</a></span><span class="kw">pub async fn </span>authenticate_test_token(
+<a href=#1039 id=1039 data-nosnippet>1039</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#1040 id=1040 data-nosnippet>1040</a>    _token: <span class="kw-2">&amp;</span>SecretString,
+<a href=#1041 id=1041 data-nosnippet>1041</a>    application_configuration: <span class="kw-2">&amp;</span>ApplicationConfiguration,
+<a href=#1042 id=1042 data-nosnippet>1042</a>) -&gt; anyhow::Result&lt;User&gt; {
+<a href=#1043 id=1043 data-nosnippet>1043</a>    <span class="comment">// Sanity check to ensure this is not called outside of test mode. The whole application configuration is passed to this function instead of just the boolean to make mistakes harder.
+<a href=#1044 id=1044 data-nosnippet>1044</a>    </span><span class="macro">assert!</span>(application_configuration.test_mode);
+<a href=#1045 id=1045 data-nosnippet>1045</a>    <span class="comment">// TODO: this has never worked
+<a href=#1046 id=1046 data-nosnippet>1046</a>    </span><span class="kw">let </span>user = models::users::get_by_email(conn, <span class="string">"TODO"</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#1047 id=1047 data-nosnippet>1047</a>    <span class="prelude-val">Ok</span>(user)
+<a href=#1048 id=1048 data-nosnippet>1048</a>}
+<a href=#1049 id=1049 data-nosnippet>1049</a>
+<a href=#1050 id=1050 data-nosnippet>1050</a><span class="doccomment">/**
+<a href=#1051 id=1051 data-nosnippet>1051</a> Gets the rate limit protection API key from environment variables and converts it to a header value.
+<a href=#1052 id=1052 data-nosnippet>1052</a> This key is used to bypass rate limiting when making requests to TMC server.
+<a href=#1053 id=1053 data-nosnippet>1053</a>*/
+<a href=#1054 id=1054 data-nosnippet>1054</a></span><span class="kw">fn </span>get_ratelimit_api_key() -&gt; <span class="prelude-ty">Result</span>&lt;reqwest::header::HeaderValue, HttpClientError&lt;reqwest::Error&gt;&gt;
+<a href=#1055 id=1055 data-nosnippet>1055</a>{
+<a href=#1056 id=1056 data-nosnippet>1056</a>    <span class="kw">let </span>key = server_runtime_config()
+<a href=#1057 id=1057 data-nosnippet>1057</a>        .ratelimit_protection_safe_api_key
+<a href=#1058 id=1058 data-nosnippet>1058</a>        .clone();
+<a href=#1059 id=1059 data-nosnippet>1059</a>    <span class="macro">debug!</span>(<span class="string">"Using ratelimit API key from runtime config"</span>);
+<a href=#1060 id=1060 data-nosnippet>1060</a>
+<a href=#1061 id=1061 data-nosnippet>1061</a>    key.expose_secret()
+<a href=#1062 id=1062 data-nosnippet>1062</a>        .parse::&lt;reqwest::header::HeaderValue&gt;()
+<a href=#1063 id=1063 data-nosnippet>1063</a>        .map_err(|err| {
+<a href=#1064 id=1064 data-nosnippet>1064</a>            <span class="macro">error!</span>(<span class="string">"Invalid RATELIMIT API key format: {}"</span>, err);
+<a href=#1065 id=1065 data-nosnippet>1065</a>            HttpClientError::Other(<span class="string">"Invalid RATELIMIT API key."</span>.to_string())
+<a href=#1066 id=1066 data-nosnippet>1066</a>        })
+<a href=#1067 id=1067 data-nosnippet>1067</a>}
+<a href=#1068 id=1068 data-nosnippet>1068</a>
+<a href=#1069 id=1069 data-nosnippet>1069</a><span class="doccomment">/**
+<a href=#1070 id=1070 data-nosnippet>1070</a> HTTP Client used only for authenticating with TMC server. This function:
+<a href=#1071 id=1071 data-nosnippet>1071</a> 1. Ensures TMC server does not rate limit auth requests from backend by adding a special header
+<a href=#1072 id=1072 data-nosnippet>1072</a> 2. Converts between oauth2 crate's internal http types and our reqwest types:
+<a href=#1073 id=1073 data-nosnippet>1073</a>    - Converts oauth2::HttpRequest to a reqwest::Request
+<a href=#1074 id=1074 data-nosnippet>1074</a>    - Makes the request using our REQWEST_CLIENT
+<a href=#1075 id=1075 data-nosnippet>1075</a>    - Converts the reqwest::Response back to oauth2::HttpResponse
+<a href=#1076 id=1076 data-nosnippet>1076</a>*/
+<a href=#1077 id=1077 data-nosnippet>1077</a></span><span class="kw">async fn </span>async_http_client_with_headers(
+<a href=#1078 id=1078 data-nosnippet>1078</a>    oauth_request: oauth2::HttpRequest,
+<a href=#1079 id=1079 data-nosnippet>1079</a>) -&gt; <span class="prelude-ty">Result</span>&lt;oauth2::HttpResponse, HttpClientError&lt;reqwest::Error&gt;&gt; {
+<a href=#1080 id=1080 data-nosnippet>1080</a>    <span class="macro">debug!</span>(<span class="string">"Making OAuth request to TMC server"</span>);
+<a href=#1081 id=1081 data-nosnippet>1081</a>
+<a href=#1082 id=1082 data-nosnippet>1082</a>    <span class="kw">if </span><span class="macro">log::log_enabled!</span>(log::Level::Trace) {
+<a href=#1083 id=1083 data-nosnippet>1083</a>        <span class="comment">// Only log the URL path, not query parameters which may contain credentials
+<a href=#1084 id=1084 data-nosnippet>1084</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(url) = oauth_request.uri().to_string().parse::&lt;reqwest::Url&gt;() {
+<a href=#1085 id=1085 data-nosnippet>1085</a>            <span class="macro">trace!</span>(<span class="string">"OAuth request path: {}"</span>, url.path());
+<a href=#1086 id=1086 data-nosnippet>1086</a>        }
+<a href=#1087 id=1087 data-nosnippet>1087</a>    }
+<a href=#1088 id=1088 data-nosnippet>1088</a>
+<a href=#1089 id=1089 data-nosnippet>1089</a>    <span class="kw">let </span>parsed_key = get_ratelimit_api_key()<span class="question-mark">?</span>;
+<a href=#1090 id=1090 data-nosnippet>1090</a>
+<a href=#1091 id=1091 data-nosnippet>1091</a>    <span class="macro">debug!</span>(<span class="string">"Building request to TMC server"</span>);
+<a href=#1092 id=1092 data-nosnippet>1092</a>    <span class="kw">let </span>request = REQWEST_CLIENT
+<a href=#1093 id=1093 data-nosnippet>1093</a>        .request(
+<a href=#1094 id=1094 data-nosnippet>1094</a>            oauth_request.method().clone(),
+<a href=#1095 id=1095 data-nosnippet>1095</a>            oauth_request
+<a href=#1096 id=1096 data-nosnippet>1096</a>                .uri()
+<a href=#1097 id=1097 data-nosnippet>1097</a>                .to_string()
+<a href=#1098 id=1098 data-nosnippet>1098</a>                .parse::&lt;reqwest::Url&gt;()
+<a href=#1099 id=1099 data-nosnippet>1099</a>                .map_err(|e| HttpClientError::Other(<span class="macro">format!</span>(<span class="string">"Invalid URL: {}"</span>, e)))<span class="question-mark">?</span>,
+<a href=#1100 id=1100 data-nosnippet>1100</a>        )
+<a href=#1101 id=1101 data-nosnippet>1101</a>        .headers(oauth_request.headers().clone())
+<a href=#1102 id=1102 data-nosnippet>1102</a>        .version(oauth_request.version())
+<a href=#1103 id=1103 data-nosnippet>1103</a>        .header(<span class="string">"RATELIMIT-PROTECTION-SAFE-API-KEY"</span>, parsed_key)
+<a href=#1104 id=1104 data-nosnippet>1104</a>        .body(oauth_request.body().to_vec());
+<a href=#1105 id=1105 data-nosnippet>1105</a>
+<a href=#1106 id=1106 data-nosnippet>1106</a>    <span class="macro">debug!</span>(<span class="string">"Sending request to TMC server"</span>);
+<a href=#1107 id=1107 data-nosnippet>1107</a>    <span class="kw">let </span>response = request
+<a href=#1108 id=1108 data-nosnippet>1108</a>        .send()
+<a href=#1109 id=1109 data-nosnippet>1109</a>        .<span class="kw">await
+<a href=#1110 id=1110 data-nosnippet>1110</a>        </span>.map_err(|e| HttpClientError::Other(<span class="macro">format!</span>(<span class="string">"Failed to execute request: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#1111 id=1111 data-nosnippet>1111</a>
+<a href=#1112 id=1112 data-nosnippet>1112</a>    <span class="comment">// Log response status and version, but not headers or body which may contain tokens
+<a href=#1113 id=1113 data-nosnippet>1113</a>    </span><span class="macro">debug!</span>(
+<a href=#1114 id=1114 data-nosnippet>1114</a>        <span class="string">"Received response from TMC server - Status: {}, Version: {:?}"</span>,
+<a href=#1115 id=1115 data-nosnippet>1115</a>        response.status(),
+<a href=#1116 id=1116 data-nosnippet>1116</a>        response.version()
+<a href=#1117 id=1117 data-nosnippet>1117</a>    );
+<a href=#1118 id=1118 data-nosnippet>1118</a>
+<a href=#1119 id=1119 data-nosnippet>1119</a>    <span class="kw">let </span>status = response.status();
+<a href=#1120 id=1120 data-nosnippet>1120</a>    <span class="kw">let </span>version = response.version();
+<a href=#1121 id=1121 data-nosnippet>1121</a>    <span class="kw">let </span>headers = response.headers().clone();
+<a href=#1122 id=1122 data-nosnippet>1122</a>
+<a href=#1123 id=1123 data-nosnippet>1123</a>    <span class="macro">debug!</span>(<span class="string">"Reading response body"</span>);
+<a href=#1124 id=1124 data-nosnippet>1124</a>    <span class="kw">let </span>body_bytes = response
+<a href=#1125 id=1125 data-nosnippet>1125</a>        .bytes()
+<a href=#1126 id=1126 data-nosnippet>1126</a>        .<span class="kw">await
+<a href=#1127 id=1127 data-nosnippet>1127</a>        </span>.map_err(|e| HttpClientError::Other(<span class="macro">format!</span>(<span class="string">"Failed to read response body: {}"</span>, e)))<span class="question-mark">?
+<a href=#1128 id=1128 data-nosnippet>1128</a>        </span>.to_vec();
 <a href=#1129 id=1129 data-nosnippet>1129</a>
-<a href=#1130 id=1130 data-nosnippet>1130</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(builder_headers) = builder.headers_mut() {
-<a href=#1131 id=1131 data-nosnippet>1131</a>        builder_headers.extend(headers.iter().map(|(k, v)| (k.clone(), v.clone())));
-<a href=#1132 id=1132 data-nosnippet>1132</a>    }
-<a href=#1133 id=1133 data-nosnippet>1133</a>
-<a href=#1134 id=1134 data-nosnippet>1134</a>    <span class="kw">let </span>oauth_response = builder
-<a href=#1135 id=1135 data-nosnippet>1135</a>        .body(body_bytes)
-<a href=#1136 id=1136 data-nosnippet>1136</a>        .map_err(|e| HttpClientError::Other(<span class="macro">format!</span>(<span class="string">"Failed to construct response: {}"</span>, e)))<span class="question-mark">?</span>;
-<a href=#1137 id=1137 data-nosnippet>1137</a>
-<a href=#1138 id=1138 data-nosnippet>1138</a>    <span class="macro">debug!</span>(<span class="string">"Successfully completed OAuth request"</span>);
-<a href=#1139 id=1139 data-nosnippet>1139</a>    <span class="prelude-val">Ok</span>(oauth_response)
-<a href=#1140 id=1140 data-nosnippet>1140</a>}
-<a href=#1141 id=1141 data-nosnippet>1141</a>
-<a href=#1142 id=1142 data-nosnippet>1142</a><span class="attr">#[cfg(test)]
-<a href=#1143 id=1143 data-nosnippet>1143</a></span><span class="kw">mod </span>test {
-<a href=#1144 id=1144 data-nosnippet>1144</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
-<a href=#1145 id=1145 data-nosnippet>1145</a>    <span class="kw">use </span><span class="kw">crate</span>::test_helper::<span class="kw-2">*</span>;
-<a href=#1146 id=1146 data-nosnippet>1146</a>    <span class="kw">use </span>headless_lms_models::<span class="kw-2">*</span>;
-<a href=#1147 id=1147 data-nosnippet>1147</a>    <span class="kw">use </span>models::roles::RoleDomain;
-<a href=#1148 id=1148 data-nosnippet>1148</a>
-<a href=#1149 id=1149 data-nosnippet>1149</a>    <span class="attr">#[actix_web::test]
-<a href=#1150 id=1150 data-nosnippet>1150</a>    </span><span class="kw">async fn </span>test_authorization() {
-<a href=#1151 id=1151 data-nosnippet>1151</a>        <span class="kw">let </span><span class="kw-2">mut </span>conn = Conn::init().<span class="kw">await</span>;
-<a href=#1152 id=1152 data-nosnippet>1152</a>        <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span>;
+<a href=#1130 id=1130 data-nosnippet>1130</a>    <span class="macro">debug!</span>(<span class="string">"Building OAuth response"</span>);
+<a href=#1131 id=1131 data-nosnippet>1131</a>    <span class="kw">let </span><span class="kw-2">mut </span>builder = oauth2::http::Response::builder()
+<a href=#1132 id=1132 data-nosnippet>1132</a>        .status(status)
+<a href=#1133 id=1133 data-nosnippet>1133</a>        .version(version);
+<a href=#1134 id=1134 data-nosnippet>1134</a>
+<a href=#1135 id=1135 data-nosnippet>1135</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(builder_headers) = builder.headers_mut() {
+<a href=#1136 id=1136 data-nosnippet>1136</a>        builder_headers.extend(headers.iter().map(|(k, v)| (k.clone(), v.clone())));
+<a href=#1137 id=1137 data-nosnippet>1137</a>    }
+<a href=#1138 id=1138 data-nosnippet>1138</a>
+<a href=#1139 id=1139 data-nosnippet>1139</a>    <span class="kw">let </span>oauth_response = builder
+<a href=#1140 id=1140 data-nosnippet>1140</a>        .body(body_bytes)
+<a href=#1141 id=1141 data-nosnippet>1141</a>        .map_err(|e| HttpClientError::Other(<span class="macro">format!</span>(<span class="string">"Failed to construct response: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#1142 id=1142 data-nosnippet>1142</a>
+<a href=#1143 id=1143 data-nosnippet>1143</a>    <span class="macro">debug!</span>(<span class="string">"Successfully completed OAuth request"</span>);
+<a href=#1144 id=1144 data-nosnippet>1144</a>    <span class="prelude-val">Ok</span>(oauth_response)
+<a href=#1145 id=1145 data-nosnippet>1145</a>}
+<a href=#1146 id=1146 data-nosnippet>1146</a>
+<a href=#1147 id=1147 data-nosnippet>1147</a><span class="attr">#[cfg(test)]
+<a href=#1148 id=1148 data-nosnippet>1148</a></span><span class="kw">mod </span>test {
+<a href=#1149 id=1149 data-nosnippet>1149</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#1150 id=1150 data-nosnippet>1150</a>    <span class="kw">use </span><span class="kw">crate</span>::test_helper::<span class="kw-2">*</span>;
+<a href=#1151 id=1151 data-nosnippet>1151</a>    <span class="kw">use </span>headless_lms_models::<span class="kw-2">*</span>;
+<a href=#1152 id=1152 data-nosnippet>1152</a>    <span class="kw">use </span>models::roles::RoleDomain;
 <a href=#1153 id=1153 data-nosnippet>1153</a>
-<a href=#1154 id=1154 data-nosnippet>1154</a>        <span class="kw">let </span>user = users::insert(
-<a href=#1155 id=1155 data-nosnippet>1155</a>            tx.as_mut(),
-<a href=#1156 id=1156 data-nosnippet>1156</a>            PKeyPolicy::Generate,
-<a href=#1157 id=1157 data-nosnippet>1157</a>            <span class="string">"auth@example.com"</span>,
-<a href=#1158 id=1158 data-nosnippet>1158</a>            <span class="prelude-val">None</span>,
-<a href=#1159 id=1159 data-nosnippet>1159</a>            <span class="prelude-val">None</span>,
-<a href=#1160 id=1160 data-nosnippet>1160</a>        )
-<a href=#1161 id=1161 data-nosnippet>1161</a>        .<span class="kw">await
-<a href=#1162 id=1162 data-nosnippet>1162</a>        </span>.unwrap();
-<a href=#1163 id=1163 data-nosnippet>1163</a>        <span class="kw">let </span>org = organizations::insert(
-<a href=#1164 id=1164 data-nosnippet>1164</a>            tx.as_mut(),
-<a href=#1165 id=1165 data-nosnippet>1165</a>            PKeyPolicy::Generate,
-<a href=#1166 id=1166 data-nosnippet>1166</a>            <span class="string">"auth"</span>,
-<a href=#1167 id=1167 data-nosnippet>1167</a>            <span class="string">"auth"</span>,
-<a href=#1168 id=1168 data-nosnippet>1168</a>            <span class="prelude-val">Some</span>(<span class="string">"auth"</span>),
-<a href=#1169 id=1169 data-nosnippet>1169</a>            <span class="bool-val">false</span>,
-<a href=#1170 id=1170 data-nosnippet>1170</a>        )
-<a href=#1171 id=1171 data-nosnippet>1171</a>        .<span class="kw">await
-<a href=#1172 id=1172 data-nosnippet>1172</a>        </span>.unwrap();
-<a href=#1173 id=1173 data-nosnippet>1173</a>
-<a href=#1174 id=1174 data-nosnippet>1174</a>        authorize(
-<a href=#1175 id=1175 data-nosnippet>1175</a>            tx.as_mut(),
-<a href=#1176 id=1176 data-nosnippet>1176</a>            Action::Edit,
-<a href=#1177 id=1177 data-nosnippet>1177</a>            <span class="prelude-val">Some</span>(user),
-<a href=#1178 id=1178 data-nosnippet>1178</a>            Resource::Organization(org),
-<a href=#1179 id=1179 data-nosnippet>1179</a>        )
-<a href=#1180 id=1180 data-nosnippet>1180</a>        .<span class="kw">await
-<a href=#1181 id=1181 data-nosnippet>1181</a>        </span>.unwrap_err();
-<a href=#1182 id=1182 data-nosnippet>1182</a>
-<a href=#1183 id=1183 data-nosnippet>1183</a>        roles::insert(
-<a href=#1184 id=1184 data-nosnippet>1184</a>            tx.as_mut(),
-<a href=#1185 id=1185 data-nosnippet>1185</a>            user,
-<a href=#1186 id=1186 data-nosnippet>1186</a>            UserRole::Teacher,
-<a href=#1187 id=1187 data-nosnippet>1187</a>            RoleDomain::Organization(org),
-<a href=#1188 id=1188 data-nosnippet>1188</a>        )
-<a href=#1189 id=1189 data-nosnippet>1189</a>        .<span class="kw">await
-<a href=#1190 id=1190 data-nosnippet>1190</a>        </span>.unwrap();
-<a href=#1191 id=1191 data-nosnippet>1191</a>
-<a href=#1192 id=1192 data-nosnippet>1192</a>        authorize(
-<a href=#1193 id=1193 data-nosnippet>1193</a>            tx.as_mut(),
-<a href=#1194 id=1194 data-nosnippet>1194</a>            Action::Edit,
-<a href=#1195 id=1195 data-nosnippet>1195</a>            <span class="prelude-val">Some</span>(user),
-<a href=#1196 id=1196 data-nosnippet>1196</a>            Resource::Organization(org),
-<a href=#1197 id=1197 data-nosnippet>1197</a>        )
-<a href=#1198 id=1198 data-nosnippet>1198</a>        .<span class="kw">await
-<a href=#1199 id=1199 data-nosnippet>1199</a>        </span>.unwrap();
-<a href=#1200 id=1200 data-nosnippet>1200</a>    }
-<a href=#1201 id=1201 data-nosnippet>1201</a>
-<a href=#1202 id=1202 data-nosnippet>1202</a>    <span class="attr">#[actix_web::test]
-<a href=#1203 id=1203 data-nosnippet>1203</a>    </span><span class="kw">async fn </span>course_role_chapter_resource() {
-<a href=#1204 id=1204 data-nosnippet>1204</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, :chapter);
-<a href=#1205 id=1205 data-nosnippet>1205</a>
-<a href=#1206 id=1206 data-nosnippet>1206</a>        authorize(
-<a href=#1207 id=1207 data-nosnippet>1207</a>            tx.as_mut(),
-<a href=#1208 id=1208 data-nosnippet>1208</a>            Action::Edit,
-<a href=#1209 id=1209 data-nosnippet>1209</a>            <span class="prelude-val">Some</span>(user),
-<a href=#1210 id=1210 data-nosnippet>1210</a>            Resource::Chapter(chapter),
-<a href=#1211 id=1211 data-nosnippet>1211</a>        )
-<a href=#1212 id=1212 data-nosnippet>1212</a>        .<span class="kw">await
-<a href=#1213 id=1213 data-nosnippet>1213</a>        </span>.unwrap_err();
-<a href=#1214 id=1214 data-nosnippet>1214</a>
-<a href=#1215 id=1215 data-nosnippet>1215</a>        roles::insert(
-<a href=#1216 id=1216 data-nosnippet>1216</a>            tx.as_mut(),
-<a href=#1217 id=1217 data-nosnippet>1217</a>            user,
-<a href=#1218 id=1218 data-nosnippet>1218</a>            UserRole::Teacher,
-<a href=#1219 id=1219 data-nosnippet>1219</a>            RoleDomain::Course(course),
-<a href=#1220 id=1220 data-nosnippet>1220</a>        )
-<a href=#1221 id=1221 data-nosnippet>1221</a>        .<span class="kw">await
-<a href=#1222 id=1222 data-nosnippet>1222</a>        </span>.unwrap();
-<a href=#1223 id=1223 data-nosnippet>1223</a>
-<a href=#1224 id=1224 data-nosnippet>1224</a>        authorize(
-<a href=#1225 id=1225 data-nosnippet>1225</a>            tx.as_mut(),
-<a href=#1226 id=1226 data-nosnippet>1226</a>            Action::Edit,
-<a href=#1227 id=1227 data-nosnippet>1227</a>            <span class="prelude-val">Some</span>(user),
-<a href=#1228 id=1228 data-nosnippet>1228</a>            Resource::Chapter(chapter),
-<a href=#1229 id=1229 data-nosnippet>1229</a>        )
-<a href=#1230 id=1230 data-nosnippet>1230</a>        .<span class="kw">await
-<a href=#1231 id=1231 data-nosnippet>1231</a>        </span>.unwrap();
-<a href=#1232 id=1232 data-nosnippet>1232</a>    }
-<a href=#1233 id=1233 data-nosnippet>1233</a>
-<a href=#1234 id=1234 data-nosnippet>1234</a>    <span class="attr">#[actix_web::test]
-<a href=#1235 id=1235 data-nosnippet>1235</a>    </span><span class="kw">async fn </span>anonymous_user_can_view_open_course() {
-<a href=#1236 id=1236 data-nosnippet>1236</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course);
-<a href=#1237 id=1237 data-nosnippet>1237</a>
-<a href=#1238 id=1238 data-nosnippet>1238</a>        authorize(tx.as_mut(), Action::View, <span class="prelude-val">None</span>, Resource::Course(course))
-<a href=#1239 id=1239 data-nosnippet>1239</a>            .<span class="kw">await
-<a href=#1240 id=1240 data-nosnippet>1240</a>            </span>.unwrap();
-<a href=#1241 id=1241 data-nosnippet>1241</a>    }
-<a href=#1242 id=1242 data-nosnippet>1242</a>}
+<a href=#1154 id=1154 data-nosnippet>1154</a>    <span class="attr">#[actix_web::test]
+<a href=#1155 id=1155 data-nosnippet>1155</a>    </span><span class="kw">async fn </span>test_authorization() {
+<a href=#1156 id=1156 data-nosnippet>1156</a>        <span class="kw">let </span><span class="kw-2">mut </span>conn = Conn::init().<span class="kw">await</span>;
+<a href=#1157 id=1157 data-nosnippet>1157</a>        <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span>;
+<a href=#1158 id=1158 data-nosnippet>1158</a>
+<a href=#1159 id=1159 data-nosnippet>1159</a>        <span class="kw">let </span>user = users::insert(
+<a href=#1160 id=1160 data-nosnippet>1160</a>            tx.as_mut(),
+<a href=#1161 id=1161 data-nosnippet>1161</a>            PKeyPolicy::Generate,
+<a href=#1162 id=1162 data-nosnippet>1162</a>            <span class="string">"auth@example.com"</span>,
+<a href=#1163 id=1163 data-nosnippet>1163</a>            <span class="prelude-val">None</span>,
+<a href=#1164 id=1164 data-nosnippet>1164</a>            <span class="prelude-val">None</span>,
+<a href=#1165 id=1165 data-nosnippet>1165</a>        )
+<a href=#1166 id=1166 data-nosnippet>1166</a>        .<span class="kw">await
+<a href=#1167 id=1167 data-nosnippet>1167</a>        </span>.unwrap();
+<a href=#1168 id=1168 data-nosnippet>1168</a>        <span class="kw">let </span>org = organizations::insert(
+<a href=#1169 id=1169 data-nosnippet>1169</a>            tx.as_mut(),
+<a href=#1170 id=1170 data-nosnippet>1170</a>            PKeyPolicy::Generate,
+<a href=#1171 id=1171 data-nosnippet>1171</a>            <span class="string">"auth"</span>,
+<a href=#1172 id=1172 data-nosnippet>1172</a>            <span class="string">"auth"</span>,
+<a href=#1173 id=1173 data-nosnippet>1173</a>            <span class="prelude-val">Some</span>(<span class="string">"auth"</span>),
+<a href=#1174 id=1174 data-nosnippet>1174</a>            <span class="bool-val">false</span>,
+<a href=#1175 id=1175 data-nosnippet>1175</a>        )
+<a href=#1176 id=1176 data-nosnippet>1176</a>        .<span class="kw">await
+<a href=#1177 id=1177 data-nosnippet>1177</a>        </span>.unwrap();
+<a href=#1178 id=1178 data-nosnippet>1178</a>
+<a href=#1179 id=1179 data-nosnippet>1179</a>        authorize(
+<a href=#1180 id=1180 data-nosnippet>1180</a>            tx.as_mut(),
+<a href=#1181 id=1181 data-nosnippet>1181</a>            Action::Edit,
+<a href=#1182 id=1182 data-nosnippet>1182</a>            <span class="prelude-val">Some</span>(user),
+<a href=#1183 id=1183 data-nosnippet>1183</a>            Resource::Organization(org),
+<a href=#1184 id=1184 data-nosnippet>1184</a>        )
+<a href=#1185 id=1185 data-nosnippet>1185</a>        .<span class="kw">await
+<a href=#1186 id=1186 data-nosnippet>1186</a>        </span>.unwrap_err();
+<a href=#1187 id=1187 data-nosnippet>1187</a>
+<a href=#1188 id=1188 data-nosnippet>1188</a>        roles::insert(
+<a href=#1189 id=1189 data-nosnippet>1189</a>            tx.as_mut(),
+<a href=#1190 id=1190 data-nosnippet>1190</a>            user,
+<a href=#1191 id=1191 data-nosnippet>1191</a>            UserRole::Teacher,
+<a href=#1192 id=1192 data-nosnippet>1192</a>            RoleDomain::Organization(org),
+<a href=#1193 id=1193 data-nosnippet>1193</a>        )
+<a href=#1194 id=1194 data-nosnippet>1194</a>        .<span class="kw">await
+<a href=#1195 id=1195 data-nosnippet>1195</a>        </span>.unwrap();
+<a href=#1196 id=1196 data-nosnippet>1196</a>
+<a href=#1197 id=1197 data-nosnippet>1197</a>        authorize(
+<a href=#1198 id=1198 data-nosnippet>1198</a>            tx.as_mut(),
+<a href=#1199 id=1199 data-nosnippet>1199</a>            Action::Edit,
+<a href=#1200 id=1200 data-nosnippet>1200</a>            <span class="prelude-val">Some</span>(user),
+<a href=#1201 id=1201 data-nosnippet>1201</a>            Resource::Organization(org),
+<a href=#1202 id=1202 data-nosnippet>1202</a>        )
+<a href=#1203 id=1203 data-nosnippet>1203</a>        .<span class="kw">await
+<a href=#1204 id=1204 data-nosnippet>1204</a>        </span>.unwrap();
+<a href=#1205 id=1205 data-nosnippet>1205</a>    }
+<a href=#1206 id=1206 data-nosnippet>1206</a>
+<a href=#1207 id=1207 data-nosnippet>1207</a>    <span class="attr">#[actix_web::test]
+<a href=#1208 id=1208 data-nosnippet>1208</a>    </span><span class="kw">async fn </span>course_role_chapter_resource() {
+<a href=#1209 id=1209 data-nosnippet>1209</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, :chapter);
+<a href=#1210 id=1210 data-nosnippet>1210</a>
+<a href=#1211 id=1211 data-nosnippet>1211</a>        authorize(
+<a href=#1212 id=1212 data-nosnippet>1212</a>            tx.as_mut(),
+<a href=#1213 id=1213 data-nosnippet>1213</a>            Action::Edit,
+<a href=#1214 id=1214 data-nosnippet>1214</a>            <span class="prelude-val">Some</span>(user),
+<a href=#1215 id=1215 data-nosnippet>1215</a>            Resource::Chapter(chapter),
+<a href=#1216 id=1216 data-nosnippet>1216</a>        )
+<a href=#1217 id=1217 data-nosnippet>1217</a>        .<span class="kw">await
+<a href=#1218 id=1218 data-nosnippet>1218</a>        </span>.unwrap_err();
+<a href=#1219 id=1219 data-nosnippet>1219</a>
+<a href=#1220 id=1220 data-nosnippet>1220</a>        roles::insert(
+<a href=#1221 id=1221 data-nosnippet>1221</a>            tx.as_mut(),
+<a href=#1222 id=1222 data-nosnippet>1222</a>            user,
+<a href=#1223 id=1223 data-nosnippet>1223</a>            UserRole::Teacher,
+<a href=#1224 id=1224 data-nosnippet>1224</a>            RoleDomain::Course(course),
+<a href=#1225 id=1225 data-nosnippet>1225</a>        )
+<a href=#1226 id=1226 data-nosnippet>1226</a>        .<span class="kw">await
+<a href=#1227 id=1227 data-nosnippet>1227</a>        </span>.unwrap();
+<a href=#1228 id=1228 data-nosnippet>1228</a>
+<a href=#1229 id=1229 data-nosnippet>1229</a>        authorize(
+<a href=#1230 id=1230 data-nosnippet>1230</a>            tx.as_mut(),
+<a href=#1231 id=1231 data-nosnippet>1231</a>            Action::Edit,
+<a href=#1232 id=1232 data-nosnippet>1232</a>            <span class="prelude-val">Some</span>(user),
+<a href=#1233 id=1233 data-nosnippet>1233</a>            Resource::Chapter(chapter),
+<a href=#1234 id=1234 data-nosnippet>1234</a>        )
+<a href=#1235 id=1235 data-nosnippet>1235</a>        .<span class="kw">await
+<a href=#1236 id=1236 data-nosnippet>1236</a>        </span>.unwrap();
+<a href=#1237 id=1237 data-nosnippet>1237</a>    }
+<a href=#1238 id=1238 data-nosnippet>1238</a>
+<a href=#1239 id=1239 data-nosnippet>1239</a>    <span class="attr">#[actix_web::test]
+<a href=#1240 id=1240 data-nosnippet>1240</a>    </span><span class="kw">async fn </span>anonymous_user_can_view_open_course() {
+<a href=#1241 id=1241 data-nosnippet>1241</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course);
+<a href=#1242 id=1242 data-nosnippet>1242</a>
+<a href=#1243 id=1243 data-nosnippet>1243</a>        authorize(tx.as_mut(), Action::View, <span class="prelude-val">None</span>, Resource::Course(course))
+<a href=#1244 id=1244 data-nosnippet>1244</a>            .<span class="kw">await
+<a href=#1245 id=1245 data-nosnippet>1245</a>            </span>.unwrap();
+<a href=#1246 id=1246 data-nosnippet>1246</a>    }
+<a href=#1247 id=1247 data-nosnippet>1247</a>}
 </code></pre></div></section></main></body></html>

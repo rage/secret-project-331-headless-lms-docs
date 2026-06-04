@@ -103,7 +103,7 @@
 <a href=#103 id=103 data-nosnippet>103</a><span class="kw">pub async fn </span>mark_user_email_code_used(
 <a href=#104 id=104 data-nosnippet>104</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
 <a href=#105 id=105 data-nosnippet>105</a>    user_id: Uuid,
-<a href=#106 id=106 data-nosnippet>106</a>    code: <span class="kw-2">&amp;</span>String,
+<a href=#106 id=106 data-nosnippet>106</a>    code: <span class="kw-2">&amp;</span>str,
 <a href=#107 id=107 data-nosnippet>107</a>) -&gt; ModelResult&lt;bool&gt; {
 <a href=#108 id=108 data-nosnippet>108</a>    <span class="kw">let </span>result = <span class="macro">sqlx::query!</span>(
 <a href=#109 id=109 data-nosnippet>109</a>        <span class="string">r#"

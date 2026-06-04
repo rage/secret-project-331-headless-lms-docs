@@ -6,7 +6,7 @@
 <a href=#6 id=6 data-nosnippet>6</a>    exercise_reset_logs::ExerciseResetLog, research_forms::ResearchFormQuestionAnswer,
 <a href=#7 id=7 data-nosnippet>7</a>    user_research_consents::UserResearchConsent, users::User,
 <a href=#8 id=8 data-nosnippet>8</a>};
-<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>secrecy::SecretString;
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>secrecy::{ExposeSecret, SecretString};
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>utoipa::{OpenApi, ToSchema};
 <a href=#11 id=11 data-nosnippet>11</a>
 <a href=#12 id=12 data-nosnippet>12</a><span class="attr">#[derive(OpenApi)]
@@ -333,71 +333,71 @@
 <a href=#333 id=333 data-nosnippet>333</a>    token.authorized_ok(web::Json(<span class="bool-val">true</span>))
 <a href=#334 id=334 data-nosnippet>334</a>}
 <a href=#335 id=335 data-nosnippet>335</a>
-<a href=#336 id=336 data-nosnippet>336</a><span class="attr">#[derive(Debug, Serialize, Deserialize, ToSchema)]
+<a href=#336 id=336 data-nosnippet>336</a><span class="attr">#[derive(Debug, Deserialize, ToSchema)]
 <a href=#337 id=337 data-nosnippet>337</a></span><span class="kw">pub struct </span>ResetPasswordTokenPayload {
-<a href=#338 id=338 data-nosnippet>338</a>    <span class="kw">pub </span>token: String,
-<a href=#339 id=339 data-nosnippet>339</a>}
-<a href=#340 id=340 data-nosnippet>340</a>
-<a href=#341 id=341 data-nosnippet>341</a><span class="attr">#[instrument(skip(pool))]
-<a href=#342 id=342 data-nosnippet>342</a>#[utoipa::path(
-<a href=#343 id=343 data-nosnippet>343</a>    post,
-<a href=#344 id=344 data-nosnippet>344</a>    path = <span class="string">"/reset-password-token-status"</span>,
-<a href=#345 id=345 data-nosnippet>345</a>    operation_id = <span class="string">"getResetPasswordTokenStatus"</span>,
-<a href=#346 id=346 data-nosnippet>346</a>    tag = <span class="string">"users"</span>,
-<a href=#347 id=347 data-nosnippet>347</a>    request_body = ResetPasswordTokenPayload,
-<a href=#348 id=348 data-nosnippet>348</a>    responses(
-<a href=#349 id=349 data-nosnippet>349</a>        (status = <span class="number">200</span>, description = <span class="string">"Reset password token validity"</span>, body = bool)
-<a href=#350 id=350 data-nosnippet>350</a>    )
-<a href=#351 id=351 data-nosnippet>351</a>)]
-<a href=#352 id=352 data-nosnippet>352</a></span><span class="kw">pub async fn </span>reset_password_token_status(
-<a href=#353 id=353 data-nosnippet>353</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#354 id=354 data-nosnippet>354</a>    payload: web::Json&lt;ResetPasswordTokenPayload&gt;,
-<a href=#355 id=355 data-nosnippet>355</a>) -&gt; ControllerResult&lt;web::Json&lt;bool&gt;&gt; {
-<a href=#356 id=356 data-nosnippet>356</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#357 id=357 data-nosnippet>357</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#358 id=358 data-nosnippet>358</a>
-<a href=#359 id=359 data-nosnippet>359</a>    <span class="kw">let </span>password_token = <span class="kw">match </span>Uuid::parse_str(<span class="kw-2">&amp;</span>payload.token) {
-<a href=#360 id=360 data-nosnippet>360</a>        <span class="prelude-val">Ok</span>(u) =&gt; u,
-<a href=#361 id=361 data-nosnippet>361</a>        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span>token.authorized_ok(web::Json(<span class="bool-val">false</span>)),
-<a href=#362 id=362 data-nosnippet>362</a>    };
-<a href=#363 id=363 data-nosnippet>363</a>
-<a href=#364 id=364 data-nosnippet>364</a>    <span class="kw">let </span>res =
-<a href=#365 id=365 data-nosnippet>365</a>        models::user_passwords::is_reset_password_token_valid(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>password_token).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#366 id=366 data-nosnippet>366</a>
-<a href=#367 id=367 data-nosnippet>367</a>    token.authorized_ok(web::Json(res))
-<a href=#368 id=368 data-nosnippet>368</a>}
-<a href=#369 id=369 data-nosnippet>369</a>
-<a href=#370 id=370 data-nosnippet>370</a><span class="attr">#[derive(Debug, Serialize, Deserialize, ToSchema)]
-<a href=#371 id=371 data-nosnippet>371</a>
+<a href=#338 id=338 data-nosnippet>338</a>    <span class="attr">#[schema(value_type = String)]
+<a href=#339 id=339 data-nosnippet>339</a>    </span><span class="kw">pub </span>token: SecretString,
+<a href=#340 id=340 data-nosnippet>340</a>}
+<a href=#341 id=341 data-nosnippet>341</a>
+<a href=#342 id=342 data-nosnippet>342</a><span class="attr">#[instrument(skip(pool))]
+<a href=#343 id=343 data-nosnippet>343</a>#[utoipa::path(
+<a href=#344 id=344 data-nosnippet>344</a>    post,
+<a href=#345 id=345 data-nosnippet>345</a>    path = <span class="string">"/reset-password-token-status"</span>,
+<a href=#346 id=346 data-nosnippet>346</a>    operation_id = <span class="string">"getResetPasswordTokenStatus"</span>,
+<a href=#347 id=347 data-nosnippet>347</a>    tag = <span class="string">"users"</span>,
+<a href=#348 id=348 data-nosnippet>348</a>    request_body = ResetPasswordTokenPayload,
+<a href=#349 id=349 data-nosnippet>349</a>    responses(
+<a href=#350 id=350 data-nosnippet>350</a>        (status = <span class="number">200</span>, description = <span class="string">"Reset password token validity"</span>, body = bool)
+<a href=#351 id=351 data-nosnippet>351</a>    )
+<a href=#352 id=352 data-nosnippet>352</a>)]
+<a href=#353 id=353 data-nosnippet>353</a></span><span class="kw">pub async fn </span>reset_password_token_status(
+<a href=#354 id=354 data-nosnippet>354</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#355 id=355 data-nosnippet>355</a>    payload: web::Json&lt;ResetPasswordTokenPayload&gt;,
+<a href=#356 id=356 data-nosnippet>356</a>) -&gt; ControllerResult&lt;web::Json&lt;bool&gt;&gt; {
+<a href=#357 id=357 data-nosnippet>357</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#358 id=358 data-nosnippet>358</a>    <span class="kw">let </span>token = skip_authorize();
+<a href=#359 id=359 data-nosnippet>359</a>
+<a href=#360 id=360 data-nosnippet>360</a>    <span class="kw">let </span>password_token = <span class="kw">match </span>Uuid::parse_str(payload.token.expose_secret()) {
+<a href=#361 id=361 data-nosnippet>361</a>        <span class="prelude-val">Ok</span>(u) =&gt; u,
+<a href=#362 id=362 data-nosnippet>362</a>        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span>token.authorized_ok(web::Json(<span class="bool-val">false</span>)),
+<a href=#363 id=363 data-nosnippet>363</a>    };
+<a href=#364 id=364 data-nosnippet>364</a>
+<a href=#365 id=365 data-nosnippet>365</a>    <span class="kw">let </span>res =
+<a href=#366 id=366 data-nosnippet>366</a>        models::user_passwords::is_reset_password_token_valid(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>password_token).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#367 id=367 data-nosnippet>367</a>
+<a href=#368 id=368 data-nosnippet>368</a>    token.authorized_ok(web::Json(res))
+<a href=#369 id=369 data-nosnippet>369</a>}
+<a href=#370 id=370 data-nosnippet>370</a>
+<a href=#371 id=371 data-nosnippet>371</a><span class="attr">#[derive(Debug, Deserialize, ToSchema)]
 <a href=#372 id=372 data-nosnippet>372</a></span><span class="kw">pub struct </span>ResetPasswordData {
-<a href=#373 id=373 data-nosnippet>373</a>    <span class="kw">pub </span>token: String,
-<a href=#374 id=374 data-nosnippet>374</a>    <span class="kw">pub </span>new_password: String,
-<a href=#375 id=375 data-nosnippet>375</a>}
-<a href=#376 id=376 data-nosnippet>376</a>
-<a href=#377 id=377 data-nosnippet>377</a><span class="attr">#[instrument(skip(pool))]
-<a href=#378 id=378 data-nosnippet>378</a>#[utoipa::path(
-<a href=#379 id=379 data-nosnippet>379</a>    post,
-<a href=#380 id=380 data-nosnippet>380</a>    path = <span class="string">"/reset-password"</span>,
-<a href=#381 id=381 data-nosnippet>381</a>    operation_id = <span class="string">"resetUserPassword"</span>,
-<a href=#382 id=382 data-nosnippet>382</a>    tag = <span class="string">"users"</span>,
-<a href=#383 id=383 data-nosnippet>383</a>    request_body = ResetPasswordData,
-<a href=#384 id=384 data-nosnippet>384</a>    responses(
-<a href=#385 id=385 data-nosnippet>385</a>        (status = <span class="number">200</span>, description = <span class="string">"Password reset status"</span>, body = bool)
-<a href=#386 id=386 data-nosnippet>386</a>    )
-<a href=#387 id=387 data-nosnippet>387</a>)]
-<a href=#388 id=388 data-nosnippet>388</a></span><span class="kw">pub async fn </span>reset_user_password(
-<a href=#389 id=389 data-nosnippet>389</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#390 id=390 data-nosnippet>390</a>    payload: web::Json&lt;ResetPasswordData&gt;,
-<a href=#391 id=391 data-nosnippet>391</a>    tmc_client: web::Data&lt;TmcClient&gt;,
-<a href=#392 id=392 data-nosnippet>392</a>) -&gt; ControllerResult&lt;web::Json&lt;bool&gt;&gt; {
-<a href=#393 id=393 data-nosnippet>393</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#394 id=394 data-nosnippet>394</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#395 id=395 data-nosnippet>395</a>
-<a href=#396 id=396 data-nosnippet>396</a>    <span class="kw">let </span>token_uuid = Uuid::parse_str(<span class="kw-2">&amp;</span>payload.token)<span class="question-mark">?</span>;
-<a href=#397 id=397 data-nosnippet>397</a>    <span class="kw">let </span>password_hash = models::user_passwords::hash_password(<span class="kw-2">&amp;</span>SecretString::new(
-<a href=#398 id=398 data-nosnippet>398</a>        payload.new_password.clone().into(),
-<a href=#399 id=399 data-nosnippet>399</a>    ))
-<a href=#400 id=400 data-nosnippet>400</a>    .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to hash password: {:?}"</span>, e))<span class="question-mark">?</span>;
+<a href=#373 id=373 data-nosnippet>373</a>    <span class="attr">#[schema(value_type = String)]
+<a href=#374 id=374 data-nosnippet>374</a>    </span><span class="kw">pub </span>token: SecretString,
+<a href=#375 id=375 data-nosnippet>375</a>    <span class="attr">#[schema(value_type = String)]
+<a href=#376 id=376 data-nosnippet>376</a>    </span><span class="kw">pub </span>new_password: SecretString,
+<a href=#377 id=377 data-nosnippet>377</a>}
+<a href=#378 id=378 data-nosnippet>378</a>
+<a href=#379 id=379 data-nosnippet>379</a><span class="attr">#[instrument(skip(pool))]
+<a href=#380 id=380 data-nosnippet>380</a>#[utoipa::path(
+<a href=#381 id=381 data-nosnippet>381</a>    post,
+<a href=#382 id=382 data-nosnippet>382</a>    path = <span class="string">"/reset-password"</span>,
+<a href=#383 id=383 data-nosnippet>383</a>    operation_id = <span class="string">"resetUserPassword"</span>,
+<a href=#384 id=384 data-nosnippet>384</a>    tag = <span class="string">"users"</span>,
+<a href=#385 id=385 data-nosnippet>385</a>    request_body = ResetPasswordData,
+<a href=#386 id=386 data-nosnippet>386</a>    responses(
+<a href=#387 id=387 data-nosnippet>387</a>        (status = <span class="number">200</span>, description = <span class="string">"Password reset status"</span>, body = bool)
+<a href=#388 id=388 data-nosnippet>388</a>    )
+<a href=#389 id=389 data-nosnippet>389</a>)]
+<a href=#390 id=390 data-nosnippet>390</a></span><span class="kw">pub async fn </span>reset_user_password(
+<a href=#391 id=391 data-nosnippet>391</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#392 id=392 data-nosnippet>392</a>    payload: web::Json&lt;ResetPasswordData&gt;,
+<a href=#393 id=393 data-nosnippet>393</a>    tmc_client: web::Data&lt;TmcClient&gt;,
+<a href=#394 id=394 data-nosnippet>394</a>) -&gt; ControllerResult&lt;web::Json&lt;bool&gt;&gt; {
+<a href=#395 id=395 data-nosnippet>395</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#396 id=396 data-nosnippet>396</a>    <span class="kw">let </span>token = skip_authorize();
+<a href=#397 id=397 data-nosnippet>397</a>
+<a href=#398 id=398 data-nosnippet>398</a>    <span class="kw">let </span>token_uuid = Uuid::parse_str(payload.token.expose_secret())<span class="question-mark">?</span>;
+<a href=#399 id=399 data-nosnippet>399</a>    <span class="kw">let </span>password_hash = models::user_passwords::hash_password(<span class="kw-2">&amp;</span>payload.new_password)
+<a href=#400 id=400 data-nosnippet>400</a>        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to hash password: {:?}"</span>, e))<span class="question-mark">?</span>;
 <a href=#401 id=401 data-nosnippet>401</a>
 <a href=#402 id=402 data-nosnippet>402</a>    <span class="kw">let </span>res = models::user_passwords::change_user_password_with_password_reset_token(
 <a href=#403 id=403 data-nosnippet>403</a>        <span class="kw-2">&amp;mut </span>conn,
@@ -410,80 +410,78 @@
 <a href=#410 id=410 data-nosnippet>410</a>    token.authorized_ok(web::Json(res))
 <a href=#411 id=411 data-nosnippet>411</a>}
 <a href=#412 id=412 data-nosnippet>412</a>
-<a href=#413 id=413 data-nosnippet>413</a><span class="attr">#[derive(Debug, Serialize, Deserialize, ToSchema)]
-<a href=#414 id=414 data-nosnippet>414</a>
-<a href=#415 id=415 data-nosnippet>415</a></span><span class="kw">pub struct </span>ChangePasswordData {
-<a href=#416 id=416 data-nosnippet>416</a>    <span class="kw">pub </span>old_password: String,
-<a href=#417 id=417 data-nosnippet>417</a>    <span class="kw">pub </span>new_password: String,
-<a href=#418 id=418 data-nosnippet>418</a>}
-<a href=#419 id=419 data-nosnippet>419</a>
-<a href=#420 id=420 data-nosnippet>420</a><span class="attr">#[instrument(skip(pool))]
-<a href=#421 id=421 data-nosnippet>421</a>#[utoipa::path(
-<a href=#422 id=422 data-nosnippet>422</a>    post,
-<a href=#423 id=423 data-nosnippet>423</a>    path = <span class="string">"/change-password"</span>,
-<a href=#424 id=424 data-nosnippet>424</a>    operation_id = <span class="string">"changeUserPassword"</span>,
-<a href=#425 id=425 data-nosnippet>425</a>    tag = <span class="string">"users"</span>,
-<a href=#426 id=426 data-nosnippet>426</a>    request_body = ChangePasswordData,
-<a href=#427 id=427 data-nosnippet>427</a>    responses(
-<a href=#428 id=428 data-nosnippet>428</a>        (status = <span class="number">200</span>, description = <span class="string">"Password change status"</span>, body = bool)
-<a href=#429 id=429 data-nosnippet>429</a>    )
-<a href=#430 id=430 data-nosnippet>430</a>)]
-<a href=#431 id=431 data-nosnippet>431</a></span><span class="kw">pub async fn </span>change_user_password(
-<a href=#432 id=432 data-nosnippet>432</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#433 id=433 data-nosnippet>433</a>    payload: web::Json&lt;ChangePasswordData&gt;,
-<a href=#434 id=434 data-nosnippet>434</a>    user: AuthUser,
-<a href=#435 id=435 data-nosnippet>435</a>) -&gt; ControllerResult&lt;web::Json&lt;bool&gt;&gt; {
-<a href=#436 id=436 data-nosnippet>436</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#437 id=437 data-nosnippet>437</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#438 id=438 data-nosnippet>438</a>    <span class="kw">let </span>password_hash = models::user_passwords::hash_password(<span class="kw-2">&amp;</span>SecretString::new(
-<a href=#439 id=439 data-nosnippet>439</a>        payload.new_password.clone().into(),
-<a href=#440 id=440 data-nosnippet>440</a>    ))
-<a href=#441 id=441 data-nosnippet>441</a>    .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to hash password: {:?}"</span>, e))<span class="question-mark">?</span>;
-<a href=#442 id=442 data-nosnippet>442</a>    <span class="kw">let </span>old_password = SecretString::new(payload.old_password.clone().into());
-<a href=#443 id=443 data-nosnippet>443</a>
-<a href=#444 id=444 data-nosnippet>444</a>    <span class="kw">let </span>res = models::user_passwords::change_user_password_with_old_password(
-<a href=#445 id=445 data-nosnippet>445</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#446 id=446 data-nosnippet>446</a>        user.id,
-<a href=#447 id=447 data-nosnippet>447</a>        <span class="kw-2">&amp;</span>old_password,
-<a href=#448 id=448 data-nosnippet>448</a>        <span class="kw-2">&amp;</span>password_hash,
-<a href=#449 id=449 data-nosnippet>449</a>    )
-<a href=#450 id=450 data-nosnippet>450</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#451 id=451 data-nosnippet>451</a>
-<a href=#452 id=452 data-nosnippet>452</a>    token.authorized_ok(web::Json(res))
-<a href=#453 id=453 data-nosnippet>453</a>}
-<a href=#454 id=454 data-nosnippet>454</a>
-<a href=#455 id=455 data-nosnippet>455</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#456 id=456 data-nosnippet>456</a>    cfg.route(
-<a href=#457 id=457 data-nosnippet>457</a>        <span class="string">"/user-research-form-question-answers"</span>,
-<a href=#458 id=458 data-nosnippet>458</a>        web::get().to(get_all_research_form_answers_with_user_id),
-<a href=#459 id=459 data-nosnippet>459</a>    )
-<a href=#460 id=460 data-nosnippet>460</a>    .route(<span class="string">"/my-courses"</span>, web::get().to(get_my_courses))
-<a href=#461 id=461 data-nosnippet>461</a>    .route(
-<a href=#462 id=462 data-nosnippet>462</a>        <span class="string">"/get-user-research-consent"</span>,
-<a href=#463 id=463 data-nosnippet>463</a>        web::get().to(get_research_consent_by_user_id),
-<a href=#464 id=464 data-nosnippet>464</a>    )
-<a href=#465 id=465 data-nosnippet>465</a>    .route(
-<a href=#466 id=466 data-nosnippet>466</a>        <span class="string">"/user-research-consents"</span>,
-<a href=#467 id=467 data-nosnippet>467</a>        web::post().to(post_user_consents),
-<a href=#468 id=468 data-nosnippet>468</a>    )
-<a href=#469 id=469 data-nosnippet>469</a>    .route(
-<a href=#470 id=470 data-nosnippet>470</a>        <span class="string">"/send-reset-password-email"</span>,
-<a href=#471 id=471 data-nosnippet>471</a>        web::post().to(send_reset_password_email),
-<a href=#472 id=472 data-nosnippet>472</a>    )
-<a href=#473 id=473 data-nosnippet>473</a>    .route(<span class="string">"/{user_id}"</span>, web::get().to(get_user))
-<a href=#474 id=474 data-nosnippet>474</a>    .route(
-<a href=#475 id=475 data-nosnippet>475</a>        <span class="string">"/{user_id}/course-enrollments"</span>,
-<a href=#476 id=476 data-nosnippet>476</a>        web::get().to(get_course_enrollments_for_user),
-<a href=#477 id=477 data-nosnippet>477</a>    )
-<a href=#478 id=478 data-nosnippet>478</a>    .route(
-<a href=#479 id=479 data-nosnippet>479</a>        <span class="string">"/{user_id}/user-reset-exercise-logs"</span>,
-<a href=#480 id=480 data-nosnippet>480</a>        web::get().to(get_user_reset_exercise_logs),
-<a href=#481 id=481 data-nosnippet>481</a>    )
-<a href=#482 id=482 data-nosnippet>482</a>    .route(
-<a href=#483 id=483 data-nosnippet>483</a>        <span class="string">"/reset-password-token-status"</span>,
-<a href=#484 id=484 data-nosnippet>484</a>        web::post().to(reset_password_token_status),
-<a href=#485 id=485 data-nosnippet>485</a>    )
-<a href=#486 id=486 data-nosnippet>486</a>    .route(<span class="string">"/reset-password"</span>, web::post().to(reset_user_password))
-<a href=#487 id=487 data-nosnippet>487</a>    .route(<span class="string">"/change-password"</span>, web::post().to(change_user_password));
-<a href=#488 id=488 data-nosnippet>488</a>}
+<a href=#413 id=413 data-nosnippet>413</a><span class="attr">#[derive(Debug, Deserialize, ToSchema)]
+<a href=#414 id=414 data-nosnippet>414</a></span><span class="kw">pub struct </span>ChangePasswordData {
+<a href=#415 id=415 data-nosnippet>415</a>    <span class="attr">#[schema(value_type = String)]
+<a href=#416 id=416 data-nosnippet>416</a>    </span><span class="kw">pub </span>old_password: SecretString,
+<a href=#417 id=417 data-nosnippet>417</a>    <span class="attr">#[schema(value_type = String)]
+<a href=#418 id=418 data-nosnippet>418</a>    </span><span class="kw">pub </span>new_password: SecretString,
+<a href=#419 id=419 data-nosnippet>419</a>}
+<a href=#420 id=420 data-nosnippet>420</a>
+<a href=#421 id=421 data-nosnippet>421</a><span class="attr">#[instrument(skip(pool))]
+<a href=#422 id=422 data-nosnippet>422</a>#[utoipa::path(
+<a href=#423 id=423 data-nosnippet>423</a>    post,
+<a href=#424 id=424 data-nosnippet>424</a>    path = <span class="string">"/change-password"</span>,
+<a href=#425 id=425 data-nosnippet>425</a>    operation_id = <span class="string">"changeUserPassword"</span>,
+<a href=#426 id=426 data-nosnippet>426</a>    tag = <span class="string">"users"</span>,
+<a href=#427 id=427 data-nosnippet>427</a>    request_body = ChangePasswordData,
+<a href=#428 id=428 data-nosnippet>428</a>    responses(
+<a href=#429 id=429 data-nosnippet>429</a>        (status = <span class="number">200</span>, description = <span class="string">"Password change status"</span>, body = bool)
+<a href=#430 id=430 data-nosnippet>430</a>    )
+<a href=#431 id=431 data-nosnippet>431</a>)]
+<a href=#432 id=432 data-nosnippet>432</a></span><span class="kw">pub async fn </span>change_user_password(
+<a href=#433 id=433 data-nosnippet>433</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#434 id=434 data-nosnippet>434</a>    payload: web::Json&lt;ChangePasswordData&gt;,
+<a href=#435 id=435 data-nosnippet>435</a>    user: AuthUser,
+<a href=#436 id=436 data-nosnippet>436</a>) -&gt; ControllerResult&lt;web::Json&lt;bool&gt;&gt; {
+<a href=#437 id=437 data-nosnippet>437</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#438 id=438 data-nosnippet>438</a>    <span class="kw">let </span>token = skip_authorize();
+<a href=#439 id=439 data-nosnippet>439</a>    <span class="kw">let </span>password_hash = models::user_passwords::hash_password(<span class="kw-2">&amp;</span>payload.new_password)
+<a href=#440 id=440 data-nosnippet>440</a>        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to hash password: {:?}"</span>, e))<span class="question-mark">?</span>;
+<a href=#441 id=441 data-nosnippet>441</a>
+<a href=#442 id=442 data-nosnippet>442</a>    <span class="kw">let </span>res = models::user_passwords::change_user_password_with_old_password(
+<a href=#443 id=443 data-nosnippet>443</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#444 id=444 data-nosnippet>444</a>        user.id,
+<a href=#445 id=445 data-nosnippet>445</a>        <span class="kw-2">&amp;</span>payload.old_password,
+<a href=#446 id=446 data-nosnippet>446</a>        <span class="kw-2">&amp;</span>password_hash,
+<a href=#447 id=447 data-nosnippet>447</a>    )
+<a href=#448 id=448 data-nosnippet>448</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#449 id=449 data-nosnippet>449</a>
+<a href=#450 id=450 data-nosnippet>450</a>    token.authorized_ok(web::Json(res))
+<a href=#451 id=451 data-nosnippet>451</a>}
+<a href=#452 id=452 data-nosnippet>452</a>
+<a href=#453 id=453 data-nosnippet>453</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#454 id=454 data-nosnippet>454</a>    cfg.route(
+<a href=#455 id=455 data-nosnippet>455</a>        <span class="string">"/user-research-form-question-answers"</span>,
+<a href=#456 id=456 data-nosnippet>456</a>        web::get().to(get_all_research_form_answers_with_user_id),
+<a href=#457 id=457 data-nosnippet>457</a>    )
+<a href=#458 id=458 data-nosnippet>458</a>    .route(<span class="string">"/my-courses"</span>, web::get().to(get_my_courses))
+<a href=#459 id=459 data-nosnippet>459</a>    .route(
+<a href=#460 id=460 data-nosnippet>460</a>        <span class="string">"/get-user-research-consent"</span>,
+<a href=#461 id=461 data-nosnippet>461</a>        web::get().to(get_research_consent_by_user_id),
+<a href=#462 id=462 data-nosnippet>462</a>    )
+<a href=#463 id=463 data-nosnippet>463</a>    .route(
+<a href=#464 id=464 data-nosnippet>464</a>        <span class="string">"/user-research-consents"</span>,
+<a href=#465 id=465 data-nosnippet>465</a>        web::post().to(post_user_consents),
+<a href=#466 id=466 data-nosnippet>466</a>    )
+<a href=#467 id=467 data-nosnippet>467</a>    .route(
+<a href=#468 id=468 data-nosnippet>468</a>        <span class="string">"/send-reset-password-email"</span>,
+<a href=#469 id=469 data-nosnippet>469</a>        web::post().to(send_reset_password_email),
+<a href=#470 id=470 data-nosnippet>470</a>    )
+<a href=#471 id=471 data-nosnippet>471</a>    .route(<span class="string">"/{user_id}"</span>, web::get().to(get_user))
+<a href=#472 id=472 data-nosnippet>472</a>    .route(
+<a href=#473 id=473 data-nosnippet>473</a>        <span class="string">"/{user_id}/course-enrollments"</span>,
+<a href=#474 id=474 data-nosnippet>474</a>        web::get().to(get_course_enrollments_for_user),
+<a href=#475 id=475 data-nosnippet>475</a>    )
+<a href=#476 id=476 data-nosnippet>476</a>    .route(
+<a href=#477 id=477 data-nosnippet>477</a>        <span class="string">"/{user_id}/user-reset-exercise-logs"</span>,
+<a href=#478 id=478 data-nosnippet>478</a>        web::get().to(get_user_reset_exercise_logs),
+<a href=#479 id=479 data-nosnippet>479</a>    )
+<a href=#480 id=480 data-nosnippet>480</a>    .route(
+<a href=#481 id=481 data-nosnippet>481</a>        <span class="string">"/reset-password-token-status"</span>,
+<a href=#482 id=482 data-nosnippet>482</a>        web::post().to(reset_password_token_status),
+<a href=#483 id=483 data-nosnippet>483</a>    )
+<a href=#484 id=484 data-nosnippet>484</a>    .route(<span class="string">"/reset-password"</span>, web::post().to(reset_user_password))
+<a href=#485 id=485 data-nosnippet>485</a>    .route(<span class="string">"/change-password"</span>, web::post().to(change_user_password));
+<a href=#486 id=486 data-nosnippet>486</a>}
 </code></pre></div></section></main></body></html>
