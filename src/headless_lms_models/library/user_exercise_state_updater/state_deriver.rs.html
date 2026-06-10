@@ -1231,162 +1231,163 @@
 <a href=#1231 id=1231 data-nosnippet>1231</a>                closed_additional_message: <span class="prelude-val">None</span>,
 <a href=#1232 id=1232 data-nosnippet>1232</a>                closed_course_successor_id: <span class="prelude-val">None</span>,
 <a href=#1233 id=1233 data-nosnippet>1233</a>                chapter_locking_enabled: <span class="bool-val">false</span>,
-<a href=#1234 id=1234 data-nosnippet>1234</a>            }
-<a href=#1235 id=1235 data-nosnippet>1235</a>        }
-<a href=#1236 id=1236 data-nosnippet>1236</a>
-<a href=#1237 id=1237 data-nosnippet>1237</a>        <span class="kw">fn </span>create_peer_or_self_review_config(
-<a href=#1238 id=1238 data-nosnippet>1238</a>            processing_strategy: PeerReviewProcessingStrategy,
-<a href=#1239 id=1239 data-nosnippet>1239</a>        ) -&gt; PeerOrSelfReviewConfig {
-<a href=#1240 id=1240 data-nosnippet>1240</a>            <span class="kw">let </span>id = Uuid::parse_str(<span class="string">"5f464818-1e68-4839-ae86-850b310f508c"</span>).unwrap();
-<a href=#1241 id=1241 data-nosnippet>1241</a>            PeerOrSelfReviewConfig {
-<a href=#1242 id=1242 data-nosnippet>1242</a>                id,
-<a href=#1243 id=1243 data-nosnippet>1243</a>                created_at: Utc.with_ymd_and_hms(<span class="number">2022</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
-<a href=#1244 id=1244 data-nosnippet>1244</a>                updated_at: Utc.with_ymd_and_hms(<span class="number">2022</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
-<a href=#1245 id=1245 data-nosnippet>1245</a>                deleted_at: <span class="prelude-val">None</span>,
-<a href=#1246 id=1246 data-nosnippet>1246</a>                course_id: id,
-<a href=#1247 id=1247 data-nosnippet>1247</a>                exercise_id: <span class="prelude-val">None</span>,
-<a href=#1248 id=1248 data-nosnippet>1248</a>                peer_reviews_to_give: <span class="number">3</span>,
-<a href=#1249 id=1249 data-nosnippet>1249</a>                peer_reviews_to_receive: <span class="number">2</span>,
-<a href=#1250 id=1250 data-nosnippet>1250</a>                accepting_threshold: <span class="number">2.1</span>,
-<a href=#1251 id=1251 data-nosnippet>1251</a>                processing_strategy,
-<a href=#1252 id=1252 data-nosnippet>1252</a>                reset_answer_if_zero_points_from_review: <span class="bool-val">false</span>,
-<a href=#1253 id=1253 data-nosnippet>1253</a>                manual_review_cutoff_in_days: <span class="number">21</span>,
-<a href=#1254 id=1254 data-nosnippet>1254</a>                points_are_all_or_nothing: <span class="bool-val">true</span>,
-<a href=#1255 id=1255 data-nosnippet>1255</a>                review_instructions: <span class="prelude-val">None</span>,
-<a href=#1256 id=1256 data-nosnippet>1256</a>            }
-<a href=#1257 id=1257 data-nosnippet>1257</a>        }
-<a href=#1258 id=1258 data-nosnippet>1258</a>
-<a href=#1259 id=1259 data-nosnippet>1259</a>        <span class="kw">fn </span>create_peer_review_question_submission(
-<a href=#1260 id=1260 data-nosnippet>1260</a>            number_data: f32,
-<a href=#1261 id=1261 data-nosnippet>1261</a>        ) -&gt; PeerOrSelfReviewQuestionSubmission {
-<a href=#1262 id=1262 data-nosnippet>1262</a>            PeerOrSelfReviewQuestionSubmission {
-<a href=#1263 id=1263 data-nosnippet>1263</a>                id: Uuid::parse_str(<span class="string">"bf923ea4-a637-4d97-b78b-6f843d76120a"</span>).unwrap(),
-<a href=#1264 id=1264 data-nosnippet>1264</a>                created_at: Utc::now(),
-<a href=#1265 id=1265 data-nosnippet>1265</a>                updated_at: Utc::now(),
-<a href=#1266 id=1266 data-nosnippet>1266</a>                deleted_at: <span class="prelude-val">None</span>,
-<a href=#1267 id=1267 data-nosnippet>1267</a>                peer_or_self_review_question_id: Uuid::parse_str(
-<a href=#1268 id=1268 data-nosnippet>1268</a>                    <span class="string">"b853bbd7-feee-4447-ab14-c9622e565ea1"</span>,
-<a href=#1269 id=1269 data-nosnippet>1269</a>                )
-<a href=#1270 id=1270 data-nosnippet>1270</a>                .unwrap(),
-<a href=#1271 id=1271 data-nosnippet>1271</a>                peer_or_self_review_submission_id: Uuid::parse_str(
-<a href=#1272 id=1272 data-nosnippet>1272</a>                    <span class="string">"be4061b5-b468-4f50-93b0-cf3bf9de9a13"</span>,
-<a href=#1273 id=1273 data-nosnippet>1273</a>                )
-<a href=#1274 id=1274 data-nosnippet>1274</a>                .unwrap(),
-<a href=#1275 id=1275 data-nosnippet>1275</a>                text_data: <span class="prelude-val">None</span>,
-<a href=#1276 id=1276 data-nosnippet>1276</a>                number_data: <span class="prelude-val">Some</span>(number_data),
-<a href=#1277 id=1277 data-nosnippet>1277</a>            }
-<a href=#1278 id=1278 data-nosnippet>1278</a>        }
-<a href=#1279 id=1279 data-nosnippet>1279</a>
-<a href=#1280 id=1280 data-nosnippet>1280</a>        <span class="kw">fn </span>create_peer_review_question_submission_with_ids(
-<a href=#1281 id=1281 data-nosnippet>1281</a>            number_data: f32,
-<a href=#1282 id=1282 data-nosnippet>1282</a>            peer_or_self_review_question_id: Uuid,
-<a href=#1283 id=1283 data-nosnippet>1283</a>            peer_or_self_review_submission_id: Uuid,
-<a href=#1284 id=1284 data-nosnippet>1284</a>        ) -&gt; PeerOrSelfReviewQuestionSubmission {
-<a href=#1285 id=1285 data-nosnippet>1285</a>            PeerOrSelfReviewQuestionSubmission {
-<a href=#1286 id=1286 data-nosnippet>1286</a>                id: Uuid::parse_str(<span class="string">"bf923ea4-a637-4d97-b78b-6f843d76120a"</span>).unwrap(),
-<a href=#1287 id=1287 data-nosnippet>1287</a>                created_at: Utc::now(),
-<a href=#1288 id=1288 data-nosnippet>1288</a>                updated_at: Utc::now(),
-<a href=#1289 id=1289 data-nosnippet>1289</a>                deleted_at: <span class="prelude-val">None</span>,
-<a href=#1290 id=1290 data-nosnippet>1290</a>                peer_or_self_review_question_id,
-<a href=#1291 id=1291 data-nosnippet>1291</a>                peer_or_self_review_submission_id,
-<a href=#1292 id=1292 data-nosnippet>1292</a>                text_data: <span class="prelude-val">None</span>,
-<a href=#1293 id=1293 data-nosnippet>1293</a>                number_data: <span class="prelude-val">Some</span>(number_data),
-<a href=#1294 id=1294 data-nosnippet>1294</a>            }
-<a href=#1295 id=1295 data-nosnippet>1295</a>        }
-<a href=#1296 id=1296 data-nosnippet>1296</a>
-<a href=#1297 id=1297 data-nosnippet>1297</a>        <span class="kw">fn </span>create_peer_review_question_scale(id: Uuid, weight: f32) -&gt; PeerOrSelfReviewQuestion {
-<a href=#1298 id=1298 data-nosnippet>1298</a>            PeerOrSelfReviewQuestion {
-<a href=#1299 id=1299 data-nosnippet>1299</a>                id,
-<a href=#1300 id=1300 data-nosnippet>1300</a>                weight,
-<a href=#1301 id=1301 data-nosnippet>1301</a>                created_at: Utc::now(),
-<a href=#1302 id=1302 data-nosnippet>1302</a>                updated_at: Utc::now(),
-<a href=#1303 id=1303 data-nosnippet>1303</a>                deleted_at: <span class="prelude-val">None</span>,
-<a href=#1304 id=1304 data-nosnippet>1304</a>                peer_or_self_review_config_id: Uuid::parse_str(
-<a href=#1305 id=1305 data-nosnippet>1305</a>                    <span class="string">"bf923ea4-a637-4d97-b78b-6f843d76120a"</span>,
-<a href=#1306 id=1306 data-nosnippet>1306</a>                )
-<a href=#1307 id=1307 data-nosnippet>1307</a>                .unwrap(),
-<a href=#1308 id=1308 data-nosnippet>1308</a>                order_number: <span class="number">1</span>,
-<a href=#1309 id=1309 data-nosnippet>1309</a>                question: <span class="string">"A question"</span>.to_string(),
-<a href=#1310 id=1310 data-nosnippet>1310</a>                question_type: PeerOrSelfReviewQuestionType::Scale,
-<a href=#1311 id=1311 data-nosnippet>1311</a>                answer_required: <span class="bool-val">true</span>,
-<a href=#1312 id=1312 data-nosnippet>1312</a>            }
-<a href=#1313 id=1313 data-nosnippet>1313</a>        }
-<a href=#1314 id=1314 data-nosnippet>1314</a>
-<a href=#1315 id=1315 data-nosnippet>1315</a>        <span class="kw">fn </span>create_peer_review_question_essay(id: Uuid, weight: f32) -&gt; PeerOrSelfReviewQuestion {
-<a href=#1316 id=1316 data-nosnippet>1316</a>            PeerOrSelfReviewQuestion {
-<a href=#1317 id=1317 data-nosnippet>1317</a>                id,
-<a href=#1318 id=1318 data-nosnippet>1318</a>                weight,
-<a href=#1319 id=1319 data-nosnippet>1319</a>                created_at: Utc::now(),
-<a href=#1320 id=1320 data-nosnippet>1320</a>                updated_at: Utc::now(),
-<a href=#1321 id=1321 data-nosnippet>1321</a>                deleted_at: <span class="prelude-val">None</span>,
-<a href=#1322 id=1322 data-nosnippet>1322</a>                peer_or_self_review_config_id: Uuid::parse_str(
-<a href=#1323 id=1323 data-nosnippet>1323</a>                    <span class="string">"bf923ea4-a637-4d97-b78b-6f843d76120a"</span>,
-<a href=#1324 id=1324 data-nosnippet>1324</a>                )
-<a href=#1325 id=1325 data-nosnippet>1325</a>                .unwrap(),
-<a href=#1326 id=1326 data-nosnippet>1326</a>                order_number: <span class="number">1</span>,
-<a href=#1327 id=1327 data-nosnippet>1327</a>                question: <span class="string">"A question"</span>.to_string(),
-<a href=#1328 id=1328 data-nosnippet>1328</a>                question_type: PeerOrSelfReviewQuestionType::Essay,
-<a href=#1329 id=1329 data-nosnippet>1329</a>                answer_required: <span class="bool-val">true</span>,
-<a href=#1330 id=1330 data-nosnippet>1330</a>            }
-<a href=#1331 id=1331 data-nosnippet>1331</a>        }
-<a href=#1332 id=1332 data-nosnippet>1332</a>
-<a href=#1333 id=1333 data-nosnippet>1333</a>        <span class="kw">fn </span>create_peer_review_submission() -&gt; PeerOrSelfReviewSubmission {
-<a href=#1334 id=1334 data-nosnippet>1334</a>            <span class="kw">let </span>id = Uuid::parse_str(<span class="string">"5f464818-1e68-4839-ae86-850b310f508c"</span>).unwrap();
-<a href=#1335 id=1335 data-nosnippet>1335</a>            PeerOrSelfReviewSubmission {
-<a href=#1336 id=1336 data-nosnippet>1336</a>                id,
-<a href=#1337 id=1337 data-nosnippet>1337</a>                created_at: Utc::now(),
-<a href=#1338 id=1338 data-nosnippet>1338</a>                updated_at: Utc::now(),
-<a href=#1339 id=1339 data-nosnippet>1339</a>                deleted_at: <span class="prelude-val">None</span>,
-<a href=#1340 id=1340 data-nosnippet>1340</a>                user_id: id,
-<a href=#1341 id=1341 data-nosnippet>1341</a>                exercise_id: id,
-<a href=#1342 id=1342 data-nosnippet>1342</a>                course_id: id,
-<a href=#1343 id=1343 data-nosnippet>1343</a>                peer_or_self_review_config_id: id,
-<a href=#1344 id=1344 data-nosnippet>1344</a>                exercise_slide_submission_id: id,
-<a href=#1345 id=1345 data-nosnippet>1345</a>            }
-<a href=#1346 id=1346 data-nosnippet>1346</a>        }
-<a href=#1347 id=1347 data-nosnippet>1347</a>
-<a href=#1348 id=1348 data-nosnippet>1348</a>        <span class="kw">fn </span>create_peer_review_queue_entry(
-<a href=#1349 id=1349 data-nosnippet>1349</a>            received_enough_peer_reviews: bool,
-<a href=#1350 id=1350 data-nosnippet>1350</a>        ) -&gt; PeerReviewQueueEntry {
-<a href=#1351 id=1351 data-nosnippet>1351</a>            <span class="kw">let </span>id = Uuid::parse_str(<span class="string">"5f464818-1e68-4839-ae86-850b310f508c"</span>).unwrap();
-<a href=#1352 id=1352 data-nosnippet>1352</a>            PeerReviewQueueEntry {
-<a href=#1353 id=1353 data-nosnippet>1353</a>                id,
-<a href=#1354 id=1354 data-nosnippet>1354</a>                created_at: Utc::now(),
-<a href=#1355 id=1355 data-nosnippet>1355</a>                updated_at: Utc::now(),
-<a href=#1356 id=1356 data-nosnippet>1356</a>                deleted_at: <span class="prelude-val">None</span>,
-<a href=#1357 id=1357 data-nosnippet>1357</a>                user_id: id,
-<a href=#1358 id=1358 data-nosnippet>1358</a>                exercise_id: id,
-<a href=#1359 id=1359 data-nosnippet>1359</a>                course_id: id,
-<a href=#1360 id=1360 data-nosnippet>1360</a>                receiving_peer_reviews_exercise_slide_submission_id: id,
-<a href=#1361 id=1361 data-nosnippet>1361</a>                received_enough_peer_reviews,
-<a href=#1362 id=1362 data-nosnippet>1362</a>                peer_review_priority: <span class="number">100</span>,
-<a href=#1363 id=1363 data-nosnippet>1363</a>                removed_from_queue_for_unusual_reason: <span class="bool-val">false</span>,
-<a href=#1364 id=1364 data-nosnippet>1364</a>            }
-<a href=#1365 id=1365 data-nosnippet>1365</a>        }
-<a href=#1366 id=1366 data-nosnippet>1366</a>
-<a href=#1367 id=1367 data-nosnippet>1367</a>        <span class="kw">fn </span>create_user_exercise_state(
-<a href=#1368 id=1368 data-nosnippet>1368</a>            exercise: <span class="kw-2">&amp;</span>Exercise,
-<a href=#1369 id=1369 data-nosnippet>1369</a>            score_given: <span class="prelude-ty">Option</span>&lt;f32&gt;,
-<a href=#1370 id=1370 data-nosnippet>1370</a>            activity_progress: ActivityProgress,
-<a href=#1371 id=1371 data-nosnippet>1371</a>            reviewing_stage: ReviewingStage,
-<a href=#1372 id=1372 data-nosnippet>1372</a>        ) -&gt; UserExerciseState {
-<a href=#1373 id=1373 data-nosnippet>1373</a>            <span class="kw">let </span>id = Uuid::parse_str(<span class="string">"5f464818-1e68-4839-ae86-850b310f508c"</span>).unwrap();
-<a href=#1374 id=1374 data-nosnippet>1374</a>            UserExerciseState {
-<a href=#1375 id=1375 data-nosnippet>1375</a>                id,
-<a href=#1376 id=1376 data-nosnippet>1376</a>                user_id: id,
-<a href=#1377 id=1377 data-nosnippet>1377</a>                exercise_id: exercise.id,
-<a href=#1378 id=1378 data-nosnippet>1378</a>                course_id: exercise.course_id,
-<a href=#1379 id=1379 data-nosnippet>1379</a>                exam_id: exercise.exam_id,
-<a href=#1380 id=1380 data-nosnippet>1380</a>                created_at: Utc.with_ymd_and_hms(<span class="number">2022</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
-<a href=#1381 id=1381 data-nosnippet>1381</a>                updated_at: Utc.with_ymd_and_hms(<span class="number">2022</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
-<a href=#1382 id=1382 data-nosnippet>1382</a>                deleted_at: <span class="prelude-val">None</span>,
-<a href=#1383 id=1383 data-nosnippet>1383</a>                score_given,
-<a href=#1384 id=1384 data-nosnippet>1384</a>                grading_progress: GradingProgress::NotReady,
-<a href=#1385 id=1385 data-nosnippet>1385</a>                activity_progress,
-<a href=#1386 id=1386 data-nosnippet>1386</a>                reviewing_stage,
-<a href=#1387 id=1387 data-nosnippet>1387</a>                selected_exercise_slide_id: <span class="prelude-val">None</span>,
-<a href=#1388 id=1388 data-nosnippet>1388</a>            }
-<a href=#1389 id=1389 data-nosnippet>1389</a>        }
-<a href=#1390 id=1390 data-nosnippet>1390</a>    }
-<a href=#1391 id=1391 data-nosnippet>1391</a>}
+<a href=#1234 id=1234 data-nosnippet>1234</a>                cheater_detection_enabled: <span class="bool-val">true</span>,
+<a href=#1235 id=1235 data-nosnippet>1235</a>            }
+<a href=#1236 id=1236 data-nosnippet>1236</a>        }
+<a href=#1237 id=1237 data-nosnippet>1237</a>
+<a href=#1238 id=1238 data-nosnippet>1238</a>        <span class="kw">fn </span>create_peer_or_self_review_config(
+<a href=#1239 id=1239 data-nosnippet>1239</a>            processing_strategy: PeerReviewProcessingStrategy,
+<a href=#1240 id=1240 data-nosnippet>1240</a>        ) -&gt; PeerOrSelfReviewConfig {
+<a href=#1241 id=1241 data-nosnippet>1241</a>            <span class="kw">let </span>id = Uuid::parse_str(<span class="string">"5f464818-1e68-4839-ae86-850b310f508c"</span>).unwrap();
+<a href=#1242 id=1242 data-nosnippet>1242</a>            PeerOrSelfReviewConfig {
+<a href=#1243 id=1243 data-nosnippet>1243</a>                id,
+<a href=#1244 id=1244 data-nosnippet>1244</a>                created_at: Utc.with_ymd_and_hms(<span class="number">2022</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
+<a href=#1245 id=1245 data-nosnippet>1245</a>                updated_at: Utc.with_ymd_and_hms(<span class="number">2022</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
+<a href=#1246 id=1246 data-nosnippet>1246</a>                deleted_at: <span class="prelude-val">None</span>,
+<a href=#1247 id=1247 data-nosnippet>1247</a>                course_id: id,
+<a href=#1248 id=1248 data-nosnippet>1248</a>                exercise_id: <span class="prelude-val">None</span>,
+<a href=#1249 id=1249 data-nosnippet>1249</a>                peer_reviews_to_give: <span class="number">3</span>,
+<a href=#1250 id=1250 data-nosnippet>1250</a>                peer_reviews_to_receive: <span class="number">2</span>,
+<a href=#1251 id=1251 data-nosnippet>1251</a>                accepting_threshold: <span class="number">2.1</span>,
+<a href=#1252 id=1252 data-nosnippet>1252</a>                processing_strategy,
+<a href=#1253 id=1253 data-nosnippet>1253</a>                reset_answer_if_zero_points_from_review: <span class="bool-val">false</span>,
+<a href=#1254 id=1254 data-nosnippet>1254</a>                manual_review_cutoff_in_days: <span class="number">21</span>,
+<a href=#1255 id=1255 data-nosnippet>1255</a>                points_are_all_or_nothing: <span class="bool-val">true</span>,
+<a href=#1256 id=1256 data-nosnippet>1256</a>                review_instructions: <span class="prelude-val">None</span>,
+<a href=#1257 id=1257 data-nosnippet>1257</a>            }
+<a href=#1258 id=1258 data-nosnippet>1258</a>        }
+<a href=#1259 id=1259 data-nosnippet>1259</a>
+<a href=#1260 id=1260 data-nosnippet>1260</a>        <span class="kw">fn </span>create_peer_review_question_submission(
+<a href=#1261 id=1261 data-nosnippet>1261</a>            number_data: f32,
+<a href=#1262 id=1262 data-nosnippet>1262</a>        ) -&gt; PeerOrSelfReviewQuestionSubmission {
+<a href=#1263 id=1263 data-nosnippet>1263</a>            PeerOrSelfReviewQuestionSubmission {
+<a href=#1264 id=1264 data-nosnippet>1264</a>                id: Uuid::parse_str(<span class="string">"bf923ea4-a637-4d97-b78b-6f843d76120a"</span>).unwrap(),
+<a href=#1265 id=1265 data-nosnippet>1265</a>                created_at: Utc::now(),
+<a href=#1266 id=1266 data-nosnippet>1266</a>                updated_at: Utc::now(),
+<a href=#1267 id=1267 data-nosnippet>1267</a>                deleted_at: <span class="prelude-val">None</span>,
+<a href=#1268 id=1268 data-nosnippet>1268</a>                peer_or_self_review_question_id: Uuid::parse_str(
+<a href=#1269 id=1269 data-nosnippet>1269</a>                    <span class="string">"b853bbd7-feee-4447-ab14-c9622e565ea1"</span>,
+<a href=#1270 id=1270 data-nosnippet>1270</a>                )
+<a href=#1271 id=1271 data-nosnippet>1271</a>                .unwrap(),
+<a href=#1272 id=1272 data-nosnippet>1272</a>                peer_or_self_review_submission_id: Uuid::parse_str(
+<a href=#1273 id=1273 data-nosnippet>1273</a>                    <span class="string">"be4061b5-b468-4f50-93b0-cf3bf9de9a13"</span>,
+<a href=#1274 id=1274 data-nosnippet>1274</a>                )
+<a href=#1275 id=1275 data-nosnippet>1275</a>                .unwrap(),
+<a href=#1276 id=1276 data-nosnippet>1276</a>                text_data: <span class="prelude-val">None</span>,
+<a href=#1277 id=1277 data-nosnippet>1277</a>                number_data: <span class="prelude-val">Some</span>(number_data),
+<a href=#1278 id=1278 data-nosnippet>1278</a>            }
+<a href=#1279 id=1279 data-nosnippet>1279</a>        }
+<a href=#1280 id=1280 data-nosnippet>1280</a>
+<a href=#1281 id=1281 data-nosnippet>1281</a>        <span class="kw">fn </span>create_peer_review_question_submission_with_ids(
+<a href=#1282 id=1282 data-nosnippet>1282</a>            number_data: f32,
+<a href=#1283 id=1283 data-nosnippet>1283</a>            peer_or_self_review_question_id: Uuid,
+<a href=#1284 id=1284 data-nosnippet>1284</a>            peer_or_self_review_submission_id: Uuid,
+<a href=#1285 id=1285 data-nosnippet>1285</a>        ) -&gt; PeerOrSelfReviewQuestionSubmission {
+<a href=#1286 id=1286 data-nosnippet>1286</a>            PeerOrSelfReviewQuestionSubmission {
+<a href=#1287 id=1287 data-nosnippet>1287</a>                id: Uuid::parse_str(<span class="string">"bf923ea4-a637-4d97-b78b-6f843d76120a"</span>).unwrap(),
+<a href=#1288 id=1288 data-nosnippet>1288</a>                created_at: Utc::now(),
+<a href=#1289 id=1289 data-nosnippet>1289</a>                updated_at: Utc::now(),
+<a href=#1290 id=1290 data-nosnippet>1290</a>                deleted_at: <span class="prelude-val">None</span>,
+<a href=#1291 id=1291 data-nosnippet>1291</a>                peer_or_self_review_question_id,
+<a href=#1292 id=1292 data-nosnippet>1292</a>                peer_or_self_review_submission_id,
+<a href=#1293 id=1293 data-nosnippet>1293</a>                text_data: <span class="prelude-val">None</span>,
+<a href=#1294 id=1294 data-nosnippet>1294</a>                number_data: <span class="prelude-val">Some</span>(number_data),
+<a href=#1295 id=1295 data-nosnippet>1295</a>            }
+<a href=#1296 id=1296 data-nosnippet>1296</a>        }
+<a href=#1297 id=1297 data-nosnippet>1297</a>
+<a href=#1298 id=1298 data-nosnippet>1298</a>        <span class="kw">fn </span>create_peer_review_question_scale(id: Uuid, weight: f32) -&gt; PeerOrSelfReviewQuestion {
+<a href=#1299 id=1299 data-nosnippet>1299</a>            PeerOrSelfReviewQuestion {
+<a href=#1300 id=1300 data-nosnippet>1300</a>                id,
+<a href=#1301 id=1301 data-nosnippet>1301</a>                weight,
+<a href=#1302 id=1302 data-nosnippet>1302</a>                created_at: Utc::now(),
+<a href=#1303 id=1303 data-nosnippet>1303</a>                updated_at: Utc::now(),
+<a href=#1304 id=1304 data-nosnippet>1304</a>                deleted_at: <span class="prelude-val">None</span>,
+<a href=#1305 id=1305 data-nosnippet>1305</a>                peer_or_self_review_config_id: Uuid::parse_str(
+<a href=#1306 id=1306 data-nosnippet>1306</a>                    <span class="string">"bf923ea4-a637-4d97-b78b-6f843d76120a"</span>,
+<a href=#1307 id=1307 data-nosnippet>1307</a>                )
+<a href=#1308 id=1308 data-nosnippet>1308</a>                .unwrap(),
+<a href=#1309 id=1309 data-nosnippet>1309</a>                order_number: <span class="number">1</span>,
+<a href=#1310 id=1310 data-nosnippet>1310</a>                question: <span class="string">"A question"</span>.to_string(),
+<a href=#1311 id=1311 data-nosnippet>1311</a>                question_type: PeerOrSelfReviewQuestionType::Scale,
+<a href=#1312 id=1312 data-nosnippet>1312</a>                answer_required: <span class="bool-val">true</span>,
+<a href=#1313 id=1313 data-nosnippet>1313</a>            }
+<a href=#1314 id=1314 data-nosnippet>1314</a>        }
+<a href=#1315 id=1315 data-nosnippet>1315</a>
+<a href=#1316 id=1316 data-nosnippet>1316</a>        <span class="kw">fn </span>create_peer_review_question_essay(id: Uuid, weight: f32) -&gt; PeerOrSelfReviewQuestion {
+<a href=#1317 id=1317 data-nosnippet>1317</a>            PeerOrSelfReviewQuestion {
+<a href=#1318 id=1318 data-nosnippet>1318</a>                id,
+<a href=#1319 id=1319 data-nosnippet>1319</a>                weight,
+<a href=#1320 id=1320 data-nosnippet>1320</a>                created_at: Utc::now(),
+<a href=#1321 id=1321 data-nosnippet>1321</a>                updated_at: Utc::now(),
+<a href=#1322 id=1322 data-nosnippet>1322</a>                deleted_at: <span class="prelude-val">None</span>,
+<a href=#1323 id=1323 data-nosnippet>1323</a>                peer_or_self_review_config_id: Uuid::parse_str(
+<a href=#1324 id=1324 data-nosnippet>1324</a>                    <span class="string">"bf923ea4-a637-4d97-b78b-6f843d76120a"</span>,
+<a href=#1325 id=1325 data-nosnippet>1325</a>                )
+<a href=#1326 id=1326 data-nosnippet>1326</a>                .unwrap(),
+<a href=#1327 id=1327 data-nosnippet>1327</a>                order_number: <span class="number">1</span>,
+<a href=#1328 id=1328 data-nosnippet>1328</a>                question: <span class="string">"A question"</span>.to_string(),
+<a href=#1329 id=1329 data-nosnippet>1329</a>                question_type: PeerOrSelfReviewQuestionType::Essay,
+<a href=#1330 id=1330 data-nosnippet>1330</a>                answer_required: <span class="bool-val">true</span>,
+<a href=#1331 id=1331 data-nosnippet>1331</a>            }
+<a href=#1332 id=1332 data-nosnippet>1332</a>        }
+<a href=#1333 id=1333 data-nosnippet>1333</a>
+<a href=#1334 id=1334 data-nosnippet>1334</a>        <span class="kw">fn </span>create_peer_review_submission() -&gt; PeerOrSelfReviewSubmission {
+<a href=#1335 id=1335 data-nosnippet>1335</a>            <span class="kw">let </span>id = Uuid::parse_str(<span class="string">"5f464818-1e68-4839-ae86-850b310f508c"</span>).unwrap();
+<a href=#1336 id=1336 data-nosnippet>1336</a>            PeerOrSelfReviewSubmission {
+<a href=#1337 id=1337 data-nosnippet>1337</a>                id,
+<a href=#1338 id=1338 data-nosnippet>1338</a>                created_at: Utc::now(),
+<a href=#1339 id=1339 data-nosnippet>1339</a>                updated_at: Utc::now(),
+<a href=#1340 id=1340 data-nosnippet>1340</a>                deleted_at: <span class="prelude-val">None</span>,
+<a href=#1341 id=1341 data-nosnippet>1341</a>                user_id: id,
+<a href=#1342 id=1342 data-nosnippet>1342</a>                exercise_id: id,
+<a href=#1343 id=1343 data-nosnippet>1343</a>                course_id: id,
+<a href=#1344 id=1344 data-nosnippet>1344</a>                peer_or_self_review_config_id: id,
+<a href=#1345 id=1345 data-nosnippet>1345</a>                exercise_slide_submission_id: id,
+<a href=#1346 id=1346 data-nosnippet>1346</a>            }
+<a href=#1347 id=1347 data-nosnippet>1347</a>        }
+<a href=#1348 id=1348 data-nosnippet>1348</a>
+<a href=#1349 id=1349 data-nosnippet>1349</a>        <span class="kw">fn </span>create_peer_review_queue_entry(
+<a href=#1350 id=1350 data-nosnippet>1350</a>            received_enough_peer_reviews: bool,
+<a href=#1351 id=1351 data-nosnippet>1351</a>        ) -&gt; PeerReviewQueueEntry {
+<a href=#1352 id=1352 data-nosnippet>1352</a>            <span class="kw">let </span>id = Uuid::parse_str(<span class="string">"5f464818-1e68-4839-ae86-850b310f508c"</span>).unwrap();
+<a href=#1353 id=1353 data-nosnippet>1353</a>            PeerReviewQueueEntry {
+<a href=#1354 id=1354 data-nosnippet>1354</a>                id,
+<a href=#1355 id=1355 data-nosnippet>1355</a>                created_at: Utc::now(),
+<a href=#1356 id=1356 data-nosnippet>1356</a>                updated_at: Utc::now(),
+<a href=#1357 id=1357 data-nosnippet>1357</a>                deleted_at: <span class="prelude-val">None</span>,
+<a href=#1358 id=1358 data-nosnippet>1358</a>                user_id: id,
+<a href=#1359 id=1359 data-nosnippet>1359</a>                exercise_id: id,
+<a href=#1360 id=1360 data-nosnippet>1360</a>                course_id: id,
+<a href=#1361 id=1361 data-nosnippet>1361</a>                receiving_peer_reviews_exercise_slide_submission_id: id,
+<a href=#1362 id=1362 data-nosnippet>1362</a>                received_enough_peer_reviews,
+<a href=#1363 id=1363 data-nosnippet>1363</a>                peer_review_priority: <span class="number">100</span>,
+<a href=#1364 id=1364 data-nosnippet>1364</a>                removed_from_queue_for_unusual_reason: <span class="bool-val">false</span>,
+<a href=#1365 id=1365 data-nosnippet>1365</a>            }
+<a href=#1366 id=1366 data-nosnippet>1366</a>        }
+<a href=#1367 id=1367 data-nosnippet>1367</a>
+<a href=#1368 id=1368 data-nosnippet>1368</a>        <span class="kw">fn </span>create_user_exercise_state(
+<a href=#1369 id=1369 data-nosnippet>1369</a>            exercise: <span class="kw-2">&amp;</span>Exercise,
+<a href=#1370 id=1370 data-nosnippet>1370</a>            score_given: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#1371 id=1371 data-nosnippet>1371</a>            activity_progress: ActivityProgress,
+<a href=#1372 id=1372 data-nosnippet>1372</a>            reviewing_stage: ReviewingStage,
+<a href=#1373 id=1373 data-nosnippet>1373</a>        ) -&gt; UserExerciseState {
+<a href=#1374 id=1374 data-nosnippet>1374</a>            <span class="kw">let </span>id = Uuid::parse_str(<span class="string">"5f464818-1e68-4839-ae86-850b310f508c"</span>).unwrap();
+<a href=#1375 id=1375 data-nosnippet>1375</a>            UserExerciseState {
+<a href=#1376 id=1376 data-nosnippet>1376</a>                id,
+<a href=#1377 id=1377 data-nosnippet>1377</a>                user_id: id,
+<a href=#1378 id=1378 data-nosnippet>1378</a>                exercise_id: exercise.id,
+<a href=#1379 id=1379 data-nosnippet>1379</a>                course_id: exercise.course_id,
+<a href=#1380 id=1380 data-nosnippet>1380</a>                exam_id: exercise.exam_id,
+<a href=#1381 id=1381 data-nosnippet>1381</a>                created_at: Utc.with_ymd_and_hms(<span class="number">2022</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
+<a href=#1382 id=1382 data-nosnippet>1382</a>                updated_at: Utc.with_ymd_and_hms(<span class="number">2022</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
+<a href=#1383 id=1383 data-nosnippet>1383</a>                deleted_at: <span class="prelude-val">None</span>,
+<a href=#1384 id=1384 data-nosnippet>1384</a>                score_given,
+<a href=#1385 id=1385 data-nosnippet>1385</a>                grading_progress: GradingProgress::NotReady,
+<a href=#1386 id=1386 data-nosnippet>1386</a>                activity_progress,
+<a href=#1387 id=1387 data-nosnippet>1387</a>                reviewing_stage,
+<a href=#1388 id=1388 data-nosnippet>1388</a>                selected_exercise_slide_id: <span class="prelude-val">None</span>,
+<a href=#1389 id=1389 data-nosnippet>1389</a>            }
+<a href=#1390 id=1390 data-nosnippet>1390</a>        }
+<a href=#1391 id=1391 data-nosnippet>1391</a>    }
+<a href=#1392 id=1392 data-nosnippet>1392</a>}
 </code></pre></div></section></main></body></html>

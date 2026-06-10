@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["acknowledge","has_acknowledged"]};
