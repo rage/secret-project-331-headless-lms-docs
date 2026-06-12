@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["restore_and_clear_for_user_course","snapshot_and_fail_completions"],"struct":["CheatingConfirmationGradeSnapshot"]};
