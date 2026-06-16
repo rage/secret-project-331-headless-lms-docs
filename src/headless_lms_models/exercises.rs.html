@@ -1668,41 +1668,43 @@
 <a href=#1668 id=1668 data-nosnippet>1668</a>                closed_additional_message: existing_course.closed_additional_message,
 <a href=#1669 id=1669 data-nosnippet>1669</a>                closed_course_successor_id: existing_course.closed_course_successor_id,
 <a href=#1670 id=1670 data-nosnippet>1670</a>                chapter_locking_enabled: <span class="bool-val">true</span>,
-<a href=#1671 id=1671 data-nosnippet>1671</a>            },
-<a href=#1672 id=1672 data-nosnippet>1672</a>        )
-<a href=#1673 id=1673 data-nosnippet>1673</a>        .<span class="kw">await
-<a href=#1674 id=1674 data-nosnippet>1674</a>        </span>.unwrap();
-<a href=#1675 id=1675 data-nosnippet>1675</a>
-<a href=#1676 id=1676 data-nosnippet>1676</a>        user_chapter_locking_statuses::complete_and_lock_chapter(
-<a href=#1677 id=1677 data-nosnippet>1677</a>            tx.as_mut(),
-<a href=#1678 id=1678 data-nosnippet>1678</a>            user_id,
-<a href=#1679 id=1679 data-nosnippet>1679</a>            chapter_id,
-<a href=#1680 id=1680 data-nosnippet>1680</a>            course_id,
-<a href=#1681 id=1681 data-nosnippet>1681</a>        )
-<a href=#1682 id=1682 data-nosnippet>1682</a>        .<span class="kw">await
-<a href=#1683 id=1683 data-nosnippet>1683</a>        </span>.unwrap();
-<a href=#1684 id=1684 data-nosnippet>1684</a>
-<a href=#1685 id=1685 data-nosnippet>1685</a>        reset_exercises_for_selected_users(
-<a href=#1686 id=1686 data-nosnippet>1686</a>            tx.as_mut(),
-<a href=#1687 id=1687 data-nosnippet>1687</a>            <span class="kw-2">&amp;</span>[(user_id, <span class="macro">vec!</span>[exercise_id])],
-<a href=#1688 id=1688 data-nosnippet>1688</a>            <span class="prelude-val">Some</span>(user_id),
-<a href=#1689 id=1689 data-nosnippet>1689</a>            course_id,
-<a href=#1690 id=1690 data-nosnippet>1690</a>            <span class="prelude-val">Some</span>(<span class="string">"test-reset"</span>.to_string()),
-<a href=#1691 id=1691 data-nosnippet>1691</a>        )
-<a href=#1692 id=1692 data-nosnippet>1692</a>        .<span class="kw">await
-<a href=#1693 id=1693 data-nosnippet>1693</a>        </span>.unwrap();
-<a href=#1694 id=1694 data-nosnippet>1694</a>
-<a href=#1695 id=1695 data-nosnippet>1695</a>        <span class="kw">let </span>status = user_chapter_locking_statuses::get_or_init_status(
-<a href=#1696 id=1696 data-nosnippet>1696</a>            tx.as_mut(),
-<a href=#1697 id=1697 data-nosnippet>1697</a>            user_id,
-<a href=#1698 id=1698 data-nosnippet>1698</a>            chapter_id,
-<a href=#1699 id=1699 data-nosnippet>1699</a>            <span class="prelude-val">Some</span>(course_id),
-<a href=#1700 id=1700 data-nosnippet>1700</a>            <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
-<a href=#1701 id=1701 data-nosnippet>1701</a>        )
-<a href=#1702 id=1702 data-nosnippet>1702</a>        .<span class="kw">await
-<a href=#1703 id=1703 data-nosnippet>1703</a>        </span>.unwrap();
-<a href=#1704 id=1704 data-nosnippet>1704</a>
-<a href=#1705 id=1705 data-nosnippet>1705</a>        <span class="macro">assert_eq!</span>(status, <span class="prelude-val">Some</span>(ChapterLockingStatus::Unlocked));
-<a href=#1706 id=1706 data-nosnippet>1706</a>    }
-<a href=#1707 id=1707 data-nosnippet>1707</a>}
+<a href=#1671 id=1671 data-nosnippet>1671</a>                ai_policy: existing_course.ai_policy,
+<a href=#1672 id=1672 data-nosnippet>1672</a>                course_material_ai_instructions: existing_course.course_material_ai_instructions,
+<a href=#1673 id=1673 data-nosnippet>1673</a>            },
+<a href=#1674 id=1674 data-nosnippet>1674</a>        )
+<a href=#1675 id=1675 data-nosnippet>1675</a>        .<span class="kw">await
+<a href=#1676 id=1676 data-nosnippet>1676</a>        </span>.unwrap();
+<a href=#1677 id=1677 data-nosnippet>1677</a>
+<a href=#1678 id=1678 data-nosnippet>1678</a>        user_chapter_locking_statuses::complete_and_lock_chapter(
+<a href=#1679 id=1679 data-nosnippet>1679</a>            tx.as_mut(),
+<a href=#1680 id=1680 data-nosnippet>1680</a>            user_id,
+<a href=#1681 id=1681 data-nosnippet>1681</a>            chapter_id,
+<a href=#1682 id=1682 data-nosnippet>1682</a>            course_id,
+<a href=#1683 id=1683 data-nosnippet>1683</a>        )
+<a href=#1684 id=1684 data-nosnippet>1684</a>        .<span class="kw">await
+<a href=#1685 id=1685 data-nosnippet>1685</a>        </span>.unwrap();
+<a href=#1686 id=1686 data-nosnippet>1686</a>
+<a href=#1687 id=1687 data-nosnippet>1687</a>        reset_exercises_for_selected_users(
+<a href=#1688 id=1688 data-nosnippet>1688</a>            tx.as_mut(),
+<a href=#1689 id=1689 data-nosnippet>1689</a>            <span class="kw-2">&amp;</span>[(user_id, <span class="macro">vec!</span>[exercise_id])],
+<a href=#1690 id=1690 data-nosnippet>1690</a>            <span class="prelude-val">Some</span>(user_id),
+<a href=#1691 id=1691 data-nosnippet>1691</a>            course_id,
+<a href=#1692 id=1692 data-nosnippet>1692</a>            <span class="prelude-val">Some</span>(<span class="string">"test-reset"</span>.to_string()),
+<a href=#1693 id=1693 data-nosnippet>1693</a>        )
+<a href=#1694 id=1694 data-nosnippet>1694</a>        .<span class="kw">await
+<a href=#1695 id=1695 data-nosnippet>1695</a>        </span>.unwrap();
+<a href=#1696 id=1696 data-nosnippet>1696</a>
+<a href=#1697 id=1697 data-nosnippet>1697</a>        <span class="kw">let </span>status = user_chapter_locking_statuses::get_or_init_status(
+<a href=#1698 id=1698 data-nosnippet>1698</a>            tx.as_mut(),
+<a href=#1699 id=1699 data-nosnippet>1699</a>            user_id,
+<a href=#1700 id=1700 data-nosnippet>1700</a>            chapter_id,
+<a href=#1701 id=1701 data-nosnippet>1701</a>            <span class="prelude-val">Some</span>(course_id),
+<a href=#1702 id=1702 data-nosnippet>1702</a>            <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
+<a href=#1703 id=1703 data-nosnippet>1703</a>        )
+<a href=#1704 id=1704 data-nosnippet>1704</a>        .<span class="kw">await
+<a href=#1705 id=1705 data-nosnippet>1705</a>        </span>.unwrap();
+<a href=#1706 id=1706 data-nosnippet>1706</a>
+<a href=#1707 id=1707 data-nosnippet>1707</a>        <span class="macro">assert_eq!</span>(status, <span class="prelude-val">Some</span>(ChapterLockingStatus::Unlocked));
+<a href=#1708 id=1708 data-nosnippet>1708</a>    }
+<a href=#1709 id=1709 data-nosnippet>1709</a>}
 </code></pre></div></section></main></body></html>
