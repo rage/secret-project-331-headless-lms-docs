@@ -972,7 +972,7 @@
 <a href=#972 id=972 data-nosnippet>972</a>  q.weight
 <a href=#973 id=973 data-nosnippet>973</a>FROM peer_or_self_review_questions q
 <a href=#974 id=974 data-nosnippet>974</a>  JOIN peer_or_self_review_configs posrc ON (posrc.id = q.peer_or_self_review_config_id)
-<a href=#975 id=975 data-nosnippet>975</a>  JOIN exercises e ON (e.id = posrc.exercise_id)
+<a href=#975 id=975 data-nosnippet>975</a>  LEFT JOIN exercises e ON (e.id = posrc.exercise_id)
 <a href=#976 id=976 data-nosnippet>976</a>WHERE peer_or_self_review_config_id IN (
 <a href=#977 id=977 data-nosnippet>977</a>    SELECT id
 <a href=#978 id=978 data-nosnippet>978</a>    FROM peer_or_self_review_configs
