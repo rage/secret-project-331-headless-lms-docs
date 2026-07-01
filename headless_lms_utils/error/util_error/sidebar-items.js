@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["UtilErrorType"],"fn":["as_util_error","missing_util_error"],"macro":["util_err"],"struct":["UtilError"],"type":["UtilResult"]};
+window.SIDEBAR_ITEMS = {"enum":["SisuErrorVariant","UtilErrorType"],"fn":["as_util_error","missing_util_error"],"macro":["util_err"],"struct":["UtilError"],"type":["UtilResult"]};

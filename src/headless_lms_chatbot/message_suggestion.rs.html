@@ -2,9 +2,9 @@
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>crate::{
 <a href=#4 id=4 data-nosnippet>4</a>    azure_chatbot::{
-<a href=#5 id=5 data-nosnippet>5</a>        ArrayItem, ArrayProperty, InputItem, JSONType, LLMRequest, LLMRequestParams,
+<a href=#5 id=5 data-nosnippet>5</a>        ArrayItem, ArrayProperty, InputItem, JSONType, JsonItem, LLMRequest, LLMRequestParams,
 <a href=#6 id=6 data-nosnippet>6</a>        LLMRequestResponseFormatParam, NonThinkingParams, RequestTextOptions, Schema,
-<a href=#7 id=7 data-nosnippet>7</a>        ThinkingParams,
+<a href=#7 id=7 data-nosnippet>7</a>        SchemaPropertyType, ThinkingParams,
 <a href=#8 id=8 data-nosnippet>8</a>    },
 <a href=#9 id=9 data-nosnippet>9</a>    chatbot_error::chatbot_err,
 <a href=#10 id=10 data-nosnippet>10</a>    content_cleaner::calculate_safe_token_limit,
@@ -141,14 +141,14 @@
 <a href=#141 id=141 data-nosnippet>141</a>                    type_field: JSONType::Object,
 <a href=#142 id=142 data-nosnippet>142</a>                    properties: HashMap::from([(
 <a href=#143 id=143 data-nosnippet>143</a>                        <span class="string">"suggestions"</span>.to_string(),
-<a href=#144 id=144 data-nosnippet>144</a>                        ArrayProperty {
+<a href=#144 id=144 data-nosnippet>144</a>                        SchemaPropertyType::ArrayProperty(ArrayProperty {
 <a href=#145 id=145 data-nosnippet>145</a>                            type_field: JSONType::Array,
-<a href=#146 id=146 data-nosnippet>146</a>                            items: ArrayItem {
+<a href=#146 id=146 data-nosnippet>146</a>                            items: ArrayItem::JsonItem(JsonItem {
 <a href=#147 id=147 data-nosnippet>147</a>                                type_field: JSONType::String,
-<a href=#148 id=148 data-nosnippet>148</a>                            },
-<a href=#149 id=149 data-nosnippet>149</a>                        },
+<a href=#148 id=148 data-nosnippet>148</a>                            }),
+<a href=#149 id=149 data-nosnippet>149</a>                        }),
 <a href=#150 id=150 data-nosnippet>150</a>                    )]),
-<a href=#151 id=151 data-nosnippet>151</a>                    required: Vec::from([<span class="string">"suggestions"</span>.to_string()]),
+<a href=#151 id=151 data-nosnippet>151</a>                    required: <span class="macro">vec!</span>[<span class="string">"suggestions"</span>.to_string()],
 <a href=#152 id=152 data-nosnippet>152</a>                    additional_properties: <span class="bool-val">false</span>,
 <a href=#153 id=153 data-nosnippet>153</a>                },
 <a href=#154 id=154 data-nosnippet>154</a>                strict: <span class="bool-val">true</span>,

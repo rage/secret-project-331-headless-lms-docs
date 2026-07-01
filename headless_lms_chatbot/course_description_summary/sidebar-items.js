@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SYSTEM_PROMPT","USER_PROMPT"],"fn":["generate_description"],"struct":["Module","SisuDescriptionResponse"]};

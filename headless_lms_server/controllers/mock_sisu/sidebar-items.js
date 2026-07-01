@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","mock_sisu_course_info","mock_sisu_id_query"],"struct":["MockSisuRequest"]};

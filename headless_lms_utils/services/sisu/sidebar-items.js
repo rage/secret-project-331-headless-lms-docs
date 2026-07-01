@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["TIMEOUT_DURATION"],"static":["STRIP_HTML_REGEX"],"struct":["Additional","CourseUnitSearchResults","Credits","Name","Organisation","OrganisationValidityPeriod","SearchResult","SisuClient","SisuCourseInfoElement","SisuCourseInfoValidityPeriod","SisuDescriptions"],"type":["SisuCourseInfo"]};
