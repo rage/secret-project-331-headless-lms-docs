@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["format_backtrace","print_filtered_frame_placeholder"]};

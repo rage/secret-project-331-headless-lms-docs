@@ -15,15 +15,18 @@
 <a href=#15 id=15 data-nosnippet>15</a>```
 <a href=#16 id=16 data-nosnippet>16</a>*/
 <a href=#17 id=17 data-nosnippet>17</a></span><span class="kw">pub fn </span>setup_tracing() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-<a href=#18 id=18 data-nosnippet>18</a>    <span class="kw">let </span>subscriber = tracing_subscriber::Registry::default()
-<a href=#19 id=19 data-nosnippet>19</a>        .with(
-<a href=#20 id=20 data-nosnippet>20</a>            tracing_subscriber::fmt::layer()
-<a href=#21 id=21 data-nosnippet>21</a>                .event_format(tracing_subscriber::fmt::format().compact()),
-<a href=#22 id=22 data-nosnippet>22</a>        )
-<a href=#23 id=23 data-nosnippet>23</a>        .with(ErrorLayer::default())
-<a href=#24 id=24 data-nosnippet>24</a>        .with(EnvFilter::try_from_default_env().unwrap_or_else(|<span class="kw">_</span>| EnvFilter::new(<span class="string">"info"</span>)));
-<a href=#25 id=25 data-nosnippet>25</a>    tracing::subscriber::set_global_default(subscriber)<span class="question-mark">?</span>;
-<a href=#26 id=26 data-nosnippet>26</a>    LogTracer::init()<span class="question-mark">?</span>;
-<a href=#27 id=27 data-nosnippet>27</a>    <span class="prelude-val">Ok</span>(())
-<a href=#28 id=28 data-nosnippet>28</a>}
+<a href=#18 id=18 data-nosnippet>18</a>    <span class="comment">// Resolve the color decision once so the error formatter colors only on a TTY.
+<a href=#19 id=19 data-nosnippet>19</a>    </span><span class="kw">crate</span>::error::clean_format::color::init_auto();
+<a href=#20 id=20 data-nosnippet>20</a>
+<a href=#21 id=21 data-nosnippet>21</a>    <span class="kw">let </span>subscriber = tracing_subscriber::Registry::default()
+<a href=#22 id=22 data-nosnippet>22</a>        .with(
+<a href=#23 id=23 data-nosnippet>23</a>            tracing_subscriber::fmt::layer()
+<a href=#24 id=24 data-nosnippet>24</a>                .event_format(tracing_subscriber::fmt::format().compact()),
+<a href=#25 id=25 data-nosnippet>25</a>        )
+<a href=#26 id=26 data-nosnippet>26</a>        .with(ErrorLayer::default())
+<a href=#27 id=27 data-nosnippet>27</a>        .with(EnvFilter::try_from_default_env().unwrap_or_else(|<span class="kw">_</span>| EnvFilter::new(<span class="string">"info"</span>)));
+<a href=#28 id=28 data-nosnippet>28</a>    tracing::subscriber::set_global_default(subscriber)<span class="question-mark">?</span>;
+<a href=#29 id=29 data-nosnippet>29</a>    LogTracer::init()<span class="question-mark">?</span>;
+<a href=#30 id=30 data-nosnippet>30</a>    <span class="prelude-val">Ok</span>(())
+<a href=#31 id=31 data-nosnippet>31</a>}
 </code></pre></div></section></main></body></html>

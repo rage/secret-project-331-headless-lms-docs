@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["INFRA_FILE_FRAGMENTS","INFRA_SYMBOL_FRAGMENTS"],"enum":["Kind"],"fn":["classify","clean_function","clean_path","extract_frames","format_frame","hidden_marker","is_infra","is_infra_path","is_ours","render_callers","render_stack"],"struct":["FrameView"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_CHAIN"],"fn":["header_line","render","write_cause_node","write_node","write_stack"],"mod":["color","frames","spans"],"trait":["ErrorTrace"],"type":["Resolver"]};

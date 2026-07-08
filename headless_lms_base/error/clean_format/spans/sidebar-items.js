@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_FIELDS_LEN","OUR_TARGET_PREFIX"],"fn":["breadcrumb","extract_spans","render_breadcrumb","truncate"],"struct":["SpanEntry"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["config","error","prelude_base_and_re_exports","tracing"]};
+window.SIDEBAR_ITEMS = {"macro":["impl_clean_debug"],"mod":["config","error","prelude_base_and_re_exports","tracing"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["backend_error","backtrace_formatter"]};
+window.SIDEBAR_ITEMS = {"mod":["backend_error","clean_format"]};

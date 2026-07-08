@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ColorChoice"],"fn":["bold","compute_auto","dim","init_auto"],"static":["AUTO_ENABLED"]};
