@@ -1492,297 +1492,300 @@
 <a href=#1492 id=1492 data-nosnippet>1492</a>                chapter_id: <span class="prelude-val">Some</span>(new_chapter.id),
 <a href=#1493 id=1493 data-nosnippet>1493</a>                front_page_of_chapter_id: <span class="prelude-val">Some</span>(new_chapter.id),
 <a href=#1494 id=1494 data-nosnippet>1494</a>                content_search_language: <span class="prelude-val">None</span>,
-<a href=#1495 id=1495 data-nosnippet>1495</a>            },
-<a href=#1496 id=1496 data-nosnippet>1496</a>            user,
-<a href=#1497 id=1497 data-nosnippet>1497</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1498 id=1498 data-nosnippet>1498</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1499 id=1499 data-nosnippet>1499</a>        )
-<a href=#1500 id=1500 data-nosnippet>1500</a>        .<span class="kw">await
-<a href=#1501 id=1501 data-nosnippet>1501</a>        </span>.unwrap();
-<a href=#1502 id=1502 data-nosnippet>1502</a>        <span class="kw">let </span>ex = exercises::insert(
-<a href=#1503 id=1503 data-nosnippet>1503</a>            tx.as_mut(),
-<a href=#1504 id=1504 data-nosnippet>1504</a>            PKeyPolicy::Generate,
-<a href=#1505 id=1505 data-nosnippet>1505</a>            course,
-<a href=#1506 id=1506 data-nosnippet>1506</a>            <span class="string">"ex 1"</span>,
-<a href=#1507 id=1507 data-nosnippet>1507</a>            page.id,
-<a href=#1508 id=1508 data-nosnippet>1508</a>            new_chapter.id,
-<a href=#1509 id=1509 data-nosnippet>1509</a>            <span class="number">1</span>,
-<a href=#1510 id=1510 data-nosnippet>1510</a>        )
-<a href=#1511 id=1511 data-nosnippet>1511</a>        .<span class="kw">await
-<a href=#1512 id=1512 data-nosnippet>1512</a>        </span>.unwrap();
-<a href=#1513 id=1513 data-nosnippet>1513</a>        exercise_slides::insert(tx.as_mut(), PKeyPolicy::Generate, ex, <span class="number">1</span>)
-<a href=#1514 id=1514 data-nosnippet>1514</a>            .<span class="kw">await
-<a href=#1515 id=1515 data-nosnippet>1515</a>            </span>.unwrap();
-<a href=#1516 id=1516 data-nosnippet>1516</a>        <span class="comment">// another chapter
-<a href=#1517 id=1517 data-nosnippet>1517</a>        </span><span class="kw">let </span>(new_chapter2, <span class="kw">_</span>) = create_new_chapter(
-<a href=#1518 id=1518 data-nosnippet>1518</a>            tx.as_mut(),
-<a href=#1519 id=1519 data-nosnippet>1519</a>            PKeyPolicy::Generate,
-<a href=#1520 id=1520 data-nosnippet>1520</a>            <span class="kw-2">&amp;</span>NewChapter {
-<a href=#1521 id=1521 data-nosnippet>1521</a>                name: <span class="string">"best chapter 2"</span>.to_string(),
-<a href=#1522 id=1522 data-nosnippet>1522</a>                color: <span class="prelude-val">None</span>,
-<a href=#1523 id=1523 data-nosnippet>1523</a>                course_id: course,
-<a href=#1524 id=1524 data-nosnippet>1524</a>                chapter_number: <span class="number">3</span>,
-<a href=#1525 id=1525 data-nosnippet>1525</a>                front_page_id: <span class="prelude-val">None</span>,
-<a href=#1526 id=1526 data-nosnippet>1526</a>                deadline: <span class="prelude-val">None</span>,
-<a href=#1527 id=1527 data-nosnippet>1527</a>                opens_at: <span class="prelude-val">Some</span>(
-<a href=#1528 id=1528 data-nosnippet>1528</a>                    DateTime::parse_from_str(
-<a href=#1529 id=1529 data-nosnippet>1529</a>                        <span class="comment">// chapter is open yet
-<a href=#1530 id=1530 data-nosnippet>1530</a>                        </span><span class="string">"1983 Apr 13 12:09:14 +0000"</span>,
-<a href=#1531 id=1531 data-nosnippet>1531</a>                        <span class="string">"%Y %b %d %H:%M:%S %z"</span>,
-<a href=#1532 id=1532 data-nosnippet>1532</a>                    )
-<a href=#1533 id=1533 data-nosnippet>1533</a>                    .unwrap()
-<a href=#1534 id=1534 data-nosnippet>1534</a>                    .to_utc(),
-<a href=#1535 id=1535 data-nosnippet>1535</a>                ),
-<a href=#1536 id=1536 data-nosnippet>1536</a>                course_module_id: <span class="prelude-val">Some</span>(course_module.id),
-<a href=#1537 id=1537 data-nosnippet>1537</a>            },
-<a href=#1538 id=1538 data-nosnippet>1538</a>            user,
-<a href=#1539 id=1539 data-nosnippet>1539</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1540 id=1540 data-nosnippet>1540</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1541 id=1541 data-nosnippet>1541</a>        )
-<a href=#1542 id=1542 data-nosnippet>1542</a>        .<span class="kw">await
-<a href=#1543 id=1543 data-nosnippet>1543</a>        </span>.unwrap();
-<a href=#1544 id=1544 data-nosnippet>1544</a>
-<a href=#1545 id=1545 data-nosnippet>1545</a>        <span class="comment">// insert a page with an exercise to the not-open chapter
-<a href=#1546 id=1546 data-nosnippet>1546</a>        </span><span class="kw">let </span>page2 = insert_page(
-<a href=#1547 id=1547 data-nosnippet>1547</a>            tx.as_mut(),
-<a href=#1548 id=1548 data-nosnippet>1548</a>            NewPage {
-<a href=#1549 id=1549 data-nosnippet>1549</a>                exercises: <span class="macro">vec!</span>[],
-<a href=#1550 id=1550 data-nosnippet>1550</a>                exercise_slides: <span class="macro">vec!</span>[],
-<a href=#1551 id=1551 data-nosnippet>1551</a>                exercise_tasks: <span class="macro">vec!</span>[],
-<a href=#1552 id=1552 data-nosnippet>1552</a>                content: <span class="macro">vec!</span>[],
-<a href=#1553 id=1553 data-nosnippet>1553</a>                url_path: <span class="string">"/page2"</span>.to_string(),
-<a href=#1554 id=1554 data-nosnippet>1554</a>                title: <span class="string">"title"</span>.to_string(),
-<a href=#1555 id=1555 data-nosnippet>1555</a>                course_id: <span class="prelude-val">Some</span>(course),
-<a href=#1556 id=1556 data-nosnippet>1556</a>                exam_id: <span class="prelude-val">None</span>,
-<a href=#1557 id=1557 data-nosnippet>1557</a>                chapter_id: <span class="prelude-val">Some</span>(new_chapter2.id),
-<a href=#1558 id=1558 data-nosnippet>1558</a>                front_page_of_chapter_id: <span class="prelude-val">Some</span>(new_chapter2.id),
-<a href=#1559 id=1559 data-nosnippet>1559</a>                content_search_language: <span class="prelude-val">None</span>,
-<a href=#1560 id=1560 data-nosnippet>1560</a>            },
-<a href=#1561 id=1561 data-nosnippet>1561</a>            user,
-<a href=#1562 id=1562 data-nosnippet>1562</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1563 id=1563 data-nosnippet>1563</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1564 id=1564 data-nosnippet>1564</a>        )
-<a href=#1565 id=1565 data-nosnippet>1565</a>        .<span class="kw">await
-<a href=#1566 id=1566 data-nosnippet>1566</a>        </span>.unwrap();
-<a href=#1567 id=1567 data-nosnippet>1567</a>        <span class="kw">let </span>ex = exercises::insert(
-<a href=#1568 id=1568 data-nosnippet>1568</a>            tx.as_mut(),
-<a href=#1569 id=1569 data-nosnippet>1569</a>            PKeyPolicy::Generate,
-<a href=#1570 id=1570 data-nosnippet>1570</a>            course,
-<a href=#1571 id=1571 data-nosnippet>1571</a>            <span class="string">"ex 1"</span>,
-<a href=#1572 id=1572 data-nosnippet>1572</a>            page2.id,
-<a href=#1573 id=1573 data-nosnippet>1573</a>            new_chapter2.id,
-<a href=#1574 id=1574 data-nosnippet>1574</a>            <span class="number">1</span>,
-<a href=#1575 id=1575 data-nosnippet>1575</a>        )
-<a href=#1576 id=1576 data-nosnippet>1576</a>        .<span class="kw">await
-<a href=#1577 id=1577 data-nosnippet>1577</a>        </span>.unwrap();
-<a href=#1578 id=1578 data-nosnippet>1578</a>        exercise_slides::insert(tx.as_mut(), PKeyPolicy::Generate, ex, <span class="number">1</span>)
-<a href=#1579 id=1579 data-nosnippet>1579</a>            .<span class="kw">await
-<a href=#1580 id=1580 data-nosnippet>1580</a>            </span>.unwrap();
-<a href=#1581 id=1581 data-nosnippet>1581</a>
-<a href=#1582 id=1582 data-nosnippet>1582</a>        <span class="comment">// should list all modules and exercises
-<a href=#1583 id=1583 data-nosnippet>1583</a>        </span><span class="kw">let </span>progress_all = get_user_course_progress(tx.as_mut(), course, user, <span class="bool-val">false</span>)
-<a href=#1584 id=1584 data-nosnippet>1584</a>            .<span class="kw">await
-<a href=#1585 id=1585 data-nosnippet>1585</a>            </span>.unwrap();
-<a href=#1586 id=1586 data-nosnippet>1586</a>        <span class="comment">// should only list modules with chapters and the exercises from open chapters
-<a href=#1587 id=1587 data-nosnippet>1587</a>        </span><span class="kw">let </span>progress_open_chapters = get_user_course_progress(tx.as_mut(), course, user, <span class="bool-val">true</span>)
-<a href=#1588 id=1588 data-nosnippet>1588</a>            .<span class="kw">await
-<a href=#1589 id=1589 data-nosnippet>1589</a>            </span>.unwrap();
-<a href=#1590 id=1590 data-nosnippet>1590</a>
-<a href=#1591 id=1591 data-nosnippet>1591</a>        <span class="macro">assert_ne!</span>(progress_all, progress_open_chapters);
-<a href=#1592 id=1592 data-nosnippet>1592</a>        <span class="macro">assert_eq!</span>(progress_all.len(), <span class="number">2</span>);
-<a href=#1593 id=1593 data-nosnippet>1593</a>        <span class="macro">assert_eq!</span>(progress_open_chapters.len(), <span class="number">1</span>);
-<a href=#1594 id=1594 data-nosnippet>1594</a>        <span class="macro">assert_eq!</span>(
-<a href=#1595 id=1595 data-nosnippet>1595</a>            progress_all[<span class="number">1</span>].course_module_id,
-<a href=#1596 id=1596 data-nosnippet>1596</a>            progress_open_chapters[<span class="number">0</span>].course_module_id
-<a href=#1597 id=1597 data-nosnippet>1597</a>        );
-<a href=#1598 id=1598 data-nosnippet>1598</a>        <span class="macro">assert_eq!</span>(progress_all[<span class="number">1</span>].total_exercises, <span class="prelude-val">Some</span>(<span class="number">2</span>));
-<a href=#1599 id=1599 data-nosnippet>1599</a>        <span class="macro">assert_eq!</span>(progress_open_chapters[<span class="number">0</span>].total_exercises, <span class="prelude-val">Some</span>(<span class="number">1</span>));
-<a href=#1600 id=1600 data-nosnippet>1600</a>    }
-<a href=#1601 id=1601 data-nosnippet>1601</a>
-<a href=#1602 id=1602 data-nosnippet>1602</a>    <span class="attr">#[tokio::test]
-<a href=#1603 id=1603 data-nosnippet>1603</a>    </span><span class="kw">async fn </span>get_user_course_progress_filter_out_closed_module() {
-<a href=#1604 id=1604 data-nosnippet>1604</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module);
-<a href=#1605 id=1605 data-nosnippet>1605</a>        <span class="comment">// creating a new course inserts one empty default module.
-<a href=#1606 id=1606 data-nosnippet>1606</a>        // there will be one other module with one closed chapter only
-<a href=#1607 id=1607 data-nosnippet>1607</a>        </span><span class="kw">let </span>(new_chapter, <span class="kw">_</span>) = create_new_chapter(
-<a href=#1608 id=1608 data-nosnippet>1608</a>            tx.as_mut(),
-<a href=#1609 id=1609 data-nosnippet>1609</a>            PKeyPolicy::Generate,
-<a href=#1610 id=1610 data-nosnippet>1610</a>            <span class="kw-2">&amp;</span>NewChapter {
-<a href=#1611 id=1611 data-nosnippet>1611</a>                name: <span class="string">"best chapter"</span>.to_string(),
-<a href=#1612 id=1612 data-nosnippet>1612</a>                color: <span class="prelude-val">None</span>,
-<a href=#1613 id=1613 data-nosnippet>1613</a>                course_id: course,
-<a href=#1614 id=1614 data-nosnippet>1614</a>                chapter_number: <span class="number">2</span>,
-<a href=#1615 id=1615 data-nosnippet>1615</a>                front_page_id: <span class="prelude-val">None</span>,
-<a href=#1616 id=1616 data-nosnippet>1616</a>                deadline: <span class="prelude-val">None</span>,
-<a href=#1617 id=1617 data-nosnippet>1617</a>                opens_at: <span class="prelude-val">Some</span>(
-<a href=#1618 id=1618 data-nosnippet>1618</a>                    DateTime::parse_from_str(
-<a href=#1619 id=1619 data-nosnippet>1619</a>                        <span class="comment">// chapter is not open yet
-<a href=#1620 id=1620 data-nosnippet>1620</a>                        </span><span class="string">"2983 Apr 13 12:09:14 +0000"</span>,
-<a href=#1621 id=1621 data-nosnippet>1621</a>                        <span class="string">"%Y %b %d %H:%M:%S %z"</span>,
-<a href=#1622 id=1622 data-nosnippet>1622</a>                    )
-<a href=#1623 id=1623 data-nosnippet>1623</a>                    .unwrap()
-<a href=#1624 id=1624 data-nosnippet>1624</a>                    .to_utc(),
-<a href=#1625 id=1625 data-nosnippet>1625</a>                ),
-<a href=#1626 id=1626 data-nosnippet>1626</a>                course_module_id: <span class="prelude-val">Some</span>(course_module.id),
-<a href=#1627 id=1627 data-nosnippet>1627</a>            },
-<a href=#1628 id=1628 data-nosnippet>1628</a>            user,
-<a href=#1629 id=1629 data-nosnippet>1629</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1630 id=1630 data-nosnippet>1630</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1631 id=1631 data-nosnippet>1631</a>        )
-<a href=#1632 id=1632 data-nosnippet>1632</a>        .<span class="kw">await
-<a href=#1633 id=1633 data-nosnippet>1633</a>        </span>.unwrap();
-<a href=#1634 id=1634 data-nosnippet>1634</a>
-<a href=#1635 id=1635 data-nosnippet>1635</a>        <span class="comment">// insert a page with an exercise to the not-open chapter
-<a href=#1636 id=1636 data-nosnippet>1636</a>        </span><span class="kw">let </span>page = insert_page(
-<a href=#1637 id=1637 data-nosnippet>1637</a>            tx.as_mut(),
-<a href=#1638 id=1638 data-nosnippet>1638</a>            NewPage {
-<a href=#1639 id=1639 data-nosnippet>1639</a>                exercises: <span class="macro">vec!</span>[],
-<a href=#1640 id=1640 data-nosnippet>1640</a>                exercise_slides: <span class="macro">vec!</span>[],
-<a href=#1641 id=1641 data-nosnippet>1641</a>                exercise_tasks: <span class="macro">vec!</span>[],
-<a href=#1642 id=1642 data-nosnippet>1642</a>                content: <span class="macro">vec!</span>[],
-<a href=#1643 id=1643 data-nosnippet>1643</a>                url_path: <span class="string">"/page2"</span>.to_string(),
-<a href=#1644 id=1644 data-nosnippet>1644</a>                title: <span class="string">"title"</span>.to_string(),
-<a href=#1645 id=1645 data-nosnippet>1645</a>                course_id: <span class="prelude-val">Some</span>(course),
-<a href=#1646 id=1646 data-nosnippet>1646</a>                exam_id: <span class="prelude-val">None</span>,
-<a href=#1647 id=1647 data-nosnippet>1647</a>                chapter_id: <span class="prelude-val">Some</span>(new_chapter.id),
-<a href=#1648 id=1648 data-nosnippet>1648</a>                front_page_of_chapter_id: <span class="prelude-val">Some</span>(new_chapter.id),
-<a href=#1649 id=1649 data-nosnippet>1649</a>                content_search_language: <span class="prelude-val">None</span>,
-<a href=#1650 id=1650 data-nosnippet>1650</a>            },
-<a href=#1651 id=1651 data-nosnippet>1651</a>            user,
-<a href=#1652 id=1652 data-nosnippet>1652</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1653 id=1653 data-nosnippet>1653</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#1654 id=1654 data-nosnippet>1654</a>        )
-<a href=#1655 id=1655 data-nosnippet>1655</a>        .<span class="kw">await
-<a href=#1656 id=1656 data-nosnippet>1656</a>        </span>.unwrap();
-<a href=#1657 id=1657 data-nosnippet>1657</a>        <span class="kw">let </span>ex = exercises::insert(
-<a href=#1658 id=1658 data-nosnippet>1658</a>            tx.as_mut(),
-<a href=#1659 id=1659 data-nosnippet>1659</a>            PKeyPolicy::Generate,
-<a href=#1660 id=1660 data-nosnippet>1660</a>            course,
-<a href=#1661 id=1661 data-nosnippet>1661</a>            <span class="string">"ex 1"</span>,
-<a href=#1662 id=1662 data-nosnippet>1662</a>            page.id,
-<a href=#1663 id=1663 data-nosnippet>1663</a>            new_chapter.id,
-<a href=#1664 id=1664 data-nosnippet>1664</a>            <span class="number">1</span>,
-<a href=#1665 id=1665 data-nosnippet>1665</a>        )
-<a href=#1666 id=1666 data-nosnippet>1666</a>        .<span class="kw">await
-<a href=#1667 id=1667 data-nosnippet>1667</a>        </span>.unwrap();
-<a href=#1668 id=1668 data-nosnippet>1668</a>        exercise_slides::insert(tx.as_mut(), PKeyPolicy::Generate, ex, <span class="number">1</span>)
-<a href=#1669 id=1669 data-nosnippet>1669</a>            .<span class="kw">await
-<a href=#1670 id=1670 data-nosnippet>1670</a>            </span>.unwrap();
-<a href=#1671 id=1671 data-nosnippet>1671</a>
-<a href=#1672 id=1672 data-nosnippet>1672</a>        <span class="comment">// should list one empty module and one module with only one chapter
-<a href=#1673 id=1673 data-nosnippet>1673</a>        // which is closed
-<a href=#1674 id=1674 data-nosnippet>1674</a>        </span><span class="kw">let </span>progress_all = get_user_course_progress(tx.as_mut(), course, user, <span class="bool-val">false</span>)
-<a href=#1675 id=1675 data-nosnippet>1675</a>            .<span class="kw">await
-<a href=#1676 id=1676 data-nosnippet>1676</a>            </span>.unwrap();
-<a href=#1677 id=1677 data-nosnippet>1677</a>        <span class="comment">// should be empty
-<a href=#1678 id=1678 data-nosnippet>1678</a>        </span><span class="kw">let </span>progress_open_chapters_modules =
-<a href=#1679 id=1679 data-nosnippet>1679</a>            get_user_course_progress(tx.as_mut(), course, user, <span class="bool-val">true</span>)
-<a href=#1680 id=1680 data-nosnippet>1680</a>                .<span class="kw">await
-<a href=#1681 id=1681 data-nosnippet>1681</a>                </span>.unwrap();
-<a href=#1682 id=1682 data-nosnippet>1682</a>
-<a href=#1683 id=1683 data-nosnippet>1683</a>        <span class="macro">assert_ne!</span>(progress_all, progress_open_chapters_modules);
-<a href=#1684 id=1684 data-nosnippet>1684</a>        <span class="macro">assert_eq!</span>(progress_all.len(), <span class="number">2</span>);
-<a href=#1685 id=1685 data-nosnippet>1685</a>        <span class="macro">assert_eq!</span>(progress_open_chapters_modules.len(), <span class="number">0</span>);
-<a href=#1686 id=1686 data-nosnippet>1686</a>        <span class="macro">assert_eq!</span>(progress_all[<span class="number">1</span>].total_exercises, <span class="prelude-val">Some</span>(<span class="number">1</span>));
-<a href=#1687 id=1687 data-nosnippet>1687</a>    }
-<a href=#1688 id=1688 data-nosnippet>1688</a>
-<a href=#1689 id=1689 data-nosnippet>1689</a>    <span class="attr">#[tokio::test]
-<a href=#1690 id=1690 data-nosnippet>1690</a>    </span><span class="kw">async fn </span>has_pending_manual_reviews_in_chapter_reflects_review_state() {
-<a href=#1691 id=1691 data-nosnippet>1691</a>        <span class="macro">insert_data!</span>(
-<a href=#1692 id=1692 data-nosnippet>1692</a>            :tx,
-<a href=#1693 id=1693 data-nosnippet>1693</a>            :user,
-<a href=#1694 id=1694 data-nosnippet>1694</a>            :org,
-<a href=#1695 id=1695 data-nosnippet>1695</a>            :course,
-<a href=#1696 id=1696 data-nosnippet>1696</a>            instance: _instance,
-<a href=#1697 id=1697 data-nosnippet>1697</a>            :course_module,
-<a href=#1698 id=1698 data-nosnippet>1698</a>            chapter: chapter_id,
-<a href=#1699 id=1699 data-nosnippet>1699</a>            page: _page_id,
-<a href=#1700 id=1700 data-nosnippet>1700</a>            exercise: exercise_id,
-<a href=#1701 id=1701 data-nosnippet>1701</a>            slide: _exercise_slide_id,
-<a href=#1702 id=1702 data-nosnippet>1702</a>            task: _exercise_task_id
-<a href=#1703 id=1703 data-nosnippet>1703</a>        );
-<a href=#1704 id=1704 data-nosnippet>1704</a>
-<a href=#1705 id=1705 data-nosnippet>1705</a>        exercises::update_teacher_reviews_answer_after_locking(tx.as_mut(), exercise_id, <span class="bool-val">true</span>)
-<a href=#1706 id=1706 data-nosnippet>1706</a>            .<span class="kw">await
-<a href=#1707 id=1707 data-nosnippet>1707</a>            </span>.unwrap();
-<a href=#1708 id=1708 data-nosnippet>1708</a>        get_or_create_user_exercise_state(tx.as_mut(), user, exercise_id, <span class="prelude-val">Some</span>(course), <span class="prelude-val">None</span>)
+<a href=#1495 id=1495 data-nosnippet>1495</a>                hidden: <span class="bool-val">false</span>,
+<a href=#1496 id=1496 data-nosnippet>1496</a>            },
+<a href=#1497 id=1497 data-nosnippet>1497</a>            user,
+<a href=#1498 id=1498 data-nosnippet>1498</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1499 id=1499 data-nosnippet>1499</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1500 id=1500 data-nosnippet>1500</a>        )
+<a href=#1501 id=1501 data-nosnippet>1501</a>        .<span class="kw">await
+<a href=#1502 id=1502 data-nosnippet>1502</a>        </span>.unwrap();
+<a href=#1503 id=1503 data-nosnippet>1503</a>        <span class="kw">let </span>ex = exercises::insert(
+<a href=#1504 id=1504 data-nosnippet>1504</a>            tx.as_mut(),
+<a href=#1505 id=1505 data-nosnippet>1505</a>            PKeyPolicy::Generate,
+<a href=#1506 id=1506 data-nosnippet>1506</a>            course,
+<a href=#1507 id=1507 data-nosnippet>1507</a>            <span class="string">"ex 1"</span>,
+<a href=#1508 id=1508 data-nosnippet>1508</a>            page.id,
+<a href=#1509 id=1509 data-nosnippet>1509</a>            new_chapter.id,
+<a href=#1510 id=1510 data-nosnippet>1510</a>            <span class="number">1</span>,
+<a href=#1511 id=1511 data-nosnippet>1511</a>        )
+<a href=#1512 id=1512 data-nosnippet>1512</a>        .<span class="kw">await
+<a href=#1513 id=1513 data-nosnippet>1513</a>        </span>.unwrap();
+<a href=#1514 id=1514 data-nosnippet>1514</a>        exercise_slides::insert(tx.as_mut(), PKeyPolicy::Generate, ex, <span class="number">1</span>)
+<a href=#1515 id=1515 data-nosnippet>1515</a>            .<span class="kw">await
+<a href=#1516 id=1516 data-nosnippet>1516</a>            </span>.unwrap();
+<a href=#1517 id=1517 data-nosnippet>1517</a>        <span class="comment">// another chapter
+<a href=#1518 id=1518 data-nosnippet>1518</a>        </span><span class="kw">let </span>(new_chapter2, <span class="kw">_</span>) = create_new_chapter(
+<a href=#1519 id=1519 data-nosnippet>1519</a>            tx.as_mut(),
+<a href=#1520 id=1520 data-nosnippet>1520</a>            PKeyPolicy::Generate,
+<a href=#1521 id=1521 data-nosnippet>1521</a>            <span class="kw-2">&amp;</span>NewChapter {
+<a href=#1522 id=1522 data-nosnippet>1522</a>                name: <span class="string">"best chapter 2"</span>.to_string(),
+<a href=#1523 id=1523 data-nosnippet>1523</a>                color: <span class="prelude-val">None</span>,
+<a href=#1524 id=1524 data-nosnippet>1524</a>                course_id: course,
+<a href=#1525 id=1525 data-nosnippet>1525</a>                chapter_number: <span class="number">3</span>,
+<a href=#1526 id=1526 data-nosnippet>1526</a>                front_page_id: <span class="prelude-val">None</span>,
+<a href=#1527 id=1527 data-nosnippet>1527</a>                deadline: <span class="prelude-val">None</span>,
+<a href=#1528 id=1528 data-nosnippet>1528</a>                opens_at: <span class="prelude-val">Some</span>(
+<a href=#1529 id=1529 data-nosnippet>1529</a>                    DateTime::parse_from_str(
+<a href=#1530 id=1530 data-nosnippet>1530</a>                        <span class="comment">// chapter is open yet
+<a href=#1531 id=1531 data-nosnippet>1531</a>                        </span><span class="string">"1983 Apr 13 12:09:14 +0000"</span>,
+<a href=#1532 id=1532 data-nosnippet>1532</a>                        <span class="string">"%Y %b %d %H:%M:%S %z"</span>,
+<a href=#1533 id=1533 data-nosnippet>1533</a>                    )
+<a href=#1534 id=1534 data-nosnippet>1534</a>                    .unwrap()
+<a href=#1535 id=1535 data-nosnippet>1535</a>                    .to_utc(),
+<a href=#1536 id=1536 data-nosnippet>1536</a>                ),
+<a href=#1537 id=1537 data-nosnippet>1537</a>                course_module_id: <span class="prelude-val">Some</span>(course_module.id),
+<a href=#1538 id=1538 data-nosnippet>1538</a>            },
+<a href=#1539 id=1539 data-nosnippet>1539</a>            user,
+<a href=#1540 id=1540 data-nosnippet>1540</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1541 id=1541 data-nosnippet>1541</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1542 id=1542 data-nosnippet>1542</a>        )
+<a href=#1543 id=1543 data-nosnippet>1543</a>        .<span class="kw">await
+<a href=#1544 id=1544 data-nosnippet>1544</a>        </span>.unwrap();
+<a href=#1545 id=1545 data-nosnippet>1545</a>
+<a href=#1546 id=1546 data-nosnippet>1546</a>        <span class="comment">// insert a page with an exercise to the not-open chapter
+<a href=#1547 id=1547 data-nosnippet>1547</a>        </span><span class="kw">let </span>page2 = insert_page(
+<a href=#1548 id=1548 data-nosnippet>1548</a>            tx.as_mut(),
+<a href=#1549 id=1549 data-nosnippet>1549</a>            NewPage {
+<a href=#1550 id=1550 data-nosnippet>1550</a>                exercises: <span class="macro">vec!</span>[],
+<a href=#1551 id=1551 data-nosnippet>1551</a>                exercise_slides: <span class="macro">vec!</span>[],
+<a href=#1552 id=1552 data-nosnippet>1552</a>                exercise_tasks: <span class="macro">vec!</span>[],
+<a href=#1553 id=1553 data-nosnippet>1553</a>                content: <span class="macro">vec!</span>[],
+<a href=#1554 id=1554 data-nosnippet>1554</a>                url_path: <span class="string">"/page2"</span>.to_string(),
+<a href=#1555 id=1555 data-nosnippet>1555</a>                title: <span class="string">"title"</span>.to_string(),
+<a href=#1556 id=1556 data-nosnippet>1556</a>                course_id: <span class="prelude-val">Some</span>(course),
+<a href=#1557 id=1557 data-nosnippet>1557</a>                exam_id: <span class="prelude-val">None</span>,
+<a href=#1558 id=1558 data-nosnippet>1558</a>                chapter_id: <span class="prelude-val">Some</span>(new_chapter2.id),
+<a href=#1559 id=1559 data-nosnippet>1559</a>                front_page_of_chapter_id: <span class="prelude-val">Some</span>(new_chapter2.id),
+<a href=#1560 id=1560 data-nosnippet>1560</a>                content_search_language: <span class="prelude-val">None</span>,
+<a href=#1561 id=1561 data-nosnippet>1561</a>                hidden: <span class="bool-val">false</span>,
+<a href=#1562 id=1562 data-nosnippet>1562</a>            },
+<a href=#1563 id=1563 data-nosnippet>1563</a>            user,
+<a href=#1564 id=1564 data-nosnippet>1564</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1565 id=1565 data-nosnippet>1565</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1566 id=1566 data-nosnippet>1566</a>        )
+<a href=#1567 id=1567 data-nosnippet>1567</a>        .<span class="kw">await
+<a href=#1568 id=1568 data-nosnippet>1568</a>        </span>.unwrap();
+<a href=#1569 id=1569 data-nosnippet>1569</a>        <span class="kw">let </span>ex = exercises::insert(
+<a href=#1570 id=1570 data-nosnippet>1570</a>            tx.as_mut(),
+<a href=#1571 id=1571 data-nosnippet>1571</a>            PKeyPolicy::Generate,
+<a href=#1572 id=1572 data-nosnippet>1572</a>            course,
+<a href=#1573 id=1573 data-nosnippet>1573</a>            <span class="string">"ex 1"</span>,
+<a href=#1574 id=1574 data-nosnippet>1574</a>            page2.id,
+<a href=#1575 id=1575 data-nosnippet>1575</a>            new_chapter2.id,
+<a href=#1576 id=1576 data-nosnippet>1576</a>            <span class="number">1</span>,
+<a href=#1577 id=1577 data-nosnippet>1577</a>        )
+<a href=#1578 id=1578 data-nosnippet>1578</a>        .<span class="kw">await
+<a href=#1579 id=1579 data-nosnippet>1579</a>        </span>.unwrap();
+<a href=#1580 id=1580 data-nosnippet>1580</a>        exercise_slides::insert(tx.as_mut(), PKeyPolicy::Generate, ex, <span class="number">1</span>)
+<a href=#1581 id=1581 data-nosnippet>1581</a>            .<span class="kw">await
+<a href=#1582 id=1582 data-nosnippet>1582</a>            </span>.unwrap();
+<a href=#1583 id=1583 data-nosnippet>1583</a>
+<a href=#1584 id=1584 data-nosnippet>1584</a>        <span class="comment">// should list all modules and exercises
+<a href=#1585 id=1585 data-nosnippet>1585</a>        </span><span class="kw">let </span>progress_all = get_user_course_progress(tx.as_mut(), course, user, <span class="bool-val">false</span>)
+<a href=#1586 id=1586 data-nosnippet>1586</a>            .<span class="kw">await
+<a href=#1587 id=1587 data-nosnippet>1587</a>            </span>.unwrap();
+<a href=#1588 id=1588 data-nosnippet>1588</a>        <span class="comment">// should only list modules with chapters and the exercises from open chapters
+<a href=#1589 id=1589 data-nosnippet>1589</a>        </span><span class="kw">let </span>progress_open_chapters = get_user_course_progress(tx.as_mut(), course, user, <span class="bool-val">true</span>)
+<a href=#1590 id=1590 data-nosnippet>1590</a>            .<span class="kw">await
+<a href=#1591 id=1591 data-nosnippet>1591</a>            </span>.unwrap();
+<a href=#1592 id=1592 data-nosnippet>1592</a>
+<a href=#1593 id=1593 data-nosnippet>1593</a>        <span class="macro">assert_ne!</span>(progress_all, progress_open_chapters);
+<a href=#1594 id=1594 data-nosnippet>1594</a>        <span class="macro">assert_eq!</span>(progress_all.len(), <span class="number">2</span>);
+<a href=#1595 id=1595 data-nosnippet>1595</a>        <span class="macro">assert_eq!</span>(progress_open_chapters.len(), <span class="number">1</span>);
+<a href=#1596 id=1596 data-nosnippet>1596</a>        <span class="macro">assert_eq!</span>(
+<a href=#1597 id=1597 data-nosnippet>1597</a>            progress_all[<span class="number">1</span>].course_module_id,
+<a href=#1598 id=1598 data-nosnippet>1598</a>            progress_open_chapters[<span class="number">0</span>].course_module_id
+<a href=#1599 id=1599 data-nosnippet>1599</a>        );
+<a href=#1600 id=1600 data-nosnippet>1600</a>        <span class="macro">assert_eq!</span>(progress_all[<span class="number">1</span>].total_exercises, <span class="prelude-val">Some</span>(<span class="number">2</span>));
+<a href=#1601 id=1601 data-nosnippet>1601</a>        <span class="macro">assert_eq!</span>(progress_open_chapters[<span class="number">0</span>].total_exercises, <span class="prelude-val">Some</span>(<span class="number">1</span>));
+<a href=#1602 id=1602 data-nosnippet>1602</a>    }
+<a href=#1603 id=1603 data-nosnippet>1603</a>
+<a href=#1604 id=1604 data-nosnippet>1604</a>    <span class="attr">#[tokio::test]
+<a href=#1605 id=1605 data-nosnippet>1605</a>    </span><span class="kw">async fn </span>get_user_course_progress_filter_out_closed_module() {
+<a href=#1606 id=1606 data-nosnippet>1606</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module);
+<a href=#1607 id=1607 data-nosnippet>1607</a>        <span class="comment">// creating a new course inserts one empty default module.
+<a href=#1608 id=1608 data-nosnippet>1608</a>        // there will be one other module with one closed chapter only
+<a href=#1609 id=1609 data-nosnippet>1609</a>        </span><span class="kw">let </span>(new_chapter, <span class="kw">_</span>) = create_new_chapter(
+<a href=#1610 id=1610 data-nosnippet>1610</a>            tx.as_mut(),
+<a href=#1611 id=1611 data-nosnippet>1611</a>            PKeyPolicy::Generate,
+<a href=#1612 id=1612 data-nosnippet>1612</a>            <span class="kw-2">&amp;</span>NewChapter {
+<a href=#1613 id=1613 data-nosnippet>1613</a>                name: <span class="string">"best chapter"</span>.to_string(),
+<a href=#1614 id=1614 data-nosnippet>1614</a>                color: <span class="prelude-val">None</span>,
+<a href=#1615 id=1615 data-nosnippet>1615</a>                course_id: course,
+<a href=#1616 id=1616 data-nosnippet>1616</a>                chapter_number: <span class="number">2</span>,
+<a href=#1617 id=1617 data-nosnippet>1617</a>                front_page_id: <span class="prelude-val">None</span>,
+<a href=#1618 id=1618 data-nosnippet>1618</a>                deadline: <span class="prelude-val">None</span>,
+<a href=#1619 id=1619 data-nosnippet>1619</a>                opens_at: <span class="prelude-val">Some</span>(
+<a href=#1620 id=1620 data-nosnippet>1620</a>                    DateTime::parse_from_str(
+<a href=#1621 id=1621 data-nosnippet>1621</a>                        <span class="comment">// chapter is not open yet
+<a href=#1622 id=1622 data-nosnippet>1622</a>                        </span><span class="string">"2983 Apr 13 12:09:14 +0000"</span>,
+<a href=#1623 id=1623 data-nosnippet>1623</a>                        <span class="string">"%Y %b %d %H:%M:%S %z"</span>,
+<a href=#1624 id=1624 data-nosnippet>1624</a>                    )
+<a href=#1625 id=1625 data-nosnippet>1625</a>                    .unwrap()
+<a href=#1626 id=1626 data-nosnippet>1626</a>                    .to_utc(),
+<a href=#1627 id=1627 data-nosnippet>1627</a>                ),
+<a href=#1628 id=1628 data-nosnippet>1628</a>                course_module_id: <span class="prelude-val">Some</span>(course_module.id),
+<a href=#1629 id=1629 data-nosnippet>1629</a>            },
+<a href=#1630 id=1630 data-nosnippet>1630</a>            user,
+<a href=#1631 id=1631 data-nosnippet>1631</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1632 id=1632 data-nosnippet>1632</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1633 id=1633 data-nosnippet>1633</a>        )
+<a href=#1634 id=1634 data-nosnippet>1634</a>        .<span class="kw">await
+<a href=#1635 id=1635 data-nosnippet>1635</a>        </span>.unwrap();
+<a href=#1636 id=1636 data-nosnippet>1636</a>
+<a href=#1637 id=1637 data-nosnippet>1637</a>        <span class="comment">// insert a page with an exercise to the not-open chapter
+<a href=#1638 id=1638 data-nosnippet>1638</a>        </span><span class="kw">let </span>page = insert_page(
+<a href=#1639 id=1639 data-nosnippet>1639</a>            tx.as_mut(),
+<a href=#1640 id=1640 data-nosnippet>1640</a>            NewPage {
+<a href=#1641 id=1641 data-nosnippet>1641</a>                exercises: <span class="macro">vec!</span>[],
+<a href=#1642 id=1642 data-nosnippet>1642</a>                exercise_slides: <span class="macro">vec!</span>[],
+<a href=#1643 id=1643 data-nosnippet>1643</a>                exercise_tasks: <span class="macro">vec!</span>[],
+<a href=#1644 id=1644 data-nosnippet>1644</a>                content: <span class="macro">vec!</span>[],
+<a href=#1645 id=1645 data-nosnippet>1645</a>                url_path: <span class="string">"/page2"</span>.to_string(),
+<a href=#1646 id=1646 data-nosnippet>1646</a>                title: <span class="string">"title"</span>.to_string(),
+<a href=#1647 id=1647 data-nosnippet>1647</a>                course_id: <span class="prelude-val">Some</span>(course),
+<a href=#1648 id=1648 data-nosnippet>1648</a>                exam_id: <span class="prelude-val">None</span>,
+<a href=#1649 id=1649 data-nosnippet>1649</a>                chapter_id: <span class="prelude-val">Some</span>(new_chapter.id),
+<a href=#1650 id=1650 data-nosnippet>1650</a>                front_page_of_chapter_id: <span class="prelude-val">Some</span>(new_chapter.id),
+<a href=#1651 id=1651 data-nosnippet>1651</a>                content_search_language: <span class="prelude-val">None</span>,
+<a href=#1652 id=1652 data-nosnippet>1652</a>                hidden: <span class="bool-val">false</span>,
+<a href=#1653 id=1653 data-nosnippet>1653</a>            },
+<a href=#1654 id=1654 data-nosnippet>1654</a>            user,
+<a href=#1655 id=1655 data-nosnippet>1655</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1656 id=1656 data-nosnippet>1656</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#1657 id=1657 data-nosnippet>1657</a>        )
+<a href=#1658 id=1658 data-nosnippet>1658</a>        .<span class="kw">await
+<a href=#1659 id=1659 data-nosnippet>1659</a>        </span>.unwrap();
+<a href=#1660 id=1660 data-nosnippet>1660</a>        <span class="kw">let </span>ex = exercises::insert(
+<a href=#1661 id=1661 data-nosnippet>1661</a>            tx.as_mut(),
+<a href=#1662 id=1662 data-nosnippet>1662</a>            PKeyPolicy::Generate,
+<a href=#1663 id=1663 data-nosnippet>1663</a>            course,
+<a href=#1664 id=1664 data-nosnippet>1664</a>            <span class="string">"ex 1"</span>,
+<a href=#1665 id=1665 data-nosnippet>1665</a>            page.id,
+<a href=#1666 id=1666 data-nosnippet>1666</a>            new_chapter.id,
+<a href=#1667 id=1667 data-nosnippet>1667</a>            <span class="number">1</span>,
+<a href=#1668 id=1668 data-nosnippet>1668</a>        )
+<a href=#1669 id=1669 data-nosnippet>1669</a>        .<span class="kw">await
+<a href=#1670 id=1670 data-nosnippet>1670</a>        </span>.unwrap();
+<a href=#1671 id=1671 data-nosnippet>1671</a>        exercise_slides::insert(tx.as_mut(), PKeyPolicy::Generate, ex, <span class="number">1</span>)
+<a href=#1672 id=1672 data-nosnippet>1672</a>            .<span class="kw">await
+<a href=#1673 id=1673 data-nosnippet>1673</a>            </span>.unwrap();
+<a href=#1674 id=1674 data-nosnippet>1674</a>
+<a href=#1675 id=1675 data-nosnippet>1675</a>        <span class="comment">// should list one empty module and one module with only one chapter
+<a href=#1676 id=1676 data-nosnippet>1676</a>        // which is closed
+<a href=#1677 id=1677 data-nosnippet>1677</a>        </span><span class="kw">let </span>progress_all = get_user_course_progress(tx.as_mut(), course, user, <span class="bool-val">false</span>)
+<a href=#1678 id=1678 data-nosnippet>1678</a>            .<span class="kw">await
+<a href=#1679 id=1679 data-nosnippet>1679</a>            </span>.unwrap();
+<a href=#1680 id=1680 data-nosnippet>1680</a>        <span class="comment">// should be empty
+<a href=#1681 id=1681 data-nosnippet>1681</a>        </span><span class="kw">let </span>progress_open_chapters_modules =
+<a href=#1682 id=1682 data-nosnippet>1682</a>            get_user_course_progress(tx.as_mut(), course, user, <span class="bool-val">true</span>)
+<a href=#1683 id=1683 data-nosnippet>1683</a>                .<span class="kw">await
+<a href=#1684 id=1684 data-nosnippet>1684</a>                </span>.unwrap();
+<a href=#1685 id=1685 data-nosnippet>1685</a>
+<a href=#1686 id=1686 data-nosnippet>1686</a>        <span class="macro">assert_ne!</span>(progress_all, progress_open_chapters_modules);
+<a href=#1687 id=1687 data-nosnippet>1687</a>        <span class="macro">assert_eq!</span>(progress_all.len(), <span class="number">2</span>);
+<a href=#1688 id=1688 data-nosnippet>1688</a>        <span class="macro">assert_eq!</span>(progress_open_chapters_modules.len(), <span class="number">0</span>);
+<a href=#1689 id=1689 data-nosnippet>1689</a>        <span class="macro">assert_eq!</span>(progress_all[<span class="number">1</span>].total_exercises, <span class="prelude-val">Some</span>(<span class="number">1</span>));
+<a href=#1690 id=1690 data-nosnippet>1690</a>    }
+<a href=#1691 id=1691 data-nosnippet>1691</a>
+<a href=#1692 id=1692 data-nosnippet>1692</a>    <span class="attr">#[tokio::test]
+<a href=#1693 id=1693 data-nosnippet>1693</a>    </span><span class="kw">async fn </span>has_pending_manual_reviews_in_chapter_reflects_review_state() {
+<a href=#1694 id=1694 data-nosnippet>1694</a>        <span class="macro">insert_data!</span>(
+<a href=#1695 id=1695 data-nosnippet>1695</a>            :tx,
+<a href=#1696 id=1696 data-nosnippet>1696</a>            :user,
+<a href=#1697 id=1697 data-nosnippet>1697</a>            :org,
+<a href=#1698 id=1698 data-nosnippet>1698</a>            :course,
+<a href=#1699 id=1699 data-nosnippet>1699</a>            instance: _instance,
+<a href=#1700 id=1700 data-nosnippet>1700</a>            :course_module,
+<a href=#1701 id=1701 data-nosnippet>1701</a>            chapter: chapter_id,
+<a href=#1702 id=1702 data-nosnippet>1702</a>            page: _page_id,
+<a href=#1703 id=1703 data-nosnippet>1703</a>            exercise: exercise_id,
+<a href=#1704 id=1704 data-nosnippet>1704</a>            slide: _exercise_slide_id,
+<a href=#1705 id=1705 data-nosnippet>1705</a>            task: _exercise_task_id
+<a href=#1706 id=1706 data-nosnippet>1706</a>        );
+<a href=#1707 id=1707 data-nosnippet>1707</a>
+<a href=#1708 id=1708 data-nosnippet>1708</a>        exercises::update_teacher_reviews_answer_after_locking(tx.as_mut(), exercise_id, <span class="bool-val">true</span>)
 <a href=#1709 id=1709 data-nosnippet>1709</a>            .<span class="kw">await
 <a href=#1710 id=1710 data-nosnippet>1710</a>            </span>.unwrap();
-<a href=#1711 id=1711 data-nosnippet>1711</a>
-<a href=#1712 id=1712 data-nosnippet>1712</a>        update_reviewing_stage(
-<a href=#1713 id=1713 data-nosnippet>1713</a>            tx.as_mut(),
-<a href=#1714 id=1714 data-nosnippet>1714</a>            user,
-<a href=#1715 id=1715 data-nosnippet>1715</a>            CourseOrExamId::Course(course),
-<a href=#1716 id=1716 data-nosnippet>1716</a>            exercise_id,
-<a href=#1717 id=1717 data-nosnippet>1717</a>            ReviewingStage::WaitingForManualGrading,
-<a href=#1718 id=1718 data-nosnippet>1718</a>        )
-<a href=#1719 id=1719 data-nosnippet>1719</a>        .<span class="kw">await
-<a href=#1720 id=1720 data-nosnippet>1720</a>        </span>.unwrap();
-<a href=#1721 id=1721 data-nosnippet>1721</a>
-<a href=#1722 id=1722 data-nosnippet>1722</a>        <span class="kw">let </span>has_pending = has_pending_manual_reviews_in_chapter(tx.as_mut(), user, chapter_id)
-<a href=#1723 id=1723 data-nosnippet>1723</a>            .<span class="kw">await
-<a href=#1724 id=1724 data-nosnippet>1724</a>            </span>.unwrap();
-<a href=#1725 id=1725 data-nosnippet>1725</a>        <span class="macro">assert!</span>(has_pending);
-<a href=#1726 id=1726 data-nosnippet>1726</a>
-<a href=#1727 id=1727 data-nosnippet>1727</a>        update_reviewing_stage(
-<a href=#1728 id=1728 data-nosnippet>1728</a>            tx.as_mut(),
-<a href=#1729 id=1729 data-nosnippet>1729</a>            user,
-<a href=#1730 id=1730 data-nosnippet>1730</a>            CourseOrExamId::Course(course),
-<a href=#1731 id=1731 data-nosnippet>1731</a>            exercise_id,
-<a href=#1732 id=1732 data-nosnippet>1732</a>            ReviewingStage::ReviewedAndLocked,
-<a href=#1733 id=1733 data-nosnippet>1733</a>        )
-<a href=#1734 id=1734 data-nosnippet>1734</a>        .<span class="kw">await
-<a href=#1735 id=1735 data-nosnippet>1735</a>        </span>.unwrap();
-<a href=#1736 id=1736 data-nosnippet>1736</a>
-<a href=#1737 id=1737 data-nosnippet>1737</a>        <span class="kw">let </span>has_pending = has_pending_manual_reviews_in_chapter(tx.as_mut(), user, chapter_id)
-<a href=#1738 id=1738 data-nosnippet>1738</a>            .<span class="kw">await
-<a href=#1739 id=1739 data-nosnippet>1739</a>            </span>.unwrap();
-<a href=#1740 id=1740 data-nosnippet>1740</a>        <span class="macro">assert!</span>(!has_pending);
-<a href=#1741 id=1741 data-nosnippet>1741</a>    }
-<a href=#1742 id=1742 data-nosnippet>1742</a>
-<a href=#1743 id=1743 data-nosnippet>1743</a>    <span class="attr">#[tokio::test]
-<a href=#1744 id=1744 data-nosnippet>1744</a>    </span><span class="kw">async fn </span>has_pending_manual_reviews_in_chapter_counts_self_review_manual_flows() {
-<a href=#1745 id=1745 data-nosnippet>1745</a>        <span class="macro">insert_data!</span>(
-<a href=#1746 id=1746 data-nosnippet>1746</a>            :tx,
-<a href=#1747 id=1747 data-nosnippet>1747</a>            :user,
-<a href=#1748 id=1748 data-nosnippet>1748</a>            :org,
-<a href=#1749 id=1749 data-nosnippet>1749</a>            :course,
-<a href=#1750 id=1750 data-nosnippet>1750</a>            instance: _instance,
-<a href=#1751 id=1751 data-nosnippet>1751</a>            :course_module,
-<a href=#1752 id=1752 data-nosnippet>1752</a>            chapter: chapter_id,
-<a href=#1753 id=1753 data-nosnippet>1753</a>            page: _page_id,
-<a href=#1754 id=1754 data-nosnippet>1754</a>            exercise: exercise_id,
-<a href=#1755 id=1755 data-nosnippet>1755</a>            slide: _exercise_slide_id,
-<a href=#1756 id=1756 data-nosnippet>1756</a>            task: _exercise_task_id
-<a href=#1757 id=1757 data-nosnippet>1757</a>        );
-<a href=#1758 id=1758 data-nosnippet>1758</a>
-<a href=#1759 id=1759 data-nosnippet>1759</a>        exercises::set_exercise_to_use_exercise_specific_peer_or_self_review_config(
-<a href=#1760 id=1760 data-nosnippet>1760</a>            tx.as_mut(),
-<a href=#1761 id=1761 data-nosnippet>1761</a>            exercise_id,
-<a href=#1762 id=1762 data-nosnippet>1762</a>            <span class="bool-val">false</span>,
-<a href=#1763 id=1763 data-nosnippet>1763</a>            <span class="bool-val">true</span>,
-<a href=#1764 id=1764 data-nosnippet>1764</a>            <span class="bool-val">false</span>,
-<a href=#1765 id=1765 data-nosnippet>1765</a>        )
-<a href=#1766 id=1766 data-nosnippet>1766</a>        .<span class="kw">await
-<a href=#1767 id=1767 data-nosnippet>1767</a>        </span>.unwrap();
-<a href=#1768 id=1768 data-nosnippet>1768</a>        get_or_create_user_exercise_state(tx.as_mut(), user, exercise_id, <span class="prelude-val">Some</span>(course), <span class="prelude-val">None</span>)
-<a href=#1769 id=1769 data-nosnippet>1769</a>            .<span class="kw">await
-<a href=#1770 id=1770 data-nosnippet>1770</a>            </span>.unwrap();
-<a href=#1771 id=1771 data-nosnippet>1771</a>
-<a href=#1772 id=1772 data-nosnippet>1772</a>        update_reviewing_stage(
-<a href=#1773 id=1773 data-nosnippet>1773</a>            tx.as_mut(),
-<a href=#1774 id=1774 data-nosnippet>1774</a>            user,
-<a href=#1775 id=1775 data-nosnippet>1775</a>            CourseOrExamId::Course(course),
-<a href=#1776 id=1776 data-nosnippet>1776</a>            exercise_id,
-<a href=#1777 id=1777 data-nosnippet>1777</a>            ReviewingStage::WaitingForManualGrading,
-<a href=#1778 id=1778 data-nosnippet>1778</a>        )
-<a href=#1779 id=1779 data-nosnippet>1779</a>        .<span class="kw">await
-<a href=#1780 id=1780 data-nosnippet>1780</a>        </span>.unwrap();
-<a href=#1781 id=1781 data-nosnippet>1781</a>
-<a href=#1782 id=1782 data-nosnippet>1782</a>        <span class="kw">let </span>has_pending = has_pending_manual_reviews_in_chapter(tx.as_mut(), user, chapter_id)
-<a href=#1783 id=1783 data-nosnippet>1783</a>            .<span class="kw">await
-<a href=#1784 id=1784 data-nosnippet>1784</a>            </span>.unwrap();
-<a href=#1785 id=1785 data-nosnippet>1785</a>        <span class="macro">assert!</span>(has_pending);
-<a href=#1786 id=1786 data-nosnippet>1786</a>    }
-<a href=#1787 id=1787 data-nosnippet>1787</a>}
+<a href=#1711 id=1711 data-nosnippet>1711</a>        get_or_create_user_exercise_state(tx.as_mut(), user, exercise_id, <span class="prelude-val">Some</span>(course), <span class="prelude-val">None</span>)
+<a href=#1712 id=1712 data-nosnippet>1712</a>            .<span class="kw">await
+<a href=#1713 id=1713 data-nosnippet>1713</a>            </span>.unwrap();
+<a href=#1714 id=1714 data-nosnippet>1714</a>
+<a href=#1715 id=1715 data-nosnippet>1715</a>        update_reviewing_stage(
+<a href=#1716 id=1716 data-nosnippet>1716</a>            tx.as_mut(),
+<a href=#1717 id=1717 data-nosnippet>1717</a>            user,
+<a href=#1718 id=1718 data-nosnippet>1718</a>            CourseOrExamId::Course(course),
+<a href=#1719 id=1719 data-nosnippet>1719</a>            exercise_id,
+<a href=#1720 id=1720 data-nosnippet>1720</a>            ReviewingStage::WaitingForManualGrading,
+<a href=#1721 id=1721 data-nosnippet>1721</a>        )
+<a href=#1722 id=1722 data-nosnippet>1722</a>        .<span class="kw">await
+<a href=#1723 id=1723 data-nosnippet>1723</a>        </span>.unwrap();
+<a href=#1724 id=1724 data-nosnippet>1724</a>
+<a href=#1725 id=1725 data-nosnippet>1725</a>        <span class="kw">let </span>has_pending = has_pending_manual_reviews_in_chapter(tx.as_mut(), user, chapter_id)
+<a href=#1726 id=1726 data-nosnippet>1726</a>            .<span class="kw">await
+<a href=#1727 id=1727 data-nosnippet>1727</a>            </span>.unwrap();
+<a href=#1728 id=1728 data-nosnippet>1728</a>        <span class="macro">assert!</span>(has_pending);
+<a href=#1729 id=1729 data-nosnippet>1729</a>
+<a href=#1730 id=1730 data-nosnippet>1730</a>        update_reviewing_stage(
+<a href=#1731 id=1731 data-nosnippet>1731</a>            tx.as_mut(),
+<a href=#1732 id=1732 data-nosnippet>1732</a>            user,
+<a href=#1733 id=1733 data-nosnippet>1733</a>            CourseOrExamId::Course(course),
+<a href=#1734 id=1734 data-nosnippet>1734</a>            exercise_id,
+<a href=#1735 id=1735 data-nosnippet>1735</a>            ReviewingStage::ReviewedAndLocked,
+<a href=#1736 id=1736 data-nosnippet>1736</a>        )
+<a href=#1737 id=1737 data-nosnippet>1737</a>        .<span class="kw">await
+<a href=#1738 id=1738 data-nosnippet>1738</a>        </span>.unwrap();
+<a href=#1739 id=1739 data-nosnippet>1739</a>
+<a href=#1740 id=1740 data-nosnippet>1740</a>        <span class="kw">let </span>has_pending = has_pending_manual_reviews_in_chapter(tx.as_mut(), user, chapter_id)
+<a href=#1741 id=1741 data-nosnippet>1741</a>            .<span class="kw">await
+<a href=#1742 id=1742 data-nosnippet>1742</a>            </span>.unwrap();
+<a href=#1743 id=1743 data-nosnippet>1743</a>        <span class="macro">assert!</span>(!has_pending);
+<a href=#1744 id=1744 data-nosnippet>1744</a>    }
+<a href=#1745 id=1745 data-nosnippet>1745</a>
+<a href=#1746 id=1746 data-nosnippet>1746</a>    <span class="attr">#[tokio::test]
+<a href=#1747 id=1747 data-nosnippet>1747</a>    </span><span class="kw">async fn </span>has_pending_manual_reviews_in_chapter_counts_self_review_manual_flows() {
+<a href=#1748 id=1748 data-nosnippet>1748</a>        <span class="macro">insert_data!</span>(
+<a href=#1749 id=1749 data-nosnippet>1749</a>            :tx,
+<a href=#1750 id=1750 data-nosnippet>1750</a>            :user,
+<a href=#1751 id=1751 data-nosnippet>1751</a>            :org,
+<a href=#1752 id=1752 data-nosnippet>1752</a>            :course,
+<a href=#1753 id=1753 data-nosnippet>1753</a>            instance: _instance,
+<a href=#1754 id=1754 data-nosnippet>1754</a>            :course_module,
+<a href=#1755 id=1755 data-nosnippet>1755</a>            chapter: chapter_id,
+<a href=#1756 id=1756 data-nosnippet>1756</a>            page: _page_id,
+<a href=#1757 id=1757 data-nosnippet>1757</a>            exercise: exercise_id,
+<a href=#1758 id=1758 data-nosnippet>1758</a>            slide: _exercise_slide_id,
+<a href=#1759 id=1759 data-nosnippet>1759</a>            task: _exercise_task_id
+<a href=#1760 id=1760 data-nosnippet>1760</a>        );
+<a href=#1761 id=1761 data-nosnippet>1761</a>
+<a href=#1762 id=1762 data-nosnippet>1762</a>        exercises::set_exercise_to_use_exercise_specific_peer_or_self_review_config(
+<a href=#1763 id=1763 data-nosnippet>1763</a>            tx.as_mut(),
+<a href=#1764 id=1764 data-nosnippet>1764</a>            exercise_id,
+<a href=#1765 id=1765 data-nosnippet>1765</a>            <span class="bool-val">false</span>,
+<a href=#1766 id=1766 data-nosnippet>1766</a>            <span class="bool-val">true</span>,
+<a href=#1767 id=1767 data-nosnippet>1767</a>            <span class="bool-val">false</span>,
+<a href=#1768 id=1768 data-nosnippet>1768</a>        )
+<a href=#1769 id=1769 data-nosnippet>1769</a>        .<span class="kw">await
+<a href=#1770 id=1770 data-nosnippet>1770</a>        </span>.unwrap();
+<a href=#1771 id=1771 data-nosnippet>1771</a>        get_or_create_user_exercise_state(tx.as_mut(), user, exercise_id, <span class="prelude-val">Some</span>(course), <span class="prelude-val">None</span>)
+<a href=#1772 id=1772 data-nosnippet>1772</a>            .<span class="kw">await
+<a href=#1773 id=1773 data-nosnippet>1773</a>            </span>.unwrap();
+<a href=#1774 id=1774 data-nosnippet>1774</a>
+<a href=#1775 id=1775 data-nosnippet>1775</a>        update_reviewing_stage(
+<a href=#1776 id=1776 data-nosnippet>1776</a>            tx.as_mut(),
+<a href=#1777 id=1777 data-nosnippet>1777</a>            user,
+<a href=#1778 id=1778 data-nosnippet>1778</a>            CourseOrExamId::Course(course),
+<a href=#1779 id=1779 data-nosnippet>1779</a>            exercise_id,
+<a href=#1780 id=1780 data-nosnippet>1780</a>            ReviewingStage::WaitingForManualGrading,
+<a href=#1781 id=1781 data-nosnippet>1781</a>        )
+<a href=#1782 id=1782 data-nosnippet>1782</a>        .<span class="kw">await
+<a href=#1783 id=1783 data-nosnippet>1783</a>        </span>.unwrap();
+<a href=#1784 id=1784 data-nosnippet>1784</a>
+<a href=#1785 id=1785 data-nosnippet>1785</a>        <span class="kw">let </span>has_pending = has_pending_manual_reviews_in_chapter(tx.as_mut(), user, chapter_id)
+<a href=#1786 id=1786 data-nosnippet>1786</a>            .<span class="kw">await
+<a href=#1787 id=1787 data-nosnippet>1787</a>            </span>.unwrap();
+<a href=#1788 id=1788 data-nosnippet>1788</a>        <span class="macro">assert!</span>(has_pending);
+<a href=#1789 id=1789 data-nosnippet>1789</a>    }
+<a href=#1790 id=1790 data-nosnippet>1790</a>}
 </code></pre></div></section></main></body></html>
