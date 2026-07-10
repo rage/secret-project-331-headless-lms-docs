@@ -128,7 +128,7 @@
 <a href=#128 id=128 data-nosnippet>128</a>) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;User&gt;&gt; {
 <a href=#129 id=129 data-nosnippet>129</a>    <span class="kw">let </span>user = <span class="macro">sqlx::query_as!</span>(
 <a href=#130 id=130 data-nosnippet>130</a>        User,
-<a href=#131 id=131 data-nosnippet>131</a>        <span class="string">"SELECT * FROM users WHERE upstream_id = $1"</span>,
+<a href=#131 id=131 data-nosnippet>131</a>        <span class="string">"SELECT * FROM users WHERE upstream_id = $1 AND deleted_at IS NULL"</span>,
 <a href=#132 id=132 data-nosnippet>132</a>        upstream_id
 <a href=#133 id=133 data-nosnippet>133</a>    )
 <a href=#134 id=134 data-nosnippet>134</a>    .fetch_optional(conn)
@@ -209,7 +209,7 @@
 <a href=#209 id=209 data-nosnippet>209</a>
 <a href=#210 id=210 data-nosnippet>210</a>    <span class="kw">let </span>user = <span class="macro">sqlx::query_as!</span>(
 <a href=#211 id=211 data-nosnippet>211</a>        User,
-<a href=#212 id=212 data-nosnippet>212</a>        <span class="string">"SELECT * FROM users WHERE upstream_id = $1"</span>,
+<a href=#212 id=212 data-nosnippet>212</a>        <span class="string">"SELECT * FROM users WHERE upstream_id = $1 AND deleted_at IS NULL"</span>,
 <a href=#213 id=213 data-nosnippet>213</a>        upstream_id
 <a href=#214 id=214 data-nosnippet>214</a>    )
 <a href=#215 id=215 data-nosnippet>215</a>    .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
