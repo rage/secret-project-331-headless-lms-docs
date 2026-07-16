@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_certificates_grid_by_course_id","get_completions_grid_by_course_id","get_course_users","get_progress"],"struct":["CertificateGridRow","CompletionGridRow","ProgressOverview"]};
+window.SIDEBAR_ITEMS = {"fn":["escape_like_pattern","get_certificates_grid_for_users","get_completions_grid_for_users","get_course_students_page","get_progress_for_users","get_progress_structure"],"struct":["CertificateGridRow","CompletionGridRow","CourseStudentListRow","CourseStudentsProgressStructure","CourseStudentsProgressUsers","StudentsListPage"]};
