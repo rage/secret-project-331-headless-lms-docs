@@ -175,4 +175,48 @@
 <a href=#175 id=175 data-nosnippet>175</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#176 id=176 data-nosnippet>176</a>    <span class="prelude-val">Ok</span>(res)
 <a href=#177 id=177 data-nosnippet>177</a>}
+<a href=#178 id=178 data-nosnippet>178</a>
+<a href=#179 id=179 data-nosnippet>179</a><span class="doccomment">/// Sometimes during chatbot conversation streaming, the stream ends unexpectedly while
+<a href=#180 id=180 data-nosnippet>180</a>/// a tool call has been made but not answered. This happens with provider tools that we
+<a href=#181 id=181 data-nosnippet>181</a>/// can't control. In this case, the conversation is left in a state which is invalid,
+<a href=#182 id=182 data-nosnippet>182</a>/// so we need to delete the un-answered tool call(s).
+<a href=#183 id=183 data-nosnippet>183</a></span><span class="kw">pub async fn </span>delete_hanging_tool_calls_for_conversation(
+<a href=#184 id=184 data-nosnippet>184</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#185 id=185 data-nosnippet>185</a>    conversation_id: Uuid,
+<a href=#186 id=186 data-nosnippet>186</a>) -&gt; ModelResult&lt;Vec&lt;ChatbotConversationMessageToolCall&gt;&gt; {
+<a href=#187 id=187 data-nosnippet>187</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#188 id=188 data-nosnippet>188</a>        ChatbotConversationMessageToolCall,
+<a href=#189 id=189 data-nosnippet>189</a>        <span class="string">r#"
+<a href=#190 id=190 data-nosnippet>190</a>UPDATE chatbot_conversation_message_tool_calls AS ccmtc
+<a href=#191 id=191 data-nosnippet>191</a>SET deleted_at = NOW()
+<a href=#192 id=192 data-nosnippet>192</a>WHERE ccmtc.chatbot_conversation_message_id IN (
+<a href=#193 id=193 data-nosnippet>193</a>    SELECT id
+<a href=#194 id=194 data-nosnippet>194</a>    FROM chatbot_conversation_messages
+<a href=#195 id=195 data-nosnippet>195</a>    WHERE conversation_id = $1
+<a href=#196 id=196 data-nosnippet>196</a>      AND deleted_at IS NULL
+<a href=#197 id=197 data-nosnippet>197</a>  )
+<a href=#198 id=198 data-nosnippet>198</a>  AND ccmtc.deleted_at IS NULL
+<a href=#199 id=199 data-nosnippet>199</a>  AND NOT EXISTS (
+<a href=#200 id=200 data-nosnippet>200</a>    SELECT id
+<a href=#201 id=201 data-nosnippet>201</a>    FROM chatbot_conversation_message_tool_outputs
+<a href=#202 id=202 data-nosnippet>202</a>    WHERE tool_call_id = ccmtc.tool_call_id
+<a href=#203 id=203 data-nosnippet>203</a>      AND deleted_at IS NULL
+<a href=#204 id=204 data-nosnippet>204</a>  )
+<a href=#205 id=205 data-nosnippet>205</a>RETURNING ccmtc.id,
+<a href=#206 id=206 data-nosnippet>206</a>  ccmtc.created_at,
+<a href=#207 id=207 data-nosnippet>207</a>  ccmtc.updated_at,
+<a href=#208 id=208 data-nosnippet>208</a>  ccmtc.deleted_at,
+<a href=#209 id=209 data-nosnippet>209</a>  ccmtc.chatbot_conversation_message_id,
+<a href=#210 id=210 data-nosnippet>210</a>  ccmtc.tool_name,
+<a href=#211 id=211 data-nosnippet>211</a>  ccmtc.tool_arguments,
+<a href=#212 id=212 data-nosnippet>212</a>  ccmtc.tool_call_id,
+<a href=#213 id=213 data-nosnippet>213</a>  ccmtc.tool_kind AS "tool_kind: ToolKind",
+<a href=#214 id=214 data-nosnippet>214</a>  ccmtc.response_id
+<a href=#215 id=215 data-nosnippet>215</a>        "#</span>,
+<a href=#216 id=216 data-nosnippet>216</a>        conversation_id
+<a href=#217 id=217 data-nosnippet>217</a>    )
+<a href=#218 id=218 data-nosnippet>218</a>    .fetch_all(conn)
+<a href=#219 id=219 data-nosnippet>219</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#220 id=220 data-nosnippet>220</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#221 id=221 data-nosnippet>221</a>}
 </code></pre></div></section></main></body></html>

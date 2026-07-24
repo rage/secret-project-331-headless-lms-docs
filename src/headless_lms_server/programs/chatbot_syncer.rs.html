@@ -370,7 +370,7 @@
 <a href=#370 id=370 data-nosnippet>370</a>        <span class="kw">let </span>parsed_content: Vec&lt;GutenbergBlock&gt; = serde_json::from_value(page.content.clone())<span class="question-mark">?</span>;
 <a href=#371 id=371 data-nosnippet>371</a>        <span class="kw">let </span>sanitized_blocks = remove_sensitive_attributes(parsed_content);
 <a href=#372 id=372 data-nosnippet>372</a>
-<a href=#373 id=373 data-nosnippet>373</a>        <span class="kw">let </span>content_to_upload = <span class="kw">match </span>convert_material_blocks_to_markdown_with_llm(
+<a href=#373 id=373 data-nosnippet>373</a>        <span class="kw">let </span>content_as_markdown = <span class="kw">match </span>convert_material_blocks_to_markdown_with_llm(
 <a href=#374 id=374 data-nosnippet>374</a>            <span class="kw-2">&amp;</span>sanitized_blocks,
 <a href=#375 id=375 data-nosnippet>375</a>            app_config,
 <a href=#376 id=376 data-nosnippet>376</a>            <span class="kw-2">&amp;</span>task_lm,
@@ -412,139 +412,152 @@
 <a href=#412 id=412 data-nosnippet>412</a>            </span>}
 <a href=#413 id=413 data-nosnippet>413</a>        };
 <a href=#414 id=414 data-nosnippet>414</a>
-<a href=#415 id=415 data-nosnippet>415</a>        <span class="kw">let </span>blob_path = generate_blob_path(page)<span class="question-mark">?</span>;
-<a href=#416 id=416 data-nosnippet>416</a>        <span class="kw">let </span>chapter: <span class="prelude-ty">Option</span>&lt;DatabaseChapter&gt; = <span class="kw">if </span>page.chapter_id.is_some() {
-<a href=#417 id=417 data-nosnippet>417</a>            <span class="kw">match </span>headless_lms_models::chapters::get_chapter_by_page_id(conn, page.id).<span class="kw">await </span>{
-<a href=#418 id=418 data-nosnippet>418</a>                <span class="prelude-val">Ok</span>(c) =&gt; <span class="prelude-val">Some</span>(c),
-<a href=#419 id=419 data-nosnippet>419</a>                <span class="prelude-val">Err</span>(e) =&gt; {
-<a href=#420 id=420 data-nosnippet>420</a>                    <span class="macro">debug!</span>(<span class="string">"Chapter lookup failed for page {}: {}"</span>, page.id, e);
-<a href=#421 id=421 data-nosnippet>421</a>                    <span class="prelude-val">None
-<a href=#422 id=422 data-nosnippet>422</a>                </span>}
-<a href=#423 id=423 data-nosnippet>423</a>            }
-<a href=#424 id=424 data-nosnippet>424</a>        } <span class="kw">else </span>{
-<a href=#425 id=425 data-nosnippet>425</a>            <span class="prelude-val">None
-<a href=#426 id=426 data-nosnippet>426</a>        </span>};
+<a href=#415 id=415 data-nosnippet>415</a>        <span class="comment">// save markdown content
+<a href=#416 id=416 data-nosnippet>416</a>        // if there is an error saving it to blobs, we can try uploading the same content
+<a href=#417 id=417 data-nosnippet>417</a>        // if the page hasn't been changed between tries.
+<a href=#418 id=418 data-nosnippet>418</a>        </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = headless_lms_models::chatbot_page_sync_statuses::save_markdown_content(
+<a href=#419 id=419 data-nosnippet>419</a>            conn,
+<a href=#420 id=420 data-nosnippet>420</a>            <span class="kw-2">&amp;</span>content_as_markdown,
+<a href=#421 id=421 data-nosnippet>421</a>            page.id,
+<a href=#422 id=422 data-nosnippet>422</a>        )
+<a href=#423 id=423 data-nosnippet>423</a>        .<span class="kw">await
+<a href=#424 id=424 data-nosnippet>424</a>        </span>{
+<a href=#425 id=425 data-nosnippet>425</a>            <span class="macro">warn!</span>(<span class="string">"Failed to save converted page content in DB: {}"</span>, e);
+<a href=#426 id=426 data-nosnippet>426</a>        };
 <a href=#427 id=427 data-nosnippet>427</a>
-<a href=#428 id=428 data-nosnippet>428</a>        allowed_file_paths.push(blob_path.clone());
-<a href=#429 id=429 data-nosnippet>429</a>        <span class="kw">let </span><span class="kw-2">mut </span>metadata = HashMap::new();
-<a href=#430 id=430 data-nosnippet>430</a>        <span class="comment">// Azure Blob Storage metadata values must be ASCII-only. URL-encode values that may
-<a href=#431 id=431 data-nosnippet>431</a>        // contain non-ASCII characters (e.g., Finnish characters like ä, ö) to ensure they
-<a href=#432 id=432 data-nosnippet>432</a>        // are ASCII-compatible. We decode the url and the title before we save them in our database.
-<a href=#433 id=433 data-nosnippet>433</a>        </span>metadata.insert(<span class="string">"url"</span>.to_string(), url_encode(page_url.as_ref()));
-<a href=#434 id=434 data-nosnippet>434</a>        metadata.insert(<span class="string">"title"</span>.to_string(), url_encode(<span class="kw-2">&amp;</span>page.title));
-<a href=#435 id=435 data-nosnippet>435</a>        metadata.insert(
-<a href=#436 id=436 data-nosnippet>436</a>            <span class="string">"course_id"</span>.to_string(),
-<a href=#437 id=437 data-nosnippet>437</a>            page.course_id.unwrap_or(Uuid::nil()).to_string().into(),
-<a href=#438 id=438 data-nosnippet>438</a>        );
-<a href=#439 id=439 data-nosnippet>439</a>        metadata.insert(
-<a href=#440 id=440 data-nosnippet>440</a>            <span class="string">"language"</span>.to_string(),
-<a href=#441 id=441 data-nosnippet>441</a>            course.language_code.to_string().into(),
-<a href=#442 id=442 data-nosnippet>442</a>        );
-<a href=#443 id=443 data-nosnippet>443</a>        metadata.insert(<span class="string">"filepath"</span>.to_string(), blob_path.clone().into());
-<a href=#444 id=444 data-nosnippet>444</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = chapter {
-<a href=#445 id=445 data-nosnippet>445</a>            metadata.insert(
-<a href=#446 id=446 data-nosnippet>446</a>                <span class="string">"chunk_context"</span>.to_string(),
-<a href=#447 id=447 data-nosnippet>447</a>                url_encode(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#448 id=448 data-nosnippet>448</a>                    <span class="string">"This chunk is a snippet from page {} from chapter {}: {} of the course {}."</span>,
-<a href=#449 id=449 data-nosnippet>449</a>                    page.title, c.chapter_number, c.name, course.name,
-<a href=#450 id=450 data-nosnippet>450</a>                )),
-<a href=#451 id=451 data-nosnippet>451</a>            );
-<a href=#452 id=452 data-nosnippet>452</a>        } <span class="kw">else </span>{
-<a href=#453 id=453 data-nosnippet>453</a>            metadata.insert(
-<a href=#454 id=454 data-nosnippet>454</a>                <span class="string">"chunk_context"</span>.to_string(),
-<a href=#455 id=455 data-nosnippet>455</a>                url_encode(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#456 id=456 data-nosnippet>456</a>                    <span class="string">"This chunk is a snippet from page {} of the course {}."</span>,
-<a href=#457 id=457 data-nosnippet>457</a>                    page.title, course.name,
-<a href=#458 id=458 data-nosnippet>458</a>                )),
-<a href=#459 id=459 data-nosnippet>459</a>            );
-<a href=#460 id=460 data-nosnippet>460</a>        }
-<a href=#461 id=461 data-nosnippet>461</a>
-<a href=#462 id=462 data-nosnippet>462</a>        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = blob_client
-<a href=#463 id=463 data-nosnippet>463</a>            .upload_file(<span class="kw-2">&amp;</span>blob_path, content_to_upload.as_bytes(), <span class="prelude-val">Some</span>(metadata))
-<a href=#464 id=464 data-nosnippet>464</a>            .<span class="kw">await
-<a href=#465 id=465 data-nosnippet>465</a>        </span>{
-<a href=#466 id=466 data-nosnippet>466</a>            <span class="kw">let </span>error_msg = <span class="macro">format!</span>(<span class="string">"Sync failed: Upload error: {}"</span>, e);
-<a href=#467 id=467 data-nosnippet>467</a>            <span class="macro">warn!</span>(<span class="string">"Failed to upload file {}: {:?}"</span>, blob_path, e);
-<a href=#468 id=468 data-nosnippet>468</a>            <span class="kw">if let </span><span class="prelude-val">Err</span>(db_err) =
-<a href=#469 id=469 data-nosnippet>469</a>                headless_lms_models::chatbot_page_sync_statuses::set_page_sync_error(
-<a href=#470 id=470 data-nosnippet>470</a>                    conn, page.id, <span class="kw-2">&amp;</span>error_msg,
-<a href=#471 id=471 data-nosnippet>471</a>                )
-<a href=#472 id=472 data-nosnippet>472</a>                .<span class="kw">await
-<a href=#473 id=473 data-nosnippet>473</a>            </span>{
-<a href=#474 id=474 data-nosnippet>474</a>                <span class="macro">warn!</span>(
-<a href=#475 id=475 data-nosnippet>475</a>                    <span class="string">"Failed to record upload error for page {}: {:?}"</span>,
-<a href=#476 id=476 data-nosnippet>476</a>                    page.id, db_err
-<a href=#477 id=477 data-nosnippet>477</a>                );
-<a href=#478 id=478 data-nosnippet>478</a>            }
-<a href=#479 id=479 data-nosnippet>479</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(history_id) = latest_history_ids.get(<span class="kw-2">&amp;</span>page.id) {
-<a href=#480 id=480 data-nosnippet>480</a>            <span class="kw">let </span><span class="kw-2">mut </span>page_revision_map = HashMap::new();
-<a href=#481 id=481 data-nosnippet>481</a>            page_revision_map.insert(page.id, <span class="kw-2">*</span>history_id);
-<a href=#482 id=482 data-nosnippet>482</a>            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) =
-<a href=#483 id=483 data-nosnippet>483</a>                headless_lms_models::chatbot_page_sync_statuses::update_page_revision_ids(
-<a href=#484 id=484 data-nosnippet>484</a>                    conn,
-<a href=#485 id=485 data-nosnippet>485</a>                    page_revision_map,
-<a href=#486 id=486 data-nosnippet>486</a>                )
-<a href=#487 id=487 data-nosnippet>487</a>                .<span class="kw">await
-<a href=#488 id=488 data-nosnippet>488</a>            </span>{
-<a href=#489 id=489 data-nosnippet>489</a>                <span class="kw">let </span>error_msg = <span class="macro">format!</span>(<span class="string">"Sync failed: Status update error: {}"</span>, e);
-<a href=#490 id=490 data-nosnippet>490</a>                <span class="macro">warn!</span>(<span class="string">"Failed to update sync status for page {}: {:?}"</span>, page.id, e);
-<a href=#491 id=491 data-nosnippet>491</a>                <span class="kw">if let </span><span class="prelude-val">Err</span>(db_err) =
-<a href=#492 id=492 data-nosnippet>492</a>                    headless_lms_models::chatbot_page_sync_statuses::set_page_sync_error(
-<a href=#493 id=493 data-nosnippet>493</a>                        conn, page.id, <span class="kw-2">&amp;</span>error_msg,
-<a href=#494 id=494 data-nosnippet>494</a>                    )
-<a href=#495 id=495 data-nosnippet>495</a>                    .<span class="kw">await
-<a href=#496 id=496 data-nosnippet>496</a>                </span>{
-<a href=#497 id=497 data-nosnippet>497</a>                    <span class="macro">warn!</span>(
-<a href=#498 id=498 data-nosnippet>498</a>                        <span class="string">"Failed to record status update error for page {}: {:?}"</span>,
-<a href=#499 id=499 data-nosnippet>499</a>                        page.id, db_err
-<a href=#500 id=500 data-nosnippet>500</a>                    );
-<a href=#501 id=501 data-nosnippet>501</a>                }
-<a href=#502 id=502 data-nosnippet>502</a>            }
-<a href=#503 id=503 data-nosnippet>503</a>        }
-<a href=#504 id=504 data-nosnippet>504</a>    }
-<a href=#505 id=505 data-nosnippet>505</a>
-<a href=#506 id=506 data-nosnippet>506</a>    <span class="prelude-val">Ok</span>(())
-<a href=#507 id=507 data-nosnippet>507</a>}
-<a href=#508 id=508 data-nosnippet>508</a>
-<a href=#509 id=509 data-nosnippet>509</a><span class="doccomment">/// Generates the blob storage path for a given page.
-<a href=#510 id=510 data-nosnippet>510</a></span><span class="kw">fn </span>generate_blob_path(page: <span class="kw-2">&amp;</span>Page) -&gt; anyhow::Result&lt;String&gt; {
-<a href=#511 id=511 data-nosnippet>511</a>    <span class="kw">let </span>course_id = page
-<a href=#512 id=512 data-nosnippet>512</a>        .course_id
-<a href=#513 id=513 data-nosnippet>513</a>        .ok_or_else(|| <span class="macro">anyhow::anyhow!</span>(<span class="string">"Page {} does not belong to any course."</span>, page.id))<span class="question-mark">?</span>;
-<a href=#514 id=514 data-nosnippet>514</a>
-<a href=#515 id=515 data-nosnippet>515</a>    <span class="prelude-val">Ok</span>(<span class="macro">format!</span>(<span class="string">"courses/{}/pages/{}.md"</span>, course_id, page.id))
-<a href=#516 id=516 data-nosnippet>516</a>}
-<a href=#517 id=517 data-nosnippet>517</a>
-<a href=#518 id=518 data-nosnippet>518</a><span class="doccomment">/// Deletes files from blob storage that are no longer associated with any public page.
-<a href=#519 id=519 data-nosnippet>519</a>/// This includes files for deleted pages, hidden pages, and any other pages that are no longer public.
-<a href=#520 id=520 data-nosnippet>520</a></span><span class="kw">async fn </span>delete_old_files(
-<a href=#521 id=521 data-nosnippet>521</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#522 id=522 data-nosnippet>522</a>    course_id: Uuid,
-<a href=#523 id=523 data-nosnippet>523</a>    blob_client: <span class="kw-2">&amp;</span>AzureBlobClient,
-<a href=#524 id=524 data-nosnippet>524</a>) -&gt; anyhow::Result&lt;()&gt; {
-<a href=#525 id=525 data-nosnippet>525</a>    <span class="kw">let </span><span class="kw-2">mut </span>courses_prefix = <span class="string">"courses/"</span>.to_string();
-<a href=#526 id=526 data-nosnippet>526</a>    courses_prefix.push_str(<span class="kw-2">&amp;</span>course_id.to_string());
-<a href=#527 id=527 data-nosnippet>527</a>    <span class="kw">let </span>existing_files = blob_client.list_files_with_prefix(<span class="kw-2">&amp;</span>courses_prefix).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#528 id=528 data-nosnippet>528</a>
-<a href=#529 id=529 data-nosnippet>529</a>    <span class="kw">let </span>pages = headless_lms_models::pages::get_all_by_course_id_and_visibility(
-<a href=#530 id=530 data-nosnippet>530</a>        conn,
-<a href=#531 id=531 data-nosnippet>531</a>        course_id,
-<a href=#532 id=532 data-nosnippet>532</a>        PageVisibility::Public,
-<a href=#533 id=533 data-nosnippet>533</a>    )
-<a href=#534 id=534 data-nosnippet>534</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#535 id=535 data-nosnippet>535</a>
-<a href=#536 id=536 data-nosnippet>536</a>    <span class="kw">let </span>allowed_paths: HashSet&lt;String&gt; = pages
-<a href=#537 id=537 data-nosnippet>537</a>        .iter()
-<a href=#538 id=538 data-nosnippet>538</a>        .filter_map(|page| generate_blob_path(page).ok())
-<a href=#539 id=539 data-nosnippet>539</a>        .collect();
-<a href=#540 id=540 data-nosnippet>540</a>
-<a href=#541 id=541 data-nosnippet>541</a>    <span class="kw">for </span>file <span class="kw">in </span>existing_files {
-<a href=#542 id=542 data-nosnippet>542</a>        <span class="kw">if </span>!allowed_paths.contains(<span class="kw-2">&amp;</span>file) {
-<a href=#543 id=543 data-nosnippet>543</a>            <span class="macro">info!</span>(<span class="string">"Deleting obsolete file: {}"</span>, file);
-<a href=#544 id=544 data-nosnippet>544</a>            blob_client.delete_file(<span class="kw-2">&amp;</span>file).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#545 id=545 data-nosnippet>545</a>        }
-<a href=#546 id=546 data-nosnippet>546</a>    }
-<a href=#547 id=547 data-nosnippet>547</a>
-<a href=#548 id=548 data-nosnippet>548</a>    <span class="prelude-val">Ok</span>(())
-<a href=#549 id=549 data-nosnippet>549</a>}
+<a href=#428 id=428 data-nosnippet>428</a>        <span class="kw">let </span>blob_path = generate_blob_path(page)<span class="question-mark">?</span>;
+<a href=#429 id=429 data-nosnippet>429</a>        <span class="kw">let </span>chapter: <span class="prelude-ty">Option</span>&lt;DatabaseChapter&gt; = <span class="kw">if </span>page.chapter_id.is_some() {
+<a href=#430 id=430 data-nosnippet>430</a>            <span class="kw">match </span>headless_lms_models::chapters::get_chapter_by_page_id(conn, page.id).<span class="kw">await </span>{
+<a href=#431 id=431 data-nosnippet>431</a>                <span class="prelude-val">Ok</span>(c) =&gt; <span class="prelude-val">Some</span>(c),
+<a href=#432 id=432 data-nosnippet>432</a>                <span class="prelude-val">Err</span>(e) =&gt; {
+<a href=#433 id=433 data-nosnippet>433</a>                    <span class="macro">debug!</span>(<span class="string">"Chapter lookup failed for page {}: {}"</span>, page.id, e);
+<a href=#434 id=434 data-nosnippet>434</a>                    <span class="prelude-val">None
+<a href=#435 id=435 data-nosnippet>435</a>                </span>}
+<a href=#436 id=436 data-nosnippet>436</a>            }
+<a href=#437 id=437 data-nosnippet>437</a>        } <span class="kw">else </span>{
+<a href=#438 id=438 data-nosnippet>438</a>            <span class="prelude-val">None
+<a href=#439 id=439 data-nosnippet>439</a>        </span>};
+<a href=#440 id=440 data-nosnippet>440</a>
+<a href=#441 id=441 data-nosnippet>441</a>        allowed_file_paths.push(blob_path.clone());
+<a href=#442 id=442 data-nosnippet>442</a>        <span class="kw">let </span><span class="kw-2">mut </span>metadata = HashMap::new();
+<a href=#443 id=443 data-nosnippet>443</a>        <span class="comment">// Azure Blob Storage metadata values must be ASCII-only. URL-encode values that may
+<a href=#444 id=444 data-nosnippet>444</a>        // contain non-ASCII characters (e.g., Finnish characters like ä, ö) to ensure they
+<a href=#445 id=445 data-nosnippet>445</a>        // are ASCII-compatible. We decode the url and the title before we save them in our database.
+<a href=#446 id=446 data-nosnippet>446</a>        </span>metadata.insert(<span class="string">"url"</span>.to_string(), url_encode(page_url.as_ref()));
+<a href=#447 id=447 data-nosnippet>447</a>        metadata.insert(<span class="string">"title"</span>.to_string(), url_encode(<span class="kw-2">&amp;</span>page.title));
+<a href=#448 id=448 data-nosnippet>448</a>        metadata.insert(
+<a href=#449 id=449 data-nosnippet>449</a>            <span class="string">"course_id"</span>.to_string(),
+<a href=#450 id=450 data-nosnippet>450</a>            page.course_id.unwrap_or(Uuid::nil()).to_string().into(),
+<a href=#451 id=451 data-nosnippet>451</a>        );
+<a href=#452 id=452 data-nosnippet>452</a>        metadata.insert(
+<a href=#453 id=453 data-nosnippet>453</a>            <span class="string">"language"</span>.to_string(),
+<a href=#454 id=454 data-nosnippet>454</a>            course.language_code.to_string().into(),
+<a href=#455 id=455 data-nosnippet>455</a>        );
+<a href=#456 id=456 data-nosnippet>456</a>        metadata.insert(<span class="string">"filepath"</span>.to_string(), blob_path.clone().into());
+<a href=#457 id=457 data-nosnippet>457</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = chapter {
+<a href=#458 id=458 data-nosnippet>458</a>            metadata.insert(
+<a href=#459 id=459 data-nosnippet>459</a>                <span class="string">"chunk_context"</span>.to_string(),
+<a href=#460 id=460 data-nosnippet>460</a>                url_encode(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#461 id=461 data-nosnippet>461</a>                    <span class="string">"This chunk is a snippet from page {} from chapter {}: {} of the course {}."</span>,
+<a href=#462 id=462 data-nosnippet>462</a>                    page.title, c.chapter_number, c.name, course.name,
+<a href=#463 id=463 data-nosnippet>463</a>                )),
+<a href=#464 id=464 data-nosnippet>464</a>            );
+<a href=#465 id=465 data-nosnippet>465</a>        } <span class="kw">else </span>{
+<a href=#466 id=466 data-nosnippet>466</a>            metadata.insert(
+<a href=#467 id=467 data-nosnippet>467</a>                <span class="string">"chunk_context"</span>.to_string(),
+<a href=#468 id=468 data-nosnippet>468</a>                url_encode(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#469 id=469 data-nosnippet>469</a>                    <span class="string">"This chunk is a snippet from page {} of the course {}."</span>,
+<a href=#470 id=470 data-nosnippet>470</a>                    page.title, course.name,
+<a href=#471 id=471 data-nosnippet>471</a>                )),
+<a href=#472 id=472 data-nosnippet>472</a>            );
+<a href=#473 id=473 data-nosnippet>473</a>        }
+<a href=#474 id=474 data-nosnippet>474</a>
+<a href=#475 id=475 data-nosnippet>475</a>        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = blob_client
+<a href=#476 id=476 data-nosnippet>476</a>            .upload_file(<span class="kw-2">&amp;</span>blob_path, content_as_markdown.as_bytes(), <span class="prelude-val">Some</span>(metadata))
+<a href=#477 id=477 data-nosnippet>477</a>            .<span class="kw">await
+<a href=#478 id=478 data-nosnippet>478</a>        </span>{
+<a href=#479 id=479 data-nosnippet>479</a>            <span class="kw">let </span>error_msg = <span class="macro">format!</span>(<span class="string">"Sync failed: Upload error: {}"</span>, e);
+<a href=#480 id=480 data-nosnippet>480</a>            <span class="macro">warn!</span>(<span class="string">"Failed to upload file {}: {:?}"</span>, blob_path, e);
+<a href=#481 id=481 data-nosnippet>481</a>            <span class="kw">if let </span><span class="prelude-val">Err</span>(db_err) =
+<a href=#482 id=482 data-nosnippet>482</a>                headless_lms_models::chatbot_page_sync_statuses::set_page_sync_error(
+<a href=#483 id=483 data-nosnippet>483</a>                    conn, page.id, <span class="kw-2">&amp;</span>error_msg,
+<a href=#484 id=484 data-nosnippet>484</a>                )
+<a href=#485 id=485 data-nosnippet>485</a>                .<span class="kw">await
+<a href=#486 id=486 data-nosnippet>486</a>            </span>{
+<a href=#487 id=487 data-nosnippet>487</a>                <span class="macro">warn!</span>(
+<a href=#488 id=488 data-nosnippet>488</a>                    <span class="string">"Failed to record upload error for page {}: {:?}"</span>,
+<a href=#489 id=489 data-nosnippet>489</a>                    page.id, db_err
+<a href=#490 id=490 data-nosnippet>490</a>                );
+<a href=#491 id=491 data-nosnippet>491</a>            }
+<a href=#492 id=492 data-nosnippet>492</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(history_id) = latest_history_ids.get(<span class="kw-2">&amp;</span>page.id) {
+<a href=#493 id=493 data-nosnippet>493</a>            <span class="kw">let </span><span class="kw-2">mut </span>page_revision_map = HashMap::new();
+<a href=#494 id=494 data-nosnippet>494</a>            page_revision_map.insert(page.id, <span class="kw-2">*</span>history_id);
+<a href=#495 id=495 data-nosnippet>495</a>            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) =
+<a href=#496 id=496 data-nosnippet>496</a>                headless_lms_models::chatbot_page_sync_statuses::update_page_revision_ids(
+<a href=#497 id=497 data-nosnippet>497</a>                    conn,
+<a href=#498 id=498 data-nosnippet>498</a>                    page_revision_map,
+<a href=#499 id=499 data-nosnippet>499</a>                )
+<a href=#500 id=500 data-nosnippet>500</a>                .<span class="kw">await
+<a href=#501 id=501 data-nosnippet>501</a>            </span>{
+<a href=#502 id=502 data-nosnippet>502</a>                <span class="kw">let </span>error_msg = <span class="macro">format!</span>(<span class="string">"Sync failed: Status update error: {}"</span>, e);
+<a href=#503 id=503 data-nosnippet>503</a>                <span class="macro">warn!</span>(<span class="string">"Failed to update sync status for page {}: {:?}"</span>, page.id, e);
+<a href=#504 id=504 data-nosnippet>504</a>                <span class="kw">if let </span><span class="prelude-val">Err</span>(db_err) =
+<a href=#505 id=505 data-nosnippet>505</a>                    headless_lms_models::chatbot_page_sync_statuses::set_page_sync_error(
+<a href=#506 id=506 data-nosnippet>506</a>                        conn, page.id, <span class="kw-2">&amp;</span>error_msg,
+<a href=#507 id=507 data-nosnippet>507</a>                    )
+<a href=#508 id=508 data-nosnippet>508</a>                    .<span class="kw">await
+<a href=#509 id=509 data-nosnippet>509</a>                </span>{
+<a href=#510 id=510 data-nosnippet>510</a>                    <span class="macro">warn!</span>(
+<a href=#511 id=511 data-nosnippet>511</a>                        <span class="string">"Failed to record status update error for page {}: {:?}"</span>,
+<a href=#512 id=512 data-nosnippet>512</a>                        page.id, db_err
+<a href=#513 id=513 data-nosnippet>513</a>                    );
+<a href=#514 id=514 data-nosnippet>514</a>                }
+<a href=#515 id=515 data-nosnippet>515</a>            }
+<a href=#516 id=516 data-nosnippet>516</a>        }
+<a href=#517 id=517 data-nosnippet>517</a>    }
+<a href=#518 id=518 data-nosnippet>518</a>
+<a href=#519 id=519 data-nosnippet>519</a>    <span class="prelude-val">Ok</span>(())
+<a href=#520 id=520 data-nosnippet>520</a>}
+<a href=#521 id=521 data-nosnippet>521</a>
+<a href=#522 id=522 data-nosnippet>522</a><span class="doccomment">/// Generates the blob storage path for a given page.
+<a href=#523 id=523 data-nosnippet>523</a></span><span class="kw">fn </span>generate_blob_path(page: <span class="kw-2">&amp;</span>Page) -&gt; anyhow::Result&lt;String&gt; {
+<a href=#524 id=524 data-nosnippet>524</a>    <span class="kw">let </span>course_id = page
+<a href=#525 id=525 data-nosnippet>525</a>        .course_id
+<a href=#526 id=526 data-nosnippet>526</a>        .ok_or_else(|| <span class="macro">anyhow::anyhow!</span>(<span class="string">"Page {} does not belong to any course."</span>, page.id))<span class="question-mark">?</span>;
+<a href=#527 id=527 data-nosnippet>527</a>
+<a href=#528 id=528 data-nosnippet>528</a>    <span class="prelude-val">Ok</span>(<span class="macro">format!</span>(<span class="string">"courses/{}/pages/{}.md"</span>, course_id, page.id))
+<a href=#529 id=529 data-nosnippet>529</a>}
+<a href=#530 id=530 data-nosnippet>530</a>
+<a href=#531 id=531 data-nosnippet>531</a><span class="doccomment">/// Deletes files from blob storage that are no longer associated with any public page.
+<a href=#532 id=532 data-nosnippet>532</a>/// This includes files for deleted pages, hidden pages, and any other pages that are no longer public.
+<a href=#533 id=533 data-nosnippet>533</a></span><span class="kw">async fn </span>delete_old_files(
+<a href=#534 id=534 data-nosnippet>534</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#535 id=535 data-nosnippet>535</a>    course_id: Uuid,
+<a href=#536 id=536 data-nosnippet>536</a>    blob_client: <span class="kw-2">&amp;</span>AzureBlobClient,
+<a href=#537 id=537 data-nosnippet>537</a>) -&gt; anyhow::Result&lt;()&gt; {
+<a href=#538 id=538 data-nosnippet>538</a>    <span class="kw">let </span><span class="kw-2">mut </span>courses_prefix = <span class="string">"courses/"</span>.to_string();
+<a href=#539 id=539 data-nosnippet>539</a>    courses_prefix.push_str(<span class="kw-2">&amp;</span>course_id.to_string());
+<a href=#540 id=540 data-nosnippet>540</a>    <span class="kw">let </span>existing_files = blob_client.list_files_with_prefix(<span class="kw-2">&amp;</span>courses_prefix).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#541 id=541 data-nosnippet>541</a>
+<a href=#542 id=542 data-nosnippet>542</a>    <span class="kw">let </span>pages = headless_lms_models::pages::get_all_by_course_id_and_visibility(
+<a href=#543 id=543 data-nosnippet>543</a>        conn,
+<a href=#544 id=544 data-nosnippet>544</a>        course_id,
+<a href=#545 id=545 data-nosnippet>545</a>        PageVisibility::Public,
+<a href=#546 id=546 data-nosnippet>546</a>    )
+<a href=#547 id=547 data-nosnippet>547</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#548 id=548 data-nosnippet>548</a>
+<a href=#549 id=549 data-nosnippet>549</a>    <span class="kw">let </span>allowed_paths: HashSet&lt;String&gt; = pages
+<a href=#550 id=550 data-nosnippet>550</a>        .iter()
+<a href=#551 id=551 data-nosnippet>551</a>        .filter_map(|page| generate_blob_path(page).ok())
+<a href=#552 id=552 data-nosnippet>552</a>        .collect();
+<a href=#553 id=553 data-nosnippet>553</a>
+<a href=#554 id=554 data-nosnippet>554</a>    <span class="kw">for </span>file <span class="kw">in </span>existing_files {
+<a href=#555 id=555 data-nosnippet>555</a>        <span class="kw">if </span>!allowed_paths.contains(<span class="kw-2">&amp;</span>file) {
+<a href=#556 id=556 data-nosnippet>556</a>            <span class="macro">info!</span>(<span class="string">"Deleting obsolete file: {}"</span>, file);
+<a href=#557 id=557 data-nosnippet>557</a>            blob_client.delete_file(<span class="kw-2">&amp;</span>file).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#558 id=558 data-nosnippet>558</a>        }
+<a href=#559 id=559 data-nosnippet>559</a>    }
+<a href=#560 id=560 data-nosnippet>560</a>
+<a href=#561 id=561 data-nosnippet>561</a>    <span class="prelude-val">Ok</span>(())
+<a href=#562 id=562 data-nosnippet>562</a>}
 </code></pre></div></section></main></body></html>

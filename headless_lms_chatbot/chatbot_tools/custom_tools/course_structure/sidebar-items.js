@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PageType"],"struct":["CourseStructureArguments","CourseStructureState","PageDocumentInfo"],"type":["CourseStructureTool"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["chatbot_cited_documents_to_citations","get_course_material_document","process_course_material_document_response","save_documents","save_documents_mock"],"struct":["CourseMaterialDocument"]};
+window.SIDEBAR_ITEMS = {"fn":["chatbot_cited_documents_to_citations","get_course_material_document","parse_document_filepath","process_course_material_document_response","save_documents","save_documents_mock"],"struct":["CourseMaterialDocument","DocumentProperties"]};

@@ -238,124 +238,168 @@
 <a href=#238 id=238 data-nosnippet>238</a>UPDATE chatbot_conversation_messages
 <a href=#239 id=239 data-nosnippet>239</a>SET deleted_at = NOW()
 <a href=#240 id=240 data-nosnippet>240</a>WHERE id = $1
-<a href=#241 id=241 data-nosnippet>241</a>RETURNING *
-<a href=#242 id=242 data-nosnippet>242</a>        "#</span>,
-<a href=#243 id=243 data-nosnippet>243</a>        id
-<a href=#244 id=244 data-nosnippet>244</a>    )
-<a href=#245 id=245 data-nosnippet>245</a>    .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
-<a href=#246 id=246 data-nosnippet>246</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#247 id=247 data-nosnippet>247</a>
-<a href=#248 id=248 data-nosnippet>248</a>    <span class="comment">// delete the child
-<a href=#249 id=249 data-nosnippet>249</a>    </span><span class="kw">let </span>child = delete_message_fields(<span class="kw-2">&amp;mut </span>tx, row.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#250 id=250 data-nosnippet>250</a>
-<a href=#251 id=251 data-nosnippet>251</a>    <span class="kw">let </span>res = ChatbotConversationMessage::from_row(row, child);
-<a href=#252 id=252 data-nosnippet>252</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#253 id=253 data-nosnippet>253</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#254 id=254 data-nosnippet>254</a>}
-<a href=#255 id=255 data-nosnippet>255</a>
-<a href=#256 id=256 data-nosnippet>256</a><span class="kw">pub async fn </span>update(
-<a href=#257 id=257 data-nosnippet>257</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#258 id=258 data-nosnippet>258</a>    id: Uuid,
-<a href=#259 id=259 data-nosnippet>259</a>    text: <span class="kw-2">&amp;</span>str,
-<a href=#260 id=260 data-nosnippet>260</a>    message_is_complete: bool,
-<a href=#261 id=261 data-nosnippet>261</a>    used_tokens: i32,
-<a href=#262 id=262 data-nosnippet>262</a>) -&gt; ModelResult&lt;ChatbotConversationMessage&gt; {
-<a href=#263 id=263 data-nosnippet>263</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#264 id=264 data-nosnippet>264</a>
-<a href=#265 id=265 data-nosnippet>265</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query_as!</span>(
-<a href=#266 id=266 data-nosnippet>266</a>        ChatbotConversationMessageRow,
-<a href=#267 id=267 data-nosnippet>267</a>        <span class="string">r#"
-<a href=#268 id=268 data-nosnippet>268</a>UPDATE chatbot_conversation_messages
-<a href=#269 id=269 data-nosnippet>269</a>SET updated_at = NOW()
-<a href=#270 id=270 data-nosnippet>270</a>WHERE id = $1
-<a href=#271 id=271 data-nosnippet>271</a>RETURNING *
-<a href=#272 id=272 data-nosnippet>272</a>        "#</span>,
-<a href=#273 id=273 data-nosnippet>273</a>        id
-<a href=#274 id=274 data-nosnippet>274</a>    )
-<a href=#275 id=275 data-nosnippet>275</a>    .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
-<a href=#276 id=276 data-nosnippet>276</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#277 id=277 data-nosnippet>277</a>
-<a href=#278 id=278 data-nosnippet>278</a>    <span class="comment">// update the parent
-<a href=#279 id=279 data-nosnippet>279</a>    </span><span class="kw">let </span>child = chatbot_conversation_message_messages::update(
-<a href=#280 id=280 data-nosnippet>280</a>        <span class="kw-2">&amp;mut </span>tx,
-<a href=#281 id=281 data-nosnippet>281</a>        row.id,
-<a href=#282 id=282 data-nosnippet>282</a>        text,
-<a href=#283 id=283 data-nosnippet>283</a>        message_is_complete,
-<a href=#284 id=284 data-nosnippet>284</a>        used_tokens,
-<a href=#285 id=285 data-nosnippet>285</a>    )
-<a href=#286 id=286 data-nosnippet>286</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#287 id=287 data-nosnippet>287</a>
-<a href=#288 id=288 data-nosnippet>288</a>    <span class="kw">let </span>res = ChatbotConversationMessage::from_row(row, Message::Text(child));
-<a href=#289 id=289 data-nosnippet>289</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#290 id=290 data-nosnippet>290</a>
-<a href=#291 id=291 data-nosnippet>291</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#292 id=292 data-nosnippet>292</a>}
-<a href=#293 id=293 data-nosnippet>293</a>
-<a href=#294 id=294 data-nosnippet>294</a><span class="kw">pub async fn </span>message_row_to_message(
-<a href=#295 id=295 data-nosnippet>295</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#296 id=296 data-nosnippet>296</a>    row: ChatbotConversationMessageRow,
-<a href=#297 id=297 data-nosnippet>297</a>) -&gt; ModelResult&lt;ChatbotConversationMessage&gt; {
-<a href=#298 id=298 data-nosnippet>298</a>    <span class="kw">let </span>inner_message = get_message_fields(conn, row.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#299 id=299 data-nosnippet>299</a>    <span class="kw">let </span>res = ChatbotConversationMessage::from_row(row, inner_message);
-<a href=#300 id=300 data-nosnippet>300</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#301 id=301 data-nosnippet>301</a>}
-<a href=#302 id=302 data-nosnippet>302</a>
-<a href=#303 id=303 data-nosnippet>303</a><span class="kw">pub async fn </span>get_message_fields(conn: <span class="kw-2">&amp;mut </span>PgConnection, message_id: Uuid) -&gt; ModelResult&lt;Message&gt; {
-<a href=#304 id=304 data-nosnippet>304</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(message) =
-<a href=#305 id=305 data-nosnippet>305</a>        chatbot_conversation_message_messages::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
-<a href=#306 id=306 data-nosnippet>306</a>    </span>{
-<a href=#307 id=307 data-nosnippet>307</a>        <span class="prelude-val">Ok</span>(Message::Text(message))
-<a href=#308 id=308 data-nosnippet>308</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(tool_call) =
-<a href=#309 id=309 data-nosnippet>309</a>        chatbot_conversation_message_tool_calls::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
-<a href=#310 id=310 data-nosnippet>310</a>    </span>{
-<a href=#311 id=311 data-nosnippet>311</a>        <span class="prelude-val">Ok</span>(Message::ToolCall(tool_call))
-<a href=#312 id=312 data-nosnippet>312</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(tool_output) =
-<a href=#313 id=313 data-nosnippet>313</a>        chatbot_conversation_message_tool_outputs::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
-<a href=#314 id=314 data-nosnippet>314</a>    </span>{
-<a href=#315 id=315 data-nosnippet>315</a>        <span class="prelude-val">Ok</span>(Message::ToolOutput(tool_output))
-<a href=#316 id=316 data-nosnippet>316</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(reasoning) =
-<a href=#317 id=317 data-nosnippet>317</a>        chatbot_conversation_message_reasoning::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
-<a href=#318 id=318 data-nosnippet>318</a>    </span>{
-<a href=#319 id=319 data-nosnippet>319</a>        <span class="prelude-val">Ok</span>(Message::Reasoning(reasoning))
-<a href=#320 id=320 data-nosnippet>320</a>    } <span class="kw">else </span>{
-<a href=#321 id=321 data-nosnippet>321</a>        <span class="prelude-val">Err</span>(ModelError::new(
-<a href=#322 id=322 data-nosnippet>322</a>            ModelErrorType::RecordNotFound,
-<a href=#323 id=323 data-nosnippet>323</a>            <span class="string">"No inner message found for this ChatbotConversationMessage"</span>,
-<a href=#324 id=324 data-nosnippet>324</a>            <span class="prelude-val">None</span>,
-<a href=#325 id=325 data-nosnippet>325</a>        ))
-<a href=#326 id=326 data-nosnippet>326</a>    }
-<a href=#327 id=327 data-nosnippet>327</a>}
-<a href=#328 id=328 data-nosnippet>328</a>
-<a href=#329 id=329 data-nosnippet>329</a><span class="kw">pub async fn </span>delete_message_fields(
-<a href=#330 id=330 data-nosnippet>330</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#331 id=331 data-nosnippet>331</a>    message_id: Uuid,
-<a href=#332 id=332 data-nosnippet>332</a>) -&gt; ModelResult&lt;Message&gt; {
-<a href=#333 id=333 data-nosnippet>333</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(message) =
-<a href=#334 id=334 data-nosnippet>334</a>        chatbot_conversation_message_messages::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
-<a href=#335 id=335 data-nosnippet>335</a>    </span>{
-<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw">let </span>res = chatbot_conversation_message_messages::delete(conn, message.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#337 id=337 data-nosnippet>337</a>        <span class="prelude-val">Ok</span>(Message::Text(res))
-<a href=#338 id=338 data-nosnippet>338</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(tool_call) =
-<a href=#339 id=339 data-nosnippet>339</a>        chatbot_conversation_message_tool_calls::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
-<a href=#340 id=340 data-nosnippet>340</a>    </span>{
-<a href=#341 id=341 data-nosnippet>341</a>        <span class="kw">let </span>res = chatbot_conversation_message_tool_calls::delete(conn, tool_call.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#342 id=342 data-nosnippet>342</a>        <span class="prelude-val">Ok</span>(Message::ToolCall(res))
-<a href=#343 id=343 data-nosnippet>343</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(tool_output) =
-<a href=#344 id=344 data-nosnippet>344</a>        chatbot_conversation_message_tool_outputs::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
-<a href=#345 id=345 data-nosnippet>345</a>    </span>{
-<a href=#346 id=346 data-nosnippet>346</a>        <span class="kw">let </span>res = chatbot_conversation_message_tool_outputs::delete(conn, tool_output.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#347 id=347 data-nosnippet>347</a>        <span class="prelude-val">Ok</span>(Message::ToolOutput(res))
-<a href=#348 id=348 data-nosnippet>348</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(reasoning) =
-<a href=#349 id=349 data-nosnippet>349</a>        chatbot_conversation_message_reasoning::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#241 id=241 data-nosnippet>241</a>  AND deleted_at IS NULL
+<a href=#242 id=242 data-nosnippet>242</a>RETURNING *
+<a href=#243 id=243 data-nosnippet>243</a>        "#</span>,
+<a href=#244 id=244 data-nosnippet>244</a>        id
+<a href=#245 id=245 data-nosnippet>245</a>    )
+<a href=#246 id=246 data-nosnippet>246</a>    .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#247 id=247 data-nosnippet>247</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#248 id=248 data-nosnippet>248</a>
+<a href=#249 id=249 data-nosnippet>249</a>    <span class="comment">// delete the child
+<a href=#250 id=250 data-nosnippet>250</a>    </span><span class="kw">let </span>child = delete_message_fields(<span class="kw-2">&amp;mut </span>tx, row.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#251 id=251 data-nosnippet>251</a>
+<a href=#252 id=252 data-nosnippet>252</a>    <span class="kw">let </span>res = ChatbotConversationMessage::from_row(row, child);
+<a href=#253 id=253 data-nosnippet>253</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#254 id=254 data-nosnippet>254</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#255 id=255 data-nosnippet>255</a>}
+<a href=#256 id=256 data-nosnippet>256</a>
+<a href=#257 id=257 data-nosnippet>257</a><span class="doccomment">/// Sometimes during chatbot conversation streaming, the stream ends unexpectedly while
+<a href=#258 id=258 data-nosnippet>258</a>/// a tool call has been made but not answered. This happens with provider tools that we
+<a href=#259 id=259 data-nosnippet>259</a>/// can't control. In this case, the conversation is left in a state which is invalid,
+<a href=#260 id=260 data-nosnippet>260</a>/// so we need to delete the messages with un-answered tool calls.
+<a href=#261 id=261 data-nosnippet>261</a></span><span class="kw">pub async fn </span>delete_hanging_tool_call_messages_for_conversation(
+<a href=#262 id=262 data-nosnippet>262</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#263 id=263 data-nosnippet>263</a>    conversation_id: Uuid,
+<a href=#264 id=264 data-nosnippet>264</a>) -&gt; ModelResult&lt;Vec&lt;ChatbotConversationMessageRow&gt;&gt; {
+<a href=#265 id=265 data-nosnippet>265</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#266 id=266 data-nosnippet>266</a>    <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="macro">vec!</span>[];
+<a href=#267 id=267 data-nosnippet>267</a>
+<a href=#268 id=268 data-nosnippet>268</a>    <span class="kw">let </span>deleted_children =
+<a href=#269 id=269 data-nosnippet>269</a>        chatbot_conversation_message_tool_calls::delete_hanging_tool_calls_for_conversation(
+<a href=#270 id=270 data-nosnippet>270</a>            <span class="kw-2">&amp;mut </span>tx,
+<a href=#271 id=271 data-nosnippet>271</a>            conversation_id,
+<a href=#272 id=272 data-nosnippet>272</a>        )
+<a href=#273 id=273 data-nosnippet>273</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#274 id=274 data-nosnippet>274</a>
+<a href=#275 id=275 data-nosnippet>275</a>    <span class="kw">if </span>!deleted_children.is_empty() {
+<a href=#276 id=276 data-nosnippet>276</a>        <span class="kw">let </span>ids: Vec&lt;Uuid&gt; = deleted_children
+<a href=#277 id=277 data-nosnippet>277</a>            .iter()
+<a href=#278 id=278 data-nosnippet>278</a>            .map(|x| x.chatbot_conversation_message_id)
+<a href=#279 id=279 data-nosnippet>279</a>            .collect();
+<a href=#280 id=280 data-nosnippet>280</a>        <span class="kw">let </span>deleted = <span class="macro">sqlx::query_as!</span>(
+<a href=#281 id=281 data-nosnippet>281</a>            ChatbotConversationMessageRow,
+<a href=#282 id=282 data-nosnippet>282</a>            <span class="string">r#"
+<a href=#283 id=283 data-nosnippet>283</a>UPDATE chatbot_conversation_messages
+<a href=#284 id=284 data-nosnippet>284</a>SET deleted_at = NOW()
+<a href=#285 id=285 data-nosnippet>285</a>WHERE id IN (SELECT * FROM UNNEST($1::uuid[]))
+<a href=#286 id=286 data-nosnippet>286</a>  AND deleted_at IS NULL
+<a href=#287 id=287 data-nosnippet>287</a>RETURNING *
+<a href=#288 id=288 data-nosnippet>288</a>        "#</span>,
+<a href=#289 id=289 data-nosnippet>289</a>            <span class="kw-2">&amp;</span>ids
+<a href=#290 id=290 data-nosnippet>290</a>        )
+<a href=#291 id=291 data-nosnippet>291</a>        .fetch_all(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#292 id=292 data-nosnippet>292</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#293 id=293 data-nosnippet>293</a>        res = deleted
+<a href=#294 id=294 data-nosnippet>294</a>    }
+<a href=#295 id=295 data-nosnippet>295</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#296 id=296 data-nosnippet>296</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#297 id=297 data-nosnippet>297</a>}
+<a href=#298 id=298 data-nosnippet>298</a>
+<a href=#299 id=299 data-nosnippet>299</a><span class="kw">pub async fn </span>update(
+<a href=#300 id=300 data-nosnippet>300</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#301 id=301 data-nosnippet>301</a>    id: Uuid,
+<a href=#302 id=302 data-nosnippet>302</a>    text: <span class="kw-2">&amp;</span>str,
+<a href=#303 id=303 data-nosnippet>303</a>    message_is_complete: bool,
+<a href=#304 id=304 data-nosnippet>304</a>    used_tokens: i32,
+<a href=#305 id=305 data-nosnippet>305</a>) -&gt; ModelResult&lt;ChatbotConversationMessage&gt; {
+<a href=#306 id=306 data-nosnippet>306</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#307 id=307 data-nosnippet>307</a>
+<a href=#308 id=308 data-nosnippet>308</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query_as!</span>(
+<a href=#309 id=309 data-nosnippet>309</a>        ChatbotConversationMessageRow,
+<a href=#310 id=310 data-nosnippet>310</a>        <span class="string">r#"
+<a href=#311 id=311 data-nosnippet>311</a>UPDATE chatbot_conversation_messages
+<a href=#312 id=312 data-nosnippet>312</a>SET updated_at = NOW()
+<a href=#313 id=313 data-nosnippet>313</a>WHERE id = $1
+<a href=#314 id=314 data-nosnippet>314</a>  AND deleted_at IS NULL
+<a href=#315 id=315 data-nosnippet>315</a>RETURNING *
+<a href=#316 id=316 data-nosnippet>316</a>        "#</span>,
+<a href=#317 id=317 data-nosnippet>317</a>        id
+<a href=#318 id=318 data-nosnippet>318</a>    )
+<a href=#319 id=319 data-nosnippet>319</a>    .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#320 id=320 data-nosnippet>320</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#321 id=321 data-nosnippet>321</a>
+<a href=#322 id=322 data-nosnippet>322</a>    <span class="comment">// update the parent
+<a href=#323 id=323 data-nosnippet>323</a>    </span><span class="kw">let </span>child = chatbot_conversation_message_messages::update(
+<a href=#324 id=324 data-nosnippet>324</a>        <span class="kw-2">&amp;mut </span>tx,
+<a href=#325 id=325 data-nosnippet>325</a>        row.id,
+<a href=#326 id=326 data-nosnippet>326</a>        text,
+<a href=#327 id=327 data-nosnippet>327</a>        message_is_complete,
+<a href=#328 id=328 data-nosnippet>328</a>        used_tokens,
+<a href=#329 id=329 data-nosnippet>329</a>    )
+<a href=#330 id=330 data-nosnippet>330</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#331 id=331 data-nosnippet>331</a>
+<a href=#332 id=332 data-nosnippet>332</a>    <span class="kw">let </span>res = ChatbotConversationMessage::from_row(row, Message::Text(child));
+<a href=#333 id=333 data-nosnippet>333</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#334 id=334 data-nosnippet>334</a>
+<a href=#335 id=335 data-nosnippet>335</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#336 id=336 data-nosnippet>336</a>}
+<a href=#337 id=337 data-nosnippet>337</a>
+<a href=#338 id=338 data-nosnippet>338</a><span class="kw">pub async fn </span>message_row_to_message(
+<a href=#339 id=339 data-nosnippet>339</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#340 id=340 data-nosnippet>340</a>    row: ChatbotConversationMessageRow,
+<a href=#341 id=341 data-nosnippet>341</a>) -&gt; ModelResult&lt;ChatbotConversationMessage&gt; {
+<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">let </span>inner_message = get_message_fields(conn, row.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#343 id=343 data-nosnippet>343</a>    <span class="kw">let </span>res = ChatbotConversationMessage::from_row(row, inner_message);
+<a href=#344 id=344 data-nosnippet>344</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#345 id=345 data-nosnippet>345</a>}
+<a href=#346 id=346 data-nosnippet>346</a>
+<a href=#347 id=347 data-nosnippet>347</a><span class="kw">pub async fn </span>get_message_fields(conn: <span class="kw-2">&amp;mut </span>PgConnection, message_id: Uuid) -&gt; ModelResult&lt;Message&gt; {
+<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(message) =
+<a href=#349 id=349 data-nosnippet>349</a>        chatbot_conversation_message_messages::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
 <a href=#350 id=350 data-nosnippet>350</a>    </span>{
-<a href=#351 id=351 data-nosnippet>351</a>        <span class="kw">let </span>res = chatbot_conversation_message_reasoning::delete(conn, reasoning.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#352 id=352 data-nosnippet>352</a>        <span class="prelude-val">Ok</span>(Message::Reasoning(res))
-<a href=#353 id=353 data-nosnippet>353</a>    } <span class="kw">else </span>{
-<a href=#354 id=354 data-nosnippet>354</a>        <span class="prelude-val">Err</span>(ModelError::new(
-<a href=#355 id=355 data-nosnippet>355</a>            ModelErrorType::RecordNotFound,
-<a href=#356 id=356 data-nosnippet>356</a>            <span class="string">"No inner message found for this ChatbotConversationMessage"</span>,
-<a href=#357 id=357 data-nosnippet>357</a>            <span class="prelude-val">None</span>,
-<a href=#358 id=358 data-nosnippet>358</a>        ))
-<a href=#359 id=359 data-nosnippet>359</a>    }
-<a href=#360 id=360 data-nosnippet>360</a>}
+<a href=#351 id=351 data-nosnippet>351</a>        <span class="prelude-val">Ok</span>(Message::Text(message))
+<a href=#352 id=352 data-nosnippet>352</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(tool_call) =
+<a href=#353 id=353 data-nosnippet>353</a>        chatbot_conversation_message_tool_calls::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#354 id=354 data-nosnippet>354</a>    </span>{
+<a href=#355 id=355 data-nosnippet>355</a>        <span class="prelude-val">Ok</span>(Message::ToolCall(tool_call))
+<a href=#356 id=356 data-nosnippet>356</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(tool_output) =
+<a href=#357 id=357 data-nosnippet>357</a>        chatbot_conversation_message_tool_outputs::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#358 id=358 data-nosnippet>358</a>    </span>{
+<a href=#359 id=359 data-nosnippet>359</a>        <span class="prelude-val">Ok</span>(Message::ToolOutput(tool_output))
+<a href=#360 id=360 data-nosnippet>360</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(reasoning) =
+<a href=#361 id=361 data-nosnippet>361</a>        chatbot_conversation_message_reasoning::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#362 id=362 data-nosnippet>362</a>    </span>{
+<a href=#363 id=363 data-nosnippet>363</a>        <span class="prelude-val">Ok</span>(Message::Reasoning(reasoning))
+<a href=#364 id=364 data-nosnippet>364</a>    } <span class="kw">else </span>{
+<a href=#365 id=365 data-nosnippet>365</a>        <span class="prelude-val">Err</span>(ModelError::new(
+<a href=#366 id=366 data-nosnippet>366</a>            ModelErrorType::RecordNotFound,
+<a href=#367 id=367 data-nosnippet>367</a>            <span class="string">"No inner message found for this ChatbotConversationMessage"</span>,
+<a href=#368 id=368 data-nosnippet>368</a>            <span class="prelude-val">None</span>,
+<a href=#369 id=369 data-nosnippet>369</a>        ))
+<a href=#370 id=370 data-nosnippet>370</a>    }
+<a href=#371 id=371 data-nosnippet>371</a>}
+<a href=#372 id=372 data-nosnippet>372</a>
+<a href=#373 id=373 data-nosnippet>373</a><span class="kw">pub async fn </span>delete_message_fields(
+<a href=#374 id=374 data-nosnippet>374</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#375 id=375 data-nosnippet>375</a>    message_id: Uuid,
+<a href=#376 id=376 data-nosnippet>376</a>) -&gt; ModelResult&lt;Message&gt; {
+<a href=#377 id=377 data-nosnippet>377</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(message) =
+<a href=#378 id=378 data-nosnippet>378</a>        chatbot_conversation_message_messages::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#379 id=379 data-nosnippet>379</a>    </span>{
+<a href=#380 id=380 data-nosnippet>380</a>        <span class="kw">let </span>res = chatbot_conversation_message_messages::delete(conn, message.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#381 id=381 data-nosnippet>381</a>        <span class="prelude-val">Ok</span>(Message::Text(res))
+<a href=#382 id=382 data-nosnippet>382</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(tool_call) =
+<a href=#383 id=383 data-nosnippet>383</a>        chatbot_conversation_message_tool_calls::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#384 id=384 data-nosnippet>384</a>    </span>{
+<a href=#385 id=385 data-nosnippet>385</a>        <span class="kw">let </span>res = chatbot_conversation_message_tool_calls::delete(conn, tool_call.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#386 id=386 data-nosnippet>386</a>        <span class="prelude-val">Ok</span>(Message::ToolCall(res))
+<a href=#387 id=387 data-nosnippet>387</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(tool_output) =
+<a href=#388 id=388 data-nosnippet>388</a>        chatbot_conversation_message_tool_outputs::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#389 id=389 data-nosnippet>389</a>    </span>{
+<a href=#390 id=390 data-nosnippet>390</a>        <span class="kw">let </span>res = chatbot_conversation_message_tool_outputs::delete(conn, tool_output.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#391 id=391 data-nosnippet>391</a>        <span class="prelude-val">Ok</span>(Message::ToolOutput(res))
+<a href=#392 id=392 data-nosnippet>392</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(reasoning) =
+<a href=#393 id=393 data-nosnippet>393</a>        chatbot_conversation_message_reasoning::get_by_message_id(conn, message_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#394 id=394 data-nosnippet>394</a>    </span>{
+<a href=#395 id=395 data-nosnippet>395</a>        <span class="kw">let </span>res = chatbot_conversation_message_reasoning::delete(conn, reasoning.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="prelude-val">Ok</span>(Message::Reasoning(res))
+<a href=#397 id=397 data-nosnippet>397</a>    } <span class="kw">else </span>{
+<a href=#398 id=398 data-nosnippet>398</a>        <span class="prelude-val">Err</span>(ModelError::new(
+<a href=#399 id=399 data-nosnippet>399</a>            ModelErrorType::RecordNotFound,
+<a href=#400 id=400 data-nosnippet>400</a>            <span class="string">"No inner message found for this ChatbotConversationMessage"</span>,
+<a href=#401 id=401 data-nosnippet>401</a>            <span class="prelude-val">None</span>,
+<a href=#402 id=402 data-nosnippet>402</a>        ))
+<a href=#403 id=403 data-nosnippet>403</a>    }
+<a href=#404 id=404 data-nosnippet>404</a>}
 </code></pre></div></section></main></body></html>
