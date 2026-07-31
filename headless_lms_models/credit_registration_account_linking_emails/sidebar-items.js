@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["claim_send_slot","count_sent_for_person_and_course","count_sent_since","get_by_course_id","get_by_sisu_person_id","soft_delete"],"struct":["CreditRegistrationAccountLinkingEmail","NewAccountLinkingEmail"]};

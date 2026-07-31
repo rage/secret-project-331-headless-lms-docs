@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["seed_generic_emails"]};
+window.SIDEBAR_ITEMS = {"fn":["seed_email_ownership_verification_templates","seed_generic_emails"]};

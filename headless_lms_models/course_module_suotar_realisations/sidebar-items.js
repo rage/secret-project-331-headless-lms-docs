@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_all_active_for_enabled_modules","get_by_course_module_id","record_listing_outcome","soft_delete","upsert"],"struct":["CourseModuleSuotarRealisation","RealisationListingOutcome"]};

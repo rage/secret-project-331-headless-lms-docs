@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["BODY_SAMPLE_MAX_BYTES","FULL_BODY_ITEM_LIMIT","RETENTION_DAYS","SAMPLED_BODY_ITEM_COUNT"],"enum":["SuotarEndpoint"],"fn":["delete_older_than","get_by_credit_registration_id","get_by_id","get_recent","get_recent_by_endpoint","get_recent_failures","insert"],"struct":["NewSuotarApiCall","SuotarApiCall"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_by_user_and_course","get_by_user_id","get_consenting_user_ids_for_course","upsert"],"struct":["CourseCreditRegistrationConsent"]};

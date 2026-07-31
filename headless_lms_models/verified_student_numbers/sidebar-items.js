@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["StudentNumberVerificationMethod"],"fn":["get_by_id","get_by_student_number","get_by_student_numbers","get_by_user_id","get_by_user_ids","insert","soft_delete"],"struct":["NewVerifiedStudentNumber","VerifiedStudentNumber"]};

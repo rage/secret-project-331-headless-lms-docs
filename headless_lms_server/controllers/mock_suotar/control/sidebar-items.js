@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PhaseTickResult"],"fn":["_add_routes","known_phase_names","run_registrar_tick","run_tick"],"struct":["RegistrarTickResult","RunTickQuery"]};

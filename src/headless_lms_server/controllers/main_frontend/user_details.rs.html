@@ -470,7 +470,7 @@
 <a href=#470 id=470 data-nosnippet>470</a>            email_opt,
 <a href=#471 id=471 data-nosnippet>471</a>            upstream_id,
 <a href=#472 id=472 data-nosnippet>472</a>            tmc_client.clone(),
-<a href=#473 id=473 data-nosnippet>473</a>            app_conf,
+<a href=#473 id=473 data-nosnippet>473</a>            app_conf.clone(),
 <a href=#474 id=474 data-nosnippet>474</a>        )
 <a href=#475 id=475 data-nosnippet>475</a>        .<span class="kw">await
 <a href=#476 id=476 data-nosnippet>476</a>        </span>.map_err(|e| {
@@ -485,38 +485,50 @@
 <a href=#485 id=485 data-nosnippet>485</a>    }
 <a href=#486 id=486 data-nosnippet>486</a>
 <a href=#487 id=487 data-nosnippet>487</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#488 id=488 data-nosnippet>488</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#489 id=489 data-nosnippet>489</a>    token.authorized_ok(web::Json(updated_user))
-<a href=#490 id=490 data-nosnippet>490</a>}
-<a href=#491 id=491 data-nosnippet>491</a>
-<a href=#492 id=492 data-nosnippet>492</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#493 id=493 data-nosnippet>493</a>    cfg.route(<span class="string">"/search-by-email"</span>, web::post().to(search_users_by_email))
-<a href=#494 id=494 data-nosnippet>494</a>        .route(
-<a href=#495 id=495 data-nosnippet>495</a>            <span class="string">"/search-by-other-details"</span>,
-<a href=#496 id=496 data-nosnippet>496</a>            web::post().to(search_users_by_other_details),
-<a href=#497 id=497 data-nosnippet>497</a>        )
-<a href=#498 id=498 data-nosnippet>498</a>        .route(
-<a href=#499 id=499 data-nosnippet>499</a>            <span class="string">"/search-fuzzy-match"</span>,
-<a href=#500 id=500 data-nosnippet>500</a>            web::post().to(search_users_fuzzy_match),
-<a href=#501 id=501 data-nosnippet>501</a>        )
-<a href=#502 id=502 data-nosnippet>502</a>        .route(
-<a href=#503 id=503 data-nosnippet>503</a>            <span class="string">"/{course_id}/user/{user_id}"</span>,
-<a href=#504 id=504 data-nosnippet>504</a>            web::get().to(get_user_details),
-<a href=#505 id=505 data-nosnippet>505</a>        )
+<a href=#488 id=488 data-nosnippet>488</a>
+<a href=#489 id=489 data-nosnippet>489</a>    <span class="kw">if </span>email_changed {
+<a href=#490 id=490 data-nosnippet>490</a>        <span class="comment">// After the commit: a rolled-back edit must not mail a code for an address the account lacks.
+<a href=#491 id=491 data-nosnippet>491</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#492 id=492 data-nosnippet>492</a>        domain::email_ownership_verification::queue_verification_email_best_effort(
+<a href=#493 id=493 data-nosnippet>493</a>            <span class="kw-2">&amp;mut </span>conn,
+<a href=#494 id=494 data-nosnippet>494</a>            app_conf.enable_email_ownership_verification,
+<a href=#495 id=495 data-nosnippet>495</a>            user.id,
+<a href=#496 id=496 data-nosnippet>496</a>        )
+<a href=#497 id=497 data-nosnippet>497</a>        .<span class="kw">await</span>;
+<a href=#498 id=498 data-nosnippet>498</a>    }
+<a href=#499 id=499 data-nosnippet>499</a>
+<a href=#500 id=500 data-nosnippet>500</a>    <span class="kw">let </span>token = skip_authorize();
+<a href=#501 id=501 data-nosnippet>501</a>    token.authorized_ok(web::Json(updated_user))
+<a href=#502 id=502 data-nosnippet>502</a>}
+<a href=#503 id=503 data-nosnippet>503</a>
+<a href=#504 id=504 data-nosnippet>504</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#505 id=505 data-nosnippet>505</a>    cfg.route(<span class="string">"/search-by-email"</span>, web::post().to(search_users_by_email))
 <a href=#506 id=506 data-nosnippet>506</a>        .route(
-<a href=#507 id=507 data-nosnippet>507</a>            <span class="string">"/user-by-courses"</span>,
-<a href=#508 id=508 data-nosnippet>508</a>            web::post().to(get_user_details_by_courses),
+<a href=#507 id=507 data-nosnippet>507</a>            <span class="string">"/search-by-other-details"</span>,
+<a href=#508 id=508 data-nosnippet>508</a>            web::post().to(search_users_by_other_details),
 <a href=#509 id=509 data-nosnippet>509</a>        )
-<a href=#510 id=510 data-nosnippet>510</a>        .route(<span class="string">"/users-ip-country"</span>, web::get().to(get_user_country_by_ip))
-<a href=#511 id=511 data-nosnippet>511</a>        .route(
-<a href=#512 id=512 data-nosnippet>512</a>            <span class="string">"/user-details-for-user"</span>,
-<a href=#513 id=513 data-nosnippet>513</a>            web::get().to(get_user_details_for_user),
-<a href=#514 id=514 data-nosnippet>514</a>        )
-<a href=#515 id=515 data-nosnippet>515</a>        .route(<span class="string">"/update-user-info"</span>, web::post().to(update_user_info))
-<a href=#516 id=516 data-nosnippet>516</a>        .route(
-<a href=#517 id=517 data-nosnippet>517</a>            <span class="string">"/{course_id}/get-users-by-course-id"</span>,
-<a href=#518 id=518 data-nosnippet>518</a>            web::get().to(get_users_by_course_id),
-<a href=#519 id=519 data-nosnippet>519</a>        )
-<a href=#520 id=520 data-nosnippet>520</a>        .route(<span class="string">"/bulk-user-details"</span>, web::post().to(get_bulk_user_details));
-<a href=#521 id=521 data-nosnippet>521</a>}
+<a href=#510 id=510 data-nosnippet>510</a>        .route(
+<a href=#511 id=511 data-nosnippet>511</a>            <span class="string">"/search-fuzzy-match"</span>,
+<a href=#512 id=512 data-nosnippet>512</a>            web::post().to(search_users_fuzzy_match),
+<a href=#513 id=513 data-nosnippet>513</a>        )
+<a href=#514 id=514 data-nosnippet>514</a>        .route(
+<a href=#515 id=515 data-nosnippet>515</a>            <span class="string">"/{course_id}/user/{user_id}"</span>,
+<a href=#516 id=516 data-nosnippet>516</a>            web::get().to(get_user_details),
+<a href=#517 id=517 data-nosnippet>517</a>        )
+<a href=#518 id=518 data-nosnippet>518</a>        .route(
+<a href=#519 id=519 data-nosnippet>519</a>            <span class="string">"/user-by-courses"</span>,
+<a href=#520 id=520 data-nosnippet>520</a>            web::post().to(get_user_details_by_courses),
+<a href=#521 id=521 data-nosnippet>521</a>        )
+<a href=#522 id=522 data-nosnippet>522</a>        .route(<span class="string">"/users-ip-country"</span>, web::get().to(get_user_country_by_ip))
+<a href=#523 id=523 data-nosnippet>523</a>        .route(
+<a href=#524 id=524 data-nosnippet>524</a>            <span class="string">"/user-details-for-user"</span>,
+<a href=#525 id=525 data-nosnippet>525</a>            web::get().to(get_user_details_for_user),
+<a href=#526 id=526 data-nosnippet>526</a>        )
+<a href=#527 id=527 data-nosnippet>527</a>        .route(<span class="string">"/update-user-info"</span>, web::post().to(update_user_info))
+<a href=#528 id=528 data-nosnippet>528</a>        .route(
+<a href=#529 id=529 data-nosnippet>529</a>            <span class="string">"/{course_id}/get-users-by-course-id"</span>,
+<a href=#530 id=530 data-nosnippet>530</a>            web::get().to(get_users_by_course_id),
+<a href=#531 id=531 data-nosnippet>531</a>        )
+<a href=#532 id=532 data-nosnippet>532</a>        .route(<span class="string">"/bulk-user-details"</span>, web::post().to(get_bulk_user_details));
+<a href=#533 id=533 data-nosnippet>533</a>}
 </code></pre></div></section></main></body></html>

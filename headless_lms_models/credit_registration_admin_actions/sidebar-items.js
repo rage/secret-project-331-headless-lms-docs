@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CreditRegistrationAdminAction","CreditRegistrationAdminActionTarget"],"fn":["get_by_actor","get_by_actor_course","get_by_phase","get_by_target","get_recent","record"],"struct":["CreditRegistrationAdminActionRecord","NewCreditRegistrationAdminAction"]};

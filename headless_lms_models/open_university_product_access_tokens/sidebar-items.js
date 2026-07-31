@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_all","get_by_product_id","record_refresh_failure","soft_delete","upsert"],"struct":["NewOpenUniversityProductAccessToken","OpenUniversityProductAccessToken"]};
