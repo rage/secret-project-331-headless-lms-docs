@@ -362,7 +362,7 @@
 <a href=#362 id=362 data-nosnippet>362</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#363 id=363 data-nosnippet>363</a>    <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::View, <span class="prelude-val">Some</span>(user.id), Res::Course(<span class="kw-2">*</span>course_id)).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#364 id=364 data-nosnippet>364</a>
-<a href=#365 id=365 data-nosnippet>365</a>    <span class="kw">let </span><span class="kw-2">mut </span>chapters = models::chapters::course_chapters(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#365 id=365 data-nosnippet>365</a>    <span class="kw">let </span><span class="kw-2">mut </span>chapters = models::chapters::get_course_chapters(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course_id).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#366 id=366 data-nosnippet>366</a>
 <a href=#367 id=367 data-nosnippet>367</a>    chapters.sort_by_key(|a| a.chapter_number);
 <a href=#368 id=368 data-nosnippet>368</a>

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_course_page_content_by_page_id","insert"],"struct":["CoursePageContent","CoursePageMarkdownContent"]};
+window.SIDEBAR_ITEMS = {"fn":["get","get_course_page_content_by_page_id","get_many","insert","insert_batch"],"struct":["CoursePageContent","CoursePageMarkdownContent"]};

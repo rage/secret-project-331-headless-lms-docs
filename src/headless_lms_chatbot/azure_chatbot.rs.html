@@ -1366,21 +1366,21 @@
 <a href=#1366 id=1366 data-nosnippet>1366</a>    )
 <a href=#1367 id=1367 data-nosnippet>1367</a>}
 <a href=#1368 id=1368 data-nosnippet>1368</a>
-<a href=#1369 id=1369 data-nosnippet>1369</a><span class="kw">async fn </span>clean_up_unfinished_tool_calls(
+<a href=#1369 id=1369 data-nosnippet>1369</a><span class="kw">async fn </span>answer_unfinished_tool_calls(
 <a href=#1370 id=1370 data-nosnippet>1370</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
 <a href=#1371 id=1371 data-nosnippet>1371</a>    conversation_id: Uuid,
 <a href=#1372 id=1372 data-nosnippet>1372</a>) -&gt; ChatbotResult&lt;()&gt; {
 <a href=#1373 id=1373 data-nosnippet>1373</a>    <span class="macro">trace!</span>(
-<a href=#1374 id=1374 data-nosnippet>1374</a>        <span class="string">"Cleaning up unfinished tool calls for conversation {}"</span>,
+<a href=#1374 id=1374 data-nosnippet>1374</a>        <span class="string">"Dealing with unfinished tool calls for conversation {}"</span>,
 <a href=#1375 id=1375 data-nosnippet>1375</a>        conversation_id
 <a href=#1376 id=1376 data-nosnippet>1376</a>    );
-<a href=#1377 id=1377 data-nosnippet>1377</a>    <span class="kw">let </span>res = headless_lms_models::chatbot_conversation_messages::delete_hanging_tool_call_messages_for_conversation(
+<a href=#1377 id=1377 data-nosnippet>1377</a>    <span class="kw">let </span>res = headless_lms_models::chatbot_conversation_messages::answer_hanging_tool_call_messages_for_conversation(
 <a href=#1378 id=1378 data-nosnippet>1378</a>        conn,
 <a href=#1379 id=1379 data-nosnippet>1379</a>        conversation_id,
 <a href=#1380 id=1380 data-nosnippet>1380</a>    )
 <a href=#1381 id=1381 data-nosnippet>1381</a>    .<span class="kw">await
 <a href=#1382 id=1382 data-nosnippet>1382</a>    </span>.map_err(ChatbotError::from)<span class="question-mark">?</span>;
-<a href=#1383 id=1383 data-nosnippet>1383</a>    <span class="macro">trace!</span>(<span class="string">"Cleaned {} tool calls"</span>, res.len());
+<a href=#1383 id=1383 data-nosnippet>1383</a>    <span class="macro">trace!</span>(<span class="string">"Answered {} hanging tool calls"</span>, res.len());
 <a href=#1384 id=1384 data-nosnippet>1384</a>    <span class="prelude-val">Ok</span>(())
 <a href=#1385 id=1385 data-nosnippet>1385</a>}
 <a href=#1386 id=1386 data-nosnippet>1386</a>
@@ -1502,8 +1502,8 @@
 <a href=#1502 id=1502 data-nosnippet>1502</a>                        <span class="macro">error!</span>(<span class="string">"Stream ended unexpectedly. Response id: {} Error: {}"</span>, response_id.lock().<span class="kw">await</span>, e);
 <a href=#1503 id=1503 data-nosnippet>1503</a>                        should_clean_tool_calls = <span class="bool-val">true</span>;
 <a href=#1504 id=1504 data-nosnippet>1504</a>                        <span class="kw">if </span>check_error_should_terminate_stream(e.error_type()) {
-<a href=#1505 id=1505 data-nosnippet>1505</a>                            <span class="kw">if let </span><span class="prelude-val">Err</span>(e2) = clean_up_unfinished_tool_calls(<span class="kw-2">&amp;mut </span>conn, conversation_id).<span class="kw">await </span>{
-<a href=#1506 id=1506 data-nosnippet>1506</a>                                <span class="macro">error!</span>(<span class="string">"Error in chatbot streaming and couldn't clean up tool calls: {e2}. Response id: {}"</span>, response_id.lock().<span class="kw">await</span>);
+<a href=#1505 id=1505 data-nosnippet>1505</a>                            <span class="kw">if let </span><span class="prelude-val">Err</span>(e2) = answer_unfinished_tool_calls(<span class="kw-2">&amp;mut </span>conn, conversation_id).<span class="kw">await </span>{
+<a href=#1506 id=1506 data-nosnippet>1506</a>                                <span class="macro">error!</span>(<span class="string">"Error in chatbot streaming and couldn't answer unfinished tool calls: {e2}. Response id: {}"</span>, response_id.lock().<span class="kw">await</span>);
 <a href=#1507 id=1507 data-nosnippet>1507</a>                            };
 <a href=#1508 id=1508 data-nosnippet>1508</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(e)<span class="question-mark">?</span>;
 <a href=#1509 id=1509 data-nosnippet>1509</a>                        };
@@ -1585,8 +1585,8 @@
 <a href=#1585 id=1585 data-nosnippet>1585</a>                        };
 <a href=#1586 id=1586 data-nosnippet>1586</a>                        should_clean_tool_calls = <span class="bool-val">true</span>;
 <a href=#1587 id=1587 data-nosnippet>1587</a>                        <span class="kw">if </span>check_error_should_terminate_stream(e.error_type()) {
-<a href=#1588 id=1588 data-nosnippet>1588</a>                            <span class="kw">if let </span><span class="prelude-val">Err</span>(e2) = clean_up_unfinished_tool_calls(<span class="kw-2">&amp;mut </span>conn, conversation_id).<span class="kw">await </span>{
-<a href=#1589 id=1589 data-nosnippet>1589</a>                                <span class="macro">error!</span>(<span class="string">"Error in chatbot streaming and couldn't clean up tool calls: {e2}. Response id: {}"</span>, response_id.to_string());
+<a href=#1588 id=1588 data-nosnippet>1588</a>                            <span class="kw">if let </span><span class="prelude-val">Err</span>(e2) = answer_unfinished_tool_calls(<span class="kw-2">&amp;mut </span>conn, conversation_id).<span class="kw">await </span>{
+<a href=#1589 id=1589 data-nosnippet>1589</a>                                <span class="macro">error!</span>(<span class="string">"Error in chatbot streaming and couldn't answer unfinished tool calls: {e2}. Response id: {}"</span>, response_id.to_string());
 <a href=#1590 id=1590 data-nosnippet>1590</a>                            };
 <a href=#1591 id=1591 data-nosnippet>1591</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(e)<span class="question-mark">?</span>;
 <a href=#1592 id=1592 data-nosnippet>1592</a>                        };
@@ -1642,7 +1642,7 @@
 <a href=#1642 id=1642 data-nosnippet>1642</a>                }
 <a href=#1643 id=1643 data-nosnippet>1643</a>            }
 <a href=#1644 id=1644 data-nosnippet>1644</a>        }
-<a href=#1645 id=1645 data-nosnippet>1645</a>        <span class="kw">if </span>should_clean_tool_calls { clean_up_unfinished_tool_calls(<span class="kw-2">&amp;mut </span>conn, conversation_id).<span class="kw">await</span><span class="question-mark">?</span>;}
+<a href=#1645 id=1645 data-nosnippet>1645</a>        <span class="kw">if </span>should_clean_tool_calls { answer_unfinished_tool_calls(<span class="kw-2">&amp;mut </span>conn, conversation_id).<span class="kw">await</span><span class="question-mark">?</span>;}
 <a href=#1646 id=1646 data-nosnippet>1646</a>
 <a href=#1647 id=1647 data-nosnippet>1647</a>        <span class="kw">if </span>!done.load(atomic::Ordering::Relaxed) {
 <a href=#1648 id=1648 data-nosnippet>1648</a>            <span class="kw">let </span>id = response_id.lock().<span class="kw">await</span>;

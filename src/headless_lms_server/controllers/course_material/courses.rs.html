@@ -554,7 +554,7 @@
 <a href=#554 id=554 data-nosnippet>554</a>    <span class="kw">let </span>exercise_deadline_overrides =
 <a href=#555 id=555 data-nosnippet>555</a>        models::chapters::exercise_deadline_overrides_by_chapter_for_course(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course_id)
 <a href=#556 id=556 data-nosnippet>556</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#557 id=557 data-nosnippet>557</a>    <span class="kw">let </span>chapters = models::chapters::course_chapters(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course_id)
+<a href=#557 id=557 data-nosnippet>557</a>    <span class="kw">let </span>chapters = models::chapters::get_course_chapters(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course_id)
 <a href=#558 id=558 data-nosnippet>558</a>        .<span class="kw">await</span><span class="question-mark">?
 <a href=#559 id=559 data-nosnippet>559</a>        </span>.into_iter()
 <a href=#560 id=560 data-nosnippet>560</a>        .map(|chapter| {

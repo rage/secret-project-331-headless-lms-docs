@@ -95,7 +95,7 @@
 <a href=#95 id=95 data-nosnippet>95</a>
 <a href=#96 id=96 data-nosnippet>96</a>    <span class="kw">let </span><span class="kw-2">mut </span>slides = Vec::new();
 <a href=#97 id=97 data-nosnippet>97</a>    <span class="comment">// process only exercises of open chapters
-<a href=#98 id=98 data-nosnippet>98</a>    </span><span class="kw">let </span>open_chapter_ids = models::chapters::course_chapters(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course)
+<a href=#98 id=98 data-nosnippet>98</a>    </span><span class="kw">let </span>open_chapter_ids = models::chapters::get_course_chapters(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course)
 <a href=#99 id=99 data-nosnippet>99</a>        .<span class="kw">await</span><span class="question-mark">?
 <a href=#100 id=100 data-nosnippet>100</a>        </span>.into_iter()
 <a href=#101 id=101 data-nosnippet>101</a>        .filter(DatabaseChapter::has_opened)

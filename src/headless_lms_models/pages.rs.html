@@ -15,7 +15,7 @@
 <a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span>crate::{
 <a href=#16 id=16 data-nosnippet>16</a>    CourseOrExamId, SpecFetcher,
 <a href=#17 id=17 data-nosnippet>17</a>    chapters::{
-<a href=#18 id=18 data-nosnippet>18</a>        <span class="self">self</span>, Chapter, DatabaseChapter, course_chapters, get_chapter, get_chapter_by_page_id,
+<a href=#18 id=18 data-nosnippet>18</a>        <span class="self">self</span>, Chapter, DatabaseChapter, get_chapter, get_chapter_by_page_id, get_course_chapters,
 <a href=#19 id=19 data-nosnippet>19</a>    },
 <a href=#20 id=20 data-nosnippet>20</a>    course_instances::{<span class="self">self</span>, CourseInstance},
 <a href=#21 id=21 data-nosnippet>21</a>    courses::{<span class="self">self</span>, Course, CourseContextData, CourseMaterialCourse},
@@ -4127,7 +4127,7 @@
 <a href=#4127 id=4127 data-nosnippet>4127</a>) -&gt; ModelResult&lt;()&gt; {
 <a href=#4128 id=4128 data-nosnippet>4128</a>    <span class="kw">let </span>db_pages =
 <a href=#4129 id=4129 data-nosnippet>4129</a>        get_all_by_course_id_and_visibility(conn, course_id, PageVisibility::Any).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#4130 id=4130 data-nosnippet>4130</a>    <span class="kw">let </span>chapters = course_chapters(conn, course_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#4130 id=4130 data-nosnippet>4130</a>    <span class="kw">let </span>chapters = get_course_chapters(conn, course_id).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#4131 id=4131 data-nosnippet>4131</a>
 <a href=#4132 id=4132 data-nosnippet>4132</a>    <span class="kw">let </span><span class="kw-2">mut </span>chapter_pages: HashMap&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;, Vec&lt;<span class="kw-2">&amp;</span>Page&gt;&gt; = HashMap::new();
 <a href=#4133 id=4133 data-nosnippet>4133</a>
@@ -4265,7 +4265,7 @@
 <a href=#4265 id=4265 data-nosnippet>4265</a>    chapters: <span class="kw-2">&amp;</span>[Chapter],
 <a href=#4266 id=4266 data-nosnippet>4266</a>    course_id: Uuid,
 <a href=#4267 id=4267 data-nosnippet>4267</a>) -&gt; ModelResult&lt;()&gt; {
-<a href=#4268 id=4268 data-nosnippet>4268</a>    <span class="kw">let </span>db_chapters = course_chapters(conn, course_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#4268 id=4268 data-nosnippet>4268</a>    <span class="kw">let </span>db_chapters = get_course_chapters(conn, course_id).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#4269 id=4269 data-nosnippet>4269</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#4270 id=4270 data-nosnippet>4270</a>    <span class="comment">// Look for the modified chapter in the existing database
 <a href=#4271 id=4271 data-nosnippet>4271</a>
