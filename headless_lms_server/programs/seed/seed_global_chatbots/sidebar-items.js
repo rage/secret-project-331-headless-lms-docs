@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["seed_global_chatbots"]};
+window.SIDEBAR_ITEMS = {"constant":["GLOBAL_CHATBOT_CONFIGURATION_ID_TEST"],"fn":["seed_global_chatbots"]};

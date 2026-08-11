@@ -117,17 +117,17 @@
 <a href=#117 id=117 data-nosnippet>117</a>        CourseInstanceWithCourseInfo,
 <a href=#118 id=118 data-nosnippet>118</a>        <span class="string">r#"
 <a href=#119 id=119 data-nosnippet>119</a>SELECT
-<a href=#120 id=120 data-nosnippet>120</a>    c.id AS "course_id!",
-<a href=#121 id=121 data-nosnippet>121</a>    c.slug AS "course_slug!",
-<a href=#122 id=122 data-nosnippet>122</a>    c.name AS "course_name!",
+<a href=#120 id=120 data-nosnippet>120</a>    c.id AS "course_id",
+<a href=#121 id=121 data-nosnippet>121</a>    c.slug AS "course_slug",
+<a href=#122 id=122 data-nosnippet>122</a>    c.name AS "course_name",
 <a href=#123 id=123 data-nosnippet>123</a>    c.description AS course_description,
 <a href=#124 id=124 data-nosnippet>124</a>    ci.id AS course_instance_id,
 <a href=#125 id=125 data-nosnippet>125</a>    ci.name AS course_instance_name,
 <a href=#126 id=126 data-nosnippet>126</a>    ci.description AS course_instance_description,
-<a href=#127 id=127 data-nosnippet>127</a>    o.name AS "organization_name!"
+<a href=#127 id=127 data-nosnippet>127</a>    o.name AS "organization_name"
 <a href=#128 id=128 data-nosnippet>128</a>FROM course_instances AS ci
-<a href=#129 id=129 data-nosnippet>129</a>  LEFT JOIN courses AS c ON ci.course_id = c.id
-<a href=#130 id=130 data-nosnippet>130</a>  LEFT JOIN organizations AS o ON o.id = c.organization_id
+<a href=#129 id=129 data-nosnippet>129</a>  JOIN courses AS c ON ci.course_id = c.id
+<a href=#130 id=130 data-nosnippet>130</a>  JOIN organizations AS o ON o.id = c.organization_id
 <a href=#131 id=131 data-nosnippet>131</a>WHERE ci.id = $1
 <a href=#132 id=132 data-nosnippet>132</a>  AND ci.deleted_at IS NULL
 <a href=#133 id=133 data-nosnippet>133</a>  AND c.deleted_at IS NULL
