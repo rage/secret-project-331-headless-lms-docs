@@ -131,619 +131,637 @@
 <a href=#131 id=131 data-nosnippet>131</a>    .fetch(conn)
 <a href=#132 id=132 data-nosnippet>132</a>}
 <a href=#133 id=133 data-nosnippet>133</a>
-<a href=#134 id=134 data-nosnippet>134</a><span class="kw">pub async fn </span>search_for_user_details_by_email(
-<a href=#135 id=135 data-nosnippet>135</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#136 id=136 data-nosnippet>136</a>    email: <span class="kw-2">&amp;</span>str,
-<a href=#137 id=137 data-nosnippet>137</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
-<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">let </span>email = normalize_email_search_term(email);
-<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">if </span>!is_fuzzy_search_term_long_enough(email) {
-<a href=#140 id=140 data-nosnippet>140</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
-<a href=#141 id=141 data-nosnippet>141</a>    }
-<a href=#142 id=142 data-nosnippet>142</a>
-<a href=#143 id=143 data-nosnippet>143</a>    <span class="comment">// ORDER BY dist only so the GiST trigram index can serve KNN distance ordering.
-<a href=#144 id=144 data-nosnippet>144</a>    </span><span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#145 id=145 data-nosnippet>145</a>        UserDetail,
-<a href=#146 id=146 data-nosnippet>146</a>        <span class="string">"
-<a href=#147 id=147 data-nosnippet>147</a>SELECT user_id,
-<a href=#148 id=148 data-nosnippet>148</a>  created_at,
-<a href=#149 id=149 data-nosnippet>149</a>  updated_at,
-<a href=#150 id=150 data-nosnippet>150</a>  email,
-<a href=#151 id=151 data-nosnippet>151</a>  first_name,
-<a href=#152 id=152 data-nosnippet>152</a>  last_name,
-<a href=#153 id=153 data-nosnippet>153</a>  search_helper,
-<a href=#154 id=154 data-nosnippet>154</a>  country,
-<a href=#155 id=155 data-nosnippet>155</a>  email_communication_consent,
-<a href=#156 id=156 data-nosnippet>156</a>  email_verified_at,
-<a href=#157 id=157 data-nosnippet>157</a>  email_verified_method
-<a href=#158 id=158 data-nosnippet>158</a>FROM (
-<a href=#159 id=159 data-nosnippet>159</a>    SELECT user_id,
-<a href=#160 id=160 data-nosnippet>160</a>      created_at,
-<a href=#161 id=161 data-nosnippet>161</a>      updated_at,
-<a href=#162 id=162 data-nosnippet>162</a>      email,
-<a href=#163 id=163 data-nosnippet>163</a>      first_name,
-<a href=#164 id=164 data-nosnippet>164</a>      last_name,
-<a href=#165 id=165 data-nosnippet>165</a>      search_helper,
-<a href=#166 id=166 data-nosnippet>166</a>      country,
-<a href=#167 id=167 data-nosnippet>167</a>      email_communication_consent,
-<a href=#168 id=168 data-nosnippet>168</a>      email_verified_at,
-<a href=#169 id=169 data-nosnippet>169</a>      email_verified_method,
-<a href=#170 id=170 data-nosnippet>170</a>      lower($1) &lt;&lt;-&gt; email_search_helper AS dist
-<a href=#171 id=171 data-nosnippet>171</a>    FROM user_details
-<a href=#172 id=172 data-nosnippet>172</a>    ORDER BY dist
-<a href=#173 id=173 data-nosnippet>173</a>    LIMIT 100
-<a href=#174 id=174 data-nosnippet>174</a>  ) search
-<a href=#175 id=175 data-nosnippet>175</a>WHERE dist &lt; 0.7;
-<a href=#176 id=176 data-nosnippet>176</a>"</span>,
-<a href=#177 id=177 data-nosnippet>177</a>        email,
-<a href=#178 id=178 data-nosnippet>178</a>    )
-<a href=#179 id=179 data-nosnippet>179</a>    .fetch_all(conn)
-<a href=#180 id=180 data-nosnippet>180</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#181 id=181 data-nosnippet>181</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#182 id=182 data-nosnippet>182</a>}
-<a href=#183 id=183 data-nosnippet>183</a>
-<a href=#184 id=184 data-nosnippet>184</a><span class="doccomment">/// Searches user_details by exact user id.
-<a href=#185 id=185 data-nosnippet>185</a></span><span class="kw">pub async fn </span>search_for_user_details_by_other_details(
-<a href=#186 id=186 data-nosnippet>186</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#187 id=187 data-nosnippet>187</a>    search: <span class="kw-2">&amp;</span>str,
-<a href=#188 id=188 data-nosnippet>188</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
-<a href=#189 id=189 data-nosnippet>189</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(user_id) = parse_exact_user_id_search_term(search) <span class="kw">else </span>{
-<a href=#190 id=190 data-nosnippet>190</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
-<a href=#191 id=191 data-nosnippet>191</a>    };
-<a href=#192 id=192 data-nosnippet>192</a>
-<a href=#193 id=193 data-nosnippet>193</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#194 id=194 data-nosnippet>194</a>        UserDetail,
-<a href=#195 id=195 data-nosnippet>195</a>        <span class="string">"
-<a href=#196 id=196 data-nosnippet>196</a>SELECT user_id,
-<a href=#197 id=197 data-nosnippet>197</a>  created_at,
-<a href=#198 id=198 data-nosnippet>198</a>  updated_at,
-<a href=#199 id=199 data-nosnippet>199</a>  email,
-<a href=#200 id=200 data-nosnippet>200</a>  first_name,
-<a href=#201 id=201 data-nosnippet>201</a>  last_name,
-<a href=#202 id=202 data-nosnippet>202</a>  search_helper,
-<a href=#203 id=203 data-nosnippet>203</a>  country,
-<a href=#204 id=204 data-nosnippet>204</a>  email_communication_consent,
-<a href=#205 id=205 data-nosnippet>205</a>  email_verified_at,
-<a href=#206 id=206 data-nosnippet>206</a>  email_verified_method
-<a href=#207 id=207 data-nosnippet>207</a>FROM user_details
-<a href=#208 id=208 data-nosnippet>208</a>WHERE user_id = $1;
-<a href=#209 id=209 data-nosnippet>209</a>"</span>,
-<a href=#210 id=210 data-nosnippet>210</a>        user_id,
-<a href=#211 id=211 data-nosnippet>211</a>    )
-<a href=#212 id=212 data-nosnippet>212</a>    .fetch_all(conn)
-<a href=#213 id=213 data-nosnippet>213</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#214 id=214 data-nosnippet>214</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#215 id=215 data-nosnippet>215</a>}
-<a href=#216 id=216 data-nosnippet>216</a>
-<a href=#217 id=217 data-nosnippet>217</a><span class="kw">pub async fn </span>search_for_user_details_fuzzy_match(
-<a href=#218 id=218 data-nosnippet>218</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#219 id=219 data-nosnippet>219</a>    search: <span class="kw-2">&amp;</span>str,
-<a href=#220 id=220 data-nosnippet>220</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
-<a href=#221 id=221 data-nosnippet>221</a>    <span class="comment">// If a full email address reaches name search, compare only the local part against names.
-<a href=#222 id=222 data-nosnippet>222</a>    </span><span class="kw">let </span>search = normalize_name_search_term(search);
-<a href=#223 id=223 data-nosnippet>223</a>    <span class="kw">if </span>!is_fuzzy_search_term_long_enough(search) {
-<a href=#224 id=224 data-nosnippet>224</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
-<a href=#225 id=225 data-nosnippet>225</a>    }
-<a href=#226 id=226 data-nosnippet>226</a>
-<a href=#227 id=227 data-nosnippet>227</a>    <span class="comment">// ORDER BY dist only — no secondary tiebreaker. Adding one (e.g. user_id)
-<a href=#228 id=228 data-nosnippet>228</a>    // would prevent the GiST trigram index from serving the distance ordering,
-<a href=#229 id=229 data-nosnippet>229</a>    // forcing a full table scan+sort. Ties at exactly equal float distances are
-<a href=#230 id=230 data-nosnippet>230</a>    // rare enough in practice that non-determinism in the LIMIT 100 is acceptable.
-<a href=#231 id=231 data-nosnippet>231</a>    </span><span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#232 id=232 data-nosnippet>232</a>        UserDetail,
-<a href=#233 id=233 data-nosnippet>233</a>        <span class="string">"
-<a href=#234 id=234 data-nosnippet>234</a>SELECT user_id,
-<a href=#235 id=235 data-nosnippet>235</a>  created_at,
-<a href=#236 id=236 data-nosnippet>236</a>  updated_at,
-<a href=#237 id=237 data-nosnippet>237</a>  email,
-<a href=#238 id=238 data-nosnippet>238</a>  first_name,
-<a href=#239 id=239 data-nosnippet>239</a>  last_name,
-<a href=#240 id=240 data-nosnippet>240</a>  search_helper,
-<a href=#241 id=241 data-nosnippet>241</a>  country,
-<a href=#242 id=242 data-nosnippet>242</a>  email_communication_consent,
-<a href=#243 id=243 data-nosnippet>243</a>  email_verified_at,
-<a href=#244 id=244 data-nosnippet>244</a>  email_verified_method
-<a href=#245 id=245 data-nosnippet>245</a>FROM (
-<a href=#246 id=246 data-nosnippet>246</a>    SELECT user_id,
-<a href=#247 id=247 data-nosnippet>247</a>      created_at,
-<a href=#248 id=248 data-nosnippet>248</a>      updated_at,
-<a href=#249 id=249 data-nosnippet>249</a>      email,
-<a href=#250 id=250 data-nosnippet>250</a>      first_name,
-<a href=#251 id=251 data-nosnippet>251</a>      last_name,
-<a href=#252 id=252 data-nosnippet>252</a>      search_helper,
-<a href=#253 id=253 data-nosnippet>253</a>      country,
-<a href=#254 id=254 data-nosnippet>254</a>      email_communication_consent,
-<a href=#255 id=255 data-nosnippet>255</a>      email_verified_at,
-<a href=#256 id=256 data-nosnippet>256</a>      email_verified_method,
-<a href=#257 id=257 data-nosnippet>257</a>      lower($1) &lt;&lt;-&gt; name_search_helper AS dist
-<a href=#258 id=258 data-nosnippet>258</a>    FROM user_details
-<a href=#259 id=259 data-nosnippet>259</a>    ORDER BY dist
-<a href=#260 id=260 data-nosnippet>260</a>    LIMIT 100
-<a href=#261 id=261 data-nosnippet>261</a>  ) search
-<a href=#262 id=262 data-nosnippet>262</a>WHERE dist &lt; 0.7;
-<a href=#263 id=263 data-nosnippet>263</a>"</span>,
-<a href=#264 id=264 data-nosnippet>264</a>        search,
-<a href=#265 id=265 data-nosnippet>265</a>    )
-<a href=#266 id=266 data-nosnippet>266</a>    .fetch_all(conn)
-<a href=#267 id=267 data-nosnippet>267</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#268 id=268 data-nosnippet>268</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#269 id=269 data-nosnippet>269</a>}
-<a href=#270 id=270 data-nosnippet>270</a>
-<a href=#271 id=271 data-nosnippet>271</a><span class="kw">fn </span>normalize_name_search_term(search: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;</span>str {
-<a href=#272 id=272 data-nosnippet>272</a>    search.split(<span class="string">'@'</span>).next().unwrap_or(search).trim()
-<a href=#273 id=273 data-nosnippet>273</a>}
-<a href=#274 id=274 data-nosnippet>274</a>
-<a href=#275 id=275 data-nosnippet>275</a><span class="kw">fn </span>normalize_email_search_term(search: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;</span>str {
-<a href=#276 id=276 data-nosnippet>276</a>    search.trim()
-<a href=#277 id=277 data-nosnippet>277</a>}
-<a href=#278 id=278 data-nosnippet>278</a>
-<a href=#279 id=279 data-nosnippet>279</a><span class="kw">fn </span>is_fuzzy_search_term_long_enough(search: <span class="kw-2">&amp;</span>str) -&gt; bool {
-<a href=#280 id=280 data-nosnippet>280</a>    search.chars().count() &gt;= MIN_FUZZY_SEARCH_TERM_LENGTH
-<a href=#281 id=281 data-nosnippet>281</a>}
-<a href=#282 id=282 data-nosnippet>282</a>
-<a href=#283 id=283 data-nosnippet>283</a><span class="kw">fn </span>parse_exact_user_id_search_term(search: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;Uuid&gt; {
-<a href=#284 id=284 data-nosnippet>284</a>    search.trim().parse().ok()
-<a href=#285 id=285 data-nosnippet>285</a>}
-<a href=#286 id=286 data-nosnippet>286</a>
-<a href=#287 id=287 data-nosnippet>287</a><span class="attr">#[cfg(test)]
-<a href=#288 id=288 data-nosnippet>288</a></span><span class="kw">mod </span>tests {
-<a href=#289 id=289 data-nosnippet>289</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
-<a href=#290 id=290 data-nosnippet>290</a>
-<a href=#291 id=291 data-nosnippet>291</a>    <span class="attr">#[test]
-<a href=#292 id=292 data-nosnippet>292</a>    </span><span class="kw">fn </span>normalizes_name_search_term() {
-<a href=#293 id=293 data-nosnippet>293</a>        <span class="macro">assert_eq!</span>(normalize_name_search_term(<span class="string">"  alice@example.com  "</span>), <span class="string">"alice"</span>);
-<a href=#294 id=294 data-nosnippet>294</a>        <span class="macro">assert_eq!</span>(normalize_name_search_term(<span class="string">"  alice  "</span>), <span class="string">"alice"</span>);
-<a href=#295 id=295 data-nosnippet>295</a>    }
+<a href=#134 id=134 data-nosnippet>134</a><span class="doccomment">/// None when no active user has this email. Case-insensitive, matching the users_email unique index.
+<a href=#135 id=135 data-nosnippet>135</a></span><span class="kw">pub async fn </span>get_active_user_id_by_email_case_insensitive(
+<a href=#136 id=136 data-nosnippet>136</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#137 id=137 data-nosnippet>137</a>    email: <span class="kw-2">&amp;</span>str,
+<a href=#138 id=138 data-nosnippet>138</a>) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;&gt; {
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">let </span>id = <span class="macro">sqlx::query_scalar!</span>(
+<a href=#140 id=140 data-nosnippet>140</a>        <span class="string">"SELECT ud.user_id
+<a href=#141 id=141 data-nosnippet>141</a>         FROM user_details ud
+<a href=#142 id=142 data-nosnippet>142</a>         JOIN users u ON u.id = ud.user_id
+<a href=#143 id=143 data-nosnippet>143</a>         WHERE LOWER(ud.email) = LOWER($1)
+<a href=#144 id=144 data-nosnippet>144</a>           AND u.deleted_at IS NULL"</span>,
+<a href=#145 id=145 data-nosnippet>145</a>        email
+<a href=#146 id=146 data-nosnippet>146</a>    )
+<a href=#147 id=147 data-nosnippet>147</a>    .fetch_optional(conn)
+<a href=#148 id=148 data-nosnippet>148</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="prelude-val">Ok</span>(id)
+<a href=#150 id=150 data-nosnippet>150</a>}
+<a href=#151 id=151 data-nosnippet>151</a>
+<a href=#152 id=152 data-nosnippet>152</a><span class="kw">pub async fn </span>search_for_user_details_by_email(
+<a href=#153 id=153 data-nosnippet>153</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#154 id=154 data-nosnippet>154</a>    email: <span class="kw-2">&amp;</span>str,
+<a href=#155 id=155 data-nosnippet>155</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
+<a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">let </span>email = normalize_email_search_term(email);
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">if </span>!is_fuzzy_search_term_long_enough(email) {
+<a href=#158 id=158 data-nosnippet>158</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
+<a href=#159 id=159 data-nosnippet>159</a>    }
+<a href=#160 id=160 data-nosnippet>160</a>
+<a href=#161 id=161 data-nosnippet>161</a>    <span class="comment">// ORDER BY dist only so the GiST trigram index can serve KNN distance ordering.
+<a href=#162 id=162 data-nosnippet>162</a>    </span><span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#163 id=163 data-nosnippet>163</a>        UserDetail,
+<a href=#164 id=164 data-nosnippet>164</a>        <span class="string">"
+<a href=#165 id=165 data-nosnippet>165</a>SELECT user_id,
+<a href=#166 id=166 data-nosnippet>166</a>  created_at,
+<a href=#167 id=167 data-nosnippet>167</a>  updated_at,
+<a href=#168 id=168 data-nosnippet>168</a>  email,
+<a href=#169 id=169 data-nosnippet>169</a>  first_name,
+<a href=#170 id=170 data-nosnippet>170</a>  last_name,
+<a href=#171 id=171 data-nosnippet>171</a>  search_helper,
+<a href=#172 id=172 data-nosnippet>172</a>  country,
+<a href=#173 id=173 data-nosnippet>173</a>  email_communication_consent,
+<a href=#174 id=174 data-nosnippet>174</a>  email_verified_at,
+<a href=#175 id=175 data-nosnippet>175</a>  email_verified_method
+<a href=#176 id=176 data-nosnippet>176</a>FROM (
+<a href=#177 id=177 data-nosnippet>177</a>    SELECT user_id,
+<a href=#178 id=178 data-nosnippet>178</a>      created_at,
+<a href=#179 id=179 data-nosnippet>179</a>      updated_at,
+<a href=#180 id=180 data-nosnippet>180</a>      email,
+<a href=#181 id=181 data-nosnippet>181</a>      first_name,
+<a href=#182 id=182 data-nosnippet>182</a>      last_name,
+<a href=#183 id=183 data-nosnippet>183</a>      search_helper,
+<a href=#184 id=184 data-nosnippet>184</a>      country,
+<a href=#185 id=185 data-nosnippet>185</a>      email_communication_consent,
+<a href=#186 id=186 data-nosnippet>186</a>      email_verified_at,
+<a href=#187 id=187 data-nosnippet>187</a>      email_verified_method,
+<a href=#188 id=188 data-nosnippet>188</a>      lower($1) &lt;&lt;-&gt; email_search_helper AS dist
+<a href=#189 id=189 data-nosnippet>189</a>    FROM user_details
+<a href=#190 id=190 data-nosnippet>190</a>    ORDER BY dist
+<a href=#191 id=191 data-nosnippet>191</a>    LIMIT 100
+<a href=#192 id=192 data-nosnippet>192</a>  ) search
+<a href=#193 id=193 data-nosnippet>193</a>WHERE dist &lt; 0.7;
+<a href=#194 id=194 data-nosnippet>194</a>"</span>,
+<a href=#195 id=195 data-nosnippet>195</a>        email,
+<a href=#196 id=196 data-nosnippet>196</a>    )
+<a href=#197 id=197 data-nosnippet>197</a>    .fetch_all(conn)
+<a href=#198 id=198 data-nosnippet>198</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#199 id=199 data-nosnippet>199</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#200 id=200 data-nosnippet>200</a>}
+<a href=#201 id=201 data-nosnippet>201</a>
+<a href=#202 id=202 data-nosnippet>202</a><span class="doccomment">/// Searches user_details by exact user id.
+<a href=#203 id=203 data-nosnippet>203</a></span><span class="kw">pub async fn </span>search_for_user_details_by_other_details(
+<a href=#204 id=204 data-nosnippet>204</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#205 id=205 data-nosnippet>205</a>    search: <span class="kw-2">&amp;</span>str,
+<a href=#206 id=206 data-nosnippet>206</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
+<a href=#207 id=207 data-nosnippet>207</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(user_id) = parse_exact_user_id_search_term(search) <span class="kw">else </span>{
+<a href=#208 id=208 data-nosnippet>208</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
+<a href=#209 id=209 data-nosnippet>209</a>    };
+<a href=#210 id=210 data-nosnippet>210</a>
+<a href=#211 id=211 data-nosnippet>211</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#212 id=212 data-nosnippet>212</a>        UserDetail,
+<a href=#213 id=213 data-nosnippet>213</a>        <span class="string">"
+<a href=#214 id=214 data-nosnippet>214</a>SELECT user_id,
+<a href=#215 id=215 data-nosnippet>215</a>  created_at,
+<a href=#216 id=216 data-nosnippet>216</a>  updated_at,
+<a href=#217 id=217 data-nosnippet>217</a>  email,
+<a href=#218 id=218 data-nosnippet>218</a>  first_name,
+<a href=#219 id=219 data-nosnippet>219</a>  last_name,
+<a href=#220 id=220 data-nosnippet>220</a>  search_helper,
+<a href=#221 id=221 data-nosnippet>221</a>  country,
+<a href=#222 id=222 data-nosnippet>222</a>  email_communication_consent,
+<a href=#223 id=223 data-nosnippet>223</a>  email_verified_at,
+<a href=#224 id=224 data-nosnippet>224</a>  email_verified_method
+<a href=#225 id=225 data-nosnippet>225</a>FROM user_details
+<a href=#226 id=226 data-nosnippet>226</a>WHERE user_id = $1;
+<a href=#227 id=227 data-nosnippet>227</a>"</span>,
+<a href=#228 id=228 data-nosnippet>228</a>        user_id,
+<a href=#229 id=229 data-nosnippet>229</a>    )
+<a href=#230 id=230 data-nosnippet>230</a>    .fetch_all(conn)
+<a href=#231 id=231 data-nosnippet>231</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#232 id=232 data-nosnippet>232</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#233 id=233 data-nosnippet>233</a>}
+<a href=#234 id=234 data-nosnippet>234</a>
+<a href=#235 id=235 data-nosnippet>235</a><span class="kw">pub async fn </span>search_for_user_details_fuzzy_match(
+<a href=#236 id=236 data-nosnippet>236</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#237 id=237 data-nosnippet>237</a>    search: <span class="kw-2">&amp;</span>str,
+<a href=#238 id=238 data-nosnippet>238</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
+<a href=#239 id=239 data-nosnippet>239</a>    <span class="comment">// If a full email address reaches name search, compare only the local part against names.
+<a href=#240 id=240 data-nosnippet>240</a>    </span><span class="kw">let </span>search = normalize_name_search_term(search);
+<a href=#241 id=241 data-nosnippet>241</a>    <span class="kw">if </span>!is_fuzzy_search_term_long_enough(search) {
+<a href=#242 id=242 data-nosnippet>242</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
+<a href=#243 id=243 data-nosnippet>243</a>    }
+<a href=#244 id=244 data-nosnippet>244</a>
+<a href=#245 id=245 data-nosnippet>245</a>    <span class="comment">// ORDER BY dist only — no secondary tiebreaker. Adding one (e.g. user_id)
+<a href=#246 id=246 data-nosnippet>246</a>    // would prevent the GiST trigram index from serving the distance ordering,
+<a href=#247 id=247 data-nosnippet>247</a>    // forcing a full table scan+sort. Ties at exactly equal float distances are
+<a href=#248 id=248 data-nosnippet>248</a>    // rare enough in practice that non-determinism in the LIMIT 100 is acceptable.
+<a href=#249 id=249 data-nosnippet>249</a>    </span><span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#250 id=250 data-nosnippet>250</a>        UserDetail,
+<a href=#251 id=251 data-nosnippet>251</a>        <span class="string">"
+<a href=#252 id=252 data-nosnippet>252</a>SELECT user_id,
+<a href=#253 id=253 data-nosnippet>253</a>  created_at,
+<a href=#254 id=254 data-nosnippet>254</a>  updated_at,
+<a href=#255 id=255 data-nosnippet>255</a>  email,
+<a href=#256 id=256 data-nosnippet>256</a>  first_name,
+<a href=#257 id=257 data-nosnippet>257</a>  last_name,
+<a href=#258 id=258 data-nosnippet>258</a>  search_helper,
+<a href=#259 id=259 data-nosnippet>259</a>  country,
+<a href=#260 id=260 data-nosnippet>260</a>  email_communication_consent,
+<a href=#261 id=261 data-nosnippet>261</a>  email_verified_at,
+<a href=#262 id=262 data-nosnippet>262</a>  email_verified_method
+<a href=#263 id=263 data-nosnippet>263</a>FROM (
+<a href=#264 id=264 data-nosnippet>264</a>    SELECT user_id,
+<a href=#265 id=265 data-nosnippet>265</a>      created_at,
+<a href=#266 id=266 data-nosnippet>266</a>      updated_at,
+<a href=#267 id=267 data-nosnippet>267</a>      email,
+<a href=#268 id=268 data-nosnippet>268</a>      first_name,
+<a href=#269 id=269 data-nosnippet>269</a>      last_name,
+<a href=#270 id=270 data-nosnippet>270</a>      search_helper,
+<a href=#271 id=271 data-nosnippet>271</a>      country,
+<a href=#272 id=272 data-nosnippet>272</a>      email_communication_consent,
+<a href=#273 id=273 data-nosnippet>273</a>      email_verified_at,
+<a href=#274 id=274 data-nosnippet>274</a>      email_verified_method,
+<a href=#275 id=275 data-nosnippet>275</a>      lower($1) &lt;&lt;-&gt; name_search_helper AS dist
+<a href=#276 id=276 data-nosnippet>276</a>    FROM user_details
+<a href=#277 id=277 data-nosnippet>277</a>    ORDER BY dist
+<a href=#278 id=278 data-nosnippet>278</a>    LIMIT 100
+<a href=#279 id=279 data-nosnippet>279</a>  ) search
+<a href=#280 id=280 data-nosnippet>280</a>WHERE dist &lt; 0.7;
+<a href=#281 id=281 data-nosnippet>281</a>"</span>,
+<a href=#282 id=282 data-nosnippet>282</a>        search,
+<a href=#283 id=283 data-nosnippet>283</a>    )
+<a href=#284 id=284 data-nosnippet>284</a>    .fetch_all(conn)
+<a href=#285 id=285 data-nosnippet>285</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#286 id=286 data-nosnippet>286</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#287 id=287 data-nosnippet>287</a>}
+<a href=#288 id=288 data-nosnippet>288</a>
+<a href=#289 id=289 data-nosnippet>289</a><span class="kw">fn </span>normalize_name_search_term(search: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;</span>str {
+<a href=#290 id=290 data-nosnippet>290</a>    search.split(<span class="string">'@'</span>).next().unwrap_or(search).trim()
+<a href=#291 id=291 data-nosnippet>291</a>}
+<a href=#292 id=292 data-nosnippet>292</a>
+<a href=#293 id=293 data-nosnippet>293</a><span class="kw">fn </span>normalize_email_search_term(search: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;</span>str {
+<a href=#294 id=294 data-nosnippet>294</a>    search.trim()
+<a href=#295 id=295 data-nosnippet>295</a>}
 <a href=#296 id=296 data-nosnippet>296</a>
-<a href=#297 id=297 data-nosnippet>297</a>    <span class="attr">#[test]
-<a href=#298 id=298 data-nosnippet>298</a>    </span><span class="kw">fn </span>normalizes_email_search_term_without_removing_domain() {
-<a href=#299 id=299 data-nosnippet>299</a>        <span class="macro">assert_eq!</span>(
-<a href=#300 id=300 data-nosnippet>300</a>            normalize_email_search_term(<span class="string">"  alice@example.com  "</span>),
-<a href=#301 id=301 data-nosnippet>301</a>            <span class="string">"alice@example.com"
-<a href=#302 id=302 data-nosnippet>302</a>        </span>);
-<a href=#303 id=303 data-nosnippet>303</a>    }
+<a href=#297 id=297 data-nosnippet>297</a><span class="kw">fn </span>is_fuzzy_search_term_long_enough(search: <span class="kw-2">&amp;</span>str) -&gt; bool {
+<a href=#298 id=298 data-nosnippet>298</a>    search.chars().count() &gt;= MIN_FUZZY_SEARCH_TERM_LENGTH
+<a href=#299 id=299 data-nosnippet>299</a>}
+<a href=#300 id=300 data-nosnippet>300</a>
+<a href=#301 id=301 data-nosnippet>301</a><span class="kw">fn </span>parse_exact_user_id_search_term(search: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;Uuid&gt; {
+<a href=#302 id=302 data-nosnippet>302</a>    search.trim().parse().ok()
+<a href=#303 id=303 data-nosnippet>303</a>}
 <a href=#304 id=304 data-nosnippet>304</a>
-<a href=#305 id=305 data-nosnippet>305</a>    <span class="attr">#[test]
-<a href=#306 id=306 data-nosnippet>306</a>    </span><span class="kw">fn </span>rejects_short_fuzzy_search_terms() {
-<a href=#307 id=307 data-nosnippet>307</a>        <span class="macro">assert!</span>(!is_fuzzy_search_term_long_enough(<span class="string">"al"</span>));
-<a href=#308 id=308 data-nosnippet>308</a>        <span class="macro">assert!</span>(is_fuzzy_search_term_long_enough(<span class="string">"ali"</span>));
-<a href=#309 id=309 data-nosnippet>309</a>    }
-<a href=#310 id=310 data-nosnippet>310</a>
-<a href=#311 id=311 data-nosnippet>311</a>    <span class="attr">#[test]
-<a href=#312 id=312 data-nosnippet>312</a>    </span><span class="kw">fn </span>parses_exact_user_id_search_term() {
-<a href=#313 id=313 data-nosnippet>313</a>        <span class="kw">let </span>user_id = Uuid::parse_str(<span class="string">"5b177cc9-fbc3-43b5-8108-63481ff0b0e4"</span>).unwrap();
+<a href=#305 id=305 data-nosnippet>305</a><span class="attr">#[cfg(test)]
+<a href=#306 id=306 data-nosnippet>306</a></span><span class="kw">mod </span>tests {
+<a href=#307 id=307 data-nosnippet>307</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#308 id=308 data-nosnippet>308</a>
+<a href=#309 id=309 data-nosnippet>309</a>    <span class="attr">#[test]
+<a href=#310 id=310 data-nosnippet>310</a>    </span><span class="kw">fn </span>normalizes_name_search_term() {
+<a href=#311 id=311 data-nosnippet>311</a>        <span class="macro">assert_eq!</span>(normalize_name_search_term(<span class="string">"  alice@example.com  "</span>), <span class="string">"alice"</span>);
+<a href=#312 id=312 data-nosnippet>312</a>        <span class="macro">assert_eq!</span>(normalize_name_search_term(<span class="string">"  alice  "</span>), <span class="string">"alice"</span>);
+<a href=#313 id=313 data-nosnippet>313</a>    }
 <a href=#314 id=314 data-nosnippet>314</a>
-<a href=#315 id=315 data-nosnippet>315</a>        <span class="macro">assert_eq!</span>(
-<a href=#316 id=316 data-nosnippet>316</a>            parse_exact_user_id_search_term(<span class="string">"  5b177cc9-fbc3-43b5-8108-63481ff0b0e4  "</span>),
-<a href=#317 id=317 data-nosnippet>317</a>            <span class="prelude-val">Some</span>(user_id)
-<a href=#318 id=318 data-nosnippet>318</a>        );
-<a href=#319 id=319 data-nosnippet>319</a>        <span class="macro">assert_eq!</span>(parse_exact_user_id_search_term(<span class="string">"not-a-user-id"</span>), <span class="prelude-val">None</span>);
-<a href=#320 id=320 data-nosnippet>320</a>    }
-<a href=#321 id=321 data-nosnippet>321</a>
-<a href=#322 id=322 data-nosnippet>322</a>    <span class="comment">// One test per writer of user_details.email. No call site clears the verification flag itself,
-<a href=#323 id=323 data-nosnippet>323</a>    // so these are what notices if the clear_email_verification trigger is ever dropped. Writers A
-<a href=#324 id=324 data-nosnippet>324</a>    // and B both go through update_user_info, so they differ only in the payload sent.
-<a href=#325 id=325 data-nosnippet>325</a>    </span><span class="kw">mod </span>email_verification_trigger {
-<a href=#326 id=326 data-nosnippet>326</a>        <span class="kw">use </span>super::<span class="kw-2">*</span>;
-<a href=#327 id=327 data-nosnippet>327</a>        <span class="kw">use </span><span class="kw">crate</span>::test_helper::<span class="kw-2">*</span>;
+<a href=#315 id=315 data-nosnippet>315</a>    <span class="attr">#[test]
+<a href=#316 id=316 data-nosnippet>316</a>    </span><span class="kw">fn </span>normalizes_email_search_term_without_removing_domain() {
+<a href=#317 id=317 data-nosnippet>317</a>        <span class="macro">assert_eq!</span>(
+<a href=#318 id=318 data-nosnippet>318</a>            normalize_email_search_term(<span class="string">"  alice@example.com  "</span>),
+<a href=#319 id=319 data-nosnippet>319</a>            <span class="string">"alice@example.com"
+<a href=#320 id=320 data-nosnippet>320</a>        </span>);
+<a href=#321 id=321 data-nosnippet>321</a>    }
+<a href=#322 id=322 data-nosnippet>322</a>
+<a href=#323 id=323 data-nosnippet>323</a>    <span class="attr">#[test]
+<a href=#324 id=324 data-nosnippet>324</a>    </span><span class="kw">fn </span>rejects_short_fuzzy_search_terms() {
+<a href=#325 id=325 data-nosnippet>325</a>        <span class="macro">assert!</span>(!is_fuzzy_search_term_long_enough(<span class="string">"al"</span>));
+<a href=#326 id=326 data-nosnippet>326</a>        <span class="macro">assert!</span>(is_fuzzy_search_term_long_enough(<span class="string">"ali"</span>));
+<a href=#327 id=327 data-nosnippet>327</a>    }
 <a href=#328 id=328 data-nosnippet>328</a>
-<a href=#329 id=329 data-nosnippet>329</a>        <span class="kw">async fn </span>verify_now(tx: <span class="kw-2">&amp;mut </span>PgConnection, user_id: Uuid) {
-<a href=#330 id=330 data-nosnippet>330</a>            set_email_verified(
-<a href=#331 id=331 data-nosnippet>331</a>                tx,
-<a href=#332 id=332 data-nosnippet>332</a>                user_id,
-<a href=#333 id=333 data-nosnippet>333</a>                EmailVerificationMethod::EmailedCode,
-<a href=#334 id=334 data-nosnippet>334</a>                Utc::now(),
-<a href=#335 id=335 data-nosnippet>335</a>            )
-<a href=#336 id=336 data-nosnippet>336</a>            .<span class="kw">await
-<a href=#337 id=337 data-nosnippet>337</a>            </span>.unwrap();
-<a href=#338 id=338 data-nosnippet>338</a>        }
+<a href=#329 id=329 data-nosnippet>329</a>    <span class="attr">#[test]
+<a href=#330 id=330 data-nosnippet>330</a>    </span><span class="kw">fn </span>parses_exact_user_id_search_term() {
+<a href=#331 id=331 data-nosnippet>331</a>        <span class="kw">let </span>user_id = Uuid::parse_str(<span class="string">"5b177cc9-fbc3-43b5-8108-63481ff0b0e4"</span>).unwrap();
+<a href=#332 id=332 data-nosnippet>332</a>
+<a href=#333 id=333 data-nosnippet>333</a>        <span class="macro">assert_eq!</span>(
+<a href=#334 id=334 data-nosnippet>334</a>            parse_exact_user_id_search_term(<span class="string">"  5b177cc9-fbc3-43b5-8108-63481ff0b0e4  "</span>),
+<a href=#335 id=335 data-nosnippet>335</a>            <span class="prelude-val">Some</span>(user_id)
+<a href=#336 id=336 data-nosnippet>336</a>        );
+<a href=#337 id=337 data-nosnippet>337</a>        <span class="macro">assert_eq!</span>(parse_exact_user_id_search_term(<span class="string">"not-a-user-id"</span>), <span class="prelude-val">None</span>);
+<a href=#338 id=338 data-nosnippet>338</a>    }
 <a href=#339 id=339 data-nosnippet>339</a>
-<a href=#340 id=340 data-nosnippet>340</a>        <span class="attr">#[tokio::test]
-<a href=#341 id=341 data-nosnippet>341</a>        </span><span class="kw">async fn </span>writer_a_user_settings_edit_clears_the_flag() {
-<a href=#342 id=342 data-nosnippet>342</a>            <span class="macro">insert_data!</span>(:tx, :user);
-<a href=#343 id=343 data-nosnippet>343</a>            verify_now(tx.as_mut(), user).<span class="kw">await</span>;
-<a href=#344 id=344 data-nosnippet>344</a>
-<a href=#345 id=345 data-nosnippet>345</a>            <span class="kw">let </span>updated = update_user_info(
-<a href=#346 id=346 data-nosnippet>346</a>                tx.as_mut(),
-<a href=#347 id=347 data-nosnippet>347</a>                user,
-<a href=#348 id=348 data-nosnippet>348</a>                <span class="string">"writer-a-changed@example.com"</span>,
-<a href=#349 id=349 data-nosnippet>349</a>                <span class="string">"Changed"</span>,
-<a href=#350 id=350 data-nosnippet>350</a>                <span class="string">"Name"</span>,
-<a href=#351 id=351 data-nosnippet>351</a>                <span class="string">"FI"</span>,
-<a href=#352 id=352 data-nosnippet>352</a>                <span class="bool-val">true</span>,
+<a href=#340 id=340 data-nosnippet>340</a>    <span class="comment">// One test per writer of user_details.email. No call site clears the verification flag itself,
+<a href=#341 id=341 data-nosnippet>341</a>    // so these are what notices if the clear_email_verification trigger is ever dropped. Writers A
+<a href=#342 id=342 data-nosnippet>342</a>    // and B both go through update_user_info, so they differ only in the payload sent.
+<a href=#343 id=343 data-nosnippet>343</a>    </span><span class="kw">mod </span>email_verification_trigger {
+<a href=#344 id=344 data-nosnippet>344</a>        <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#345 id=345 data-nosnippet>345</a>        <span class="kw">use </span><span class="kw">crate</span>::test_helper::<span class="kw-2">*</span>;
+<a href=#346 id=346 data-nosnippet>346</a>
+<a href=#347 id=347 data-nosnippet>347</a>        <span class="kw">async fn </span>verify_now(tx: <span class="kw-2">&amp;mut </span>PgConnection, user_id: Uuid) {
+<a href=#348 id=348 data-nosnippet>348</a>            set_email_verified(
+<a href=#349 id=349 data-nosnippet>349</a>                tx,
+<a href=#350 id=350 data-nosnippet>350</a>                user_id,
+<a href=#351 id=351 data-nosnippet>351</a>                EmailVerificationMethod::EmailedCode,
+<a href=#352 id=352 data-nosnippet>352</a>                Utc::now(),
 <a href=#353 id=353 data-nosnippet>353</a>            )
 <a href=#354 id=354 data-nosnippet>354</a>            .<span class="kw">await
 <a href=#355 id=355 data-nosnippet>355</a>            </span>.unwrap();
-<a href=#356 id=356 data-nosnippet>356</a>
-<a href=#357 id=357 data-nosnippet>357</a>            <span class="macro">assert_eq!</span>(updated.email, <span class="string">"writer-a-changed@example.com"</span>);
-<a href=#358 id=358 data-nosnippet>358</a>            <span class="macro">assert_eq!</span>(updated.email_verified_at, <span class="prelude-val">None</span>);
-<a href=#359 id=359 data-nosnippet>359</a>            <span class="macro">assert_eq!</span>(updated.email_verified_method, <span class="prelude-val">None</span>);
-<a href=#360 id=360 data-nosnippet>360</a>        }
-<a href=#361 id=361 data-nosnippet>361</a>
-<a href=#362 id=362 data-nosnippet>362</a>        <span class="attr">#[tokio::test]
-<a href=#363 id=363 data-nosnippet>363</a>        </span><span class="kw">async fn </span>writer_b_course_material_edit_clears_the_flag() {
-<a href=#364 id=364 data-nosnippet>364</a>            <span class="macro">insert_data!</span>(:tx, :user);
-<a href=#365 id=365 data-nosnippet>365</a>            <span class="kw">let </span>before = update_user_info(
-<a href=#366 id=366 data-nosnippet>366</a>                tx.as_mut(),
-<a href=#367 id=367 data-nosnippet>367</a>                user,
-<a href=#368 id=368 data-nosnippet>368</a>                <span class="string">"writer-b@example.com"</span>,
-<a href=#369 id=369 data-nosnippet>369</a>                <span class="string">"Course"</span>,
-<a href=#370 id=370 data-nosnippet>370</a>                <span class="string">"Material"</span>,
-<a href=#371 id=371 data-nosnippet>371</a>                <span class="string">"FI"</span>,
-<a href=#372 id=372 data-nosnippet>372</a>                <span class="bool-val">true</span>,
-<a href=#373 id=373 data-nosnippet>373</a>            )
-<a href=#374 id=374 data-nosnippet>374</a>            .<span class="kw">await
-<a href=#375 id=375 data-nosnippet>375</a>            </span>.unwrap();
-<a href=#376 id=376 data-nosnippet>376</a>            verify_now(tx.as_mut(), user).<span class="kw">await</span>;
-<a href=#377 id=377 data-nosnippet>377</a>
-<a href=#378 id=378 data-nosnippet>378</a>            <span class="comment">// The course-material form resubmits the whole profile, so only the address differs.
-<a href=#379 id=379 data-nosnippet>379</a>            </span><span class="kw">let </span>updated = update_user_info(
-<a href=#380 id=380 data-nosnippet>380</a>                tx.as_mut(),
-<a href=#381 id=381 data-nosnippet>381</a>                user,
-<a href=#382 id=382 data-nosnippet>382</a>                <span class="string">"writer-b-changed@example.com"</span>,
-<a href=#383 id=383 data-nosnippet>383</a>                before.first_name.as_deref().unwrap(),
-<a href=#384 id=384 data-nosnippet>384</a>                before.last_name.as_deref().unwrap(),
-<a href=#385 id=385 data-nosnippet>385</a>                before.country.as_deref().unwrap(),
-<a href=#386 id=386 data-nosnippet>386</a>                before.email_communication_consent.unwrap(),
-<a href=#387 id=387 data-nosnippet>387</a>            )
-<a href=#388 id=388 data-nosnippet>388</a>            .<span class="kw">await
-<a href=#389 id=389 data-nosnippet>389</a>            </span>.unwrap();
-<a href=#390 id=390 data-nosnippet>390</a>
-<a href=#391 id=391 data-nosnippet>391</a>            <span class="macro">assert_eq!</span>(updated.email_verified_at, <span class="prelude-val">None</span>);
-<a href=#392 id=392 data-nosnippet>392</a>            <span class="macro">assert_eq!</span>(updated.email_verified_method, <span class="prelude-val">None</span>);
-<a href=#393 id=393 data-nosnippet>393</a>        }
-<a href=#394 id=394 data-nosnippet>394</a>
-<a href=#395 id=395 data-nosnippet>395</a>        <span class="attr">#[tokio::test]
-<a href=#396 id=396 data-nosnippet>396</a>        </span><span class="kw">async fn </span>writer_c_tmc_sync_clears_the_flag() {
-<a href=#397 id=397 data-nosnippet>397</a>            <span class="macro">insert_data!</span>(:tx);
-<a href=#398 id=398 data-nosnippet>398</a>            <span class="kw">let </span>upstream_id = <span class="number">90_112_233</span>;
-<a href=#399 id=399 data-nosnippet>399</a>            <span class="kw">let </span>user = <span class="kw">crate</span>::users::insert_with_upstream_id_and_moocfi_id(
-<a href=#400 id=400 data-nosnippet>400</a>                tx.as_mut(),
-<a href=#401 id=401 data-nosnippet>401</a>                <span class="string">"writer-c@example.com"</span>,
-<a href=#402 id=402 data-nosnippet>402</a>                <span class="prelude-val">None</span>,
-<a href=#403 id=403 data-nosnippet>403</a>                <span class="prelude-val">None</span>,
-<a href=#404 id=404 data-nosnippet>404</a>                upstream_id,
-<a href=#405 id=405 data-nosnippet>405</a>                Uuid::new_v4(),
-<a href=#406 id=406 data-nosnippet>406</a>            )
-<a href=#407 id=407 data-nosnippet>407</a>            .<span class="kw">await
-<a href=#408 id=408 data-nosnippet>408</a>            </span>.unwrap();
-<a href=#409 id=409 data-nosnippet>409</a>            verify_now(tx.as_mut(), user.id).<span class="kw">await</span>;
-<a href=#410 id=410 data-nosnippet>410</a>
-<a href=#411 id=411 data-nosnippet>411</a>            <span class="kw">crate</span>::users::update_email_for_user(
-<a href=#412 id=412 data-nosnippet>412</a>                tx.as_mut(),
-<a href=#413 id=413 data-nosnippet>413</a>                <span class="kw-2">&amp;</span>upstream_id,
-<a href=#414 id=414 data-nosnippet>414</a>                <span class="string">"writer-c-changed@example.com"</span>.to_string(),
-<a href=#415 id=415 data-nosnippet>415</a>            )
-<a href=#416 id=416 data-nosnippet>416</a>            .<span class="kw">await
-<a href=#417 id=417 data-nosnippet>417</a>            </span>.unwrap();
-<a href=#418 id=418 data-nosnippet>418</a>
-<a href=#419 id=419 data-nosnippet>419</a>            <span class="macro">assert!</span>(
-<a href=#420 id=420 data-nosnippet>420</a>                get_email_verification(tx.as_mut(), user.id)
-<a href=#421 id=421 data-nosnippet>421</a>                    .<span class="kw">await
-<a href=#422 id=422 data-nosnippet>422</a>                    </span>.unwrap()
-<a href=#423 id=423 data-nosnippet>423</a>                    .is_none()
-<a href=#424 id=424 data-nosnippet>424</a>            );
-<a href=#425 id=425 data-nosnippet>425</a>        }
-<a href=#426 id=426 data-nosnippet>426</a>
-<a href=#427 id=427 data-nosnippet>427</a>        <span class="attr">#[tokio::test]
-<a href=#428 id=428 data-nosnippet>428</a>        </span><span class="kw">async fn </span>an_edit_that_leaves_the_address_alone_keeps_the_flag() {
-<a href=#429 id=429 data-nosnippet>429</a>            <span class="macro">insert_data!</span>(:tx, :user);
-<a href=#430 id=430 data-nosnippet>430</a>            <span class="kw">let </span>before = get_user_details_by_user_id(tx.as_mut(), user)
-<a href=#431 id=431 data-nosnippet>431</a>                .<span class="kw">await
-<a href=#432 id=432 data-nosnippet>432</a>                </span>.unwrap();
-<a href=#433 id=433 data-nosnippet>433</a>            verify_now(tx.as_mut(), user).<span class="kw">await</span>;
-<a href=#434 id=434 data-nosnippet>434</a>
-<a href=#435 id=435 data-nosnippet>435</a>            <span class="kw">let </span>updated = update_user_info(
-<a href=#436 id=436 data-nosnippet>436</a>                tx.as_mut(),
-<a href=#437 id=437 data-nosnippet>437</a>                user,
-<a href=#438 id=438 data-nosnippet>438</a>                <span class="kw-2">&amp;</span>before.email,
-<a href=#439 id=439 data-nosnippet>439</a>                <span class="string">"Renamed"</span>,
-<a href=#440 id=440 data-nosnippet>440</a>                <span class="string">"Person"</span>,
-<a href=#441 id=441 data-nosnippet>441</a>                <span class="string">"SE"</span>,
-<a href=#442 id=442 data-nosnippet>442</a>                <span class="bool-val">false</span>,
-<a href=#443 id=443 data-nosnippet>443</a>            )
-<a href=#444 id=444 data-nosnippet>444</a>            .<span class="kw">await
-<a href=#445 id=445 data-nosnippet>445</a>            </span>.unwrap();
-<a href=#446 id=446 data-nosnippet>446</a>
-<a href=#447 id=447 data-nosnippet>447</a>            <span class="macro">assert!</span>(updated.email_verified_at.is_some());
-<a href=#448 id=448 data-nosnippet>448</a>            <span class="macro">assert_eq!</span>(
-<a href=#449 id=449 data-nosnippet>449</a>                updated.email_verified_method,
-<a href=#450 id=450 data-nosnippet>450</a>                <span class="prelude-val">Some</span>(EmailVerificationMethod::EmailedCode)
-<a href=#451 id=451 data-nosnippet>451</a>            );
-<a href=#452 id=452 data-nosnippet>452</a>        }
-<a href=#453 id=453 data-nosnippet>453</a>    }
-<a href=#454 id=454 data-nosnippet>454</a>}
-<a href=#455 id=455 data-nosnippet>455</a>
-<a href=#456 id=456 data-nosnippet>456</a><span class="doccomment">/// Retrieves all users enrolled in a specific course
-<a href=#457 id=457 data-nosnippet>457</a></span><span class="kw">pub async fn </span>get_users_by_course_id(
-<a href=#458 id=458 data-nosnippet>458</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#459 id=459 data-nosnippet>459</a>    course_id: Uuid,
-<a href=#460 id=460 data-nosnippet>460</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
-<a href=#461 id=461 data-nosnippet>461</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#462 id=462 data-nosnippet>462</a>        UserDetail,
-<a href=#463 id=463 data-nosnippet>463</a>        <span class="string">r#"
-<a href=#464 id=464 data-nosnippet>464</a>SELECT d.user_id,
-<a href=#465 id=465 data-nosnippet>465</a>  d.created_at,
-<a href=#466 id=466 data-nosnippet>466</a>  d.updated_at,
-<a href=#467 id=467 data-nosnippet>467</a>  d.email,
-<a href=#468 id=468 data-nosnippet>468</a>  d.first_name,
-<a href=#469 id=469 data-nosnippet>469</a>  d.last_name,
-<a href=#470 id=470 data-nosnippet>470</a>  d.search_helper,
-<a href=#471 id=471 data-nosnippet>471</a>  d.country,
-<a href=#472 id=472 data-nosnippet>472</a>  d.email_communication_consent,
-<a href=#473 id=473 data-nosnippet>473</a>  d.email_verified_at,
-<a href=#474 id=474 data-nosnippet>474</a>  d.email_verified_method
-<a href=#475 id=475 data-nosnippet>475</a>FROM course_instance_enrollments e
-<a href=#476 id=476 data-nosnippet>476</a>  JOIN user_details d ON e.user_id = d.user_id
-<a href=#477 id=477 data-nosnippet>477</a>WHERE e.course_id = $1
-<a href=#478 id=478 data-nosnippet>478</a>  AND e.deleted_at IS NULL
-<a href=#479 id=479 data-nosnippet>479</a>        "#</span>,
-<a href=#480 id=480 data-nosnippet>480</a>        course_id
-<a href=#481 id=481 data-nosnippet>481</a>    )
-<a href=#482 id=482 data-nosnippet>482</a>    .fetch_all(conn)
-<a href=#483 id=483 data-nosnippet>483</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#484 id=484 data-nosnippet>484</a>
-<a href=#485 id=485 data-nosnippet>485</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#486 id=486 data-nosnippet>486</a>}
-<a href=#487 id=487 data-nosnippet>487</a>
-<a href=#488 id=488 data-nosnippet>488</a><span class="doccomment">/// Retrieves user details for a list of user IDs
-<a href=#489 id=489 data-nosnippet>489</a></span><span class="kw">pub async fn </span>get_user_details_by_user_ids(
-<a href=#490 id=490 data-nosnippet>490</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#491 id=491 data-nosnippet>491</a>    user_ids: <span class="kw-2">&amp;</span>[Uuid],
-<a href=#492 id=492 data-nosnippet>492</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
-<a href=#493 id=493 data-nosnippet>493</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#494 id=494 data-nosnippet>494</a>        UserDetail,
-<a href=#495 id=495 data-nosnippet>495</a>        <span class="string">r#"
-<a href=#496 id=496 data-nosnippet>496</a>SELECT user_id,
-<a href=#497 id=497 data-nosnippet>497</a>  created_at,
-<a href=#498 id=498 data-nosnippet>498</a>  updated_at,
-<a href=#499 id=499 data-nosnippet>499</a>  email,
-<a href=#500 id=500 data-nosnippet>500</a>  first_name,
-<a href=#501 id=501 data-nosnippet>501</a>  last_name,
-<a href=#502 id=502 data-nosnippet>502</a>  search_helper,
-<a href=#503 id=503 data-nosnippet>503</a>  country,
-<a href=#504 id=504 data-nosnippet>504</a>  email_communication_consent,
-<a href=#505 id=505 data-nosnippet>505</a>  email_verified_at,
-<a href=#506 id=506 data-nosnippet>506</a>  email_verified_method
-<a href=#507 id=507 data-nosnippet>507</a>FROM user_details
-<a href=#508 id=508 data-nosnippet>508</a>WHERE user_id = ANY($1::uuid[])
-<a href=#509 id=509 data-nosnippet>509</a>        "#</span>,
-<a href=#510 id=510 data-nosnippet>510</a>        user_ids
-<a href=#511 id=511 data-nosnippet>511</a>    )
-<a href=#512 id=512 data-nosnippet>512</a>    .fetch_all(conn)
-<a href=#513 id=513 data-nosnippet>513</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#514 id=514 data-nosnippet>514</a>
-<a href=#515 id=515 data-nosnippet>515</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#516 id=516 data-nosnippet>516</a>}
-<a href=#517 id=517 data-nosnippet>517</a>
-<a href=#518 id=518 data-nosnippet>518</a><span class="doccomment">/// Retrieves user details for a list of user IDs, but only for users who are enrolled in the specified course
-<a href=#519 id=519 data-nosnippet>519</a></span><span class="kw">pub async fn </span>get_user_details_by_user_ids_for_course(
-<a href=#520 id=520 data-nosnippet>520</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#521 id=521 data-nosnippet>521</a>    user_ids: <span class="kw-2">&amp;</span>[Uuid],
-<a href=#522 id=522 data-nosnippet>522</a>    course_id: Uuid,
-<a href=#523 id=523 data-nosnippet>523</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
-<a href=#524 id=524 data-nosnippet>524</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#525 id=525 data-nosnippet>525</a>        UserDetail,
-<a href=#526 id=526 data-nosnippet>526</a>        <span class="string">r#"
-<a href=#527 id=527 data-nosnippet>527</a>SELECT ud.user_id,
-<a href=#528 id=528 data-nosnippet>528</a>  ud.created_at,
-<a href=#529 id=529 data-nosnippet>529</a>  ud.updated_at,
-<a href=#530 id=530 data-nosnippet>530</a>  ud.email,
-<a href=#531 id=531 data-nosnippet>531</a>  ud.first_name,
-<a href=#532 id=532 data-nosnippet>532</a>  ud.last_name,
-<a href=#533 id=533 data-nosnippet>533</a>  ud.search_helper,
-<a href=#534 id=534 data-nosnippet>534</a>  ud.country,
-<a href=#535 id=535 data-nosnippet>535</a>  ud.email_communication_consent,
-<a href=#536 id=536 data-nosnippet>536</a>  ud.email_verified_at,
-<a href=#537 id=537 data-nosnippet>537</a>  ud.email_verified_method
-<a href=#538 id=538 data-nosnippet>538</a>FROM user_details ud
-<a href=#539 id=539 data-nosnippet>539</a>JOIN user_course_settings ucs ON ud.user_id = ucs.user_id
-<a href=#540 id=540 data-nosnippet>540</a>WHERE ud.user_id = ANY($1::uuid[])
-<a href=#541 id=541 data-nosnippet>541</a>  AND ucs.current_course_id = $2
-<a href=#542 id=542 data-nosnippet>542</a>  AND ucs.deleted_at IS NULL
-<a href=#543 id=543 data-nosnippet>543</a>        "#</span>,
-<a href=#544 id=544 data-nosnippet>544</a>        user_ids,
-<a href=#545 id=545 data-nosnippet>545</a>        course_id
-<a href=#546 id=546 data-nosnippet>546</a>    )
-<a href=#547 id=547 data-nosnippet>547</a>    .fetch_all(conn)
-<a href=#548 id=548 data-nosnippet>548</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#549 id=549 data-nosnippet>549</a>
-<a href=#550 id=550 data-nosnippet>550</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#551 id=551 data-nosnippet>551</a>}
-<a href=#552 id=552 data-nosnippet>552</a>
-<a href=#553 id=553 data-nosnippet>553</a><span class="doccomment">/// Retrieves user details for a single user ID, but only if the user is enrolled in the specified course
-<a href=#554 id=554 data-nosnippet>554</a></span><span class="kw">pub async fn </span>get_user_details_by_user_id_for_course(
-<a href=#555 id=555 data-nosnippet>555</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#556 id=556 data-nosnippet>556</a>    user_id: Uuid,
-<a href=#557 id=557 data-nosnippet>557</a>    course_id: Uuid,
-<a href=#558 id=558 data-nosnippet>558</a>) -&gt; ModelResult&lt;UserDetail&gt; {
-<a href=#559 id=559 data-nosnippet>559</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#560 id=560 data-nosnippet>560</a>        UserDetail,
-<a href=#561 id=561 data-nosnippet>561</a>        <span class="string">r#"
-<a href=#562 id=562 data-nosnippet>562</a>SELECT ud.user_id,
-<a href=#563 id=563 data-nosnippet>563</a>  ud.created_at,
-<a href=#564 id=564 data-nosnippet>564</a>  ud.updated_at,
-<a href=#565 id=565 data-nosnippet>565</a>  ud.email,
-<a href=#566 id=566 data-nosnippet>566</a>  ud.first_name,
-<a href=#567 id=567 data-nosnippet>567</a>  ud.last_name,
-<a href=#568 id=568 data-nosnippet>568</a>  ud.search_helper,
-<a href=#569 id=569 data-nosnippet>569</a>  ud.country,
-<a href=#570 id=570 data-nosnippet>570</a>  ud.email_communication_consent,
-<a href=#571 id=571 data-nosnippet>571</a>  ud.email_verified_at,
-<a href=#572 id=572 data-nosnippet>572</a>  ud.email_verified_method
-<a href=#573 id=573 data-nosnippet>573</a>FROM user_details ud
-<a href=#574 id=574 data-nosnippet>574</a>JOIN user_course_settings ucs ON ud.user_id = ucs.user_id
-<a href=#575 id=575 data-nosnippet>575</a>WHERE ud.user_id = $1
-<a href=#576 id=576 data-nosnippet>576</a>  AND ucs.current_course_id = $2
-<a href=#577 id=577 data-nosnippet>577</a>  AND ucs.deleted_at IS NULL
-<a href=#578 id=578 data-nosnippet>578</a>        "#</span>,
-<a href=#579 id=579 data-nosnippet>579</a>        user_id,
-<a href=#580 id=580 data-nosnippet>580</a>        course_id
-<a href=#581 id=581 data-nosnippet>581</a>    )
-<a href=#582 id=582 data-nosnippet>582</a>    .fetch_one(conn)
-<a href=#583 id=583 data-nosnippet>583</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#584 id=584 data-nosnippet>584</a>
-<a href=#585 id=585 data-nosnippet>585</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#586 id=586 data-nosnippet>586</a>}
-<a href=#587 id=587 data-nosnippet>587</a>
-<a href=#588 id=588 data-nosnippet>588</a><span class="kw">pub async fn </span>update_user_country(
-<a href=#589 id=589 data-nosnippet>589</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#590 id=590 data-nosnippet>590</a>    user_id: Uuid,
-<a href=#591 id=591 data-nosnippet>591</a>    country: <span class="kw-2">&amp;</span>str,
-<a href=#592 id=592 data-nosnippet>592</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), sqlx::Error&gt; {
-<a href=#593 id=593 data-nosnippet>593</a>    <span class="macro">sqlx::query!</span>(
-<a href=#594 id=594 data-nosnippet>594</a>        <span class="string">r#"
-<a href=#595 id=595 data-nosnippet>595</a>UPDATE user_details
-<a href=#596 id=596 data-nosnippet>596</a>SET country = $1
-<a href=#597 id=597 data-nosnippet>597</a>WHERE user_id = $2
-<a href=#598 id=598 data-nosnippet>598</a>"#</span>,
-<a href=#599 id=599 data-nosnippet>599</a>        country,
-<a href=#600 id=600 data-nosnippet>600</a>        user_id,
-<a href=#601 id=601 data-nosnippet>601</a>    )
-<a href=#602 id=602 data-nosnippet>602</a>    .execute(conn)
-<a href=#603 id=603 data-nosnippet>603</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#604 id=604 data-nosnippet>604</a>    <span class="prelude-val">Ok</span>(())
-<a href=#605 id=605 data-nosnippet>605</a>}
-<a href=#606 id=606 data-nosnippet>606</a>
-<a href=#607 id=607 data-nosnippet>607</a><span class="kw">pub async fn </span>update_user_email_communication_consent(
-<a href=#608 id=608 data-nosnippet>608</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#609 id=609 data-nosnippet>609</a>    user_id: Uuid,
-<a href=#610 id=610 data-nosnippet>610</a>    email_communication_consent: bool,
-<a href=#611 id=611 data-nosnippet>611</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), sqlx::Error&gt; {
-<a href=#612 id=612 data-nosnippet>612</a>    <span class="macro">sqlx::query!</span>(
-<a href=#613 id=613 data-nosnippet>613</a>        <span class="string">r#"
-<a href=#614 id=614 data-nosnippet>614</a>UPDATE user_details
-<a href=#615 id=615 data-nosnippet>615</a>SET email_communication_consent = $1
-<a href=#616 id=616 data-nosnippet>616</a>WHERE user_id = $2
-<a href=#617 id=617 data-nosnippet>617</a>"#</span>,
-<a href=#618 id=618 data-nosnippet>618</a>        email_communication_consent,
-<a href=#619 id=619 data-nosnippet>619</a>        user_id,
-<a href=#620 id=620 data-nosnippet>620</a>    )
-<a href=#621 id=621 data-nosnippet>621</a>    .execute(conn)
-<a href=#622 id=622 data-nosnippet>622</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#623 id=623 data-nosnippet>623</a>    <span class="prelude-val">Ok</span>(())
-<a href=#624 id=624 data-nosnippet>624</a>}
-<a href=#625 id=625 data-nosnippet>625</a>
-<a href=#626 id=626 data-nosnippet>626</a><span class="doccomment">/// Writes the whole profile form, including the derived `users.email_domain`.
-<a href=#627 id=627 data-nosnippet>627</a>///
-<a href=#628 id=628 data-nosnippet>628</a>/// On an address change the `clear_email_verification` trigger nulls `email_verified_at` and
-<a href=#629 id=629 data-nosnippet>629</a>/// `email_verified_method`, so a caller wanting fresh proof must mail a new verification link.
-<a href=#630 id=630 data-nosnippet>630</a></span><span class="kw">pub async fn </span>update_user_info(
-<a href=#631 id=631 data-nosnippet>631</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#632 id=632 data-nosnippet>632</a>    user_id: Uuid,
-<a href=#633 id=633 data-nosnippet>633</a>    email: <span class="kw-2">&amp;</span>str,
-<a href=#634 id=634 data-nosnippet>634</a>    first_name: <span class="kw-2">&amp;</span>str,
-<a href=#635 id=635 data-nosnippet>635</a>    last_name: <span class="kw-2">&amp;</span>str,
-<a href=#636 id=636 data-nosnippet>636</a>    country: <span class="kw-2">&amp;</span>str,
-<a href=#637 id=637 data-nosnippet>637</a>    email_communication_consent: bool,
-<a href=#638 id=638 data-nosnippet>638</a>) -&gt; <span class="prelude-ty">Result</span>&lt;UserDetail, sqlx::Error&gt; {
-<a href=#639 id=639 data-nosnippet>639</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#640 id=640 data-nosnippet>640</a>    <span class="kw">let </span>updated_user = <span class="macro">sqlx::query_as!</span>(
-<a href=#641 id=641 data-nosnippet>641</a>        UserDetail,
-<a href=#642 id=642 data-nosnippet>642</a>        <span class="string">r#"
-<a href=#643 id=643 data-nosnippet>643</a>UPDATE user_details
-<a href=#644 id=644 data-nosnippet>644</a>SET email = $1,
-<a href=#645 id=645 data-nosnippet>645</a>  first_name = $2,
-<a href=#646 id=646 data-nosnippet>646</a>  last_name = $3,
-<a href=#647 id=647 data-nosnippet>647</a>  country = $4,
-<a href=#648 id=648 data-nosnippet>648</a>  email_communication_consent = $5
-<a href=#649 id=649 data-nosnippet>649</a>WHERE user_id = $6
-<a href=#650 id=650 data-nosnippet>650</a>RETURNING user_id,
-<a href=#651 id=651 data-nosnippet>651</a>  created_at,
-<a href=#652 id=652 data-nosnippet>652</a>  updated_at,
-<a href=#653 id=653 data-nosnippet>653</a>  email,
-<a href=#654 id=654 data-nosnippet>654</a>  first_name,
-<a href=#655 id=655 data-nosnippet>655</a>  last_name,
-<a href=#656 id=656 data-nosnippet>656</a>  search_helper,
-<a href=#657 id=657 data-nosnippet>657</a>  country,
-<a href=#658 id=658 data-nosnippet>658</a>  email_communication_consent,
-<a href=#659 id=659 data-nosnippet>659</a>  email_verified_at,
-<a href=#660 id=660 data-nosnippet>660</a>  email_verified_method
-<a href=#661 id=661 data-nosnippet>661</a>"#</span>,
-<a href=#662 id=662 data-nosnippet>662</a>        email,
-<a href=#663 id=663 data-nosnippet>663</a>        first_name,
-<a href=#664 id=664 data-nosnippet>664</a>        last_name,
-<a href=#665 id=665 data-nosnippet>665</a>        country,
-<a href=#666 id=666 data-nosnippet>666</a>        email_communication_consent,
-<a href=#667 id=667 data-nosnippet>667</a>        user_id,
-<a href=#668 id=668 data-nosnippet>668</a>    )
-<a href=#669 id=669 data-nosnippet>669</a>    .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
-<a href=#670 id=670 data-nosnippet>670</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#671 id=671 data-nosnippet>671</a>
-<a href=#672 id=672 data-nosnippet>672</a>    <span class="macro">sqlx::query!</span>(
-<a href=#673 id=673 data-nosnippet>673</a>        <span class="string">r#"
-<a href=#674 id=674 data-nosnippet>674</a>UPDATE users
-<a href=#675 id=675 data-nosnippet>675</a>SET email_domain = $1
-<a href=#676 id=676 data-nosnippet>676</a>WHERE id = $2
-<a href=#677 id=677 data-nosnippet>677</a>"#</span>,
-<a href=#678 id=678 data-nosnippet>678</a>        <span class="kw">crate</span>::users::email_domain_from_email(email),
-<a href=#679 id=679 data-nosnippet>679</a>        user_id,
-<a href=#680 id=680 data-nosnippet>680</a>    )
-<a href=#681 id=681 data-nosnippet>681</a>    .execute(<span class="kw-2">&amp;mut *</span>tx)
-<a href=#682 id=682 data-nosnippet>682</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#683 id=683 data-nosnippet>683</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#684 id=684 data-nosnippet>684</a>
-<a href=#685 id=685 data-nosnippet>685</a>    <span class="prelude-val">Ok</span>(updated_user)
-<a href=#686 id=686 data-nosnippet>686</a>}
-<a href=#687 id=687 data-nosnippet>687</a>
-<a href=#688 id=688 data-nosnippet>688</a><span class="doccomment">/// Records a proof of control over the address currently in `email`.
-<a href=#689 id=689 data-nosnippet>689</a>///
-<a href=#690 id=690 data-nosnippet>690</a>/// Must not also write `email`: the `clear_email_verification` trigger would null the flag in the
-<a href=#691 id=691 data-nosnippet>691</a>/// same statement.
-<a href=#692 id=692 data-nosnippet>692</a></span><span class="kw">pub async fn </span>set_email_verified(
-<a href=#693 id=693 data-nosnippet>693</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#694 id=694 data-nosnippet>694</a>    user_id: Uuid,
-<a href=#695 id=695 data-nosnippet>695</a>    method: EmailVerificationMethod,
-<a href=#696 id=696 data-nosnippet>696</a>    verified_at: DateTime&lt;Utc&gt;,
-<a href=#697 id=697 data-nosnippet>697</a>) -&gt; ModelResult&lt;()&gt; {
-<a href=#698 id=698 data-nosnippet>698</a>    <span class="macro">sqlx::query!</span>(
-<a href=#699 id=699 data-nosnippet>699</a>        <span class="string">r#"
-<a href=#700 id=700 data-nosnippet>700</a>UPDATE user_details
-<a href=#701 id=701 data-nosnippet>701</a>SET email_verified_at = $2,
-<a href=#702 id=702 data-nosnippet>702</a>  email_verified_method = $3
-<a href=#703 id=703 data-nosnippet>703</a>WHERE user_id = $1
-<a href=#704 id=704 data-nosnippet>704</a>"#</span>,
-<a href=#705 id=705 data-nosnippet>705</a>        user_id,
-<a href=#706 id=706 data-nosnippet>706</a>        verified_at,
-<a href=#707 id=707 data-nosnippet>707</a>        method <span class="kw">as </span>EmailVerificationMethod,
-<a href=#708 id=708 data-nosnippet>708</a>    )
-<a href=#709 id=709 data-nosnippet>709</a>    .execute(conn)
-<a href=#710 id=710 data-nosnippet>710</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#711 id=711 data-nosnippet>711</a>    <span class="prelude-val">Ok</span>(())
-<a href=#712 id=712 data-nosnippet>712</a>}
-<a href=#713 id=713 data-nosnippet>713</a>
-<a href=#714 id=714 data-nosnippet>714</a><span class="doccomment">/// Drops a proof of control, for an admin revoking a verification. Address changes do not need it;
-<a href=#715 id=715 data-nosnippet>715</a>/// the `clear_email_verification` trigger handles those.
-<a href=#716 id=716 data-nosnippet>716</a></span><span class="kw">pub async fn </span>clear_email_verified(conn: <span class="kw-2">&amp;mut </span>PgConnection, user_id: Uuid) -&gt; ModelResult&lt;()&gt; {
-<a href=#717 id=717 data-nosnippet>717</a>    <span class="macro">sqlx::query!</span>(
-<a href=#718 id=718 data-nosnippet>718</a>        <span class="string">r#"
-<a href=#719 id=719 data-nosnippet>719</a>UPDATE user_details
-<a href=#720 id=720 data-nosnippet>720</a>SET email_verified_at = NULL,
-<a href=#721 id=721 data-nosnippet>721</a>  email_verified_method = NULL
-<a href=#722 id=722 data-nosnippet>722</a>WHERE user_id = $1
-<a href=#723 id=723 data-nosnippet>723</a>"#</span>,
-<a href=#724 id=724 data-nosnippet>724</a>        user_id,
-<a href=#725 id=725 data-nosnippet>725</a>    )
-<a href=#726 id=726 data-nosnippet>726</a>    .execute(conn)
-<a href=#727 id=727 data-nosnippet>727</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#728 id=728 data-nosnippet>728</a>    <span class="prelude-val">Ok</span>(())
-<a href=#729 id=729 data-nosnippet>729</a>}
-<a href=#730 id=730 data-nosnippet>730</a>
-<a href=#731 id=731 data-nosnippet>731</a><span class="doccomment">/// Whether the address currently in `email` has a proof of control, and how it was obtained.
-<a href=#732 id=732 data-nosnippet>732</a></span><span class="kw">pub async fn </span>get_email_verification(
-<a href=#733 id=733 data-nosnippet>733</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#734 id=734 data-nosnippet>734</a>    user_id: Uuid,
-<a href=#735 id=735 data-nosnippet>735</a>) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;(DateTime&lt;Utc&gt;, EmailVerificationMethod)&gt;&gt; {
-<a href=#736 id=736 data-nosnippet>736</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query!</span>(
-<a href=#737 id=737 data-nosnippet>737</a>        <span class="string">r#"
-<a href=#738 id=738 data-nosnippet>738</a>SELECT email_verified_at,
-<a href=#739 id=739 data-nosnippet>739</a>  email_verified_method AS "email_verified_method: EmailVerificationMethod"
-<a href=#740 id=740 data-nosnippet>740</a>FROM user_details
-<a href=#741 id=741 data-nosnippet>741</a>WHERE user_id = $1
-<a href=#742 id=742 data-nosnippet>742</a>"#</span>,
-<a href=#743 id=743 data-nosnippet>743</a>        user_id,
-<a href=#744 id=744 data-nosnippet>744</a>    )
-<a href=#745 id=745 data-nosnippet>745</a>    .fetch_one(conn)
-<a href=#746 id=746 data-nosnippet>746</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#747 id=747 data-nosnippet>747</a>    <span class="prelude-val">Ok</span>(row.email_verified_at.zip(row.email_verified_method))
-<a href=#748 id=748 data-nosnippet>748</a>}
+<a href=#356 id=356 data-nosnippet>356</a>        }
+<a href=#357 id=357 data-nosnippet>357</a>
+<a href=#358 id=358 data-nosnippet>358</a>        <span class="attr">#[tokio::test]
+<a href=#359 id=359 data-nosnippet>359</a>        </span><span class="kw">async fn </span>writer_a_user_settings_edit_clears_the_flag() {
+<a href=#360 id=360 data-nosnippet>360</a>            <span class="macro">insert_data!</span>(:tx, :user);
+<a href=#361 id=361 data-nosnippet>361</a>            verify_now(tx.as_mut(), user).<span class="kw">await</span>;
+<a href=#362 id=362 data-nosnippet>362</a>
+<a href=#363 id=363 data-nosnippet>363</a>            <span class="kw">let </span>updated = update_user_info(
+<a href=#364 id=364 data-nosnippet>364</a>                tx.as_mut(),
+<a href=#365 id=365 data-nosnippet>365</a>                user,
+<a href=#366 id=366 data-nosnippet>366</a>                <span class="string">"writer-a-changed@example.com"</span>,
+<a href=#367 id=367 data-nosnippet>367</a>                <span class="string">"Changed"</span>,
+<a href=#368 id=368 data-nosnippet>368</a>                <span class="string">"Name"</span>,
+<a href=#369 id=369 data-nosnippet>369</a>                <span class="string">"FI"</span>,
+<a href=#370 id=370 data-nosnippet>370</a>                <span class="bool-val">true</span>,
+<a href=#371 id=371 data-nosnippet>371</a>            )
+<a href=#372 id=372 data-nosnippet>372</a>            .<span class="kw">await
+<a href=#373 id=373 data-nosnippet>373</a>            </span>.unwrap();
+<a href=#374 id=374 data-nosnippet>374</a>
+<a href=#375 id=375 data-nosnippet>375</a>            <span class="macro">assert_eq!</span>(updated.email, <span class="string">"writer-a-changed@example.com"</span>);
+<a href=#376 id=376 data-nosnippet>376</a>            <span class="macro">assert_eq!</span>(updated.email_verified_at, <span class="prelude-val">None</span>);
+<a href=#377 id=377 data-nosnippet>377</a>            <span class="macro">assert_eq!</span>(updated.email_verified_method, <span class="prelude-val">None</span>);
+<a href=#378 id=378 data-nosnippet>378</a>        }
+<a href=#379 id=379 data-nosnippet>379</a>
+<a href=#380 id=380 data-nosnippet>380</a>        <span class="attr">#[tokio::test]
+<a href=#381 id=381 data-nosnippet>381</a>        </span><span class="kw">async fn </span>writer_b_course_material_edit_clears_the_flag() {
+<a href=#382 id=382 data-nosnippet>382</a>            <span class="macro">insert_data!</span>(:tx, :user);
+<a href=#383 id=383 data-nosnippet>383</a>            <span class="kw">let </span>before = update_user_info(
+<a href=#384 id=384 data-nosnippet>384</a>                tx.as_mut(),
+<a href=#385 id=385 data-nosnippet>385</a>                user,
+<a href=#386 id=386 data-nosnippet>386</a>                <span class="string">"writer-b@example.com"</span>,
+<a href=#387 id=387 data-nosnippet>387</a>                <span class="string">"Course"</span>,
+<a href=#388 id=388 data-nosnippet>388</a>                <span class="string">"Material"</span>,
+<a href=#389 id=389 data-nosnippet>389</a>                <span class="string">"FI"</span>,
+<a href=#390 id=390 data-nosnippet>390</a>                <span class="bool-val">true</span>,
+<a href=#391 id=391 data-nosnippet>391</a>            )
+<a href=#392 id=392 data-nosnippet>392</a>            .<span class="kw">await
+<a href=#393 id=393 data-nosnippet>393</a>            </span>.unwrap();
+<a href=#394 id=394 data-nosnippet>394</a>            verify_now(tx.as_mut(), user).<span class="kw">await</span>;
+<a href=#395 id=395 data-nosnippet>395</a>
+<a href=#396 id=396 data-nosnippet>396</a>            <span class="comment">// The course-material form resubmits the whole profile, so only the address differs.
+<a href=#397 id=397 data-nosnippet>397</a>            </span><span class="kw">let </span>updated = update_user_info(
+<a href=#398 id=398 data-nosnippet>398</a>                tx.as_mut(),
+<a href=#399 id=399 data-nosnippet>399</a>                user,
+<a href=#400 id=400 data-nosnippet>400</a>                <span class="string">"writer-b-changed@example.com"</span>,
+<a href=#401 id=401 data-nosnippet>401</a>                before.first_name.as_deref().unwrap(),
+<a href=#402 id=402 data-nosnippet>402</a>                before.last_name.as_deref().unwrap(),
+<a href=#403 id=403 data-nosnippet>403</a>                before.country.as_deref().unwrap(),
+<a href=#404 id=404 data-nosnippet>404</a>                before.email_communication_consent.unwrap(),
+<a href=#405 id=405 data-nosnippet>405</a>            )
+<a href=#406 id=406 data-nosnippet>406</a>            .<span class="kw">await
+<a href=#407 id=407 data-nosnippet>407</a>            </span>.unwrap();
+<a href=#408 id=408 data-nosnippet>408</a>
+<a href=#409 id=409 data-nosnippet>409</a>            <span class="macro">assert_eq!</span>(updated.email_verified_at, <span class="prelude-val">None</span>);
+<a href=#410 id=410 data-nosnippet>410</a>            <span class="macro">assert_eq!</span>(updated.email_verified_method, <span class="prelude-val">None</span>);
+<a href=#411 id=411 data-nosnippet>411</a>        }
+<a href=#412 id=412 data-nosnippet>412</a>
+<a href=#413 id=413 data-nosnippet>413</a>        <span class="attr">#[tokio::test]
+<a href=#414 id=414 data-nosnippet>414</a>        </span><span class="kw">async fn </span>writer_c_tmc_sync_clears_the_flag() {
+<a href=#415 id=415 data-nosnippet>415</a>            <span class="macro">insert_data!</span>(:tx);
+<a href=#416 id=416 data-nosnippet>416</a>            <span class="kw">let </span>upstream_id = <span class="number">90_112_233</span>;
+<a href=#417 id=417 data-nosnippet>417</a>            <span class="kw">let </span>user = <span class="kw">crate</span>::users::insert_with_upstream_id_and_moocfi_id(
+<a href=#418 id=418 data-nosnippet>418</a>                tx.as_mut(),
+<a href=#419 id=419 data-nosnippet>419</a>                <span class="string">"writer-c@example.com"</span>,
+<a href=#420 id=420 data-nosnippet>420</a>                <span class="prelude-val">None</span>,
+<a href=#421 id=421 data-nosnippet>421</a>                <span class="prelude-val">None</span>,
+<a href=#422 id=422 data-nosnippet>422</a>                upstream_id,
+<a href=#423 id=423 data-nosnippet>423</a>                Uuid::new_v4(),
+<a href=#424 id=424 data-nosnippet>424</a>            )
+<a href=#425 id=425 data-nosnippet>425</a>            .<span class="kw">await
+<a href=#426 id=426 data-nosnippet>426</a>            </span>.unwrap();
+<a href=#427 id=427 data-nosnippet>427</a>            verify_now(tx.as_mut(), user.id).<span class="kw">await</span>;
+<a href=#428 id=428 data-nosnippet>428</a>
+<a href=#429 id=429 data-nosnippet>429</a>            <span class="kw">crate</span>::users::update_email_for_user(
+<a href=#430 id=430 data-nosnippet>430</a>                tx.as_mut(),
+<a href=#431 id=431 data-nosnippet>431</a>                <span class="kw-2">&amp;</span>upstream_id,
+<a href=#432 id=432 data-nosnippet>432</a>                <span class="string">"writer-c-changed@example.com"</span>.to_string(),
+<a href=#433 id=433 data-nosnippet>433</a>            )
+<a href=#434 id=434 data-nosnippet>434</a>            .<span class="kw">await
+<a href=#435 id=435 data-nosnippet>435</a>            </span>.unwrap();
+<a href=#436 id=436 data-nosnippet>436</a>
+<a href=#437 id=437 data-nosnippet>437</a>            <span class="macro">assert!</span>(
+<a href=#438 id=438 data-nosnippet>438</a>                get_email_verification(tx.as_mut(), user.id)
+<a href=#439 id=439 data-nosnippet>439</a>                    .<span class="kw">await
+<a href=#440 id=440 data-nosnippet>440</a>                    </span>.unwrap()
+<a href=#441 id=441 data-nosnippet>441</a>                    .is_none()
+<a href=#442 id=442 data-nosnippet>442</a>            );
+<a href=#443 id=443 data-nosnippet>443</a>        }
+<a href=#444 id=444 data-nosnippet>444</a>
+<a href=#445 id=445 data-nosnippet>445</a>        <span class="attr">#[tokio::test]
+<a href=#446 id=446 data-nosnippet>446</a>        </span><span class="kw">async fn </span>an_edit_that_leaves_the_address_alone_keeps_the_flag() {
+<a href=#447 id=447 data-nosnippet>447</a>            <span class="macro">insert_data!</span>(:tx, :user);
+<a href=#448 id=448 data-nosnippet>448</a>            <span class="kw">let </span>before = get_user_details_by_user_id(tx.as_mut(), user)
+<a href=#449 id=449 data-nosnippet>449</a>                .<span class="kw">await
+<a href=#450 id=450 data-nosnippet>450</a>                </span>.unwrap();
+<a href=#451 id=451 data-nosnippet>451</a>            verify_now(tx.as_mut(), user).<span class="kw">await</span>;
+<a href=#452 id=452 data-nosnippet>452</a>
+<a href=#453 id=453 data-nosnippet>453</a>            <span class="kw">let </span>updated = update_user_info(
+<a href=#454 id=454 data-nosnippet>454</a>                tx.as_mut(),
+<a href=#455 id=455 data-nosnippet>455</a>                user,
+<a href=#456 id=456 data-nosnippet>456</a>                <span class="kw-2">&amp;</span>before.email,
+<a href=#457 id=457 data-nosnippet>457</a>                <span class="string">"Renamed"</span>,
+<a href=#458 id=458 data-nosnippet>458</a>                <span class="string">"Person"</span>,
+<a href=#459 id=459 data-nosnippet>459</a>                <span class="string">"SE"</span>,
+<a href=#460 id=460 data-nosnippet>460</a>                <span class="bool-val">false</span>,
+<a href=#461 id=461 data-nosnippet>461</a>            )
+<a href=#462 id=462 data-nosnippet>462</a>            .<span class="kw">await
+<a href=#463 id=463 data-nosnippet>463</a>            </span>.unwrap();
+<a href=#464 id=464 data-nosnippet>464</a>
+<a href=#465 id=465 data-nosnippet>465</a>            <span class="macro">assert!</span>(updated.email_verified_at.is_some());
+<a href=#466 id=466 data-nosnippet>466</a>            <span class="macro">assert_eq!</span>(
+<a href=#467 id=467 data-nosnippet>467</a>                updated.email_verified_method,
+<a href=#468 id=468 data-nosnippet>468</a>                <span class="prelude-val">Some</span>(EmailVerificationMethod::EmailedCode)
+<a href=#469 id=469 data-nosnippet>469</a>            );
+<a href=#470 id=470 data-nosnippet>470</a>        }
+<a href=#471 id=471 data-nosnippet>471</a>    }
+<a href=#472 id=472 data-nosnippet>472</a>}
+<a href=#473 id=473 data-nosnippet>473</a>
+<a href=#474 id=474 data-nosnippet>474</a><span class="doccomment">/// Retrieves all users enrolled in a specific course
+<a href=#475 id=475 data-nosnippet>475</a></span><span class="kw">pub async fn </span>get_users_by_course_id(
+<a href=#476 id=476 data-nosnippet>476</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#477 id=477 data-nosnippet>477</a>    course_id: Uuid,
+<a href=#478 id=478 data-nosnippet>478</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
+<a href=#479 id=479 data-nosnippet>479</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#480 id=480 data-nosnippet>480</a>        UserDetail,
+<a href=#481 id=481 data-nosnippet>481</a>        <span class="string">r#"
+<a href=#482 id=482 data-nosnippet>482</a>SELECT d.user_id,
+<a href=#483 id=483 data-nosnippet>483</a>  d.created_at,
+<a href=#484 id=484 data-nosnippet>484</a>  d.updated_at,
+<a href=#485 id=485 data-nosnippet>485</a>  d.email,
+<a href=#486 id=486 data-nosnippet>486</a>  d.first_name,
+<a href=#487 id=487 data-nosnippet>487</a>  d.last_name,
+<a href=#488 id=488 data-nosnippet>488</a>  d.search_helper,
+<a href=#489 id=489 data-nosnippet>489</a>  d.country,
+<a href=#490 id=490 data-nosnippet>490</a>  d.email_communication_consent,
+<a href=#491 id=491 data-nosnippet>491</a>  d.email_verified_at,
+<a href=#492 id=492 data-nosnippet>492</a>  d.email_verified_method
+<a href=#493 id=493 data-nosnippet>493</a>FROM course_instance_enrollments e
+<a href=#494 id=494 data-nosnippet>494</a>  JOIN user_details d ON e.user_id = d.user_id
+<a href=#495 id=495 data-nosnippet>495</a>WHERE e.course_id = $1
+<a href=#496 id=496 data-nosnippet>496</a>  AND e.deleted_at IS NULL
+<a href=#497 id=497 data-nosnippet>497</a>        "#</span>,
+<a href=#498 id=498 data-nosnippet>498</a>        course_id
+<a href=#499 id=499 data-nosnippet>499</a>    )
+<a href=#500 id=500 data-nosnippet>500</a>    .fetch_all(conn)
+<a href=#501 id=501 data-nosnippet>501</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#502 id=502 data-nosnippet>502</a>
+<a href=#503 id=503 data-nosnippet>503</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#504 id=504 data-nosnippet>504</a>}
+<a href=#505 id=505 data-nosnippet>505</a>
+<a href=#506 id=506 data-nosnippet>506</a><span class="doccomment">/// Retrieves user details for a list of user IDs
+<a href=#507 id=507 data-nosnippet>507</a></span><span class="kw">pub async fn </span>get_user_details_by_user_ids(
+<a href=#508 id=508 data-nosnippet>508</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#509 id=509 data-nosnippet>509</a>    user_ids: <span class="kw-2">&amp;</span>[Uuid],
+<a href=#510 id=510 data-nosnippet>510</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
+<a href=#511 id=511 data-nosnippet>511</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#512 id=512 data-nosnippet>512</a>        UserDetail,
+<a href=#513 id=513 data-nosnippet>513</a>        <span class="string">r#"
+<a href=#514 id=514 data-nosnippet>514</a>SELECT user_id,
+<a href=#515 id=515 data-nosnippet>515</a>  created_at,
+<a href=#516 id=516 data-nosnippet>516</a>  updated_at,
+<a href=#517 id=517 data-nosnippet>517</a>  email,
+<a href=#518 id=518 data-nosnippet>518</a>  first_name,
+<a href=#519 id=519 data-nosnippet>519</a>  last_name,
+<a href=#520 id=520 data-nosnippet>520</a>  search_helper,
+<a href=#521 id=521 data-nosnippet>521</a>  country,
+<a href=#522 id=522 data-nosnippet>522</a>  email_communication_consent,
+<a href=#523 id=523 data-nosnippet>523</a>  email_verified_at,
+<a href=#524 id=524 data-nosnippet>524</a>  email_verified_method
+<a href=#525 id=525 data-nosnippet>525</a>FROM user_details
+<a href=#526 id=526 data-nosnippet>526</a>WHERE user_id = ANY($1::uuid[])
+<a href=#527 id=527 data-nosnippet>527</a>        "#</span>,
+<a href=#528 id=528 data-nosnippet>528</a>        user_ids
+<a href=#529 id=529 data-nosnippet>529</a>    )
+<a href=#530 id=530 data-nosnippet>530</a>    .fetch_all(conn)
+<a href=#531 id=531 data-nosnippet>531</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#532 id=532 data-nosnippet>532</a>
+<a href=#533 id=533 data-nosnippet>533</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#534 id=534 data-nosnippet>534</a>}
+<a href=#535 id=535 data-nosnippet>535</a>
+<a href=#536 id=536 data-nosnippet>536</a><span class="doccomment">/// Retrieves user details for a list of user IDs, but only for users who are enrolled in the specified course
+<a href=#537 id=537 data-nosnippet>537</a></span><span class="kw">pub async fn </span>get_user_details_by_user_ids_for_course(
+<a href=#538 id=538 data-nosnippet>538</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#539 id=539 data-nosnippet>539</a>    user_ids: <span class="kw-2">&amp;</span>[Uuid],
+<a href=#540 id=540 data-nosnippet>540</a>    course_id: Uuid,
+<a href=#541 id=541 data-nosnippet>541</a>) -&gt; ModelResult&lt;Vec&lt;UserDetail&gt;&gt; {
+<a href=#542 id=542 data-nosnippet>542</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#543 id=543 data-nosnippet>543</a>        UserDetail,
+<a href=#544 id=544 data-nosnippet>544</a>        <span class="string">r#"
+<a href=#545 id=545 data-nosnippet>545</a>SELECT ud.user_id,
+<a href=#546 id=546 data-nosnippet>546</a>  ud.created_at,
+<a href=#547 id=547 data-nosnippet>547</a>  ud.updated_at,
+<a href=#548 id=548 data-nosnippet>548</a>  ud.email,
+<a href=#549 id=549 data-nosnippet>549</a>  ud.first_name,
+<a href=#550 id=550 data-nosnippet>550</a>  ud.last_name,
+<a href=#551 id=551 data-nosnippet>551</a>  ud.search_helper,
+<a href=#552 id=552 data-nosnippet>552</a>  ud.country,
+<a href=#553 id=553 data-nosnippet>553</a>  ud.email_communication_consent,
+<a href=#554 id=554 data-nosnippet>554</a>  ud.email_verified_at,
+<a href=#555 id=555 data-nosnippet>555</a>  ud.email_verified_method
+<a href=#556 id=556 data-nosnippet>556</a>FROM user_details ud
+<a href=#557 id=557 data-nosnippet>557</a>JOIN user_course_settings ucs ON ud.user_id = ucs.user_id
+<a href=#558 id=558 data-nosnippet>558</a>WHERE ud.user_id = ANY($1::uuid[])
+<a href=#559 id=559 data-nosnippet>559</a>  AND ucs.current_course_id = $2
+<a href=#560 id=560 data-nosnippet>560</a>  AND ucs.deleted_at IS NULL
+<a href=#561 id=561 data-nosnippet>561</a>        "#</span>,
+<a href=#562 id=562 data-nosnippet>562</a>        user_ids,
+<a href=#563 id=563 data-nosnippet>563</a>        course_id
+<a href=#564 id=564 data-nosnippet>564</a>    )
+<a href=#565 id=565 data-nosnippet>565</a>    .fetch_all(conn)
+<a href=#566 id=566 data-nosnippet>566</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#567 id=567 data-nosnippet>567</a>
+<a href=#568 id=568 data-nosnippet>568</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#569 id=569 data-nosnippet>569</a>}
+<a href=#570 id=570 data-nosnippet>570</a>
+<a href=#571 id=571 data-nosnippet>571</a><span class="doccomment">/// Retrieves user details for a single user ID, but only if the user is enrolled in the specified course
+<a href=#572 id=572 data-nosnippet>572</a></span><span class="kw">pub async fn </span>get_user_details_by_user_id_for_course(
+<a href=#573 id=573 data-nosnippet>573</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#574 id=574 data-nosnippet>574</a>    user_id: Uuid,
+<a href=#575 id=575 data-nosnippet>575</a>    course_id: Uuid,
+<a href=#576 id=576 data-nosnippet>576</a>) -&gt; ModelResult&lt;UserDetail&gt; {
+<a href=#577 id=577 data-nosnippet>577</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#578 id=578 data-nosnippet>578</a>        UserDetail,
+<a href=#579 id=579 data-nosnippet>579</a>        <span class="string">r#"
+<a href=#580 id=580 data-nosnippet>580</a>SELECT ud.user_id,
+<a href=#581 id=581 data-nosnippet>581</a>  ud.created_at,
+<a href=#582 id=582 data-nosnippet>582</a>  ud.updated_at,
+<a href=#583 id=583 data-nosnippet>583</a>  ud.email,
+<a href=#584 id=584 data-nosnippet>584</a>  ud.first_name,
+<a href=#585 id=585 data-nosnippet>585</a>  ud.last_name,
+<a href=#586 id=586 data-nosnippet>586</a>  ud.search_helper,
+<a href=#587 id=587 data-nosnippet>587</a>  ud.country,
+<a href=#588 id=588 data-nosnippet>588</a>  ud.email_communication_consent,
+<a href=#589 id=589 data-nosnippet>589</a>  ud.email_verified_at,
+<a href=#590 id=590 data-nosnippet>590</a>  ud.email_verified_method
+<a href=#591 id=591 data-nosnippet>591</a>FROM user_details ud
+<a href=#592 id=592 data-nosnippet>592</a>JOIN user_course_settings ucs ON ud.user_id = ucs.user_id
+<a href=#593 id=593 data-nosnippet>593</a>WHERE ud.user_id = $1
+<a href=#594 id=594 data-nosnippet>594</a>  AND ucs.current_course_id = $2
+<a href=#595 id=595 data-nosnippet>595</a>  AND ucs.deleted_at IS NULL
+<a href=#596 id=596 data-nosnippet>596</a>        "#</span>,
+<a href=#597 id=597 data-nosnippet>597</a>        user_id,
+<a href=#598 id=598 data-nosnippet>598</a>        course_id
+<a href=#599 id=599 data-nosnippet>599</a>    )
+<a href=#600 id=600 data-nosnippet>600</a>    .fetch_one(conn)
+<a href=#601 id=601 data-nosnippet>601</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#602 id=602 data-nosnippet>602</a>
+<a href=#603 id=603 data-nosnippet>603</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#604 id=604 data-nosnippet>604</a>}
+<a href=#605 id=605 data-nosnippet>605</a>
+<a href=#606 id=606 data-nosnippet>606</a><span class="kw">pub async fn </span>update_user_country(
+<a href=#607 id=607 data-nosnippet>607</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#608 id=608 data-nosnippet>608</a>    user_id: Uuid,
+<a href=#609 id=609 data-nosnippet>609</a>    country: <span class="kw-2">&amp;</span>str,
+<a href=#610 id=610 data-nosnippet>610</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), sqlx::Error&gt; {
+<a href=#611 id=611 data-nosnippet>611</a>    <span class="macro">sqlx::query!</span>(
+<a href=#612 id=612 data-nosnippet>612</a>        <span class="string">r#"
+<a href=#613 id=613 data-nosnippet>613</a>UPDATE user_details
+<a href=#614 id=614 data-nosnippet>614</a>SET country = $1
+<a href=#615 id=615 data-nosnippet>615</a>WHERE user_id = $2
+<a href=#616 id=616 data-nosnippet>616</a>"#</span>,
+<a href=#617 id=617 data-nosnippet>617</a>        country,
+<a href=#618 id=618 data-nosnippet>618</a>        user_id,
+<a href=#619 id=619 data-nosnippet>619</a>    )
+<a href=#620 id=620 data-nosnippet>620</a>    .execute(conn)
+<a href=#621 id=621 data-nosnippet>621</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#622 id=622 data-nosnippet>622</a>    <span class="prelude-val">Ok</span>(())
+<a href=#623 id=623 data-nosnippet>623</a>}
+<a href=#624 id=624 data-nosnippet>624</a>
+<a href=#625 id=625 data-nosnippet>625</a><span class="kw">pub async fn </span>update_user_email_communication_consent(
+<a href=#626 id=626 data-nosnippet>626</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#627 id=627 data-nosnippet>627</a>    user_id: Uuid,
+<a href=#628 id=628 data-nosnippet>628</a>    email_communication_consent: bool,
+<a href=#629 id=629 data-nosnippet>629</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), sqlx::Error&gt; {
+<a href=#630 id=630 data-nosnippet>630</a>    <span class="macro">sqlx::query!</span>(
+<a href=#631 id=631 data-nosnippet>631</a>        <span class="string">r#"
+<a href=#632 id=632 data-nosnippet>632</a>UPDATE user_details
+<a href=#633 id=633 data-nosnippet>633</a>SET email_communication_consent = $1
+<a href=#634 id=634 data-nosnippet>634</a>WHERE user_id = $2
+<a href=#635 id=635 data-nosnippet>635</a>"#</span>,
+<a href=#636 id=636 data-nosnippet>636</a>        email_communication_consent,
+<a href=#637 id=637 data-nosnippet>637</a>        user_id,
+<a href=#638 id=638 data-nosnippet>638</a>    )
+<a href=#639 id=639 data-nosnippet>639</a>    .execute(conn)
+<a href=#640 id=640 data-nosnippet>640</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#641 id=641 data-nosnippet>641</a>    <span class="prelude-val">Ok</span>(())
+<a href=#642 id=642 data-nosnippet>642</a>}
+<a href=#643 id=643 data-nosnippet>643</a>
+<a href=#644 id=644 data-nosnippet>644</a><span class="doccomment">/// Writes the whole profile form, including the derived `users.email_domain`.
+<a href=#645 id=645 data-nosnippet>645</a>///
+<a href=#646 id=646 data-nosnippet>646</a>/// On an address change the `clear_email_verification` trigger nulls `email_verified_at` and
+<a href=#647 id=647 data-nosnippet>647</a>/// `email_verified_method`, so a caller wanting fresh proof must mail a new verification link.
+<a href=#648 id=648 data-nosnippet>648</a></span><span class="kw">pub async fn </span>update_user_info(
+<a href=#649 id=649 data-nosnippet>649</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#650 id=650 data-nosnippet>650</a>    user_id: Uuid,
+<a href=#651 id=651 data-nosnippet>651</a>    email: <span class="kw-2">&amp;</span>str,
+<a href=#652 id=652 data-nosnippet>652</a>    first_name: <span class="kw-2">&amp;</span>str,
+<a href=#653 id=653 data-nosnippet>653</a>    last_name: <span class="kw-2">&amp;</span>str,
+<a href=#654 id=654 data-nosnippet>654</a>    country: <span class="kw-2">&amp;</span>str,
+<a href=#655 id=655 data-nosnippet>655</a>    email_communication_consent: bool,
+<a href=#656 id=656 data-nosnippet>656</a>) -&gt; <span class="prelude-ty">Result</span>&lt;UserDetail, sqlx::Error&gt; {
+<a href=#657 id=657 data-nosnippet>657</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#658 id=658 data-nosnippet>658</a>    <span class="kw">let </span>updated_user = <span class="macro">sqlx::query_as!</span>(
+<a href=#659 id=659 data-nosnippet>659</a>        UserDetail,
+<a href=#660 id=660 data-nosnippet>660</a>        <span class="string">r#"
+<a href=#661 id=661 data-nosnippet>661</a>UPDATE user_details
+<a href=#662 id=662 data-nosnippet>662</a>SET email = $1,
+<a href=#663 id=663 data-nosnippet>663</a>  first_name = $2,
+<a href=#664 id=664 data-nosnippet>664</a>  last_name = $3,
+<a href=#665 id=665 data-nosnippet>665</a>  country = $4,
+<a href=#666 id=666 data-nosnippet>666</a>  email_communication_consent = $5
+<a href=#667 id=667 data-nosnippet>667</a>WHERE user_id = $6
+<a href=#668 id=668 data-nosnippet>668</a>RETURNING user_id,
+<a href=#669 id=669 data-nosnippet>669</a>  created_at,
+<a href=#670 id=670 data-nosnippet>670</a>  updated_at,
+<a href=#671 id=671 data-nosnippet>671</a>  email,
+<a href=#672 id=672 data-nosnippet>672</a>  first_name,
+<a href=#673 id=673 data-nosnippet>673</a>  last_name,
+<a href=#674 id=674 data-nosnippet>674</a>  search_helper,
+<a href=#675 id=675 data-nosnippet>675</a>  country,
+<a href=#676 id=676 data-nosnippet>676</a>  email_communication_consent,
+<a href=#677 id=677 data-nosnippet>677</a>  email_verified_at,
+<a href=#678 id=678 data-nosnippet>678</a>  email_verified_method
+<a href=#679 id=679 data-nosnippet>679</a>"#</span>,
+<a href=#680 id=680 data-nosnippet>680</a>        email,
+<a href=#681 id=681 data-nosnippet>681</a>        first_name,
+<a href=#682 id=682 data-nosnippet>682</a>        last_name,
+<a href=#683 id=683 data-nosnippet>683</a>        country,
+<a href=#684 id=684 data-nosnippet>684</a>        email_communication_consent,
+<a href=#685 id=685 data-nosnippet>685</a>        user_id,
+<a href=#686 id=686 data-nosnippet>686</a>    )
+<a href=#687 id=687 data-nosnippet>687</a>    .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#688 id=688 data-nosnippet>688</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#689 id=689 data-nosnippet>689</a>
+<a href=#690 id=690 data-nosnippet>690</a>    <span class="macro">sqlx::query!</span>(
+<a href=#691 id=691 data-nosnippet>691</a>        <span class="string">r#"
+<a href=#692 id=692 data-nosnippet>692</a>UPDATE users
+<a href=#693 id=693 data-nosnippet>693</a>SET email_domain = $1
+<a href=#694 id=694 data-nosnippet>694</a>WHERE id = $2
+<a href=#695 id=695 data-nosnippet>695</a>"#</span>,
+<a href=#696 id=696 data-nosnippet>696</a>        <span class="kw">crate</span>::users::email_domain_from_email(email),
+<a href=#697 id=697 data-nosnippet>697</a>        user_id,
+<a href=#698 id=698 data-nosnippet>698</a>    )
+<a href=#699 id=699 data-nosnippet>699</a>    .execute(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#700 id=700 data-nosnippet>700</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#701 id=701 data-nosnippet>701</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#702 id=702 data-nosnippet>702</a>
+<a href=#703 id=703 data-nosnippet>703</a>    <span class="prelude-val">Ok</span>(updated_user)
+<a href=#704 id=704 data-nosnippet>704</a>}
+<a href=#705 id=705 data-nosnippet>705</a>
+<a href=#706 id=706 data-nosnippet>706</a><span class="doccomment">/// Records a proof of control over the address currently in `email`.
+<a href=#707 id=707 data-nosnippet>707</a>///
+<a href=#708 id=708 data-nosnippet>708</a>/// Must not also write `email`: the `clear_email_verification` trigger would null the flag in the
+<a href=#709 id=709 data-nosnippet>709</a>/// same statement.
+<a href=#710 id=710 data-nosnippet>710</a></span><span class="kw">pub async fn </span>set_email_verified(
+<a href=#711 id=711 data-nosnippet>711</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#712 id=712 data-nosnippet>712</a>    user_id: Uuid,
+<a href=#713 id=713 data-nosnippet>713</a>    method: EmailVerificationMethod,
+<a href=#714 id=714 data-nosnippet>714</a>    verified_at: DateTime&lt;Utc&gt;,
+<a href=#715 id=715 data-nosnippet>715</a>) -&gt; ModelResult&lt;()&gt; {
+<a href=#716 id=716 data-nosnippet>716</a>    <span class="macro">sqlx::query!</span>(
+<a href=#717 id=717 data-nosnippet>717</a>        <span class="string">r#"
+<a href=#718 id=718 data-nosnippet>718</a>UPDATE user_details
+<a href=#719 id=719 data-nosnippet>719</a>SET email_verified_at = $2,
+<a href=#720 id=720 data-nosnippet>720</a>  email_verified_method = $3
+<a href=#721 id=721 data-nosnippet>721</a>WHERE user_id = $1
+<a href=#722 id=722 data-nosnippet>722</a>"#</span>,
+<a href=#723 id=723 data-nosnippet>723</a>        user_id,
+<a href=#724 id=724 data-nosnippet>724</a>        verified_at,
+<a href=#725 id=725 data-nosnippet>725</a>        method <span class="kw">as </span>EmailVerificationMethod,
+<a href=#726 id=726 data-nosnippet>726</a>    )
+<a href=#727 id=727 data-nosnippet>727</a>    .execute(conn)
+<a href=#728 id=728 data-nosnippet>728</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#729 id=729 data-nosnippet>729</a>    <span class="prelude-val">Ok</span>(())
+<a href=#730 id=730 data-nosnippet>730</a>}
+<a href=#731 id=731 data-nosnippet>731</a>
+<a href=#732 id=732 data-nosnippet>732</a><span class="doccomment">/// Drops a proof of control, for an admin revoking a verification. Address changes do not need it;
+<a href=#733 id=733 data-nosnippet>733</a>/// the `clear_email_verification` trigger handles those.
+<a href=#734 id=734 data-nosnippet>734</a></span><span class="kw">pub async fn </span>clear_email_verified(conn: <span class="kw-2">&amp;mut </span>PgConnection, user_id: Uuid) -&gt; ModelResult&lt;()&gt; {
+<a href=#735 id=735 data-nosnippet>735</a>    <span class="macro">sqlx::query!</span>(
+<a href=#736 id=736 data-nosnippet>736</a>        <span class="string">r#"
+<a href=#737 id=737 data-nosnippet>737</a>UPDATE user_details
+<a href=#738 id=738 data-nosnippet>738</a>SET email_verified_at = NULL,
+<a href=#739 id=739 data-nosnippet>739</a>  email_verified_method = NULL
+<a href=#740 id=740 data-nosnippet>740</a>WHERE user_id = $1
+<a href=#741 id=741 data-nosnippet>741</a>"#</span>,
+<a href=#742 id=742 data-nosnippet>742</a>        user_id,
+<a href=#743 id=743 data-nosnippet>743</a>    )
+<a href=#744 id=744 data-nosnippet>744</a>    .execute(conn)
+<a href=#745 id=745 data-nosnippet>745</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#746 id=746 data-nosnippet>746</a>    <span class="prelude-val">Ok</span>(())
+<a href=#747 id=747 data-nosnippet>747</a>}
+<a href=#748 id=748 data-nosnippet>748</a>
+<a href=#749 id=749 data-nosnippet>749</a><span class="doccomment">/// Whether the address currently in `email` has a proof of control, and how it was obtained.
+<a href=#750 id=750 data-nosnippet>750</a></span><span class="kw">pub async fn </span>get_email_verification(
+<a href=#751 id=751 data-nosnippet>751</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#752 id=752 data-nosnippet>752</a>    user_id: Uuid,
+<a href=#753 id=753 data-nosnippet>753</a>) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;(DateTime&lt;Utc&gt;, EmailVerificationMethod)&gt;&gt; {
+<a href=#754 id=754 data-nosnippet>754</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query!</span>(
+<a href=#755 id=755 data-nosnippet>755</a>        <span class="string">r#"
+<a href=#756 id=756 data-nosnippet>756</a>SELECT email_verified_at,
+<a href=#757 id=757 data-nosnippet>757</a>  email_verified_method AS "email_verified_method: EmailVerificationMethod"
+<a href=#758 id=758 data-nosnippet>758</a>FROM user_details
+<a href=#759 id=759 data-nosnippet>759</a>WHERE user_id = $1
+<a href=#760 id=760 data-nosnippet>760</a>"#</span>,
+<a href=#761 id=761 data-nosnippet>761</a>        user_id,
+<a href=#762 id=762 data-nosnippet>762</a>    )
+<a href=#763 id=763 data-nosnippet>763</a>    .fetch_one(conn)
+<a href=#764 id=764 data-nosnippet>764</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#765 id=765 data-nosnippet>765</a>    <span class="prelude-val">Ok</span>(row.email_verified_at.zip(row.email_verified_method))
+<a href=#766 id=766 data-nosnippet>766</a>}
 </code></pre></div></section></main></body></html>

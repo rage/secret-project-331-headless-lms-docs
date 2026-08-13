@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Effect","FaultMatch","Predicate","Stage","WhenSpec"],"fn":["carries_item_level_transient","is_retryable_transient_code","matches_item","matches_request","owner_matches","resolvable_keys","validate"],"struct":["Fault","FaultProblem","FaultSpec","FlatWhen","ItemAddress","Lifetime","OwnerRef","ResolvedOwner"]};

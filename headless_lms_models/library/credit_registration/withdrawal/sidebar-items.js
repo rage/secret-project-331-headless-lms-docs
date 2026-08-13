@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["apply_consent_change","withdrawal_target"]};

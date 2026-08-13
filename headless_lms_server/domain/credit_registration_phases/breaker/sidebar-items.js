@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FAILURE_RUN_MEMORY","MAX_CONSECUTIVE_SUOTAR_FAILURES","SUOTAR_COOLDOWN_SECS","TEST_SUOTAR_COOLDOWN_SECS"],"enum":["ScopeKey"],"fn":["cooldown","is_open","lock","record_failure","record_success","snapshot"],"static":["BREAKERS"],"struct":["BreakerSnapshot","BreakerState"]};

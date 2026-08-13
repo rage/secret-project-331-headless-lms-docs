@@ -1,0 +1,323 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `models/src/library/credit_registration/payload.rs`."><title>payload.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="headless_lms_models" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">headless_lms_models/library/credit_registration/</div>payload.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The frozen copy of what we submit: written once before the row leaves enrolment resolution and
+<a href=#2 id=2 data-nosnippet>2</a>//! never rewritten, so a later regrade cannot silently change something already sent.
+<a href=#3 id=3 data-nosnippet>3</a>
+<a href=#4 id=4 data-nosnippet>4</a></span><span class="kw">use </span>chrono::{Datelike, NaiveDate, Weekday};
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>headless_lms_utils::services::suotar::SuotarEnrolment;
+<a href=#6 id=6 data-nosnippet>6</a>
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::course_module_completions::CourseModuleCompletion;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::credit_registrations::{CreditRegistrationErrorCode, PayloadSnapshot};
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">crate</span>::prelude::<span class="kw-2">*</span>;
+<a href=#10 id=10 data-nosnippet>10</a>
+<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span><span class="kw">super</span>::grade_mapping::{GradeSource, map_grade};
+<a href=#12 id=12 data-nosnippet>12</a>
+<a href=#13 id=13 data-nosnippet>13</a><span class="doccomment">/// What the completion contributes to the payload.
+<a href=#14 id=14 data-nosnippet>14</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#15 id=15 data-nosnippet>15</a></span><span class="kw">pub struct </span>CompletionFacts {
+<a href=#16 id=16 data-nosnippet>16</a>    <span class="kw">pub </span>passed: bool,
+<a href=#17 id=17 data-nosnippet>17</a>    <span class="kw">pub </span>grade: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+<a href=#18 id=18 data-nosnippet>18</a>    <span class="kw">pub </span>completion_date: DateTime&lt;Utc&gt;,
+<a href=#19 id=19 data-nosnippet>19</a>    <span class="kw">pub </span>completion_language: String,
+<a href=#20 id=20 data-nosnippet>20</a>}
+<a href=#21 id=21 data-nosnippet>21</a>
+<a href=#22 id=22 data-nosnippet>22</a><span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>CourseModuleCompletion&gt; <span class="kw">for </span>CompletionFacts {
+<a href=#23 id=23 data-nosnippet>23</a>    <span class="kw">fn </span>from(completion: <span class="kw-2">&amp;</span>CourseModuleCompletion) -&gt; <span class="self">Self </span>{
+<a href=#24 id=24 data-nosnippet>24</a>        <span class="self">Self </span>{
+<a href=#25 id=25 data-nosnippet>25</a>            passed: completion.passed,
+<a href=#26 id=26 data-nosnippet>26</a>            grade: completion.grade,
+<a href=#27 id=27 data-nosnippet>27</a>            completion_date: completion.completion_date,
+<a href=#28 id=28 data-nosnippet>28</a>            completion_language: completion.completion_language.clone(),
+<a href=#29 id=29 data-nosnippet>29</a>        }
+<a href=#30 id=30 data-nosnippet>30</a>    }
+<a href=#31 id=31 data-nosnippet>31</a>}
+<a href=#32 id=32 data-nosnippet>32</a>
+<a href=#33 id=33 data-nosnippet>33</a><span class="doccomment">/// Everything outside the completion that the payload is built from.
+<a href=#34 id=34 data-nosnippet>34</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq)]
+<a href=#35 id=35 data-nosnippet>35</a></span><span class="kw">pub struct </span>PayloadSources&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#36 id=36 data-nosnippet>36</a>    <span class="kw">pub </span>student_number: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+<a href=#37 id=37 data-nosnippet>37</a>    <span class="kw">pub </span>sisu_person_id: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
+<a href=#39 id=39 data-nosnippet>39</a>    <span class="kw">pub </span>ects_credits: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#40 id=40 data-nosnippet>40</a>    <span class="kw">pub </span>configured_grade_scale_id: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
+<a href=#41 id=41 data-nosnippet>41</a>    <span class="kw">pub </span>enrolment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>SuotarEnrolment&gt;,
+<a href=#42 id=42 data-nosnippet>42</a>}
+<a href=#43 id=43 data-nosnippet>43</a>
+<a href=#44 id=44 data-nosnippet>44</a><span class="doccomment">/// A snapshot and whatever had to be adjusted to make it acceptable.
+<a href=#45 id=45 data-nosnippet>45</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#46 id=46 data-nosnippet>46</a></span><span class="kw">pub struct </span>BuiltPayload {
+<a href=#47 id=47 data-nosnippet>47</a>    <span class="kw">pub </span>snapshot: PayloadSnapshot,
+<a href=#48 id=48 data-nosnippet>48</a>    <span class="doccomment">/// Set when the module's credits did not fit the enrolment's range; recorded, not refused.
+<a href=#49 id=49 data-nosnippet>49</a>    </span><span class="kw">pub </span>clamped_credits_from: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#50 id=50 data-nosnippet>50</a>}
+<a href=#51 id=51 data-nosnippet>51</a>
+<a href=#52 id=52 data-nosnippet>52</a><span class="kw">pub fn </span>build_payload_snapshot(
+<a href=#53 id=53 data-nosnippet>53</a>    completion: <span class="kw-2">&amp;</span>CompletionFacts,
+<a href=#54 id=54 data-nosnippet>54</a>    sources: PayloadSources&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#55 id=55 data-nosnippet>55</a>) -&gt; <span class="prelude-ty">Result</span>&lt;BuiltPayload, CreditRegistrationErrorCode&gt; {
+<a href=#56 id=56 data-nosnippet>56</a>    <span class="comment">// The last line of defence for "never push a failure", behind materialize's filter and the
+<a href=#57 id=57 data-nosnippet>57</a>    // precondition recompute: this is what goes on the wire.
+<a href=#58 id=58 data-nosnippet>58</a>    </span><span class="kw">if </span>!completion.passed {
+<a href=#59 id=59 data-nosnippet>59</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(CreditRegistrationErrorCode::NoGradeScaleMapping);
+<a href=#60 id=60 data-nosnippet>60</a>    }
+<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">let </span>uh_course_code = sources
+<a href=#62 id=62 data-nosnippet>62</a>        .uh_course_code
+<a href=#63 id=63 data-nosnippet>63</a>        .filter(|code| !code.trim().is_empty())
+<a href=#64 id=64 data-nosnippet>64</a>        .ok_or(CreditRegistrationErrorCode::MissingUhCourseCode)<span class="question-mark">?</span>;
+<a href=#65 id=65 data-nosnippet>65</a>    <span class="kw">let </span>ects_credits = sources
+<a href=#66 id=66 data-nosnippet>66</a>        .ects_credits
+<a href=#67 id=67 data-nosnippet>67</a>        .ok_or(CreditRegistrationErrorCode::MissingEctsCredits)<span class="question-mark">?</span>;
+<a href=#68 id=68 data-nosnippet>68</a>    <span class="kw">let </span>grade = map_grade(GradeSource {
+<a href=#69 id=69 data-nosnippet>69</a>        passed: completion.passed,
+<a href=#70 id=70 data-nosnippet>70</a>        grade: completion.grade,
+<a href=#71 id=71 data-nosnippet>71</a>        configured_grade_scale_id: sources.configured_grade_scale_id,
+<a href=#72 id=72 data-nosnippet>72</a>        enrolment_grade_scale_id: sources
+<a href=#73 id=73 data-nosnippet>73</a>            .enrolment
+<a href=#74 id=74 data-nosnippet>74</a>            .map(|enrolment| enrolment.grade_scale_id.as_str()),
+<a href=#75 id=75 data-nosnippet>75</a>    })<span class="question-mark">?</span>;
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="kw">let </span>(credits, clamped_credits_from) = clamp_credits(ects_credits, sources.enrolment);
+<a href=#77 id=77 data-nosnippet>77</a>
+<a href=#78 id=78 data-nosnippet>78</a>    <span class="prelude-val">Ok</span>(BuiltPayload {
+<a href=#79 id=79 data-nosnippet>79</a>        snapshot: PayloadSnapshot {
+<a href=#80 id=80 data-nosnippet>80</a>            student_number: sources.student_number.to_string(),
+<a href=#81 id=81 data-nosnippet>81</a>            sisu_person_id: sources.sisu_person_id.to_string(),
+<a href=#82 id=82 data-nosnippet>82</a>            uh_course_code: uh_course_code.to_string(),
+<a href=#83 id=83 data-nosnippet>83</a>            selected_enrolment_id: sources.enrolment.map(|enrolment| enrolment.id.clone()),
+<a href=#84 id=84 data-nosnippet>84</a>            selected_enrolment_kind: sources.enrolment.map(|enrolment| enrolment.kind.clone()),
+<a href=#85 id=85 data-nosnippet>85</a>            selected_enrolment_realisation_id: sources
+<a href=#86 id=86 data-nosnippet>86</a>                .enrolment
+<a href=#87 id=87 data-nosnippet>87</a>                .map(|enrolment| enrolment.course_unit_realisation_id.clone()),
+<a href=#88 id=88 data-nosnippet>88</a>            attainment_date: helsinki_date(completion.completion_date),
+<a href=#89 id=89 data-nosnippet>89</a>            attainment_language: attainment_language(<span class="kw-2">&amp;</span>completion.completion_language),
+<a href=#90 id=90 data-nosnippet>90</a>            grade_scale_id: grade.grade_scale_id,
+<a href=#91 id=91 data-nosnippet>91</a>            grade_id: grade.grade_id,
+<a href=#92 id=92 data-nosnippet>92</a>            credits,
+<a href=#93 id=93 data-nosnippet>93</a>        },
+<a href=#94 id=94 data-nosnippet>94</a>        clamped_credits_from,
+<a href=#95 id=95 data-nosnippet>95</a>    })
+<a href=#96 id=96 data-nosnippet>96</a>}
+<a href=#97 id=97 data-nosnippet>97</a>
+<a href=#98 id=98 data-nosnippet>98</a><span class="kw">fn </span>clamp_credits(credits: f32, enrolment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SuotarEnrolment&gt;) -&gt; (f32, <span class="prelude-ty">Option</span>&lt;f32&gt;) {
+<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(range) = enrolment.map(|enrolment| <span class="kw-2">&amp;</span>enrolment.credits) <span class="kw">else </span>{
+<a href=#100 id=100 data-nosnippet>100</a>        <span class="kw">return </span>(credits, <span class="prelude-val">None</span>);
+<a href=#101 id=101 data-nosnippet>101</a>    };
+<a href=#102 id=102 data-nosnippet>102</a>    <span class="comment">// Not f64::clamp, which panics if min &gt; max: select_enrolment refuses such a range, but a wire
+<a href=#103 id=103 data-nosnippet>103</a>    // value must not be able to crash the worker whatever upstream guarantees.
+<a href=#104 id=104 data-nosnippet>104</a>    </span><span class="kw">let </span>clamped = f64::from(credits).max(range.min).min(range.max) <span class="kw">as </span>f32;
+<a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">if </span>clamped == credits {
+<a href=#106 id=106 data-nosnippet>106</a>        (credits, <span class="prelude-val">None</span>)
+<a href=#107 id=107 data-nosnippet>107</a>    } <span class="kw">else </span>{
+<a href=#108 id=108 data-nosnippet>108</a>        (clamped, <span class="prelude-val">Some</span>(credits))
+<a href=#109 id=109 data-nosnippet>109</a>    }
+<a href=#110 id=110 data-nosnippet>110</a>}
+<a href=#111 id=111 data-nosnippet>111</a>
+<a href=#112 id=112 data-nosnippet>112</a><span class="doccomment">/// The two-letter code the registry's examples use; our column holds forms like `fi-FI`.
+<a href=#113 id=113 data-nosnippet>113</a></span><span class="kw">fn </span>attainment_language(completion_language: <span class="kw-2">&amp;</span>str) -&gt; String {
+<a href=#114 id=114 data-nosnippet>114</a>    completion_language
+<a href=#115 id=115 data-nosnippet>115</a>        .chars()
+<a href=#116 id=116 data-nosnippet>116</a>        .take_while(|c| c.is_ascii_alphabetic())
+<a href=#117 id=117 data-nosnippet>117</a>        .take(<span class="number">2</span>)
+<a href=#118 id=118 data-nosnippet>118</a>        .collect::&lt;String&gt;()
+<a href=#119 id=119 data-nosnippet>119</a>        .to_lowercase()
+<a href=#120 id=120 data-nosnippet>120</a>}
+<a href=#121 id=121 data-nosnippet>121</a>
+<a href=#122 id=122 data-nosnippet>122</a><span class="doccomment">/// The attainment date as the university reckons it, which is the date an official transcript gets:
+<a href=#123 id=123 data-nosnippet>123</a>/// a completion at 23:30 UTC on the 31st is the 1st in Helsinki. The EU summer-time rule is written
+<a href=#124 id=124 data-nosnippet>124</a>/// out rather than read from a timezone database, which this crate does not carry.
+<a href=#125 id=125 data-nosnippet>125</a></span><span class="kw">pub fn </span>helsinki_date(instant: DateTime&lt;Utc&gt;) -&gt; NaiveDate {
+<a href=#126 id=126 data-nosnippet>126</a>    <span class="kw">let </span>offset = chrono::Duration::hours(<span class="kw">if </span>in_eu_summer_time(instant) { <span class="number">3 </span>} <span class="kw">else </span>{ <span class="number">2 </span>});
+<a href=#127 id=127 data-nosnippet>127</a>    (instant + offset).date_naive()
+<a href=#128 id=128 data-nosnippet>128</a>}
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a><span class="kw">fn </span>in_eu_summer_time(instant: DateTime&lt;Utc&gt;) -&gt; bool {
+<a href=#131 id=131 data-nosnippet>131</a>    <span class="kw">let </span>year = instant.year();
+<a href=#132 id=132 data-nosnippet>132</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(starts) = last_sunday(year, <span class="number">3</span>).and_then(|day| day.and_hms_opt(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>)) <span class="kw">else </span>{
+<a href=#133 id=133 data-nosnippet>133</a>        <span class="kw">return </span><span class="bool-val">false</span>;
+<a href=#134 id=134 data-nosnippet>134</a>    };
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(ends) = last_sunday(year, <span class="number">10</span>).and_then(|day| day.and_hms_opt(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>)) <span class="kw">else </span>{
+<a href=#136 id=136 data-nosnippet>136</a>        <span class="kw">return </span><span class="bool-val">false</span>;
+<a href=#137 id=137 data-nosnippet>137</a>    };
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">let </span>naive = instant.naive_utc();
+<a href=#139 id=139 data-nosnippet>139</a>    naive &gt;= starts &amp;&amp; naive &lt; ends
+<a href=#140 id=140 data-nosnippet>140</a>}
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a><span class="kw">fn </span>last_sunday(year: i32, month: u32) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDate&gt; {
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="kw">let </span>first_of_next = <span class="kw">if </span>month == <span class="number">12 </span>{
+<a href=#144 id=144 data-nosnippet>144</a>        NaiveDate::from_ymd_opt(year + <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>)
+<a href=#145 id=145 data-nosnippet>145</a>    } <span class="kw">else </span>{
+<a href=#146 id=146 data-nosnippet>146</a>        NaiveDate::from_ymd_opt(year, month + <span class="number">1</span>, <span class="number">1</span>)
+<a href=#147 id=147 data-nosnippet>147</a>    }<span class="question-mark">?</span>;
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="kw">let </span>last = first_of_next.pred_opt()<span class="question-mark">?</span>;
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="prelude-val">Some</span>(last - chrono::Duration::days(i64::from(last.weekday().days_since(Weekday::Sun))))
+<a href=#150 id=150 data-nosnippet>150</a>}
+<a href=#151 id=151 data-nosnippet>151</a>
+<a href=#152 id=152 data-nosnippet>152</a><span class="attr">#[cfg(test)]
+<a href=#153 id=153 data-nosnippet>153</a></span><span class="kw">mod </span>tests {
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">use </span>headless_lms_utils::services::suotar::{CreditRange, DatePeriod, LocalizedName};
+<a href=#155 id=155 data-nosnippet>155</a>
+<a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::grade_mapping::{NUMERIC_GRADE_SCALE_ID, PASS_FAIL_GRADE_SCALE_ID};
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#158 id=158 data-nosnippet>158</a>
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">fn </span>completion(passed: bool, grade: <span class="prelude-ty">Option</span>&lt;i32&gt;) -&gt; CompletionFacts {
+<a href=#160 id=160 data-nosnippet>160</a>        CompletionFacts {
+<a href=#161 id=161 data-nosnippet>161</a>            passed,
+<a href=#162 id=162 data-nosnippet>162</a>            grade,
+<a href=#163 id=163 data-nosnippet>163</a>            completion_date: <span class="string">"2026-05-22T09:00:00Z"</span>.parse().expect(<span class="string">"valid instant"</span>),
+<a href=#164 id=164 data-nosnippet>164</a>            completion_language: <span class="string">"fi-FI"</span>.to_string(),
+<a href=#165 id=165 data-nosnippet>165</a>        }
+<a href=#166 id=166 data-nosnippet>166</a>    }
+<a href=#167 id=167 data-nosnippet>167</a>
+<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">fn </span>enrolment(min: f64, max: f64) -&gt; SuotarEnrolment {
+<a href=#169 id=169 data-nosnippet>169</a>        SuotarEnrolment {
+<a href=#170 id=170 data-nosnippet>170</a>            id: <span class="string">"otm-enrolment"</span>.to_string(),
+<a href=#171 id=171 data-nosnippet>171</a>            state: <span class="string">"ENROLLED"</span>.to_string(),
+<a href=#172 id=172 data-nosnippet>172</a>            kind: <span class="string">"degree"</span>.to_string(),
+<a href=#173 id=173 data-nosnippet>173</a>            course_unit_id: <span class="string">"hy-CU-1"</span>.to_string(),
+<a href=#174 id=174 data-nosnippet>174</a>            assessment_item_id: <span class="string">"hy-AI-1"</span>.to_string(),
+<a href=#175 id=175 data-nosnippet>175</a>            course_unit_realisation_id: <span class="string">"hy-CUR-1"</span>.to_string(),
+<a href=#176 id=176 data-nosnippet>176</a>            course_unit_realisation_name: LocalizedName {
+<a href=#177 id=177 data-nosnippet>177</a>                fi: <span class="string">"kurssi"</span>.to_string(),
+<a href=#178 id=178 data-nosnippet>178</a>                sv: <span class="string">"kurs"</span>.to_string(),
+<a href=#179 id=179 data-nosnippet>179</a>                en: <span class="string">"course"</span>.to_string(),
+<a href=#180 id=180 data-nosnippet>180</a>            },
+<a href=#181 id=181 data-nosnippet>181</a>            activity_period: DatePeriod {
+<a href=#182 id=182 data-nosnippet>182</a>                start_date: NaiveDate::from_ymd_opt(<span class="number">2026</span>, <span class="number">1</span>, <span class="number">1</span>).expect(<span class="string">"valid date"</span>),
+<a href=#183 id=183 data-nosnippet>183</a>                end_date: NaiveDate::from_ymd_opt(<span class="number">2026</span>, <span class="number">12</span>, <span class="number">31</span>).expect(<span class="string">"valid date"</span>),
+<a href=#184 id=184 data-nosnippet>184</a>            },
+<a href=#185 id=185 data-nosnippet>185</a>            grade_scale_id: PASS_FAIL_GRADE_SCALE_ID.to_string(),
+<a href=#186 id=186 data-nosnippet>186</a>            credits: CreditRange { min, max },
+<a href=#187 id=187 data-nosnippet>187</a>            study_right_id: <span class="string">"hy-SR-1"</span>.to_string(),
+<a href=#188 id=188 data-nosnippet>188</a>            study_right_validity_period: DatePeriod {
+<a href=#189 id=189 data-nosnippet>189</a>                start_date: NaiveDate::from_ymd_opt(<span class="number">2020</span>, <span class="number">1</span>, <span class="number">1</span>).expect(<span class="string">"valid date"</span>),
+<a href=#190 id=190 data-nosnippet>190</a>                end_date: NaiveDate::from_ymd_opt(<span class="number">2030</span>, <span class="number">1</span>, <span class="number">1</span>).expect(<span class="string">"valid date"</span>),
+<a href=#191 id=191 data-nosnippet>191</a>            },
+<a href=#192 id=192 data-nosnippet>192</a>            enrolment_date_time: Utc::now(),
+<a href=#193 id=193 data-nosnippet>193</a>        }
+<a href=#194 id=194 data-nosnippet>194</a>    }
+<a href=#195 id=195 data-nosnippet>195</a>
+<a href=#196 id=196 data-nosnippet>196</a>    <span class="kw">fn </span>sources&lt;<span class="lifetime">'a</span>&gt;(enrolment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>SuotarEnrolment&gt;) -&gt; PayloadSources&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#197 id=197 data-nosnippet>197</a>        PayloadSources {
+<a href=#198 id=198 data-nosnippet>198</a>            student_number: <span class="string">"012345678"</span>,
+<a href=#199 id=199 data-nosnippet>199</a>            sisu_person_id: <span class="string">"hy-hlo-1"</span>,
+<a href=#200 id=200 data-nosnippet>200</a>            uh_course_code: <span class="prelude-val">Some</span>(<span class="string">"TKT10001"</span>),
+<a href=#201 id=201 data-nosnippet>201</a>            ects_credits: <span class="prelude-val">Some</span>(<span class="number">5.0</span>),
+<a href=#202 id=202 data-nosnippet>202</a>            configured_grade_scale_id: <span class="prelude-val">None</span>,
+<a href=#203 id=203 data-nosnippet>203</a>            enrolment,
+<a href=#204 id=204 data-nosnippet>204</a>        }
+<a href=#205 id=205 data-nosnippet>205</a>    }
+<a href=#206 id=206 data-nosnippet>206</a>
+<a href=#207 id=207 data-nosnippet>207</a>    <span class="attr">#[test]
+<a href=#208 id=208 data-nosnippet>208</a>    </span><span class="kw">fn </span>the_payload_takes_its_scale_from_the_chosen_enrolment() {
+<a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">let </span>enrolment = enrolment(<span class="number">1.0</span>, <span class="number">5.0</span>);
+<a href=#210 id=210 data-nosnippet>210</a>        <span class="kw">let </span>built =
+<a href=#211 id=211 data-nosnippet>211</a>            build_payload_snapshot(<span class="kw-2">&amp;</span>completion(<span class="bool-val">true</span>, <span class="prelude-val">None</span>), sources(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>enrolment))).unwrap();
+<a href=#212 id=212 data-nosnippet>212</a>        <span class="macro">assert_eq!</span>(built.snapshot.grade_scale_id, PASS_FAIL_GRADE_SCALE_ID);
+<a href=#213 id=213 data-nosnippet>213</a>        <span class="macro">assert_eq!</span>(built.snapshot.grade_id, <span class="string">"1"</span>);
+<a href=#214 id=214 data-nosnippet>214</a>        <span class="macro">assert_eq!</span>(built.snapshot.credits, <span class="number">5.0</span>);
+<a href=#215 id=215 data-nosnippet>215</a>        <span class="macro">assert_eq!</span>(built.clamped_credits_from, <span class="prelude-val">None</span>);
+<a href=#216 id=216 data-nosnippet>216</a>        <span class="macro">assert_eq!</span>(
+<a href=#217 id=217 data-nosnippet>217</a>            built.snapshot.selected_enrolment_id.as_deref(),
+<a href=#218 id=218 data-nosnippet>218</a>            <span class="prelude-val">Some</span>(<span class="string">"otm-enrolment"</span>)
+<a href=#219 id=219 data-nosnippet>219</a>        );
+<a href=#220 id=220 data-nosnippet>220</a>    }
+<a href=#221 id=221 data-nosnippet>221</a>
+<a href=#222 id=222 data-nosnippet>222</a>    <span class="attr">#[test]
+<a href=#223 id=223 data-nosnippet>223</a>    </span><span class="kw">fn </span>credits_are_clamped_into_the_enrolments_range_rather_than_refused() {
+<a href=#224 id=224 data-nosnippet>224</a>        <span class="kw">let </span>enrolment = enrolment(<span class="number">1.0</span>, <span class="number">4.0</span>);
+<a href=#225 id=225 data-nosnippet>225</a>        <span class="kw">let </span>built =
+<a href=#226 id=226 data-nosnippet>226</a>            build_payload_snapshot(<span class="kw-2">&amp;</span>completion(<span class="bool-val">true</span>, <span class="prelude-val">None</span>), sources(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>enrolment))).unwrap();
+<a href=#227 id=227 data-nosnippet>227</a>        <span class="macro">assert_eq!</span>(built.snapshot.credits, <span class="number">4.0</span>);
+<a href=#228 id=228 data-nosnippet>228</a>        <span class="macro">assert_eq!</span>(built.clamped_credits_from, <span class="prelude-val">Some</span>(<span class="number">5.0</span>));
+<a href=#229 id=229 data-nosnippet>229</a>    }
+<a href=#230 id=230 data-nosnippet>230</a>
+<a href=#231 id=231 data-nosnippet>231</a>    <span class="attr">#[test]
+<a href=#232 id=232 data-nosnippet>232</a>    </span><span class="kw">fn </span>a_module_with_no_course_code_or_credits_is_a_configuration_problem() {
+<a href=#233 id=233 data-nosnippet>233</a>        <span class="macro">assert_eq!</span>(
+<a href=#234 id=234 data-nosnippet>234</a>            build_payload_snapshot(
+<a href=#235 id=235 data-nosnippet>235</a>                <span class="kw-2">&amp;</span>completion(<span class="bool-val">true</span>, <span class="prelude-val">None</span>),
+<a href=#236 id=236 data-nosnippet>236</a>                PayloadSources {
+<a href=#237 id=237 data-nosnippet>237</a>                    uh_course_code: <span class="prelude-val">None</span>,
+<a href=#238 id=238 data-nosnippet>238</a>                    ..sources(<span class="prelude-val">None</span>)
+<a href=#239 id=239 data-nosnippet>239</a>                }
+<a href=#240 id=240 data-nosnippet>240</a>            ),
+<a href=#241 id=241 data-nosnippet>241</a>            <span class="prelude-val">Err</span>(CreditRegistrationErrorCode::MissingUhCourseCode)
+<a href=#242 id=242 data-nosnippet>242</a>        );
+<a href=#243 id=243 data-nosnippet>243</a>        <span class="macro">assert_eq!</span>(
+<a href=#244 id=244 data-nosnippet>244</a>            build_payload_snapshot(
+<a href=#245 id=245 data-nosnippet>245</a>                <span class="kw-2">&amp;</span>completion(<span class="bool-val">true</span>, <span class="prelude-val">None</span>),
+<a href=#246 id=246 data-nosnippet>246</a>                PayloadSources {
+<a href=#247 id=247 data-nosnippet>247</a>                    uh_course_code: <span class="prelude-val">Some</span>(<span class="string">"  "</span>),
+<a href=#248 id=248 data-nosnippet>248</a>                    ..sources(<span class="prelude-val">None</span>)
+<a href=#249 id=249 data-nosnippet>249</a>                }
+<a href=#250 id=250 data-nosnippet>250</a>            ),
+<a href=#251 id=251 data-nosnippet>251</a>            <span class="prelude-val">Err</span>(CreditRegistrationErrorCode::MissingUhCourseCode)
+<a href=#252 id=252 data-nosnippet>252</a>        );
+<a href=#253 id=253 data-nosnippet>253</a>        <span class="macro">assert_eq!</span>(
+<a href=#254 id=254 data-nosnippet>254</a>            build_payload_snapshot(
+<a href=#255 id=255 data-nosnippet>255</a>                <span class="kw-2">&amp;</span>completion(<span class="bool-val">true</span>, <span class="prelude-val">None</span>),
+<a href=#256 id=256 data-nosnippet>256</a>                PayloadSources {
+<a href=#257 id=257 data-nosnippet>257</a>                    ects_credits: <span class="prelude-val">None</span>,
+<a href=#258 id=258 data-nosnippet>258</a>                    ..sources(<span class="prelude-val">None</span>)
+<a href=#259 id=259 data-nosnippet>259</a>                }
+<a href=#260 id=260 data-nosnippet>260</a>            ),
+<a href=#261 id=261 data-nosnippet>261</a>            <span class="prelude-val">Err</span>(CreditRegistrationErrorCode::MissingEctsCredits)
+<a href=#262 id=262 data-nosnippet>262</a>        );
+<a href=#263 id=263 data-nosnippet>263</a>    }
+<a href=#264 id=264 data-nosnippet>264</a>
+<a href=#265 id=265 data-nosnippet>265</a>    <span class="attr">#[test]
+<a href=#266 id=266 data-nosnippet>266</a>    </span><span class="kw">fn </span>a_failed_completion_never_becomes_a_payload() {
+<a href=#267 id=267 data-nosnippet>267</a>        <span class="macro">assert!</span>(build_payload_snapshot(<span class="kw-2">&amp;</span>completion(<span class="bool-val">false</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>)), sources(<span class="prelude-val">None</span>)).is_err());
+<a href=#268 id=268 data-nosnippet>268</a>    }
+<a href=#269 id=269 data-nosnippet>269</a>
+<a href=#270 id=270 data-nosnippet>270</a>    <span class="attr">#[test]
+<a href=#271 id=271 data-nosnippet>271</a>    </span><span class="kw">fn </span>the_language_is_sent_as_a_two_letter_code() {
+<a href=#272 id=272 data-nosnippet>272</a>        <span class="macro">assert_eq!</span>(attainment_language(<span class="string">"fi-FI"</span>), <span class="string">"fi"</span>);
+<a href=#273 id=273 data-nosnippet>273</a>        <span class="macro">assert_eq!</span>(attainment_language(<span class="string">"en"</span>), <span class="string">"en"</span>);
+<a href=#274 id=274 data-nosnippet>274</a>        <span class="macro">assert_eq!</span>(attainment_language(<span class="string">"sv-SE"</span>), <span class="string">"sv"</span>);
+<a href=#275 id=275 data-nosnippet>275</a>    }
+<a href=#276 id=276 data-nosnippet>276</a>
+<a href=#277 id=277 data-nosnippet>277</a>    <span class="attr">#[test]
+<a href=#278 id=278 data-nosnippet>278</a>    </span><span class="kw">fn </span>a_graded_completion_keeps_its_number() {
+<a href=#279 id=279 data-nosnippet>279</a>        <span class="kw">let </span>built = build_payload_snapshot(
+<a href=#280 id=280 data-nosnippet>280</a>            <span class="kw-2">&amp;</span>completion(<span class="bool-val">true</span>, <span class="prelude-val">Some</span>(<span class="number">4</span>)),
+<a href=#281 id=281 data-nosnippet>281</a>            PayloadSources {
+<a href=#282 id=282 data-nosnippet>282</a>                configured_grade_scale_id: <span class="prelude-val">Some</span>(NUMERIC_GRADE_SCALE_ID),
+<a href=#283 id=283 data-nosnippet>283</a>                ..sources(<span class="prelude-val">None</span>)
+<a href=#284 id=284 data-nosnippet>284</a>            },
+<a href=#285 id=285 data-nosnippet>285</a>        )
+<a href=#286 id=286 data-nosnippet>286</a>        .unwrap();
+<a href=#287 id=287 data-nosnippet>287</a>        <span class="macro">assert_eq!</span>(built.snapshot.grade_id, <span class="string">"4"</span>);
+<a href=#288 id=288 data-nosnippet>288</a>    }
+<a href=#289 id=289 data-nosnippet>289</a>
+<a href=#290 id=290 data-nosnippet>290</a>    <span class="attr">#[test]
+<a href=#291 id=291 data-nosnippet>291</a>    </span><span class="kw">fn </span>the_attainment_date_is_the_helsinki_date() {
+<a href=#292 id=292 data-nosnippet>292</a>        <span class="kw">let </span>winter_evening: DateTime&lt;Utc&gt; = <span class="string">"2026-01-31T23:30:00Z"</span>.parse().expect(<span class="string">"valid instant"</span>);
+<a href=#293 id=293 data-nosnippet>293</a>        <span class="macro">assert_eq!</span>(
+<a href=#294 id=294 data-nosnippet>294</a>            helsinki_date(winter_evening),
+<a href=#295 id=295 data-nosnippet>295</a>            NaiveDate::from_ymd_opt(<span class="number">2026</span>, <span class="number">2</span>, <span class="number">1</span>).expect(<span class="string">"valid date"</span>)
+<a href=#296 id=296 data-nosnippet>296</a>        );
+<a href=#297 id=297 data-nosnippet>297</a>        <span class="kw">let </span>summer_evening: DateTime&lt;Utc&gt; = <span class="string">"2026-07-31T21:30:00Z"</span>.parse().expect(<span class="string">"valid instant"</span>);
+<a href=#298 id=298 data-nosnippet>298</a>        <span class="macro">assert_eq!</span>(
+<a href=#299 id=299 data-nosnippet>299</a>            helsinki_date(summer_evening),
+<a href=#300 id=300 data-nosnippet>300</a>            NaiveDate::from_ymd_opt(<span class="number">2026</span>, <span class="number">8</span>, <span class="number">1</span>).expect(<span class="string">"valid date"</span>)
+<a href=#301 id=301 data-nosnippet>301</a>        );
+<a href=#302 id=302 data-nosnippet>302</a>        <span class="kw">let </span>summer_afternoon: DateTime&lt;Utc&gt; =
+<a href=#303 id=303 data-nosnippet>303</a>            <span class="string">"2026-07-31T12:00:00Z"</span>.parse().expect(<span class="string">"valid instant"</span>);
+<a href=#304 id=304 data-nosnippet>304</a>        <span class="macro">assert_eq!</span>(
+<a href=#305 id=305 data-nosnippet>305</a>            helsinki_date(summer_afternoon),
+<a href=#306 id=306 data-nosnippet>306</a>            NaiveDate::from_ymd_opt(<span class="number">2026</span>, <span class="number">7</span>, <span class="number">31</span>).expect(<span class="string">"valid date"</span>)
+<a href=#307 id=307 data-nosnippet>307</a>        );
+<a href=#308 id=308 data-nosnippet>308</a>    }
+<a href=#309 id=309 data-nosnippet>309</a>
+<a href=#310 id=310 data-nosnippet>310</a>    <span class="attr">#[test]
+<a href=#311 id=311 data-nosnippet>311</a>    </span><span class="kw">fn </span>summer_time_starts_and_ends_on_the_documented_sundays() {
+<a href=#312 id=312 data-nosnippet>312</a>        <span class="kw">let </span>before_spring: DateTime&lt;Utc&gt; = <span class="string">"2026-03-29T00:59:00Z"</span>.parse().expect(<span class="string">"valid instant"</span>);
+<a href=#313 id=313 data-nosnippet>313</a>        <span class="kw">let </span>after_spring: DateTime&lt;Utc&gt; = <span class="string">"2026-03-29T01:00:00Z"</span>.parse().expect(<span class="string">"valid instant"</span>);
+<a href=#314 id=314 data-nosnippet>314</a>        <span class="macro">assert!</span>(!in_eu_summer_time(before_spring));
+<a href=#315 id=315 data-nosnippet>315</a>        <span class="macro">assert!</span>(in_eu_summer_time(after_spring));
+<a href=#316 id=316 data-nosnippet>316</a>
+<a href=#317 id=317 data-nosnippet>317</a>        <span class="kw">let </span>before_autumn: DateTime&lt;Utc&gt; = <span class="string">"2026-10-25T00:59:00Z"</span>.parse().expect(<span class="string">"valid instant"</span>);
+<a href=#318 id=318 data-nosnippet>318</a>        <span class="kw">let </span>after_autumn: DateTime&lt;Utc&gt; = <span class="string">"2026-10-25T01:00:00Z"</span>.parse().expect(<span class="string">"valid instant"</span>);
+<a href=#319 id=319 data-nosnippet>319</a>        <span class="macro">assert!</span>(in_eu_summer_time(before_autumn));
+<a href=#320 id=320 data-nosnippet>320</a>        <span class="macro">assert!</span>(!in_eu_summer_time(after_autumn));
+<a href=#321 id=321 data-nosnippet>321</a>    }
+<a href=#322 id=322 data-nosnippet>322</a>}
+</code></pre></div></section></main></body></html>

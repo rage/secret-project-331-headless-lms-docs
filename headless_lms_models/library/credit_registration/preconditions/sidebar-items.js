@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PRECONDITIONS_LIMIT"],"fn":["pending_moves","recompute_preconditions","resume_state","transition_for"],"struct":["PendingMove"]};

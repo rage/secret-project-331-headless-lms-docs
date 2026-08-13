@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ACCEPTOR_PERSON_ID","PASS_FAIL_SCALE","SCENARIOS"],"fn":["apply","arm","course_code","ensure_course","merge","plain","post_send_death","put_enrolment","put_person","string_field","timeout"],"struct":["ScenarioArgs"]};

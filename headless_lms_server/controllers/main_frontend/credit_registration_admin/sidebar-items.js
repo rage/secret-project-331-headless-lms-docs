@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","authorize_credit_registration_admin","build_linking_emails","required_reason"],"mod":["account_linking","dashboard","ledger","materialize","student_numbers"],"struct":["AdminLinkingEmail","MainFrontendCreditRegistrationAdminApiDoc"]};

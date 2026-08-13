@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ATTAINED_STATE","CREDITS_TOLERANCE","DEGREE_KIND","ENROLLED_STATE"],"enum":["NoUsableEnrolment"],"fn":["any_attained_by_person","attainment_for_course_unit","attainment_matching_submission","contains","credits_fit","same_id","select_enrolment"],"struct":["EnrolmentCriteria"]};

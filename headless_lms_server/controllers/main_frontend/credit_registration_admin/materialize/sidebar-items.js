@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","admin_materialize_credit_registrations"],"struct":["AdminMaterializePayload","AdminMaterializeResult"]};

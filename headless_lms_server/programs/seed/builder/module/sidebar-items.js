@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["CompletionBuilder","CompletionRegisteredBuilder","ModuleBuilder"]};
+window.SIDEBAR_ITEMS = {"struct":["CompletionBuilder","CompletionRegisteredBuilder","CreditRegistrationSeed","ModuleBuilder"]};

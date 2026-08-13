@@ -22,8 +22,8 @@
 <a href=#22 id=22 data-nosnippet>22</a>    domain::models_requests::{<span class="self">self</span>, JwtKey},
 <a href=#23 id=23 data-nosnippet>23</a>    programs::seed::{
 <a href=#24 id=24 data-nosnippet>24</a>        seed_courses::{
-<a href=#25 id=25 data-nosnippet>25</a>            CommonCourseData, seed_credit_registration, seed_cs_course_material, seed_glossary,
-<a href=#26 id=26 data-nosnippet>26</a>            seed_graded_course, seed_peer_review_course_without_submissions, seed_sample_course,
+<a href=#25 id=25 data-nosnippet>25</a>            CommonCourseData, seed_cs_course_material, seed_glossary, seed_graded_course,
+<a href=#26 id=26 data-nosnippet>26</a>            seed_peer_review_course_without_submissions, seed_sample_course,
 <a href=#27 id=27 data-nosnippet>27</a>        },
 <a href=#28 id=28 data-nosnippet>28</a>        seed_file_storage::SeedFileStorageResult,
 <a href=#29 id=29 data-nosnippet>29</a>        seed_helpers::{create_exam, get_seed_spec_fetcher},
@@ -559,11 +559,9 @@
 <a href=#559 id=559 data-nosnippet>559</a>        },
 <a href=#560 id=560 data-nosnippet>560</a>    )
 <a href=#561 id=561 data-nosnippet>561</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#562 id=562 data-nosnippet>562</a>    seed_credit_registration(cs_data.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#563 id=563 data-nosnippet>563</a>
-<a href=#564 id=564 data-nosnippet>564</a>    <span class="prelude-val">Ok</span>(SeedOrganizationUhCsResult {
-<a href=#565 id=565 data-nosnippet>565</a>        uh_cs_organization_id,
-<a href=#566 id=566 data-nosnippet>566</a>        cs_intro_course_id: cs_intro,
-<a href=#567 id=567 data-nosnippet>567</a>    })
-<a href=#568 id=568 data-nosnippet>568</a>}
+<a href=#562 id=562 data-nosnippet>562</a>    <span class="prelude-val">Ok</span>(SeedOrganizationUhCsResult {
+<a href=#563 id=563 data-nosnippet>563</a>        uh_cs_organization_id,
+<a href=#564 id=564 data-nosnippet>564</a>        cs_intro_course_id: cs_intro,
+<a href=#565 id=565 data-nosnippet>565</a>    })
+<a href=#566 id=566 data-nosnippet>566</a>}
 </code></pre></div></section></main></body></html>

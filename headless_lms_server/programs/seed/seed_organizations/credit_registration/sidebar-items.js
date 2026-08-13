@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CREDIT_REGISTRATION_ORGANIZATION_ID"],"fn":["seed_organization_credit_registration"]};

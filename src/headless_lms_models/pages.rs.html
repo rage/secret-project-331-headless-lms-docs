@@ -1000,14 +1000,14 @@
 <a href=#1000 id=1000 data-nosnippet>1000</a>    SELECT
 <a href=#1001 id=1001 data-nosnippet>1001</a>        p.id as page_id,
 <a href=#1002 id=1002 data-nosnippet>1002</a>        p.title as page_title,
-<a href=#1003 id=1003 data-nosnippet>1003</a>        c.id as "course_id",
-<a href=#1004 id=1004 data-nosnippet>1004</a>        c.name as "course_name",
-<a href=#1005 id=1005 data-nosnippet>1005</a>        c.slug as "course_slug",
-<a href=#1006 id=1006 data-nosnippet>1006</a>        o.slug as "organization_slug"
+<a href=#1003 id=1003 data-nosnippet>1003</a>        c.id as "course_id?",
+<a href=#1004 id=1004 data-nosnippet>1004</a>        c.name as "course_name?",
+<a href=#1005 id=1005 data-nosnippet>1005</a>        c.slug as "course_slug?",
+<a href=#1006 id=1006 data-nosnippet>1006</a>        o.slug as "organization_slug?"
 <a href=#1007 id=1007 data-nosnippet>1007</a>    FROM pages p
-<a href=#1008 id=1008 data-nosnippet>1008</a>    JOIN courses c
+<a href=#1008 id=1008 data-nosnippet>1008</a>    LEFT JOIN courses c
 <a href=#1009 id=1009 data-nosnippet>1009</a>        on c.id = p.course_id
-<a href=#1010 id=1010 data-nosnippet>1010</a>    JOIN organizations o
+<a href=#1010 id=1010 data-nosnippet>1010</a>    LEFT JOIN organizations o
 <a href=#1011 id=1011 data-nosnippet>1011</a>        on o.id = c.organization_id
 <a href=#1012 id=1012 data-nosnippet>1012</a>    WHERE p.id = $1;
 <a href=#1013 id=1013 data-nosnippet>1013</a>        "#</span>,

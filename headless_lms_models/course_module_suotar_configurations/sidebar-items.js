@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["upsert"],"struct":["CourseModuleSuotarConfiguration"]};
+window.SIDEBAR_ITEMS = {"fn":["exists","get_stalest_product_ids_for_enabled_modules","set_paused","upsert"],"struct":["CourseModuleSuotarConfiguration","SuotarPause"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MATERIALIZE_LIMIT"],"fn":["ensure_registration_rows_for_eligible_completions"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["LEGACY_MIRROR_LIMIT"],"fn":["mirror_successes_to_legacy_ledger"]};

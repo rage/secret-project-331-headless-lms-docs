@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["attainment_language","build_payload_snapshot","clamp_credits","helsinki_date","in_eu_summer_time","last_sunday"],"struct":["BuiltPayload","CompletionFacts","PayloadSources"]};

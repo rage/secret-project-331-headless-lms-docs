@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["account_linking","backoff","classification","enrolment_selection","grade_mapping","legacy_mirror","materialize","outcomes","payload","preconditions","student_facing_status","student_number_change","submission_context","withdrawal"]};
