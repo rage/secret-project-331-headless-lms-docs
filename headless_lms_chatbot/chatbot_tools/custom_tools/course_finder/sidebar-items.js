@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["empty_vec_as_none"],"struct":["CourseFinderArguments","CourseFinderState","CourseOccurrences"],"type":["CourseFinderTool"]};

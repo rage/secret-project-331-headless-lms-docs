@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ArrayItem","JSONType","SchemaPropertyType"],"struct":["ArrayProperty","JsonItem","Schema"]};

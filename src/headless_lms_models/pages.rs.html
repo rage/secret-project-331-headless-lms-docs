@@ -998,8 +998,8 @@
 <a href=#998 id=998 data-nosnippet>998</a>        PageInfo,
 <a href=#999 id=999 data-nosnippet>999</a>        <span class="string">r#"
 <a href=#1000 id=1000 data-nosnippet>1000</a>    SELECT
-<a href=#1001 id=1001 data-nosnippet>1001</a>        p.id as page_id,
-<a href=#1002 id=1002 data-nosnippet>1002</a>        p.title as page_title,
+<a href=#1001 id=1001 data-nosnippet>1001</a>        p.id as "page_id!",
+<a href=#1002 id=1002 data-nosnippet>1002</a>        p.title as "page_title!",
 <a href=#1003 id=1003 data-nosnippet>1003</a>        c.id as "course_id?",
 <a href=#1004 id=1004 data-nosnippet>1004</a>        c.name as "course_name?",
 <a href=#1005 id=1005 data-nosnippet>1005</a>        c.slug as "course_slug?",
@@ -4856,428 +4856,430 @@
 <a href=#4856 id=4856 data-nosnippet>4856</a>        course_id: Uuid,
 <a href=#4857 id=4857 data-nosnippet>4857</a>        chapter_locking_enabled: bool,
 <a href=#4858 id=4858 data-nosnippet>4858</a>    ) {
-<a href=#4859 id=4859 data-nosnippet>4859</a>        <span class="kw">let </span>course_before_update = courses::get_course(tx, course_id).<span class="kw">await</span>.unwrap();
-<a href=#4860 id=4860 data-nosnippet>4860</a>        courses::update_course(
-<a href=#4861 id=4861 data-nosnippet>4861</a>            tx,
-<a href=#4862 id=4862 data-nosnippet>4862</a>            course_id,
-<a href=#4863 id=4863 data-nosnippet>4863</a>            courses::CourseUpdate {
-<a href=#4864 id=4864 data-nosnippet>4864</a>                chapter_locking_enabled,
-<a href=#4865 id=4865 data-nosnippet>4865</a>                name: course_before_update.name,
-<a href=#4866 id=4866 data-nosnippet>4866</a>                description: course_before_update.description,
-<a href=#4867 id=4867 data-nosnippet>4867</a>                is_draft: course_before_update.is_draft,
-<a href=#4868 id=4868 data-nosnippet>4868</a>                is_test_mode: course_before_update.is_test_mode,
-<a href=#4869 id=4869 data-nosnippet>4869</a>                can_add_chatbot: course_before_update.can_add_chatbot,
-<a href=#4870 id=4870 data-nosnippet>4870</a>                is_unlisted: course_before_update.is_unlisted,
-<a href=#4871 id=4871 data-nosnippet>4871</a>                is_joinable_by_code_only: course_before_update.is_joinable_by_code_only,
-<a href=#4872 id=4872 data-nosnippet>4872</a>                ask_marketing_consent: course_before_update.ask_marketing_consent,
-<a href=#4873 id=4873 data-nosnippet>4873</a>                flagged_answers_threshold: course_before_update
-<a href=#4874 id=4874 data-nosnippet>4874</a>                    .flagged_answers_threshold
-<a href=#4875 id=4875 data-nosnippet>4875</a>                    .unwrap_or_default(),
-<a href=#4876 id=4876 data-nosnippet>4876</a>                flagged_answers_skip_manual_review_and_allow_retry: course_before_update
-<a href=#4877 id=4877 data-nosnippet>4877</a>                    .flagged_answers_skip_manual_review_and_allow_retry,
-<a href=#4878 id=4878 data-nosnippet>4878</a>                closed_at: course_before_update.closed_at,
-<a href=#4879 id=4879 data-nosnippet>4879</a>                closed_additional_message: course_before_update.closed_additional_message,
-<a href=#4880 id=4880 data-nosnippet>4880</a>                closed_course_successor_id: course_before_update.closed_course_successor_id,
-<a href=#4881 id=4881 data-nosnippet>4881</a>                ai_policy: course_before_update.ai_policy,
-<a href=#4882 id=4882 data-nosnippet>4882</a>                course_material_ai_instructions: course_before_update
-<a href=#4883 id=4883 data-nosnippet>4883</a>                    .course_material_ai_instructions,
-<a href=#4884 id=4884 data-nosnippet>4884</a>            },
-<a href=#4885 id=4885 data-nosnippet>4885</a>        )
-<a href=#4886 id=4886 data-nosnippet>4886</a>        .<span class="kw">await
-<a href=#4887 id=4887 data-nosnippet>4887</a>        </span>.unwrap();
-<a href=#4888 id=4888 data-nosnippet>4888</a>    }
-<a href=#4889 id=4889 data-nosnippet>4889</a>
-<a href=#4890 id=4890 data-nosnippet>4890</a>    <span class="attr">#[test]
-<a href=#4891 id=4891 data-nosnippet>4891</a>    </span><span class="kw">fn </span>sanitized_searchable_text_for_public_page_hides_lock_chapter_inner_blocks() {
-<a href=#4892 id=4892 data-nosnippet>4892</a>        <span class="kw">let </span>content = serde_json::to_value(<span class="macro">vec!</span>[
-<a href=#4893 id=4893 data-nosnippet>4893</a>            GutenbergBlock::paragraph(<span class="string">"Visible introduction"</span>),
-<a href=#4894 id=4894 data-nosnippet>4894</a>            lock_chapter_test_block(<span class="string">"Model solution"</span>),
-<a href=#4895 id=4895 data-nosnippet>4895</a>        ])
-<a href=#4896 id=4896 data-nosnippet>4896</a>        .unwrap();
-<a href=#4897 id=4897 data-nosnippet>4897</a>
-<a href=#4898 id=4898 data-nosnippet>4898</a>        <span class="kw">let </span>searchable_text = sanitized_searchable_text_for_public_page(<span class="kw-2">&amp;</span>content);
+<a href=#4859 id=4859 data-nosnippet>4859</a>        <span class="kw">let </span>app_config = init_app_conf().expect(<span class="string">"Application Configuration initialization failed"</span>);
+<a href=#4860 id=4860 data-nosnippet>4860</a>        <span class="kw">let </span>course_before_update = courses::get_course(tx, course_id).<span class="kw">await</span>.unwrap();
+<a href=#4861 id=4861 data-nosnippet>4861</a>        courses::update_course(
+<a href=#4862 id=4862 data-nosnippet>4862</a>            tx,
+<a href=#4863 id=4863 data-nosnippet>4863</a>            <span class="kw-2">&amp;</span>app_config,
+<a href=#4864 id=4864 data-nosnippet>4864</a>            course_id,
+<a href=#4865 id=4865 data-nosnippet>4865</a>            courses::CourseUpdate {
+<a href=#4866 id=4866 data-nosnippet>4866</a>                chapter_locking_enabled,
+<a href=#4867 id=4867 data-nosnippet>4867</a>                name: course_before_update.name,
+<a href=#4868 id=4868 data-nosnippet>4868</a>                description: course_before_update.description,
+<a href=#4869 id=4869 data-nosnippet>4869</a>                is_draft: course_before_update.is_draft,
+<a href=#4870 id=4870 data-nosnippet>4870</a>                is_test_mode: course_before_update.is_test_mode,
+<a href=#4871 id=4871 data-nosnippet>4871</a>                can_add_chatbot: course_before_update.can_add_chatbot,
+<a href=#4872 id=4872 data-nosnippet>4872</a>                is_unlisted: course_before_update.is_unlisted,
+<a href=#4873 id=4873 data-nosnippet>4873</a>                is_joinable_by_code_only: course_before_update.is_joinable_by_code_only,
+<a href=#4874 id=4874 data-nosnippet>4874</a>                ask_marketing_consent: course_before_update.ask_marketing_consent,
+<a href=#4875 id=4875 data-nosnippet>4875</a>                flagged_answers_threshold: course_before_update
+<a href=#4876 id=4876 data-nosnippet>4876</a>                    .flagged_answers_threshold
+<a href=#4877 id=4877 data-nosnippet>4877</a>                    .unwrap_or_default(),
+<a href=#4878 id=4878 data-nosnippet>4878</a>                flagged_answers_skip_manual_review_and_allow_retry: course_before_update
+<a href=#4879 id=4879 data-nosnippet>4879</a>                    .flagged_answers_skip_manual_review_and_allow_retry,
+<a href=#4880 id=4880 data-nosnippet>4880</a>                closed_at: course_before_update.closed_at,
+<a href=#4881 id=4881 data-nosnippet>4881</a>                closed_additional_message: course_before_update.closed_additional_message,
+<a href=#4882 id=4882 data-nosnippet>4882</a>                closed_course_successor_id: course_before_update.closed_course_successor_id,
+<a href=#4883 id=4883 data-nosnippet>4883</a>                ai_policy: course_before_update.ai_policy,
+<a href=#4884 id=4884 data-nosnippet>4884</a>                course_material_ai_instructions: course_before_update
+<a href=#4885 id=4885 data-nosnippet>4885</a>                    .course_material_ai_instructions,
+<a href=#4886 id=4886 data-nosnippet>4886</a>            },
+<a href=#4887 id=4887 data-nosnippet>4887</a>        )
+<a href=#4888 id=4888 data-nosnippet>4888</a>        .<span class="kw">await
+<a href=#4889 id=4889 data-nosnippet>4889</a>        </span>.unwrap();
+<a href=#4890 id=4890 data-nosnippet>4890</a>    }
+<a href=#4891 id=4891 data-nosnippet>4891</a>
+<a href=#4892 id=4892 data-nosnippet>4892</a>    <span class="attr">#[test]
+<a href=#4893 id=4893 data-nosnippet>4893</a>    </span><span class="kw">fn </span>sanitized_searchable_text_for_public_page_hides_lock_chapter_inner_blocks() {
+<a href=#4894 id=4894 data-nosnippet>4894</a>        <span class="kw">let </span>content = serde_json::to_value(<span class="macro">vec!</span>[
+<a href=#4895 id=4895 data-nosnippet>4895</a>            GutenbergBlock::paragraph(<span class="string">"Visible introduction"</span>),
+<a href=#4896 id=4896 data-nosnippet>4896</a>            lock_chapter_test_block(<span class="string">"Model solution"</span>),
+<a href=#4897 id=4897 data-nosnippet>4897</a>        ])
+<a href=#4898 id=4898 data-nosnippet>4898</a>        .unwrap();
 <a href=#4899 id=4899 data-nosnippet>4899</a>
-<a href=#4900 id=4900 data-nosnippet>4900</a>        <span class="macro">assert!</span>(searchable_text.contains(<span class="string">"Visible introduction"</span>));
-<a href=#4901 id=4901 data-nosnippet>4901</a>        <span class="macro">assert!</span>(!searchable_text.contains(<span class="string">"Model solution"</span>));
-<a href=#4902 id=4902 data-nosnippet>4902</a>    }
-<a href=#4903 id=4903 data-nosnippet>4903</a>
-<a href=#4904 id=4904 data-nosnippet>4904</a>    <span class="attr">#[tokio::test]
-<a href=#4905 id=4905 data-nosnippet>4905</a>    </span><span class="kw">async fn </span>filter_course_material_pages_hides_lock_chapter_inner_blocks_until_reviews_complete() {
-<a href=#4906 id=4906 data-nosnippet>4906</a>        <span class="macro">insert_data!</span>(
-<a href=#4907 id=4907 data-nosnippet>4907</a>            :tx,
-<a href=#4908 id=4908 data-nosnippet>4908</a>            :user,
-<a href=#4909 id=4909 data-nosnippet>4909</a>            :org,
-<a href=#4910 id=4910 data-nosnippet>4910</a>            :course,
-<a href=#4911 id=4911 data-nosnippet>4911</a>            instance: _instance,
-<a href=#4912 id=4912 data-nosnippet>4912</a>            :course_module,
-<a href=#4913 id=4913 data-nosnippet>4913</a>            chapter: chapter_id,
-<a href=#4914 id=4914 data-nosnippet>4914</a>            page: page_id,
-<a href=#4915 id=4915 data-nosnippet>4915</a>            exercise: exercise_id,
-<a href=#4916 id=4916 data-nosnippet>4916</a>            slide: _exercise_slide_id,
-<a href=#4917 id=4917 data-nosnippet>4917</a>            task: _exercise_task_id
-<a href=#4918 id=4918 data-nosnippet>4918</a>        );
-<a href=#4919 id=4919 data-nosnippet>4919</a>        set_course_chapter_locking_enabled(tx.as_mut(), course, <span class="bool-val">true</span>).<span class="kw">await</span>;
-<a href=#4920 id=4920 data-nosnippet>4920</a>
-<a href=#4921 id=4921 data-nosnippet>4921</a>        update_page_content(
-<a href=#4922 id=4922 data-nosnippet>4922</a>            tx.as_mut(),
-<a href=#4923 id=4923 data-nosnippet>4923</a>            page_id,
-<a href=#4924 id=4924 data-nosnippet>4924</a>            <span class="kw-2">&amp;</span>serde_json::to_value(<span class="macro">vec!</span>[lock_chapter_test_block(<span class="string">"Model solution"</span>)]).unwrap(),
-<a href=#4925 id=4925 data-nosnippet>4925</a>        )
-<a href=#4926 id=4926 data-nosnippet>4926</a>        .<span class="kw">await
-<a href=#4927 id=4927 data-nosnippet>4927</a>        </span>.unwrap();
-<a href=#4928 id=4928 data-nosnippet>4928</a>
-<a href=#4929 id=4929 data-nosnippet>4929</a>        <span class="kw">crate</span>::exercises::update_teacher_reviews_answer_after_locking(
-<a href=#4930 id=4930 data-nosnippet>4930</a>            tx.as_mut(),
-<a href=#4931 id=4931 data-nosnippet>4931</a>            exercise_id,
-<a href=#4932 id=4932 data-nosnippet>4932</a>            <span class="bool-val">true</span>,
-<a href=#4933 id=4933 data-nosnippet>4933</a>        )
-<a href=#4934 id=4934 data-nosnippet>4934</a>        .<span class="kw">await
-<a href=#4935 id=4935 data-nosnippet>4935</a>        </span>.unwrap();
-<a href=#4936 id=4936 data-nosnippet>4936</a>        <span class="kw">crate</span>::user_exercise_states::get_or_create_user_exercise_state(
-<a href=#4937 id=4937 data-nosnippet>4937</a>            tx.as_mut(),
-<a href=#4938 id=4938 data-nosnippet>4938</a>            user,
-<a href=#4939 id=4939 data-nosnippet>4939</a>            exercise_id,
-<a href=#4940 id=4940 data-nosnippet>4940</a>            <span class="prelude-val">Some</span>(course),
-<a href=#4941 id=4941 data-nosnippet>4941</a>            <span class="prelude-val">None</span>,
-<a href=#4942 id=4942 data-nosnippet>4942</a>        )
-<a href=#4943 id=4943 data-nosnippet>4943</a>        .<span class="kw">await
-<a href=#4944 id=4944 data-nosnippet>4944</a>        </span>.unwrap();
-<a href=#4945 id=4945 data-nosnippet>4945</a>        <span class="kw">crate</span>::user_chapter_locking_statuses::complete_and_lock_chapter(
-<a href=#4946 id=4946 data-nosnippet>4946</a>            tx.as_mut(),
-<a href=#4947 id=4947 data-nosnippet>4947</a>            user,
-<a href=#4948 id=4948 data-nosnippet>4948</a>            chapter_id,
-<a href=#4949 id=4949 data-nosnippet>4949</a>            course,
-<a href=#4950 id=4950 data-nosnippet>4950</a>        )
-<a href=#4951 id=4951 data-nosnippet>4951</a>        .<span class="kw">await
-<a href=#4952 id=4952 data-nosnippet>4952</a>        </span>.unwrap();
-<a href=#4953 id=4953 data-nosnippet>4953</a>        <span class="kw">crate</span>::user_exercise_states::update_reviewing_stage(
-<a href=#4954 id=4954 data-nosnippet>4954</a>            tx.as_mut(),
-<a href=#4955 id=4955 data-nosnippet>4955</a>            user,
-<a href=#4956 id=4956 data-nosnippet>4956</a>            CourseOrExamId::Course(course),
-<a href=#4957 id=4957 data-nosnippet>4957</a>            exercise_id,
-<a href=#4958 id=4958 data-nosnippet>4958</a>            <span class="kw">crate</span>::user_exercise_states::ReviewingStage::WaitingForManualGrading,
-<a href=#4959 id=4959 data-nosnippet>4959</a>        )
-<a href=#4960 id=4960 data-nosnippet>4960</a>        .<span class="kw">await
-<a href=#4961 id=4961 data-nosnippet>4961</a>        </span>.unwrap();
-<a href=#4962 id=4962 data-nosnippet>4962</a>
-<a href=#4963 id=4963 data-nosnippet>4963</a>        <span class="kw">let </span>page = get_page(tx.as_mut(), page_id).<span class="kw">await</span>.unwrap();
-<a href=#4964 id=4964 data-nosnippet>4964</a>        <span class="kw">let </span>filtered_pages = filter_course_material_pages(tx.as_mut(), <span class="prelude-val">Some</span>(user), <span class="macro">vec!</span>[page])
-<a href=#4965 id=4965 data-nosnippet>4965</a>            .<span class="kw">await
-<a href=#4966 id=4966 data-nosnippet>4966</a>            </span>.unwrap();
-<a href=#4967 id=4967 data-nosnippet>4967</a>        <span class="macro">assert_eq!</span>(first_lock_chapter_inner_block_count(<span class="kw-2">&amp;</span>filtered_pages[<span class="number">0</span>]), <span class="number">0</span>);
-<a href=#4968 id=4968 data-nosnippet>4968</a>
-<a href=#4969 id=4969 data-nosnippet>4969</a>        <span class="kw">crate</span>::user_exercise_states::update_reviewing_stage(
-<a href=#4970 id=4970 data-nosnippet>4970</a>            tx.as_mut(),
-<a href=#4971 id=4971 data-nosnippet>4971</a>            user,
-<a href=#4972 id=4972 data-nosnippet>4972</a>            CourseOrExamId::Course(course),
-<a href=#4973 id=4973 data-nosnippet>4973</a>            exercise_id,
-<a href=#4974 id=4974 data-nosnippet>4974</a>            <span class="kw">crate</span>::user_exercise_states::ReviewingStage::ReviewedAndLocked,
-<a href=#4975 id=4975 data-nosnippet>4975</a>        )
-<a href=#4976 id=4976 data-nosnippet>4976</a>        .<span class="kw">await
-<a href=#4977 id=4977 data-nosnippet>4977</a>        </span>.unwrap();
-<a href=#4978 id=4978 data-nosnippet>4978</a>
-<a href=#4979 id=4979 data-nosnippet>4979</a>        <span class="kw">let </span>page = get_page(tx.as_mut(), page_id).<span class="kw">await</span>.unwrap();
-<a href=#4980 id=4980 data-nosnippet>4980</a>        <span class="kw">let </span>filtered_pages = filter_course_material_pages(tx.as_mut(), <span class="prelude-val">Some</span>(user), <span class="macro">vec!</span>[page])
-<a href=#4981 id=4981 data-nosnippet>4981</a>            .<span class="kw">await
-<a href=#4982 id=4982 data-nosnippet>4982</a>            </span>.unwrap();
-<a href=#4983 id=4983 data-nosnippet>4983</a>        <span class="macro">assert_eq!</span>(first_lock_chapter_inner_block_count(<span class="kw-2">&amp;</span>filtered_pages[<span class="number">0</span>]), <span class="number">1</span>);
-<a href=#4984 id=4984 data-nosnippet>4984</a>    }
-<a href=#4985 id=4985 data-nosnippet>4985</a>
-<a href=#4986 id=4986 data-nosnippet>4986</a>    <span class="attr">#[tokio::test]
-<a href=#4987 id=4987 data-nosnippet>4987</a>    </span><span class="kw">async fn </span>filter_course_material_pages_with_exercises_hides_lock_chapter_inner_blocks() {
-<a href=#4988 id=4988 data-nosnippet>4988</a>        <span class="macro">insert_data!</span>(
-<a href=#4989 id=4989 data-nosnippet>4989</a>            :tx,
-<a href=#4990 id=4990 data-nosnippet>4990</a>            :user,
-<a href=#4991 id=4991 data-nosnippet>4991</a>            :org,
-<a href=#4992 id=4992 data-nosnippet>4992</a>            :course,
-<a href=#4993 id=4993 data-nosnippet>4993</a>            instance: _instance,
-<a href=#4994 id=4994 data-nosnippet>4994</a>            :course_module,
-<a href=#4995 id=4995 data-nosnippet>4995</a>            chapter: _chapter_id,
-<a href=#4996 id=4996 data-nosnippet>4996</a>            page: page_id
-<a href=#4997 id=4997 data-nosnippet>4997</a>        );
-<a href=#4998 id=4998 data-nosnippet>4998</a>
-<a href=#4999 id=4999 data-nosnippet>4999</a>        update_page_content(
-<a href=#5000 id=5000 data-nosnippet>5000</a>            tx.as_mut(),
-<a href=#5001 id=5001 data-nosnippet>5001</a>            page_id,
-<a href=#5002 id=5002 data-nosnippet>5002</a>            <span class="kw-2">&amp;</span>serde_json::to_value(<span class="macro">vec!</span>[lock_chapter_test_block(<span class="string">"Model solution"</span>)]).unwrap(),
-<a href=#5003 id=5003 data-nosnippet>5003</a>        )
-<a href=#5004 id=5004 data-nosnippet>5004</a>        .<span class="kw">await
-<a href=#5005 id=5005 data-nosnippet>5005</a>        </span>.unwrap();
-<a href=#5006 id=5006 data-nosnippet>5006</a>
-<a href=#5007 id=5007 data-nosnippet>5007</a>        <span class="kw">let </span>page = get_page(tx.as_mut(), page_id).<span class="kw">await</span>.unwrap();
-<a href=#5008 id=5008 data-nosnippet>5008</a>        <span class="kw">let </span>filtered_pages = filter_course_material_pages_with_exercises(
-<a href=#5009 id=5009 data-nosnippet>5009</a>            tx.as_mut(),
-<a href=#5010 id=5010 data-nosnippet>5010</a>            <span class="prelude-val">None</span>,
-<a href=#5011 id=5011 data-nosnippet>5011</a>            <span class="macro">vec!</span>[PageWithExercises {
-<a href=#5012 id=5012 data-nosnippet>5012</a>                page,
-<a href=#5013 id=5013 data-nosnippet>5013</a>                exercises: <span class="macro">vec!</span>[],
-<a href=#5014 id=5014 data-nosnippet>5014</a>            }],
-<a href=#5015 id=5015 data-nosnippet>5015</a>        )
-<a href=#5016 id=5016 data-nosnippet>5016</a>        .<span class="kw">await
-<a href=#5017 id=5017 data-nosnippet>5017</a>        </span>.unwrap();
-<a href=#5018 id=5018 data-nosnippet>5018</a>
-<a href=#5019 id=5019 data-nosnippet>5019</a>        <span class="macro">assert_eq!</span>(
-<a href=#5020 id=5020 data-nosnippet>5020</a>            first_lock_chapter_inner_block_count(<span class="kw-2">&amp;</span>filtered_pages[<span class="number">0</span>].page),
-<a href=#5021 id=5021 data-nosnippet>5021</a>            <span class="number">0
-<a href=#5022 id=5022 data-nosnippet>5022</a>        </span>);
-<a href=#5023 id=5023 data-nosnippet>5023</a>    }
-<a href=#5024 id=5024 data-nosnippet>5024</a>
-<a href=#5025 id=5025 data-nosnippet>5025</a>    <span class="attr">#[tokio::test]
-<a href=#5026 id=5026 data-nosnippet>5026</a>    </span><span class="kw">async fn </span>filter_course_material_pages_does_not_initialize_lock_status_when_course_locking_is_disabled()
-<a href=#5027 id=5027 data-nosnippet>5027</a>     {
-<a href=#5028 id=5028 data-nosnippet>5028</a>        <span class="macro">insert_data!</span>(
-<a href=#5029 id=5029 data-nosnippet>5029</a>            :tx,
-<a href=#5030 id=5030 data-nosnippet>5030</a>            :user,
-<a href=#5031 id=5031 data-nosnippet>5031</a>            :org,
-<a href=#5032 id=5032 data-nosnippet>5032</a>            :course,
-<a href=#5033 id=5033 data-nosnippet>5033</a>            instance: _instance,
-<a href=#5034 id=5034 data-nosnippet>5034</a>            :course_module,
-<a href=#5035 id=5035 data-nosnippet>5035</a>            chapter: chapter_id,
-<a href=#5036 id=5036 data-nosnippet>5036</a>            page: page_id
-<a href=#5037 id=5037 data-nosnippet>5037</a>        );
-<a href=#5038 id=5038 data-nosnippet>5038</a>
-<a href=#5039 id=5039 data-nosnippet>5039</a>        set_course_chapter_locking_enabled(tx.as_mut(), course, <span class="bool-val">false</span>).<span class="kw">await</span>;
+<a href=#4900 id=4900 data-nosnippet>4900</a>        <span class="kw">let </span>searchable_text = sanitized_searchable_text_for_public_page(<span class="kw-2">&amp;</span>content);
+<a href=#4901 id=4901 data-nosnippet>4901</a>
+<a href=#4902 id=4902 data-nosnippet>4902</a>        <span class="macro">assert!</span>(searchable_text.contains(<span class="string">"Visible introduction"</span>));
+<a href=#4903 id=4903 data-nosnippet>4903</a>        <span class="macro">assert!</span>(!searchable_text.contains(<span class="string">"Model solution"</span>));
+<a href=#4904 id=4904 data-nosnippet>4904</a>    }
+<a href=#4905 id=4905 data-nosnippet>4905</a>
+<a href=#4906 id=4906 data-nosnippet>4906</a>    <span class="attr">#[tokio::test]
+<a href=#4907 id=4907 data-nosnippet>4907</a>    </span><span class="kw">async fn </span>filter_course_material_pages_hides_lock_chapter_inner_blocks_until_reviews_complete() {
+<a href=#4908 id=4908 data-nosnippet>4908</a>        <span class="macro">insert_data!</span>(
+<a href=#4909 id=4909 data-nosnippet>4909</a>            :tx,
+<a href=#4910 id=4910 data-nosnippet>4910</a>            :user,
+<a href=#4911 id=4911 data-nosnippet>4911</a>            :org,
+<a href=#4912 id=4912 data-nosnippet>4912</a>            :course,
+<a href=#4913 id=4913 data-nosnippet>4913</a>            instance: _instance,
+<a href=#4914 id=4914 data-nosnippet>4914</a>            :course_module,
+<a href=#4915 id=4915 data-nosnippet>4915</a>            chapter: chapter_id,
+<a href=#4916 id=4916 data-nosnippet>4916</a>            page: page_id,
+<a href=#4917 id=4917 data-nosnippet>4917</a>            exercise: exercise_id,
+<a href=#4918 id=4918 data-nosnippet>4918</a>            slide: _exercise_slide_id,
+<a href=#4919 id=4919 data-nosnippet>4919</a>            task: _exercise_task_id
+<a href=#4920 id=4920 data-nosnippet>4920</a>        );
+<a href=#4921 id=4921 data-nosnippet>4921</a>        set_course_chapter_locking_enabled(tx.as_mut(), course, <span class="bool-val">true</span>).<span class="kw">await</span>;
+<a href=#4922 id=4922 data-nosnippet>4922</a>
+<a href=#4923 id=4923 data-nosnippet>4923</a>        update_page_content(
+<a href=#4924 id=4924 data-nosnippet>4924</a>            tx.as_mut(),
+<a href=#4925 id=4925 data-nosnippet>4925</a>            page_id,
+<a href=#4926 id=4926 data-nosnippet>4926</a>            <span class="kw-2">&amp;</span>serde_json::to_value(<span class="macro">vec!</span>[lock_chapter_test_block(<span class="string">"Model solution"</span>)]).unwrap(),
+<a href=#4927 id=4927 data-nosnippet>4927</a>        )
+<a href=#4928 id=4928 data-nosnippet>4928</a>        .<span class="kw">await
+<a href=#4929 id=4929 data-nosnippet>4929</a>        </span>.unwrap();
+<a href=#4930 id=4930 data-nosnippet>4930</a>
+<a href=#4931 id=4931 data-nosnippet>4931</a>        <span class="kw">crate</span>::exercises::update_teacher_reviews_answer_after_locking(
+<a href=#4932 id=4932 data-nosnippet>4932</a>            tx.as_mut(),
+<a href=#4933 id=4933 data-nosnippet>4933</a>            exercise_id,
+<a href=#4934 id=4934 data-nosnippet>4934</a>            <span class="bool-val">true</span>,
+<a href=#4935 id=4935 data-nosnippet>4935</a>        )
+<a href=#4936 id=4936 data-nosnippet>4936</a>        .<span class="kw">await
+<a href=#4937 id=4937 data-nosnippet>4937</a>        </span>.unwrap();
+<a href=#4938 id=4938 data-nosnippet>4938</a>        <span class="kw">crate</span>::user_exercise_states::get_or_create_user_exercise_state(
+<a href=#4939 id=4939 data-nosnippet>4939</a>            tx.as_mut(),
+<a href=#4940 id=4940 data-nosnippet>4940</a>            user,
+<a href=#4941 id=4941 data-nosnippet>4941</a>            exercise_id,
+<a href=#4942 id=4942 data-nosnippet>4942</a>            <span class="prelude-val">Some</span>(course),
+<a href=#4943 id=4943 data-nosnippet>4943</a>            <span class="prelude-val">None</span>,
+<a href=#4944 id=4944 data-nosnippet>4944</a>        )
+<a href=#4945 id=4945 data-nosnippet>4945</a>        .<span class="kw">await
+<a href=#4946 id=4946 data-nosnippet>4946</a>        </span>.unwrap();
+<a href=#4947 id=4947 data-nosnippet>4947</a>        <span class="kw">crate</span>::user_chapter_locking_statuses::complete_and_lock_chapter(
+<a href=#4948 id=4948 data-nosnippet>4948</a>            tx.as_mut(),
+<a href=#4949 id=4949 data-nosnippet>4949</a>            user,
+<a href=#4950 id=4950 data-nosnippet>4950</a>            chapter_id,
+<a href=#4951 id=4951 data-nosnippet>4951</a>            course,
+<a href=#4952 id=4952 data-nosnippet>4952</a>        )
+<a href=#4953 id=4953 data-nosnippet>4953</a>        .<span class="kw">await
+<a href=#4954 id=4954 data-nosnippet>4954</a>        </span>.unwrap();
+<a href=#4955 id=4955 data-nosnippet>4955</a>        <span class="kw">crate</span>::user_exercise_states::update_reviewing_stage(
+<a href=#4956 id=4956 data-nosnippet>4956</a>            tx.as_mut(),
+<a href=#4957 id=4957 data-nosnippet>4957</a>            user,
+<a href=#4958 id=4958 data-nosnippet>4958</a>            CourseOrExamId::Course(course),
+<a href=#4959 id=4959 data-nosnippet>4959</a>            exercise_id,
+<a href=#4960 id=4960 data-nosnippet>4960</a>            <span class="kw">crate</span>::user_exercise_states::ReviewingStage::WaitingForManualGrading,
+<a href=#4961 id=4961 data-nosnippet>4961</a>        )
+<a href=#4962 id=4962 data-nosnippet>4962</a>        .<span class="kw">await
+<a href=#4963 id=4963 data-nosnippet>4963</a>        </span>.unwrap();
+<a href=#4964 id=4964 data-nosnippet>4964</a>
+<a href=#4965 id=4965 data-nosnippet>4965</a>        <span class="kw">let </span>page = get_page(tx.as_mut(), page_id).<span class="kw">await</span>.unwrap();
+<a href=#4966 id=4966 data-nosnippet>4966</a>        <span class="kw">let </span>filtered_pages = filter_course_material_pages(tx.as_mut(), <span class="prelude-val">Some</span>(user), <span class="macro">vec!</span>[page])
+<a href=#4967 id=4967 data-nosnippet>4967</a>            .<span class="kw">await
+<a href=#4968 id=4968 data-nosnippet>4968</a>            </span>.unwrap();
+<a href=#4969 id=4969 data-nosnippet>4969</a>        <span class="macro">assert_eq!</span>(first_lock_chapter_inner_block_count(<span class="kw-2">&amp;</span>filtered_pages[<span class="number">0</span>]), <span class="number">0</span>);
+<a href=#4970 id=4970 data-nosnippet>4970</a>
+<a href=#4971 id=4971 data-nosnippet>4971</a>        <span class="kw">crate</span>::user_exercise_states::update_reviewing_stage(
+<a href=#4972 id=4972 data-nosnippet>4972</a>            tx.as_mut(),
+<a href=#4973 id=4973 data-nosnippet>4973</a>            user,
+<a href=#4974 id=4974 data-nosnippet>4974</a>            CourseOrExamId::Course(course),
+<a href=#4975 id=4975 data-nosnippet>4975</a>            exercise_id,
+<a href=#4976 id=4976 data-nosnippet>4976</a>            <span class="kw">crate</span>::user_exercise_states::ReviewingStage::ReviewedAndLocked,
+<a href=#4977 id=4977 data-nosnippet>4977</a>        )
+<a href=#4978 id=4978 data-nosnippet>4978</a>        .<span class="kw">await
+<a href=#4979 id=4979 data-nosnippet>4979</a>        </span>.unwrap();
+<a href=#4980 id=4980 data-nosnippet>4980</a>
+<a href=#4981 id=4981 data-nosnippet>4981</a>        <span class="kw">let </span>page = get_page(tx.as_mut(), page_id).<span class="kw">await</span>.unwrap();
+<a href=#4982 id=4982 data-nosnippet>4982</a>        <span class="kw">let </span>filtered_pages = filter_course_material_pages(tx.as_mut(), <span class="prelude-val">Some</span>(user), <span class="macro">vec!</span>[page])
+<a href=#4983 id=4983 data-nosnippet>4983</a>            .<span class="kw">await
+<a href=#4984 id=4984 data-nosnippet>4984</a>            </span>.unwrap();
+<a href=#4985 id=4985 data-nosnippet>4985</a>        <span class="macro">assert_eq!</span>(first_lock_chapter_inner_block_count(<span class="kw-2">&amp;</span>filtered_pages[<span class="number">0</span>]), <span class="number">1</span>);
+<a href=#4986 id=4986 data-nosnippet>4986</a>    }
+<a href=#4987 id=4987 data-nosnippet>4987</a>
+<a href=#4988 id=4988 data-nosnippet>4988</a>    <span class="attr">#[tokio::test]
+<a href=#4989 id=4989 data-nosnippet>4989</a>    </span><span class="kw">async fn </span>filter_course_material_pages_with_exercises_hides_lock_chapter_inner_blocks() {
+<a href=#4990 id=4990 data-nosnippet>4990</a>        <span class="macro">insert_data!</span>(
+<a href=#4991 id=4991 data-nosnippet>4991</a>            :tx,
+<a href=#4992 id=4992 data-nosnippet>4992</a>            :user,
+<a href=#4993 id=4993 data-nosnippet>4993</a>            :org,
+<a href=#4994 id=4994 data-nosnippet>4994</a>            :course,
+<a href=#4995 id=4995 data-nosnippet>4995</a>            instance: _instance,
+<a href=#4996 id=4996 data-nosnippet>4996</a>            :course_module,
+<a href=#4997 id=4997 data-nosnippet>4997</a>            chapter: _chapter_id,
+<a href=#4998 id=4998 data-nosnippet>4998</a>            page: page_id
+<a href=#4999 id=4999 data-nosnippet>4999</a>        );
+<a href=#5000 id=5000 data-nosnippet>5000</a>
+<a href=#5001 id=5001 data-nosnippet>5001</a>        update_page_content(
+<a href=#5002 id=5002 data-nosnippet>5002</a>            tx.as_mut(),
+<a href=#5003 id=5003 data-nosnippet>5003</a>            page_id,
+<a href=#5004 id=5004 data-nosnippet>5004</a>            <span class="kw-2">&amp;</span>serde_json::to_value(<span class="macro">vec!</span>[lock_chapter_test_block(<span class="string">"Model solution"</span>)]).unwrap(),
+<a href=#5005 id=5005 data-nosnippet>5005</a>        )
+<a href=#5006 id=5006 data-nosnippet>5006</a>        .<span class="kw">await
+<a href=#5007 id=5007 data-nosnippet>5007</a>        </span>.unwrap();
+<a href=#5008 id=5008 data-nosnippet>5008</a>
+<a href=#5009 id=5009 data-nosnippet>5009</a>        <span class="kw">let </span>page = get_page(tx.as_mut(), page_id).<span class="kw">await</span>.unwrap();
+<a href=#5010 id=5010 data-nosnippet>5010</a>        <span class="kw">let </span>filtered_pages = filter_course_material_pages_with_exercises(
+<a href=#5011 id=5011 data-nosnippet>5011</a>            tx.as_mut(),
+<a href=#5012 id=5012 data-nosnippet>5012</a>            <span class="prelude-val">None</span>,
+<a href=#5013 id=5013 data-nosnippet>5013</a>            <span class="macro">vec!</span>[PageWithExercises {
+<a href=#5014 id=5014 data-nosnippet>5014</a>                page,
+<a href=#5015 id=5015 data-nosnippet>5015</a>                exercises: <span class="macro">vec!</span>[],
+<a href=#5016 id=5016 data-nosnippet>5016</a>            }],
+<a href=#5017 id=5017 data-nosnippet>5017</a>        )
+<a href=#5018 id=5018 data-nosnippet>5018</a>        .<span class="kw">await
+<a href=#5019 id=5019 data-nosnippet>5019</a>        </span>.unwrap();
+<a href=#5020 id=5020 data-nosnippet>5020</a>
+<a href=#5021 id=5021 data-nosnippet>5021</a>        <span class="macro">assert_eq!</span>(
+<a href=#5022 id=5022 data-nosnippet>5022</a>            first_lock_chapter_inner_block_count(<span class="kw-2">&amp;</span>filtered_pages[<span class="number">0</span>].page),
+<a href=#5023 id=5023 data-nosnippet>5023</a>            <span class="number">0
+<a href=#5024 id=5024 data-nosnippet>5024</a>        </span>);
+<a href=#5025 id=5025 data-nosnippet>5025</a>    }
+<a href=#5026 id=5026 data-nosnippet>5026</a>
+<a href=#5027 id=5027 data-nosnippet>5027</a>    <span class="attr">#[tokio::test]
+<a href=#5028 id=5028 data-nosnippet>5028</a>    </span><span class="kw">async fn </span>filter_course_material_pages_does_not_initialize_lock_status_when_course_locking_is_disabled()
+<a href=#5029 id=5029 data-nosnippet>5029</a>     {
+<a href=#5030 id=5030 data-nosnippet>5030</a>        <span class="macro">insert_data!</span>(
+<a href=#5031 id=5031 data-nosnippet>5031</a>            :tx,
+<a href=#5032 id=5032 data-nosnippet>5032</a>            :user,
+<a href=#5033 id=5033 data-nosnippet>5033</a>            :org,
+<a href=#5034 id=5034 data-nosnippet>5034</a>            :course,
+<a href=#5035 id=5035 data-nosnippet>5035</a>            instance: _instance,
+<a href=#5036 id=5036 data-nosnippet>5036</a>            :course_module,
+<a href=#5037 id=5037 data-nosnippet>5037</a>            chapter: chapter_id,
+<a href=#5038 id=5038 data-nosnippet>5038</a>            page: page_id
+<a href=#5039 id=5039 data-nosnippet>5039</a>        );
 <a href=#5040 id=5040 data-nosnippet>5040</a>
-<a href=#5041 id=5041 data-nosnippet>5041</a>        update_page_content(
-<a href=#5042 id=5042 data-nosnippet>5042</a>            tx.as_mut(),
-<a href=#5043 id=5043 data-nosnippet>5043</a>            page_id,
-<a href=#5044 id=5044 data-nosnippet>5044</a>            <span class="kw-2">&amp;</span>serde_json::to_value(<span class="macro">vec!</span>[lock_chapter_test_block(<span class="string">"Model solution"</span>)]).unwrap(),
-<a href=#5045 id=5045 data-nosnippet>5045</a>        )
-<a href=#5046 id=5046 data-nosnippet>5046</a>        .<span class="kw">await
-<a href=#5047 id=5047 data-nosnippet>5047</a>        </span>.unwrap();
-<a href=#5048 id=5048 data-nosnippet>5048</a>
-<a href=#5049 id=5049 data-nosnippet>5049</a>        <span class="kw">let </span>status = user_chapter_locking_statuses::get_or_init_status(
-<a href=#5050 id=5050 data-nosnippet>5050</a>            tx.as_mut(),
-<a href=#5051 id=5051 data-nosnippet>5051</a>            user,
-<a href=#5052 id=5052 data-nosnippet>5052</a>            chapter_id,
-<a href=#5053 id=5053 data-nosnippet>5053</a>            <span class="prelude-val">Some</span>(course),
-<a href=#5054 id=5054 data-nosnippet>5054</a>            <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
-<a href=#5055 id=5055 data-nosnippet>5055</a>        )
-<a href=#5056 id=5056 data-nosnippet>5056</a>        .<span class="kw">await
-<a href=#5057 id=5057 data-nosnippet>5057</a>        </span>.unwrap();
-<a href=#5058 id=5058 data-nosnippet>5058</a>
-<a href=#5059 id=5059 data-nosnippet>5059</a>        <span class="kw">let </span>page = get_page(tx.as_mut(), page_id).<span class="kw">await</span>.unwrap();
-<a href=#5060 id=5060 data-nosnippet>5060</a>        <span class="kw">let </span>filtered_pages = filter_course_material_pages(tx.as_mut(), <span class="prelude-val">Some</span>(user), <span class="macro">vec!</span>[page])
-<a href=#5061 id=5061 data-nosnippet>5061</a>            .<span class="kw">await
-<a href=#5062 id=5062 data-nosnippet>5062</a>            </span>.unwrap();
-<a href=#5063 id=5063 data-nosnippet>5063</a>
-<a href=#5064 id=5064 data-nosnippet>5064</a>        <span class="macro">assert_eq!</span>(first_lock_chapter_inner_block_count(<span class="kw-2">&amp;</span>filtered_pages[<span class="number">0</span>]), <span class="number">0</span>);
+<a href=#5041 id=5041 data-nosnippet>5041</a>        set_course_chapter_locking_enabled(tx.as_mut(), course, <span class="bool-val">false</span>).<span class="kw">await</span>;
+<a href=#5042 id=5042 data-nosnippet>5042</a>
+<a href=#5043 id=5043 data-nosnippet>5043</a>        update_page_content(
+<a href=#5044 id=5044 data-nosnippet>5044</a>            tx.as_mut(),
+<a href=#5045 id=5045 data-nosnippet>5045</a>            page_id,
+<a href=#5046 id=5046 data-nosnippet>5046</a>            <span class="kw-2">&amp;</span>serde_json::to_value(<span class="macro">vec!</span>[lock_chapter_test_block(<span class="string">"Model solution"</span>)]).unwrap(),
+<a href=#5047 id=5047 data-nosnippet>5047</a>        )
+<a href=#5048 id=5048 data-nosnippet>5048</a>        .<span class="kw">await
+<a href=#5049 id=5049 data-nosnippet>5049</a>        </span>.unwrap();
+<a href=#5050 id=5050 data-nosnippet>5050</a>
+<a href=#5051 id=5051 data-nosnippet>5051</a>        <span class="kw">let </span>status = user_chapter_locking_statuses::get_or_init_status(
+<a href=#5052 id=5052 data-nosnippet>5052</a>            tx.as_mut(),
+<a href=#5053 id=5053 data-nosnippet>5053</a>            user,
+<a href=#5054 id=5054 data-nosnippet>5054</a>            chapter_id,
+<a href=#5055 id=5055 data-nosnippet>5055</a>            <span class="prelude-val">Some</span>(course),
+<a href=#5056 id=5056 data-nosnippet>5056</a>            <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
+<a href=#5057 id=5057 data-nosnippet>5057</a>        )
+<a href=#5058 id=5058 data-nosnippet>5058</a>        .<span class="kw">await
+<a href=#5059 id=5059 data-nosnippet>5059</a>        </span>.unwrap();
+<a href=#5060 id=5060 data-nosnippet>5060</a>
+<a href=#5061 id=5061 data-nosnippet>5061</a>        <span class="kw">let </span>page = get_page(tx.as_mut(), page_id).<span class="kw">await</span>.unwrap();
+<a href=#5062 id=5062 data-nosnippet>5062</a>        <span class="kw">let </span>filtered_pages = filter_course_material_pages(tx.as_mut(), <span class="prelude-val">Some</span>(user), <span class="macro">vec!</span>[page])
+<a href=#5063 id=5063 data-nosnippet>5063</a>            .<span class="kw">await
+<a href=#5064 id=5064 data-nosnippet>5064</a>            </span>.unwrap();
 <a href=#5065 id=5065 data-nosnippet>5065</a>
-<a href=#5066 id=5066 data-nosnippet>5066</a>        <span class="macro">assert!</span>(status.is_none());
-<a href=#5067 id=5067 data-nosnippet>5067</a>    }
-<a href=#5068 id=5068 data-nosnippet>5068</a>
-<a href=#5069 id=5069 data-nosnippet>5069</a>    <span class="attr">#[tokio::test]
-<a href=#5070 id=5070 data-nosnippet>5070</a>    </span><span class="kw">async fn </span>page_search_results_do_not_leak_hidden_lock_chapter_snippet_text() {
-<a href=#5071 id=5071 data-nosnippet>5071</a>        <span class="macro">insert_data!</span>(
-<a href=#5072 id=5072 data-nosnippet>5072</a>            :tx,
-<a href=#5073 id=5073 data-nosnippet>5073</a>            :user,
-<a href=#5074 id=5074 data-nosnippet>5074</a>            :org,
-<a href=#5075 id=5075 data-nosnippet>5075</a>            :course,
-<a href=#5076 id=5076 data-nosnippet>5076</a>            instance: _instance,
-<a href=#5077 id=5077 data-nosnippet>5077</a>            :course_module,
-<a href=#5078 id=5078 data-nosnippet>5078</a>            chapter: _chapter_id,
-<a href=#5079 id=5079 data-nosnippet>5079</a>            page: page_id
-<a href=#5080 id=5080 data-nosnippet>5080</a>        );
-<a href=#5081 id=5081 data-nosnippet>5081</a>
-<a href=#5082 id=5082 data-nosnippet>5082</a>        update_page_content(
-<a href=#5083 id=5083 data-nosnippet>5083</a>            tx.as_mut(),
-<a href=#5084 id=5084 data-nosnippet>5084</a>            page_id,
-<a href=#5085 id=5085 data-nosnippet>5085</a>            <span class="kw-2">&amp;</span>serde_json::to_value(<span class="macro">vec!</span>[
-<a href=#5086 id=5086 data-nosnippet>5086</a>                GutenbergBlock::paragraph(<span class="string">"Visible introduction"</span>),
-<a href=#5087 id=5087 data-nosnippet>5087</a>                lock_chapter_test_block(<span class="string">"Model solution"</span>),
-<a href=#5088 id=5088 data-nosnippet>5088</a>            ])
-<a href=#5089 id=5089 data-nosnippet>5089</a>            .unwrap(),
-<a href=#5090 id=5090 data-nosnippet>5090</a>        )
-<a href=#5091 id=5091 data-nosnippet>5091</a>        .<span class="kw">await
-<a href=#5092 id=5092 data-nosnippet>5092</a>        </span>.unwrap();
-<a href=#5093 id=5093 data-nosnippet>5093</a>
-<a href=#5094 id=5094 data-nosnippet>5094</a>        <span class="kw">let </span>results = get_page_search_results_for_words(
-<a href=#5095 id=5095 data-nosnippet>5095</a>            tx.as_mut(),
-<a href=#5096 id=5096 data-nosnippet>5096</a>            course,
-<a href=#5097 id=5097 data-nosnippet>5097</a>            <span class="kw-2">&amp;</span>SearchRequest {
-<a href=#5098 id=5098 data-nosnippet>5098</a>                query: <span class="string">"Visible"</span>.to_string(),
-<a href=#5099 id=5099 data-nosnippet>5099</a>            },
-<a href=#5100 id=5100 data-nosnippet>5100</a>        )
-<a href=#5101 id=5101 data-nosnippet>5101</a>        .<span class="kw">await
-<a href=#5102 id=5102 data-nosnippet>5102</a>        </span>.unwrap();
-<a href=#5103 id=5103 data-nosnippet>5103</a>
-<a href=#5104 id=5104 data-nosnippet>5104</a>        <span class="kw">let </span>result = results
-<a href=#5105 id=5105 data-nosnippet>5105</a>            .iter()
-<a href=#5106 id=5106 data-nosnippet>5106</a>            .find(|result| result.id == page_id)
-<a href=#5107 id=5107 data-nosnippet>5107</a>            .expect(<span class="string">"page should match visible content query"</span>);
-<a href=#5108 id=5108 data-nosnippet>5108</a>        <span class="kw">let </span>content_headline = result.content_headline.as_deref().unwrap_or_default();
-<a href=#5109 id=5109 data-nosnippet>5109</a>
-<a href=#5110 id=5110 data-nosnippet>5110</a>        <span class="macro">assert!</span>(!content_headline.contains(<span class="string">"Model solution"</span>));
-<a href=#5111 id=5111 data-nosnippet>5111</a>    }
-<a href=#5112 id=5112 data-nosnippet>5112</a>
-<a href=#5113 id=5113 data-nosnippet>5113</a>    <span class="attr">#[tokio::test]
-<a href=#5114 id=5114 data-nosnippet>5114</a>    </span><span class="kw">async fn </span>page_upsert_peer_reviews_work() {
-<a href=#5115 id=5115 data-nosnippet>5115</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, chapter: _chapter, page: _page, exercise: exercise_id);
-<a href=#5116 id=5116 data-nosnippet>5116</a>        <span class="kw">let </span>pr_id = Uuid::parse_str(<span class="string">"9b69dc5e-0eca-4fcd-8fd2-031a3a65da82"</span>).unwrap();
-<a href=#5117 id=5117 data-nosnippet>5117</a>        <span class="kw">let </span>prq_id = Uuid::parse_str(<span class="string">"de18fa14-4ac6-4b57-b9f8-4843fa52d948"</span>).unwrap();
-<a href=#5118 id=5118 data-nosnippet>5118</a>        <span class="kw">let </span>exercise = <span class="kw">crate</span>::exercises::get_by_id(tx.as_mut(), exercise_id)
-<a href=#5119 id=5119 data-nosnippet>5119</a>            .<span class="kw">await
-<a href=#5120 id=5120 data-nosnippet>5120</a>            </span>.unwrap();
-<a href=#5121 id=5121 data-nosnippet>5121</a>
-<a href=#5122 id=5122 data-nosnippet>5122</a>        <span class="kw">let </span>pr1 = CmsPeerOrSelfReviewConfig {
-<a href=#5123 id=5123 data-nosnippet>5123</a>            id:pr_id,
-<a href=#5124 id=5124 data-nosnippet>5124</a>            exercise_id: <span class="prelude-val">Some</span>(exercise_id),
-<a href=#5125 id=5125 data-nosnippet>5125</a>            course_id: course,
-<a href=#5126 id=5126 data-nosnippet>5126</a>            processing_strategy: <span class="kw">crate</span>::peer_or_self_review_configs::PeerReviewProcessingStrategy::AutomaticallyGradeOrManualReviewByAverage,
-<a href=#5127 id=5127 data-nosnippet>5127</a>            accepting_threshold: <span class="number">0.5</span>,
-<a href=#5128 id=5128 data-nosnippet>5128</a>            peer_reviews_to_give: <span class="number">2</span>,
-<a href=#5129 id=5129 data-nosnippet>5129</a>            peer_reviews_to_receive: <span class="number">1</span>,
-<a href=#5130 id=5130 data-nosnippet>5130</a>            points_are_all_or_nothing: <span class="bool-val">false</span>,
-<a href=#5131 id=5131 data-nosnippet>5131</a>            reset_answer_if_zero_points_from_review: <span class="bool-val">false</span>,
-<a href=#5132 id=5132 data-nosnippet>5132</a>            review_instructions: <span class="prelude-val">None</span>,
-<a href=#5133 id=5133 data-nosnippet>5133</a>        };
-<a href=#5134 id=5134 data-nosnippet>5134</a>        <span class="kw">let </span>prq = CmsPeerOrSelfReviewQuestion {
-<a href=#5135 id=5135 data-nosnippet>5135</a>            id: prq_id,
-<a href=#5136 id=5136 data-nosnippet>5136</a>            peer_or_self_review_config_id: pr_id,
-<a href=#5137 id=5137 data-nosnippet>5137</a>            answer_required: <span class="bool-val">true</span>,
-<a href=#5138 id=5138 data-nosnippet>5138</a>            order_number: <span class="number">0</span>,
-<a href=#5139 id=5139 data-nosnippet>5139</a>            question: <span class="string">"juu"</span>.to_string(),
-<a href=#5140 id=5140 data-nosnippet>5140</a>            question_type:
-<a href=#5141 id=5141 data-nosnippet>5141</a>                <span class="kw">crate</span>::peer_or_self_review_questions::PeerOrSelfReviewQuestionType::Essay,
-<a href=#5142 id=5142 data-nosnippet>5142</a>            weight: <span class="number">0.31</span>,
-<a href=#5143 id=5143 data-nosnippet>5143</a>        };
-<a href=#5144 id=5144 data-nosnippet>5144</a>        <span class="kw">let </span><span class="kw-2">mut </span>remapped_exercises = HashMap::new();
-<a href=#5145 id=5145 data-nosnippet>5145</a>        remapped_exercises.insert(exercise_id, exercise);
-<a href=#5146 id=5146 data-nosnippet>5146</a>        <span class="kw">let </span>pr_res = upsert_peer_or_self_review_configs(
-<a href=#5147 id=5147 data-nosnippet>5147</a>            tx.as_mut(),
-<a href=#5148 id=5148 data-nosnippet>5148</a>            <span class="kw-2">&amp;</span>[],
-<a href=#5149 id=5149 data-nosnippet>5149</a>            <span class="kw-2">&amp;</span>[pr1],
-<a href=#5150 id=5150 data-nosnippet>5150</a>            <span class="kw-2">&amp;</span>remapped_exercises,
-<a href=#5151 id=5151 data-nosnippet>5151</a>            <span class="bool-val">false</span>,
-<a href=#5152 id=5152 data-nosnippet>5152</a>        )
-<a href=#5153 id=5153 data-nosnippet>5153</a>        .<span class="kw">await
-<a href=#5154 id=5154 data-nosnippet>5154</a>        </span>.unwrap();
-<a href=#5155 id=5155 data-nosnippet>5155</a>        <span class="kw">let </span>prq_res =
-<a href=#5156 id=5156 data-nosnippet>5156</a>            upsert_peer_or_self_review_questions(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[prq], <span class="kw-2">&amp;</span>pr_res, <span class="bool-val">false</span>)
-<a href=#5157 id=5157 data-nosnippet>5157</a>                .<span class="kw">await
-<a href=#5158 id=5158 data-nosnippet>5158</a>                </span>.unwrap();
-<a href=#5159 id=5159 data-nosnippet>5159</a>
-<a href=#5160 id=5160 data-nosnippet>5160</a>        <span class="macro">assert!</span>(pr_res.get(<span class="kw-2">&amp;</span>pr_id).unwrap().accepting_threshold == <span class="number">0.5</span>);
+<a href=#5066 id=5066 data-nosnippet>5066</a>        <span class="macro">assert_eq!</span>(first_lock_chapter_inner_block_count(<span class="kw-2">&amp;</span>filtered_pages[<span class="number">0</span>]), <span class="number">0</span>);
+<a href=#5067 id=5067 data-nosnippet>5067</a>
+<a href=#5068 id=5068 data-nosnippet>5068</a>        <span class="macro">assert!</span>(status.is_none());
+<a href=#5069 id=5069 data-nosnippet>5069</a>    }
+<a href=#5070 id=5070 data-nosnippet>5070</a>
+<a href=#5071 id=5071 data-nosnippet>5071</a>    <span class="attr">#[tokio::test]
+<a href=#5072 id=5072 data-nosnippet>5072</a>    </span><span class="kw">async fn </span>page_search_results_do_not_leak_hidden_lock_chapter_snippet_text() {
+<a href=#5073 id=5073 data-nosnippet>5073</a>        <span class="macro">insert_data!</span>(
+<a href=#5074 id=5074 data-nosnippet>5074</a>            :tx,
+<a href=#5075 id=5075 data-nosnippet>5075</a>            :user,
+<a href=#5076 id=5076 data-nosnippet>5076</a>            :org,
+<a href=#5077 id=5077 data-nosnippet>5077</a>            :course,
+<a href=#5078 id=5078 data-nosnippet>5078</a>            instance: _instance,
+<a href=#5079 id=5079 data-nosnippet>5079</a>            :course_module,
+<a href=#5080 id=5080 data-nosnippet>5080</a>            chapter: _chapter_id,
+<a href=#5081 id=5081 data-nosnippet>5081</a>            page: page_id
+<a href=#5082 id=5082 data-nosnippet>5082</a>        );
+<a href=#5083 id=5083 data-nosnippet>5083</a>
+<a href=#5084 id=5084 data-nosnippet>5084</a>        update_page_content(
+<a href=#5085 id=5085 data-nosnippet>5085</a>            tx.as_mut(),
+<a href=#5086 id=5086 data-nosnippet>5086</a>            page_id,
+<a href=#5087 id=5087 data-nosnippet>5087</a>            <span class="kw-2">&amp;</span>serde_json::to_value(<span class="macro">vec!</span>[
+<a href=#5088 id=5088 data-nosnippet>5088</a>                GutenbergBlock::paragraph(<span class="string">"Visible introduction"</span>),
+<a href=#5089 id=5089 data-nosnippet>5089</a>                lock_chapter_test_block(<span class="string">"Model solution"</span>),
+<a href=#5090 id=5090 data-nosnippet>5090</a>            ])
+<a href=#5091 id=5091 data-nosnippet>5091</a>            .unwrap(),
+<a href=#5092 id=5092 data-nosnippet>5092</a>        )
+<a href=#5093 id=5093 data-nosnippet>5093</a>        .<span class="kw">await
+<a href=#5094 id=5094 data-nosnippet>5094</a>        </span>.unwrap();
+<a href=#5095 id=5095 data-nosnippet>5095</a>
+<a href=#5096 id=5096 data-nosnippet>5096</a>        <span class="kw">let </span>results = get_page_search_results_for_words(
+<a href=#5097 id=5097 data-nosnippet>5097</a>            tx.as_mut(),
+<a href=#5098 id=5098 data-nosnippet>5098</a>            course,
+<a href=#5099 id=5099 data-nosnippet>5099</a>            <span class="kw-2">&amp;</span>SearchRequest {
+<a href=#5100 id=5100 data-nosnippet>5100</a>                query: <span class="string">"Visible"</span>.to_string(),
+<a href=#5101 id=5101 data-nosnippet>5101</a>            },
+<a href=#5102 id=5102 data-nosnippet>5102</a>        )
+<a href=#5103 id=5103 data-nosnippet>5103</a>        .<span class="kw">await
+<a href=#5104 id=5104 data-nosnippet>5104</a>        </span>.unwrap();
+<a href=#5105 id=5105 data-nosnippet>5105</a>
+<a href=#5106 id=5106 data-nosnippet>5106</a>        <span class="kw">let </span>result = results
+<a href=#5107 id=5107 data-nosnippet>5107</a>            .iter()
+<a href=#5108 id=5108 data-nosnippet>5108</a>            .find(|result| result.id == page_id)
+<a href=#5109 id=5109 data-nosnippet>5109</a>            .expect(<span class="string">"page should match visible content query"</span>);
+<a href=#5110 id=5110 data-nosnippet>5110</a>        <span class="kw">let </span>content_headline = result.content_headline.as_deref().unwrap_or_default();
+<a href=#5111 id=5111 data-nosnippet>5111</a>
+<a href=#5112 id=5112 data-nosnippet>5112</a>        <span class="macro">assert!</span>(!content_headline.contains(<span class="string">"Model solution"</span>));
+<a href=#5113 id=5113 data-nosnippet>5113</a>    }
+<a href=#5114 id=5114 data-nosnippet>5114</a>
+<a href=#5115 id=5115 data-nosnippet>5115</a>    <span class="attr">#[tokio::test]
+<a href=#5116 id=5116 data-nosnippet>5116</a>    </span><span class="kw">async fn </span>page_upsert_peer_reviews_work() {
+<a href=#5117 id=5117 data-nosnippet>5117</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, chapter: _chapter, page: _page, exercise: exercise_id);
+<a href=#5118 id=5118 data-nosnippet>5118</a>        <span class="kw">let </span>pr_id = Uuid::parse_str(<span class="string">"9b69dc5e-0eca-4fcd-8fd2-031a3a65da82"</span>).unwrap();
+<a href=#5119 id=5119 data-nosnippet>5119</a>        <span class="kw">let </span>prq_id = Uuid::parse_str(<span class="string">"de18fa14-4ac6-4b57-b9f8-4843fa52d948"</span>).unwrap();
+<a href=#5120 id=5120 data-nosnippet>5120</a>        <span class="kw">let </span>exercise = <span class="kw">crate</span>::exercises::get_by_id(tx.as_mut(), exercise_id)
+<a href=#5121 id=5121 data-nosnippet>5121</a>            .<span class="kw">await
+<a href=#5122 id=5122 data-nosnippet>5122</a>            </span>.unwrap();
+<a href=#5123 id=5123 data-nosnippet>5123</a>
+<a href=#5124 id=5124 data-nosnippet>5124</a>        <span class="kw">let </span>pr1 = CmsPeerOrSelfReviewConfig {
+<a href=#5125 id=5125 data-nosnippet>5125</a>            id:pr_id,
+<a href=#5126 id=5126 data-nosnippet>5126</a>            exercise_id: <span class="prelude-val">Some</span>(exercise_id),
+<a href=#5127 id=5127 data-nosnippet>5127</a>            course_id: course,
+<a href=#5128 id=5128 data-nosnippet>5128</a>            processing_strategy: <span class="kw">crate</span>::peer_or_self_review_configs::PeerReviewProcessingStrategy::AutomaticallyGradeOrManualReviewByAverage,
+<a href=#5129 id=5129 data-nosnippet>5129</a>            accepting_threshold: <span class="number">0.5</span>,
+<a href=#5130 id=5130 data-nosnippet>5130</a>            peer_reviews_to_give: <span class="number">2</span>,
+<a href=#5131 id=5131 data-nosnippet>5131</a>            peer_reviews_to_receive: <span class="number">1</span>,
+<a href=#5132 id=5132 data-nosnippet>5132</a>            points_are_all_or_nothing: <span class="bool-val">false</span>,
+<a href=#5133 id=5133 data-nosnippet>5133</a>            reset_answer_if_zero_points_from_review: <span class="bool-val">false</span>,
+<a href=#5134 id=5134 data-nosnippet>5134</a>            review_instructions: <span class="prelude-val">None</span>,
+<a href=#5135 id=5135 data-nosnippet>5135</a>        };
+<a href=#5136 id=5136 data-nosnippet>5136</a>        <span class="kw">let </span>prq = CmsPeerOrSelfReviewQuestion {
+<a href=#5137 id=5137 data-nosnippet>5137</a>            id: prq_id,
+<a href=#5138 id=5138 data-nosnippet>5138</a>            peer_or_self_review_config_id: pr_id,
+<a href=#5139 id=5139 data-nosnippet>5139</a>            answer_required: <span class="bool-val">true</span>,
+<a href=#5140 id=5140 data-nosnippet>5140</a>            order_number: <span class="number">0</span>,
+<a href=#5141 id=5141 data-nosnippet>5141</a>            question: <span class="string">"juu"</span>.to_string(),
+<a href=#5142 id=5142 data-nosnippet>5142</a>            question_type:
+<a href=#5143 id=5143 data-nosnippet>5143</a>                <span class="kw">crate</span>::peer_or_self_review_questions::PeerOrSelfReviewQuestionType::Essay,
+<a href=#5144 id=5144 data-nosnippet>5144</a>            weight: <span class="number">0.31</span>,
+<a href=#5145 id=5145 data-nosnippet>5145</a>        };
+<a href=#5146 id=5146 data-nosnippet>5146</a>        <span class="kw">let </span><span class="kw-2">mut </span>remapped_exercises = HashMap::new();
+<a href=#5147 id=5147 data-nosnippet>5147</a>        remapped_exercises.insert(exercise_id, exercise);
+<a href=#5148 id=5148 data-nosnippet>5148</a>        <span class="kw">let </span>pr_res = upsert_peer_or_self_review_configs(
+<a href=#5149 id=5149 data-nosnippet>5149</a>            tx.as_mut(),
+<a href=#5150 id=5150 data-nosnippet>5150</a>            <span class="kw-2">&amp;</span>[],
+<a href=#5151 id=5151 data-nosnippet>5151</a>            <span class="kw-2">&amp;</span>[pr1],
+<a href=#5152 id=5152 data-nosnippet>5152</a>            <span class="kw-2">&amp;</span>remapped_exercises,
+<a href=#5153 id=5153 data-nosnippet>5153</a>            <span class="bool-val">false</span>,
+<a href=#5154 id=5154 data-nosnippet>5154</a>        )
+<a href=#5155 id=5155 data-nosnippet>5155</a>        .<span class="kw">await
+<a href=#5156 id=5156 data-nosnippet>5156</a>        </span>.unwrap();
+<a href=#5157 id=5157 data-nosnippet>5157</a>        <span class="kw">let </span>prq_res =
+<a href=#5158 id=5158 data-nosnippet>5158</a>            upsert_peer_or_self_review_questions(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[prq], <span class="kw-2">&amp;</span>pr_res, <span class="bool-val">false</span>)
+<a href=#5159 id=5159 data-nosnippet>5159</a>                .<span class="kw">await
+<a href=#5160 id=5160 data-nosnippet>5160</a>                </span>.unwrap();
 <a href=#5161 id=5161 data-nosnippet>5161</a>
-<a href=#5162 id=5162 data-nosnippet>5162</a>        <span class="macro">assert!</span>(prq_res.get(<span class="kw-2">&amp;</span>prq_id).unwrap().question == <span class="kw-2">*</span><span class="string">"juu"</span>);
-<a href=#5163 id=5163 data-nosnippet>5163</a>        <span class="macro">assert!</span>(!pr_res.get(<span class="kw-2">&amp;</span>pr_id).unwrap().points_are_all_or_nothing);
-<a href=#5164 id=5164 data-nosnippet>5164</a>        <span class="macro">assert_eq!</span>(prq_res.get(<span class="kw-2">&amp;</span>prq_id).unwrap().weight, <span class="number">0.31</span>);
-<a href=#5165 id=5165 data-nosnippet>5165</a>    }
-<a href=#5166 id=5166 data-nosnippet>5166</a>
-<a href=#5167 id=5167 data-nosnippet>5167</a>    <span class="attr">#[tokio::test]
-<a href=#5168 id=5168 data-nosnippet>5168</a>    </span><span class="kw">async fn </span>page_upsert_peer_reviews_work_retain_ids() {
-<a href=#5169 id=5169 data-nosnippet>5169</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, chapter: _chapter, page: _page, exercise: exercise_id);
-<a href=#5170 id=5170 data-nosnippet>5170</a>        <span class="kw">let </span>exercise = <span class="kw">crate</span>::exercises::get_by_id(tx.as_mut(), exercise_id)
-<a href=#5171 id=5171 data-nosnippet>5171</a>            .<span class="kw">await
-<a href=#5172 id=5172 data-nosnippet>5172</a>            </span>.unwrap();
-<a href=#5173 id=5173 data-nosnippet>5173</a>        <span class="kw">let </span>pr_id = Uuid::parse_str(<span class="string">"9b69dc5e-0eca-4fcd-8fd2-031a3a65da82"</span>).unwrap();
-<a href=#5174 id=5174 data-nosnippet>5174</a>        <span class="kw">let </span>prq_id = Uuid::parse_str(<span class="string">"de18fa14-4ac6-4b57-b9f8-4843fa52d948"</span>).unwrap();
-<a href=#5175 id=5175 data-nosnippet>5175</a>        <span class="kw">let </span>pr1 = CmsPeerOrSelfReviewConfig {
-<a href=#5176 id=5176 data-nosnippet>5176</a>            id:pr_id,
-<a href=#5177 id=5177 data-nosnippet>5177</a>            exercise_id: <span class="prelude-val">Some</span>(exercise_id),
-<a href=#5178 id=5178 data-nosnippet>5178</a>            course_id: course,
-<a href=#5179 id=5179 data-nosnippet>5179</a>            processing_strategy: <span class="kw">crate</span>::peer_or_self_review_configs::PeerReviewProcessingStrategy::AutomaticallyGradeOrManualReviewByAverage,
-<a href=#5180 id=5180 data-nosnippet>5180</a>            accepting_threshold: <span class="number">0.5</span>,
-<a href=#5181 id=5181 data-nosnippet>5181</a>            peer_reviews_to_give: <span class="number">2</span>,
-<a href=#5182 id=5182 data-nosnippet>5182</a>            peer_reviews_to_receive: <span class="number">1</span>,
-<a href=#5183 id=5183 data-nosnippet>5183</a>            points_are_all_or_nothing: <span class="bool-val">true</span>,
-<a href=#5184 id=5184 data-nosnippet>5184</a>            reset_answer_if_zero_points_from_review: <span class="bool-val">false</span>,
-<a href=#5185 id=5185 data-nosnippet>5185</a>            review_instructions: <span class="prelude-val">None</span>,
-<a href=#5186 id=5186 data-nosnippet>5186</a>        };
-<a href=#5187 id=5187 data-nosnippet>5187</a>        <span class="kw">let </span>prq = CmsPeerOrSelfReviewQuestion {
-<a href=#5188 id=5188 data-nosnippet>5188</a>            id: prq_id,
-<a href=#5189 id=5189 data-nosnippet>5189</a>            peer_or_self_review_config_id: pr_id,
-<a href=#5190 id=5190 data-nosnippet>5190</a>            answer_required: <span class="bool-val">true</span>,
-<a href=#5191 id=5191 data-nosnippet>5191</a>            order_number: <span class="number">0</span>,
-<a href=#5192 id=5192 data-nosnippet>5192</a>            question: <span class="string">"juu"</span>.to_string(),
-<a href=#5193 id=5193 data-nosnippet>5193</a>            question_type:
-<a href=#5194 id=5194 data-nosnippet>5194</a>                <span class="kw">crate</span>::peer_or_self_review_questions::PeerOrSelfReviewQuestionType::Essay,
-<a href=#5195 id=5195 data-nosnippet>5195</a>            weight: <span class="number">0.0</span>,
-<a href=#5196 id=5196 data-nosnippet>5196</a>        };
-<a href=#5197 id=5197 data-nosnippet>5197</a>        <span class="kw">let </span><span class="kw-2">mut </span>remapped_exercises = HashMap::new();
-<a href=#5198 id=5198 data-nosnippet>5198</a>        remapped_exercises.insert(exercise_id, exercise);
-<a href=#5199 id=5199 data-nosnippet>5199</a>        <span class="kw">let </span>pr_res =
-<a href=#5200 id=5200 data-nosnippet>5200</a>            upsert_peer_or_self_review_configs(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[pr1], <span class="kw-2">&amp;</span>remapped_exercises, <span class="bool-val">true</span>)
-<a href=#5201 id=5201 data-nosnippet>5201</a>                .<span class="kw">await
-<a href=#5202 id=5202 data-nosnippet>5202</a>                </span>.unwrap();
-<a href=#5203 id=5203 data-nosnippet>5203</a>        <span class="kw">let </span>prq_res = upsert_peer_or_self_review_questions(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[prq], <span class="kw-2">&amp;</span>pr_res, <span class="bool-val">true</span>)
-<a href=#5204 id=5204 data-nosnippet>5204</a>            .<span class="kw">await
-<a href=#5205 id=5205 data-nosnippet>5205</a>            </span>.unwrap();
-<a href=#5206 id=5206 data-nosnippet>5206</a>
-<a href=#5207 id=5207 data-nosnippet>5207</a>        <span class="macro">assert!</span>(pr_res.get(<span class="kw-2">&amp;</span>pr_id).unwrap().accepting_threshold == <span class="number">0.5</span>);
-<a href=#5208 id=5208 data-nosnippet>5208</a>        <span class="macro">assert!</span>(pr_res.get(<span class="kw-2">&amp;</span>pr_id).unwrap().id == pr_id);
-<a href=#5209 id=5209 data-nosnippet>5209</a>
-<a href=#5210 id=5210 data-nosnippet>5210</a>        <span class="macro">assert!</span>(prq_res.get(<span class="kw-2">&amp;</span>prq_id).unwrap().id == prq_id);
-<a href=#5211 id=5211 data-nosnippet>5211</a>        <span class="macro">assert!</span>(prq_res.get(<span class="kw-2">&amp;</span>prq_id).unwrap().question == <span class="kw-2">*</span><span class="string">"juu"</span>);
-<a href=#5212 id=5212 data-nosnippet>5212</a>    }
-<a href=#5213 id=5213 data-nosnippet>5213</a>
-<a href=#5214 id=5214 data-nosnippet>5214</a>    <span class="attr">#[tokio::test]
-<a href=#5215 id=5215 data-nosnippet>5215</a>    </span><span class="kw">async fn </span>page_upsert_peer_reviews_work_empty() {
-<a href=#5216 id=5216 data-nosnippet>5216</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, chapter: _chapter, page: _page, exercise: exercise_id);
-<a href=#5217 id=5217 data-nosnippet>5217</a>        <span class="kw">let </span>exercise = <span class="kw">crate</span>::exercises::get_by_id(tx.as_mut(), exercise_id)
-<a href=#5218 id=5218 data-nosnippet>5218</a>            .<span class="kw">await
-<a href=#5219 id=5219 data-nosnippet>5219</a>            </span>.unwrap();
-<a href=#5220 id=5220 data-nosnippet>5220</a>        <span class="kw">let </span><span class="kw-2">mut </span>remapped_exercises = HashMap::new();
-<a href=#5221 id=5221 data-nosnippet>5221</a>        remapped_exercises.insert(exercise_id, exercise);
-<a href=#5222 id=5222 data-nosnippet>5222</a>        <span class="kw">let </span>pr_res =
-<a href=#5223 id=5223 data-nosnippet>5223</a>            upsert_peer_or_self_review_configs(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>remapped_exercises, <span class="bool-val">true</span>)
-<a href=#5224 id=5224 data-nosnippet>5224</a>                .<span class="kw">await
-<a href=#5225 id=5225 data-nosnippet>5225</a>                </span>.unwrap();
-<a href=#5226 id=5226 data-nosnippet>5226</a>        <span class="kw">let </span>prq_res = upsert_peer_or_self_review_questions(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>pr_res, <span class="bool-val">true</span>)
-<a href=#5227 id=5227 data-nosnippet>5227</a>            .<span class="kw">await
-<a href=#5228 id=5228 data-nosnippet>5228</a>            </span>.unwrap();
-<a href=#5229 id=5229 data-nosnippet>5229</a>
-<a href=#5230 id=5230 data-nosnippet>5230</a>        <span class="macro">assert!</span>(pr_res.is_empty());
-<a href=#5231 id=5231 data-nosnippet>5231</a>        <span class="macro">assert!</span>(prq_res.is_empty());
-<a href=#5232 id=5232 data-nosnippet>5232</a>    }
-<a href=#5233 id=5233 data-nosnippet>5233</a>
-<a href=#5234 id=5234 data-nosnippet>5234</a>    <span class="attr">#[tokio::test]
-<a href=#5235 id=5235 data-nosnippet>5235</a>    </span><span class="kw">async fn </span>reorder_top_level_pages_works() {
-<a href=#5236 id=5236 data-nosnippet>5236</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course);
-<a href=#5237 id=5237 data-nosnippet>5237</a>
-<a href=#5238 id=5238 data-nosnippet>5238</a>        <span class="comment">// First, delete any existing pages in this course to ensure a clean slate
-<a href=#5239 id=5239 data-nosnippet>5239</a>        </span><span class="kw">let </span>existing_pages =
-<a href=#5240 id=5240 data-nosnippet>5240</a>            get_all_by_course_id_and_visibility(tx.as_mut(), course, PageVisibility::Any)
-<a href=#5241 id=5241 data-nosnippet>5241</a>                .<span class="kw">await
-<a href=#5242 id=5242 data-nosnippet>5242</a>                </span>.unwrap();
-<a href=#5243 id=5243 data-nosnippet>5243</a>        <span class="kw">for </span>page <span class="kw">in </span><span class="kw-2">&amp;</span>existing_pages {
-<a href=#5244 id=5244 data-nosnippet>5244</a>            delete_page_and_exercises(tx.as_mut(), page.id, user)
-<a href=#5245 id=5245 data-nosnippet>5245</a>                .<span class="kw">await
-<a href=#5246 id=5246 data-nosnippet>5246</a>                </span>.unwrap();
-<a href=#5247 id=5247 data-nosnippet>5247</a>        }
-<a href=#5248 id=5248 data-nosnippet>5248</a>
-<a href=#5249 id=5249 data-nosnippet>5249</a>        <span class="comment">// Create our test pages
-<a href=#5250 id=5250 data-nosnippet>5250</a>        </span><span class="kw">let </span>page1 = NewCoursePage::new(course, <span class="number">0</span>, <span class="string">"top-page-1"</span>, <span class="string">"Top Page 1"</span>);
-<a href=#5251 id=5251 data-nosnippet>5251</a>        <span class="kw">let </span>(page1_id, <span class="kw">_</span>) = insert_course_page(tx.as_mut(), <span class="kw-2">&amp;</span>page1, user).<span class="kw">await</span>.unwrap();
-<a href=#5252 id=5252 data-nosnippet>5252</a>        <span class="kw">let </span>page2 = NewCoursePage::new(course, <span class="number">1</span>, <span class="string">"top-page-2"</span>, <span class="string">"Top Page 2"</span>);
-<a href=#5253 id=5253 data-nosnippet>5253</a>        <span class="kw">let </span>(page2_id, <span class="kw">_</span>) = insert_course_page(tx.as_mut(), <span class="kw-2">&amp;</span>page2, user).<span class="kw">await</span>.unwrap();
-<a href=#5254 id=5254 data-nosnippet>5254</a>        <span class="kw">let </span>page3 = NewCoursePage::new(course, <span class="number">2</span>, <span class="string">"top-page-3"</span>, <span class="string">"Top Page 3"</span>);
-<a href=#5255 id=5255 data-nosnippet>5255</a>        <span class="kw">let </span>(page3_id, <span class="kw">_</span>) = insert_course_page(tx.as_mut(), <span class="kw-2">&amp;</span>page3, user).<span class="kw">await</span>.unwrap();
-<a href=#5256 id=5256 data-nosnippet>5256</a>
-<a href=#5257 id=5257 data-nosnippet>5257</a>        <span class="kw">let </span><span class="kw-2">mut </span>pages =
-<a href=#5258 id=5258 data-nosnippet>5258</a>            get_all_by_course_id_and_visibility(tx.as_mut(), course, PageVisibility::Any)
-<a href=#5259 id=5259 data-nosnippet>5259</a>                .<span class="kw">await
-<a href=#5260 id=5260 data-nosnippet>5260</a>                </span>.unwrap();
-<a href=#5261 id=5261 data-nosnippet>5261</a>
-<a href=#5262 id=5262 data-nosnippet>5262</a>        <span class="kw">let </span>page1_index = pages.iter().position(|p| p.id == page1_id).unwrap();
-<a href=#5263 id=5263 data-nosnippet>5263</a>        <span class="kw">let </span>page2_index = pages.iter().position(|p| p.id == page2_id).unwrap();
-<a href=#5264 id=5264 data-nosnippet>5264</a>        <span class="kw">let </span>page3_index = pages.iter().position(|p| p.id == page3_id).unwrap();
-<a href=#5265 id=5265 data-nosnippet>5265</a>
-<a href=#5266 id=5266 data-nosnippet>5266</a>        pages[page1_index].order_number = <span class="number">2</span>;
-<a href=#5267 id=5267 data-nosnippet>5267</a>        pages[page3_index].order_number = <span class="number">1</span>;
-<a href=#5268 id=5268 data-nosnippet>5268</a>        pages[page2_index].order_number = <span class="number">3</span>;
-<a href=#5269 id=5269 data-nosnippet>5269</a>
-<a href=#5270 id=5270 data-nosnippet>5270</a>        <span class="comment">// Apply the reordering
-<a href=#5271 id=5271 data-nosnippet>5271</a>        </span>reorder_pages(tx.as_mut(), <span class="kw-2">&amp;</span>pages, course).<span class="kw">await</span>.unwrap();
-<a href=#5272 id=5272 data-nosnippet>5272</a>
-<a href=#5273 id=5273 data-nosnippet>5273</a>        <span class="comment">// Check that the reordering took effect
-<a href=#5274 id=5274 data-nosnippet>5274</a>        </span><span class="kw">let </span>page1_updated = get_page(tx.as_mut(), page1_id).<span class="kw">await</span>.unwrap();
-<a href=#5275 id=5275 data-nosnippet>5275</a>        <span class="kw">let </span>page2_updated = get_page(tx.as_mut(), page2_id).<span class="kw">await</span>.unwrap();
-<a href=#5276 id=5276 data-nosnippet>5276</a>        <span class="kw">let </span>page3_updated = get_page(tx.as_mut(), page3_id).<span class="kw">await</span>.unwrap();
-<a href=#5277 id=5277 data-nosnippet>5277</a>
-<a href=#5278 id=5278 data-nosnippet>5278</a>        <span class="macro">assert_eq!</span>(page1_updated.order_number, <span class="number">2</span>);
-<a href=#5279 id=5279 data-nosnippet>5279</a>        <span class="macro">assert_eq!</span>(page2_updated.order_number, <span class="number">3</span>);
-<a href=#5280 id=5280 data-nosnippet>5280</a>        <span class="macro">assert_eq!</span>(page3_updated.order_number, <span class="number">1</span>);
-<a href=#5281 id=5281 data-nosnippet>5281</a>    }
-<a href=#5282 id=5282 data-nosnippet>5282</a>}
+<a href=#5162 id=5162 data-nosnippet>5162</a>        <span class="macro">assert!</span>(pr_res.get(<span class="kw-2">&amp;</span>pr_id).unwrap().accepting_threshold == <span class="number">0.5</span>);
+<a href=#5163 id=5163 data-nosnippet>5163</a>
+<a href=#5164 id=5164 data-nosnippet>5164</a>        <span class="macro">assert!</span>(prq_res.get(<span class="kw-2">&amp;</span>prq_id).unwrap().question == <span class="kw-2">*</span><span class="string">"juu"</span>);
+<a href=#5165 id=5165 data-nosnippet>5165</a>        <span class="macro">assert!</span>(!pr_res.get(<span class="kw-2">&amp;</span>pr_id).unwrap().points_are_all_or_nothing);
+<a href=#5166 id=5166 data-nosnippet>5166</a>        <span class="macro">assert_eq!</span>(prq_res.get(<span class="kw-2">&amp;</span>prq_id).unwrap().weight, <span class="number">0.31</span>);
+<a href=#5167 id=5167 data-nosnippet>5167</a>    }
+<a href=#5168 id=5168 data-nosnippet>5168</a>
+<a href=#5169 id=5169 data-nosnippet>5169</a>    <span class="attr">#[tokio::test]
+<a href=#5170 id=5170 data-nosnippet>5170</a>    </span><span class="kw">async fn </span>page_upsert_peer_reviews_work_retain_ids() {
+<a href=#5171 id=5171 data-nosnippet>5171</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, chapter: _chapter, page: _page, exercise: exercise_id);
+<a href=#5172 id=5172 data-nosnippet>5172</a>        <span class="kw">let </span>exercise = <span class="kw">crate</span>::exercises::get_by_id(tx.as_mut(), exercise_id)
+<a href=#5173 id=5173 data-nosnippet>5173</a>            .<span class="kw">await
+<a href=#5174 id=5174 data-nosnippet>5174</a>            </span>.unwrap();
+<a href=#5175 id=5175 data-nosnippet>5175</a>        <span class="kw">let </span>pr_id = Uuid::parse_str(<span class="string">"9b69dc5e-0eca-4fcd-8fd2-031a3a65da82"</span>).unwrap();
+<a href=#5176 id=5176 data-nosnippet>5176</a>        <span class="kw">let </span>prq_id = Uuid::parse_str(<span class="string">"de18fa14-4ac6-4b57-b9f8-4843fa52d948"</span>).unwrap();
+<a href=#5177 id=5177 data-nosnippet>5177</a>        <span class="kw">let </span>pr1 = CmsPeerOrSelfReviewConfig {
+<a href=#5178 id=5178 data-nosnippet>5178</a>            id:pr_id,
+<a href=#5179 id=5179 data-nosnippet>5179</a>            exercise_id: <span class="prelude-val">Some</span>(exercise_id),
+<a href=#5180 id=5180 data-nosnippet>5180</a>            course_id: course,
+<a href=#5181 id=5181 data-nosnippet>5181</a>            processing_strategy: <span class="kw">crate</span>::peer_or_self_review_configs::PeerReviewProcessingStrategy::AutomaticallyGradeOrManualReviewByAverage,
+<a href=#5182 id=5182 data-nosnippet>5182</a>            accepting_threshold: <span class="number">0.5</span>,
+<a href=#5183 id=5183 data-nosnippet>5183</a>            peer_reviews_to_give: <span class="number">2</span>,
+<a href=#5184 id=5184 data-nosnippet>5184</a>            peer_reviews_to_receive: <span class="number">1</span>,
+<a href=#5185 id=5185 data-nosnippet>5185</a>            points_are_all_or_nothing: <span class="bool-val">true</span>,
+<a href=#5186 id=5186 data-nosnippet>5186</a>            reset_answer_if_zero_points_from_review: <span class="bool-val">false</span>,
+<a href=#5187 id=5187 data-nosnippet>5187</a>            review_instructions: <span class="prelude-val">None</span>,
+<a href=#5188 id=5188 data-nosnippet>5188</a>        };
+<a href=#5189 id=5189 data-nosnippet>5189</a>        <span class="kw">let </span>prq = CmsPeerOrSelfReviewQuestion {
+<a href=#5190 id=5190 data-nosnippet>5190</a>            id: prq_id,
+<a href=#5191 id=5191 data-nosnippet>5191</a>            peer_or_self_review_config_id: pr_id,
+<a href=#5192 id=5192 data-nosnippet>5192</a>            answer_required: <span class="bool-val">true</span>,
+<a href=#5193 id=5193 data-nosnippet>5193</a>            order_number: <span class="number">0</span>,
+<a href=#5194 id=5194 data-nosnippet>5194</a>            question: <span class="string">"juu"</span>.to_string(),
+<a href=#5195 id=5195 data-nosnippet>5195</a>            question_type:
+<a href=#5196 id=5196 data-nosnippet>5196</a>                <span class="kw">crate</span>::peer_or_self_review_questions::PeerOrSelfReviewQuestionType::Essay,
+<a href=#5197 id=5197 data-nosnippet>5197</a>            weight: <span class="number">0.0</span>,
+<a href=#5198 id=5198 data-nosnippet>5198</a>        };
+<a href=#5199 id=5199 data-nosnippet>5199</a>        <span class="kw">let </span><span class="kw-2">mut </span>remapped_exercises = HashMap::new();
+<a href=#5200 id=5200 data-nosnippet>5200</a>        remapped_exercises.insert(exercise_id, exercise);
+<a href=#5201 id=5201 data-nosnippet>5201</a>        <span class="kw">let </span>pr_res =
+<a href=#5202 id=5202 data-nosnippet>5202</a>            upsert_peer_or_self_review_configs(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[pr1], <span class="kw-2">&amp;</span>remapped_exercises, <span class="bool-val">true</span>)
+<a href=#5203 id=5203 data-nosnippet>5203</a>                .<span class="kw">await
+<a href=#5204 id=5204 data-nosnippet>5204</a>                </span>.unwrap();
+<a href=#5205 id=5205 data-nosnippet>5205</a>        <span class="kw">let </span>prq_res = upsert_peer_or_self_review_questions(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[prq], <span class="kw-2">&amp;</span>pr_res, <span class="bool-val">true</span>)
+<a href=#5206 id=5206 data-nosnippet>5206</a>            .<span class="kw">await
+<a href=#5207 id=5207 data-nosnippet>5207</a>            </span>.unwrap();
+<a href=#5208 id=5208 data-nosnippet>5208</a>
+<a href=#5209 id=5209 data-nosnippet>5209</a>        <span class="macro">assert!</span>(pr_res.get(<span class="kw-2">&amp;</span>pr_id).unwrap().accepting_threshold == <span class="number">0.5</span>);
+<a href=#5210 id=5210 data-nosnippet>5210</a>        <span class="macro">assert!</span>(pr_res.get(<span class="kw-2">&amp;</span>pr_id).unwrap().id == pr_id);
+<a href=#5211 id=5211 data-nosnippet>5211</a>
+<a href=#5212 id=5212 data-nosnippet>5212</a>        <span class="macro">assert!</span>(prq_res.get(<span class="kw-2">&amp;</span>prq_id).unwrap().id == prq_id);
+<a href=#5213 id=5213 data-nosnippet>5213</a>        <span class="macro">assert!</span>(prq_res.get(<span class="kw-2">&amp;</span>prq_id).unwrap().question == <span class="kw-2">*</span><span class="string">"juu"</span>);
+<a href=#5214 id=5214 data-nosnippet>5214</a>    }
+<a href=#5215 id=5215 data-nosnippet>5215</a>
+<a href=#5216 id=5216 data-nosnippet>5216</a>    <span class="attr">#[tokio::test]
+<a href=#5217 id=5217 data-nosnippet>5217</a>    </span><span class="kw">async fn </span>page_upsert_peer_reviews_work_empty() {
+<a href=#5218 id=5218 data-nosnippet>5218</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, chapter: _chapter, page: _page, exercise: exercise_id);
+<a href=#5219 id=5219 data-nosnippet>5219</a>        <span class="kw">let </span>exercise = <span class="kw">crate</span>::exercises::get_by_id(tx.as_mut(), exercise_id)
+<a href=#5220 id=5220 data-nosnippet>5220</a>            .<span class="kw">await
+<a href=#5221 id=5221 data-nosnippet>5221</a>            </span>.unwrap();
+<a href=#5222 id=5222 data-nosnippet>5222</a>        <span class="kw">let </span><span class="kw-2">mut </span>remapped_exercises = HashMap::new();
+<a href=#5223 id=5223 data-nosnippet>5223</a>        remapped_exercises.insert(exercise_id, exercise);
+<a href=#5224 id=5224 data-nosnippet>5224</a>        <span class="kw">let </span>pr_res =
+<a href=#5225 id=5225 data-nosnippet>5225</a>            upsert_peer_or_self_review_configs(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>remapped_exercises, <span class="bool-val">true</span>)
+<a href=#5226 id=5226 data-nosnippet>5226</a>                .<span class="kw">await
+<a href=#5227 id=5227 data-nosnippet>5227</a>                </span>.unwrap();
+<a href=#5228 id=5228 data-nosnippet>5228</a>        <span class="kw">let </span>prq_res = upsert_peer_or_self_review_questions(tx.as_mut(), <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>pr_res, <span class="bool-val">true</span>)
+<a href=#5229 id=5229 data-nosnippet>5229</a>            .<span class="kw">await
+<a href=#5230 id=5230 data-nosnippet>5230</a>            </span>.unwrap();
+<a href=#5231 id=5231 data-nosnippet>5231</a>
+<a href=#5232 id=5232 data-nosnippet>5232</a>        <span class="macro">assert!</span>(pr_res.is_empty());
+<a href=#5233 id=5233 data-nosnippet>5233</a>        <span class="macro">assert!</span>(prq_res.is_empty());
+<a href=#5234 id=5234 data-nosnippet>5234</a>    }
+<a href=#5235 id=5235 data-nosnippet>5235</a>
+<a href=#5236 id=5236 data-nosnippet>5236</a>    <span class="attr">#[tokio::test]
+<a href=#5237 id=5237 data-nosnippet>5237</a>    </span><span class="kw">async fn </span>reorder_top_level_pages_works() {
+<a href=#5238 id=5238 data-nosnippet>5238</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course);
+<a href=#5239 id=5239 data-nosnippet>5239</a>
+<a href=#5240 id=5240 data-nosnippet>5240</a>        <span class="comment">// First, delete any existing pages in this course to ensure a clean slate
+<a href=#5241 id=5241 data-nosnippet>5241</a>        </span><span class="kw">let </span>existing_pages =
+<a href=#5242 id=5242 data-nosnippet>5242</a>            get_all_by_course_id_and_visibility(tx.as_mut(), course, PageVisibility::Any)
+<a href=#5243 id=5243 data-nosnippet>5243</a>                .<span class="kw">await
+<a href=#5244 id=5244 data-nosnippet>5244</a>                </span>.unwrap();
+<a href=#5245 id=5245 data-nosnippet>5245</a>        <span class="kw">for </span>page <span class="kw">in </span><span class="kw-2">&amp;</span>existing_pages {
+<a href=#5246 id=5246 data-nosnippet>5246</a>            delete_page_and_exercises(tx.as_mut(), page.id, user)
+<a href=#5247 id=5247 data-nosnippet>5247</a>                .<span class="kw">await
+<a href=#5248 id=5248 data-nosnippet>5248</a>                </span>.unwrap();
+<a href=#5249 id=5249 data-nosnippet>5249</a>        }
+<a href=#5250 id=5250 data-nosnippet>5250</a>
+<a href=#5251 id=5251 data-nosnippet>5251</a>        <span class="comment">// Create our test pages
+<a href=#5252 id=5252 data-nosnippet>5252</a>        </span><span class="kw">let </span>page1 = NewCoursePage::new(course, <span class="number">0</span>, <span class="string">"top-page-1"</span>, <span class="string">"Top Page 1"</span>);
+<a href=#5253 id=5253 data-nosnippet>5253</a>        <span class="kw">let </span>(page1_id, <span class="kw">_</span>) = insert_course_page(tx.as_mut(), <span class="kw-2">&amp;</span>page1, user).<span class="kw">await</span>.unwrap();
+<a href=#5254 id=5254 data-nosnippet>5254</a>        <span class="kw">let </span>page2 = NewCoursePage::new(course, <span class="number">1</span>, <span class="string">"top-page-2"</span>, <span class="string">"Top Page 2"</span>);
+<a href=#5255 id=5255 data-nosnippet>5255</a>        <span class="kw">let </span>(page2_id, <span class="kw">_</span>) = insert_course_page(tx.as_mut(), <span class="kw-2">&amp;</span>page2, user).<span class="kw">await</span>.unwrap();
+<a href=#5256 id=5256 data-nosnippet>5256</a>        <span class="kw">let </span>page3 = NewCoursePage::new(course, <span class="number">2</span>, <span class="string">"top-page-3"</span>, <span class="string">"Top Page 3"</span>);
+<a href=#5257 id=5257 data-nosnippet>5257</a>        <span class="kw">let </span>(page3_id, <span class="kw">_</span>) = insert_course_page(tx.as_mut(), <span class="kw-2">&amp;</span>page3, user).<span class="kw">await</span>.unwrap();
+<a href=#5258 id=5258 data-nosnippet>5258</a>
+<a href=#5259 id=5259 data-nosnippet>5259</a>        <span class="kw">let </span><span class="kw-2">mut </span>pages =
+<a href=#5260 id=5260 data-nosnippet>5260</a>            get_all_by_course_id_and_visibility(tx.as_mut(), course, PageVisibility::Any)
+<a href=#5261 id=5261 data-nosnippet>5261</a>                .<span class="kw">await
+<a href=#5262 id=5262 data-nosnippet>5262</a>                </span>.unwrap();
+<a href=#5263 id=5263 data-nosnippet>5263</a>
+<a href=#5264 id=5264 data-nosnippet>5264</a>        <span class="kw">let </span>page1_index = pages.iter().position(|p| p.id == page1_id).unwrap();
+<a href=#5265 id=5265 data-nosnippet>5265</a>        <span class="kw">let </span>page2_index = pages.iter().position(|p| p.id == page2_id).unwrap();
+<a href=#5266 id=5266 data-nosnippet>5266</a>        <span class="kw">let </span>page3_index = pages.iter().position(|p| p.id == page3_id).unwrap();
+<a href=#5267 id=5267 data-nosnippet>5267</a>
+<a href=#5268 id=5268 data-nosnippet>5268</a>        pages[page1_index].order_number = <span class="number">2</span>;
+<a href=#5269 id=5269 data-nosnippet>5269</a>        pages[page3_index].order_number = <span class="number">1</span>;
+<a href=#5270 id=5270 data-nosnippet>5270</a>        pages[page2_index].order_number = <span class="number">3</span>;
+<a href=#5271 id=5271 data-nosnippet>5271</a>
+<a href=#5272 id=5272 data-nosnippet>5272</a>        <span class="comment">// Apply the reordering
+<a href=#5273 id=5273 data-nosnippet>5273</a>        </span>reorder_pages(tx.as_mut(), <span class="kw-2">&amp;</span>pages, course).<span class="kw">await</span>.unwrap();
+<a href=#5274 id=5274 data-nosnippet>5274</a>
+<a href=#5275 id=5275 data-nosnippet>5275</a>        <span class="comment">// Check that the reordering took effect
+<a href=#5276 id=5276 data-nosnippet>5276</a>        </span><span class="kw">let </span>page1_updated = get_page(tx.as_mut(), page1_id).<span class="kw">await</span>.unwrap();
+<a href=#5277 id=5277 data-nosnippet>5277</a>        <span class="kw">let </span>page2_updated = get_page(tx.as_mut(), page2_id).<span class="kw">await</span>.unwrap();
+<a href=#5278 id=5278 data-nosnippet>5278</a>        <span class="kw">let </span>page3_updated = get_page(tx.as_mut(), page3_id).<span class="kw">await</span>.unwrap();
+<a href=#5279 id=5279 data-nosnippet>5279</a>
+<a href=#5280 id=5280 data-nosnippet>5280</a>        <span class="macro">assert_eq!</span>(page1_updated.order_number, <span class="number">2</span>);
+<a href=#5281 id=5281 data-nosnippet>5281</a>        <span class="macro">assert_eq!</span>(page2_updated.order_number, <span class="number">3</span>);
+<a href=#5282 id=5282 data-nosnippet>5282</a>        <span class="macro">assert_eq!</span>(page3_updated.order_number, <span class="number">1</span>);
+<a href=#5283 id=5283 data-nosnippet>5283</a>    }
+<a href=#5284 id=5284 data-nosnippet>5284</a>}
 </code></pre></div></section></main></body></html>

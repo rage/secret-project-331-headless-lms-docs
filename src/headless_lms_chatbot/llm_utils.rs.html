@@ -699,7 +699,7 @@
 <a href=#699 id=699 data-nosnippet>699</a>    };
 <a href=#700 id=700 data-nosnippet>700</a>
 <a href=#701 id=701 data-nosnippet>701</a>    <span class="kw">let </span>headers = build_llm_headers(<span class="kw-2">&amp;</span>chatbot_config.api_key)<span class="question-mark">?</span>;
-<a href=#702 id=702 data-nosnippet>702</a>    <span class="kw">let </span>api_endpoint = chatbot_config.api_endpoint.to_owned();
+<a href=#702 id=702 data-nosnippet>702</a>    <span class="kw">let </span>api_endpoint = chatbot_config.responses_endpoint()<span class="question-mark">?</span>;
 <a href=#703 id=703 data-nosnippet>703</a>    <span class="macro">debug!</span>(
 <a href=#704 id=704 data-nosnippet>704</a>        <span class="string">"Sending streaming request to LLM endpoint: {}"</span>,
 <a href=#705 id=705 data-nosnippet>705</a>        api_endpoint
@@ -790,7 +790,7 @@
 <a href=#790 id=790 data-nosnippet>790</a>        </span>)
 <a href=#791 id=791 data-nosnippet>791</a>    })<span class="question-mark">?</span>;
 <a href=#792 id=792 data-nosnippet>792</a>
-<a href=#793 id=793 data-nosnippet>793</a>    <span class="kw">let </span>api_endpoint = chatbot_config.api_endpoint.to_owned();
+<a href=#793 id=793 data-nosnippet>793</a>    <span class="kw">let </span>api_endpoint = chatbot_config.responses_endpoint()<span class="question-mark">?</span>;
 <a href=#794 id=794 data-nosnippet>794</a>
 <a href=#795 id=795 data-nosnippet>795</a>    <span class="macro">trace!</span>(<span class="string">"Making LLM request to endpoint: {}"</span>, api_endpoint);
 <a href=#796 id=796 data-nosnippet>796</a>    make_llm_request(chat_request, <span class="kw-2">&amp;</span>api_endpoint, <span class="kw-2">&amp;</span>chatbot_config.api_key).<span class="kw">await

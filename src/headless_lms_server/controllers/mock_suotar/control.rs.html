@@ -264,120 +264,121 @@
 <a href=#264 id=264 data-nosnippet>264</a>            test_chatbot: <span class="bool-val">false</span>,
 <a href=#265 id=265 data-nosnippet>265</a>            test_sisu: <span class="bool-val">false</span>,
 <a href=#266 id=266 data-nosnippet>266</a>            test_suotar,
-<a href=#267 id=267 data-nosnippet>267</a>            development_uuid_login: <span class="bool-val">false</span>,
-<a href=#268 id=268 data-nosnippet>268</a>            enable_admin_email_verification: <span class="bool-val">false</span>,
-<a href=#269 id=269 data-nosnippet>269</a>            enable_email_ownership_verification: <span class="bool-val">false</span>,
-<a href=#270 id=270 data-nosnippet>270</a>            azure_configuration: <span class="prelude-val">None</span>,
-<a href=#271 id=271 data-nosnippet>271</a>            suotar_configuration: SuotarConfiguration::mock_conf(<span class="string">"http://project-331.local"</span>)
-<a href=#272 id=272 data-nosnippet>272</a>                .expect(<span class="string">"the mock configuration is built from a constant base url"</span>),
-<a href=#273 id=273 data-nosnippet>273</a>            tmc_account_creation_origin: <span class="prelude-val">None</span>,
-<a href=#274 id=274 data-nosnippet>274</a>            tmc_admin_access_token: SecretString::new(<span class="string">"mock-access-token"</span>.to_string().into()),
-<a href=#275 id=275 data-nosnippet>275</a>            oauth_server_configuration: OAuthServerConfiguration {
-<a href=#276 id=276 data-nosnippet>276</a>                rsa_public_key: <span class="string">"test"</span>.into(),
-<a href=#277 id=277 data-nosnippet>277</a>                rsa_private_key: SecretString::new(<span class="string">"test"</span>.into()),
-<a href=#278 id=278 data-nosnippet>278</a>                oauth_token_hmac_key: SecretString::new(<span class="string">"test"</span>.into()),
-<a href=#279 id=279 data-nosnippet>279</a>                dpop_nonce_key: Arc::new(SecretBox::new(Box::new(<span class="string">"test"</span>.into()))),
-<a href=#280 id=280 data-nosnippet>280</a>            },
-<a href=#281 id=281 data-nosnippet>281</a>        }
-<a href=#282 id=282 data-nosnippet>282</a>    }
-<a href=#283 id=283 data-nosnippet>283</a>
-<a href=#284 id=284 data-nosnippet>284</a>    <span class="doccomment">/// Registers the real controller tree so the test sees the same gate production does. The pool is
-<a href=#285 id=285 data-nosnippet>285</a>    /// never connected, so only phases that answer before they would need one can be driven here.
-<a href=#286 id=286 data-nosnippet>286</a>    </span><span class="kw">async fn </span>call_run_tick(
-<a href=#287 id=287 data-nosnippet>287</a>        test_suotar: bool,
-<a href=#288 id=288 data-nosnippet>288</a>        query: <span class="kw-2">&amp;</span>str,
-<a href=#289 id=289 data-nosnippet>289</a>    ) -&gt; actix_web::dev::ServiceResponse&lt;actix_web::body::BoxBody&gt; {
-<a href=#290 id=290 data-nosnippet>290</a>        <span class="kw">let </span>app_conf = Data::new(app_conf(test_suotar));
-<a href=#291 id=291 data-nosnippet>291</a>        <span class="kw">let </span>pool = Data::new(
-<a href=#292 id=292 data-nosnippet>292</a>            PgPool::connect_lazy(<span class="string">"postgres://headless-lms@localhost:54328/headless_lms_dev"</span>)
-<a href=#293 id=293 data-nosnippet>293</a>                .expect(<span class="string">"a lazy pool only parses the url"</span>),
-<a href=#294 id=294 data-nosnippet>294</a>        );
-<a href=#295 id=295 data-nosnippet>295</a>        <span class="kw">let </span>service = test::init_service(
-<a href=#296 id=296 data-nosnippet>296</a>            App::new()
-<a href=#297 id=297 data-nosnippet>297</a>                .app_data(pool)
-<a href=#298 id=298 data-nosnippet>298</a>                .app_data(Data::new(SuotarClient::mock_for_test()))
-<a href=#299 id=299 data-nosnippet>299</a>                .app_data(app_conf.clone())
-<a href=#300 id=300 data-nosnippet>300</a>                .service(
-<a href=#301 id=301 data-nosnippet>301</a>                    web::scope(<span class="string">"/api/v0"</span>)
-<a href=#302 id=302 data-nosnippet>302</a>                        .configure(|cfg| configure_controllers(cfg, app_conf.clone())),
-<a href=#303 id=303 data-nosnippet>303</a>                ),
-<a href=#304 id=304 data-nosnippet>304</a>        )
-<a href=#305 id=305 data-nosnippet>305</a>        .<span class="kw">await</span>;
-<a href=#306 id=306 data-nosnippet>306</a>        <span class="kw">let </span>req = test::TestRequest::post()
-<a href=#307 id=307 data-nosnippet>307</a>            .uri(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"/api/v0/mock-suotar/control/run-tick{query}"</span>))
-<a href=#308 id=308 data-nosnippet>308</a>            .to_request();
-<a href=#309 id=309 data-nosnippet>309</a>        test::call_service(<span class="kw-2">&amp;</span>service, req).<span class="kw">await
-<a href=#310 id=310 data-nosnippet>310</a>    </span>}
-<a href=#311 id=311 data-nosnippet>311</a>
-<a href=#312 id=312 data-nosnippet>312</a>    <span class="attr">#[actix_web::test]
-<a href=#313 id=313 data-nosnippet>313</a>    </span><span class="kw">async fn </span>run_tick_reports_phase_not_implemented_when_the_mock_is_enabled() {
-<a href=#314 id=314 data-nosnippet>314</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">true</span>, <span class="string">"?phase=retention-sweep"</span>).<span class="kw">await</span>;
-<a href=#315 id=315 data-nosnippet>315</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::NOT_IMPLEMENTED);
-<a href=#316 id=316 data-nosnippet>316</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
-<a href=#317 id=317 data-nosnippet>317</a>        <span class="macro">assert_eq!</span>(
-<a href=#318 id=318 data-nosnippet>318</a>            body,
-<a href=#319 id=319 data-nosnippet>319</a>            PhaseTickResult::PhaseNotImplemented {
-<a href=#320 id=320 data-nosnippet>320</a>                phase: <span class="string">"retention-sweep"</span>.to_string()
-<a href=#321 id=321 data-nosnippet>321</a>            }
-<a href=#322 id=322 data-nosnippet>322</a>        );
-<a href=#323 id=323 data-nosnippet>323</a>    }
-<a href=#324 id=324 data-nosnippet>324</a>
-<a href=#325 id=325 data-nosnippet>325</a>    <span class="doccomment">/// Without the flag the routes must be absent, not merely refuse.
-<a href=#326 id=326 data-nosnippet>326</a>    </span><span class="attr">#[actix_web::test]
-<a href=#327 id=327 data-nosnippet>327</a>    </span><span class="kw">async fn </span>run_tick_is_absent_when_the_mock_is_disabled() {
-<a href=#328 id=328 data-nosnippet>328</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">false</span>, <span class="string">"?phase=verify"</span>).<span class="kw">await</span>;
-<a href=#329 id=329 data-nosnippet>329</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::NOT_FOUND);
-<a href=#330 id=330 data-nosnippet>330</a>    }
-<a href=#331 id=331 data-nosnippet>331</a>
-<a href=#332 id=332 data-nosnippet>332</a>    <span class="doccomment">/// A typed refusal rather than a 404 or a 500, so a spec written against an unbuilt phase fails
-<a href=#333 id=333 data-nosnippet>333</a>    /// legibly.
-<a href=#334 id=334 data-nosnippet>334</a>    </span><span class="attr">#[actix_web::test]
-<a href=#335 id=335 data-nosnippet>335</a>    </span><span class="kw">async fn </span>a_phase_that_is_not_built_yet_dispatches_to_a_typed_refusal() {
-<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw">for </span>phase <span class="kw">in </span>CreditRegistrationPhase::ALL
-<a href=#337 id=337 data-nosnippet>337</a>            .into_iter()
-<a href=#338 id=338 data-nosnippet>338</a>            .filter(|phase| phase.scope_support() == ScopeSupport::NONE)
-<a href=#339 id=339 data-nosnippet>339</a>        {
-<a href=#340 id=340 data-nosnippet>340</a>            <span class="kw">let </span>res = call_run_tick(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"?phase={}"</span>, phase.as_str())).<span class="kw">await</span>;
-<a href=#341 id=341 data-nosnippet>341</a>            <span class="macro">assert_eq!</span>(
-<a href=#342 id=342 data-nosnippet>342</a>                res.status(),
-<a href=#343 id=343 data-nosnippet>343</a>                StatusCode::NOT_IMPLEMENTED,
-<a href=#344 id=344 data-nosnippet>344</a>                <span class="string">"phase {} did not dispatch"</span>,
-<a href=#345 id=345 data-nosnippet>345</a>                phase.as_str()
-<a href=#346 id=346 data-nosnippet>346</a>            );
-<a href=#347 id=347 data-nosnippet>347</a>        }
-<a href=#348 id=348 data-nosnippet>348</a>    }
-<a href=#349 id=349 data-nosnippet>349</a>
-<a href=#350 id=350 data-nosnippet>350</a>    <span class="doccomment">/// A caller that asked to be narrowed and cannot be must be told, not quietly run wide over a
-<a href=#351 id=351 data-nosnippet>351</a>    /// shared database.
-<a href=#352 id=352 data-nosnippet>352</a>    </span><span class="attr">#[actix_web::test]
-<a href=#353 id=353 data-nosnippet>353</a>    </span><span class="kw">async fn </span>a_scope_a_phase_cannot_apply_is_refused() {
-<a href=#354 id=354 data-nosnippet>354</a>        <span class="kw">let </span>res = call_run_tick(
-<a href=#355 id=355 data-nosnippet>355</a>            <span class="bool-val">true</span>,
-<a href=#356 id=356 data-nosnippet>356</a>            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"?phase=retention-sweep&amp;courseId={}"</span>, Uuid::new_v4()),
-<a href=#357 id=357 data-nosnippet>357</a>        )
-<a href=#358 id=358 data-nosnippet>358</a>        .<span class="kw">await</span>;
-<a href=#359 id=359 data-nosnippet>359</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::BAD_REQUEST);
-<a href=#360 id=360 data-nosnippet>360</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
-<a href=#361 id=361 data-nosnippet>361</a>        <span class="macro">assert_eq!</span>(
-<a href=#362 id=362 data-nosnippet>362</a>            body,
-<a href=#363 id=363 data-nosnippet>363</a>            PhaseTickResult::ScopeNotSupported {
-<a href=#364 id=364 data-nosnippet>364</a>                phase: <span class="string">"retention-sweep"</span>.to_string()
-<a href=#365 id=365 data-nosnippet>365</a>            }
-<a href=#366 id=366 data-nosnippet>366</a>        );
-<a href=#367 id=367 data-nosnippet>367</a>    }
-<a href=#368 id=368 data-nosnippet>368</a>
-<a href=#369 id=369 data-nosnippet>369</a>    <span class="attr">#[actix_web::test]
-<a href=#370 id=370 data-nosnippet>370</a>    </span><span class="kw">async fn </span>an_invented_phase_name_is_rejected() {
-<a href=#371 id=371 data-nosnippet>371</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">true</span>, <span class="string">"?phase=materialise"</span>).<span class="kw">await</span>;
-<a href=#372 id=372 data-nosnippet>372</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::BAD_REQUEST);
-<a href=#373 id=373 data-nosnippet>373</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
-<a href=#374 id=374 data-nosnippet>374</a>        <span class="macro">assert_eq!</span>(
-<a href=#375 id=375 data-nosnippet>375</a>            body,
-<a href=#376 id=376 data-nosnippet>376</a>            PhaseTickResult::UnknownPhase {
-<a href=#377 id=377 data-nosnippet>377</a>                phase: <span class="prelude-val">Some</span>(<span class="string">"materialise"</span>.to_string()),
-<a href=#378 id=378 data-nosnippet>378</a>                known_phases: known_phase_names(),
-<a href=#379 id=379 data-nosnippet>379</a>            }
-<a href=#380 id=380 data-nosnippet>380</a>        );
-<a href=#381 id=381 data-nosnippet>381</a>    }
-<a href=#382 id=382 data-nosnippet>382</a>}
+<a href=#267 id=267 data-nosnippet>267</a>            disable_embedding_vector_creation_when_seeding: <span class="bool-val">false</span>,
+<a href=#268 id=268 data-nosnippet>268</a>            development_uuid_login: <span class="bool-val">false</span>,
+<a href=#269 id=269 data-nosnippet>269</a>            enable_admin_email_verification: <span class="bool-val">false</span>,
+<a href=#270 id=270 data-nosnippet>270</a>            enable_email_ownership_verification: <span class="bool-val">false</span>,
+<a href=#271 id=271 data-nosnippet>271</a>            azure_configuration: <span class="prelude-val">None</span>,
+<a href=#272 id=272 data-nosnippet>272</a>            suotar_configuration: SuotarConfiguration::mock_conf(<span class="string">"http://project-331.local"</span>)
+<a href=#273 id=273 data-nosnippet>273</a>                .expect(<span class="string">"the mock configuration is built from a constant base url"</span>),
+<a href=#274 id=274 data-nosnippet>274</a>            tmc_account_creation_origin: <span class="prelude-val">None</span>,
+<a href=#275 id=275 data-nosnippet>275</a>            tmc_admin_access_token: SecretString::new(<span class="string">"mock-access-token"</span>.to_string().into()),
+<a href=#276 id=276 data-nosnippet>276</a>            oauth_server_configuration: OAuthServerConfiguration {
+<a href=#277 id=277 data-nosnippet>277</a>                rsa_public_key: <span class="string">"test"</span>.into(),
+<a href=#278 id=278 data-nosnippet>278</a>                rsa_private_key: SecretString::new(<span class="string">"test"</span>.into()),
+<a href=#279 id=279 data-nosnippet>279</a>                oauth_token_hmac_key: SecretString::new(<span class="string">"test"</span>.into()),
+<a href=#280 id=280 data-nosnippet>280</a>                dpop_nonce_key: Arc::new(SecretBox::new(Box::new(<span class="string">"test"</span>.into()))),
+<a href=#281 id=281 data-nosnippet>281</a>            },
+<a href=#282 id=282 data-nosnippet>282</a>        }
+<a href=#283 id=283 data-nosnippet>283</a>    }
+<a href=#284 id=284 data-nosnippet>284</a>
+<a href=#285 id=285 data-nosnippet>285</a>    <span class="doccomment">/// Registers the real controller tree so the test sees the same gate production does. The pool is
+<a href=#286 id=286 data-nosnippet>286</a>    /// never connected, so only phases that answer before they would need one can be driven here.
+<a href=#287 id=287 data-nosnippet>287</a>    </span><span class="kw">async fn </span>call_run_tick(
+<a href=#288 id=288 data-nosnippet>288</a>        test_suotar: bool,
+<a href=#289 id=289 data-nosnippet>289</a>        query: <span class="kw-2">&amp;</span>str,
+<a href=#290 id=290 data-nosnippet>290</a>    ) -&gt; actix_web::dev::ServiceResponse&lt;actix_web::body::BoxBody&gt; {
+<a href=#291 id=291 data-nosnippet>291</a>        <span class="kw">let </span>app_conf = Data::new(app_conf(test_suotar));
+<a href=#292 id=292 data-nosnippet>292</a>        <span class="kw">let </span>pool = Data::new(
+<a href=#293 id=293 data-nosnippet>293</a>            PgPool::connect_lazy(<span class="string">"postgres://headless-lms@localhost:54328/headless_lms_dev"</span>)
+<a href=#294 id=294 data-nosnippet>294</a>                .expect(<span class="string">"a lazy pool only parses the url"</span>),
+<a href=#295 id=295 data-nosnippet>295</a>        );
+<a href=#296 id=296 data-nosnippet>296</a>        <span class="kw">let </span>service = test::init_service(
+<a href=#297 id=297 data-nosnippet>297</a>            App::new()
+<a href=#298 id=298 data-nosnippet>298</a>                .app_data(pool)
+<a href=#299 id=299 data-nosnippet>299</a>                .app_data(Data::new(SuotarClient::mock_for_test()))
+<a href=#300 id=300 data-nosnippet>300</a>                .app_data(app_conf.clone())
+<a href=#301 id=301 data-nosnippet>301</a>                .service(
+<a href=#302 id=302 data-nosnippet>302</a>                    web::scope(<span class="string">"/api/v0"</span>)
+<a href=#303 id=303 data-nosnippet>303</a>                        .configure(|cfg| configure_controllers(cfg, app_conf.clone())),
+<a href=#304 id=304 data-nosnippet>304</a>                ),
+<a href=#305 id=305 data-nosnippet>305</a>        )
+<a href=#306 id=306 data-nosnippet>306</a>        .<span class="kw">await</span>;
+<a href=#307 id=307 data-nosnippet>307</a>        <span class="kw">let </span>req = test::TestRequest::post()
+<a href=#308 id=308 data-nosnippet>308</a>            .uri(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"/api/v0/mock-suotar/control/run-tick{query}"</span>))
+<a href=#309 id=309 data-nosnippet>309</a>            .to_request();
+<a href=#310 id=310 data-nosnippet>310</a>        test::call_service(<span class="kw-2">&amp;</span>service, req).<span class="kw">await
+<a href=#311 id=311 data-nosnippet>311</a>    </span>}
+<a href=#312 id=312 data-nosnippet>312</a>
+<a href=#313 id=313 data-nosnippet>313</a>    <span class="attr">#[actix_web::test]
+<a href=#314 id=314 data-nosnippet>314</a>    </span><span class="kw">async fn </span>run_tick_reports_phase_not_implemented_when_the_mock_is_enabled() {
+<a href=#315 id=315 data-nosnippet>315</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">true</span>, <span class="string">"?phase=retention-sweep"</span>).<span class="kw">await</span>;
+<a href=#316 id=316 data-nosnippet>316</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::NOT_IMPLEMENTED);
+<a href=#317 id=317 data-nosnippet>317</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
+<a href=#318 id=318 data-nosnippet>318</a>        <span class="macro">assert_eq!</span>(
+<a href=#319 id=319 data-nosnippet>319</a>            body,
+<a href=#320 id=320 data-nosnippet>320</a>            PhaseTickResult::PhaseNotImplemented {
+<a href=#321 id=321 data-nosnippet>321</a>                phase: <span class="string">"retention-sweep"</span>.to_string()
+<a href=#322 id=322 data-nosnippet>322</a>            }
+<a href=#323 id=323 data-nosnippet>323</a>        );
+<a href=#324 id=324 data-nosnippet>324</a>    }
+<a href=#325 id=325 data-nosnippet>325</a>
+<a href=#326 id=326 data-nosnippet>326</a>    <span class="doccomment">/// Without the flag the routes must be absent, not merely refuse.
+<a href=#327 id=327 data-nosnippet>327</a>    </span><span class="attr">#[actix_web::test]
+<a href=#328 id=328 data-nosnippet>328</a>    </span><span class="kw">async fn </span>run_tick_is_absent_when_the_mock_is_disabled() {
+<a href=#329 id=329 data-nosnippet>329</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">false</span>, <span class="string">"?phase=verify"</span>).<span class="kw">await</span>;
+<a href=#330 id=330 data-nosnippet>330</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::NOT_FOUND);
+<a href=#331 id=331 data-nosnippet>331</a>    }
+<a href=#332 id=332 data-nosnippet>332</a>
+<a href=#333 id=333 data-nosnippet>333</a>    <span class="doccomment">/// A typed refusal rather than a 404 or a 500, so a spec written against an unbuilt phase fails
+<a href=#334 id=334 data-nosnippet>334</a>    /// legibly.
+<a href=#335 id=335 data-nosnippet>335</a>    </span><span class="attr">#[actix_web::test]
+<a href=#336 id=336 data-nosnippet>336</a>    </span><span class="kw">async fn </span>a_phase_that_is_not_built_yet_dispatches_to_a_typed_refusal() {
+<a href=#337 id=337 data-nosnippet>337</a>        <span class="kw">for </span>phase <span class="kw">in </span>CreditRegistrationPhase::ALL
+<a href=#338 id=338 data-nosnippet>338</a>            .into_iter()
+<a href=#339 id=339 data-nosnippet>339</a>            .filter(|phase| phase.scope_support() == ScopeSupport::NONE)
+<a href=#340 id=340 data-nosnippet>340</a>        {
+<a href=#341 id=341 data-nosnippet>341</a>            <span class="kw">let </span>res = call_run_tick(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"?phase={}"</span>, phase.as_str())).<span class="kw">await</span>;
+<a href=#342 id=342 data-nosnippet>342</a>            <span class="macro">assert_eq!</span>(
+<a href=#343 id=343 data-nosnippet>343</a>                res.status(),
+<a href=#344 id=344 data-nosnippet>344</a>                StatusCode::NOT_IMPLEMENTED,
+<a href=#345 id=345 data-nosnippet>345</a>                <span class="string">"phase {} did not dispatch"</span>,
+<a href=#346 id=346 data-nosnippet>346</a>                phase.as_str()
+<a href=#347 id=347 data-nosnippet>347</a>            );
+<a href=#348 id=348 data-nosnippet>348</a>        }
+<a href=#349 id=349 data-nosnippet>349</a>    }
+<a href=#350 id=350 data-nosnippet>350</a>
+<a href=#351 id=351 data-nosnippet>351</a>    <span class="doccomment">/// A caller that asked to be narrowed and cannot be must be told, not quietly run wide over a
+<a href=#352 id=352 data-nosnippet>352</a>    /// shared database.
+<a href=#353 id=353 data-nosnippet>353</a>    </span><span class="attr">#[actix_web::test]
+<a href=#354 id=354 data-nosnippet>354</a>    </span><span class="kw">async fn </span>a_scope_a_phase_cannot_apply_is_refused() {
+<a href=#355 id=355 data-nosnippet>355</a>        <span class="kw">let </span>res = call_run_tick(
+<a href=#356 id=356 data-nosnippet>356</a>            <span class="bool-val">true</span>,
+<a href=#357 id=357 data-nosnippet>357</a>            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"?phase=retention-sweep&amp;courseId={}"</span>, Uuid::new_v4()),
+<a href=#358 id=358 data-nosnippet>358</a>        )
+<a href=#359 id=359 data-nosnippet>359</a>        .<span class="kw">await</span>;
+<a href=#360 id=360 data-nosnippet>360</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::BAD_REQUEST);
+<a href=#361 id=361 data-nosnippet>361</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
+<a href=#362 id=362 data-nosnippet>362</a>        <span class="macro">assert_eq!</span>(
+<a href=#363 id=363 data-nosnippet>363</a>            body,
+<a href=#364 id=364 data-nosnippet>364</a>            PhaseTickResult::ScopeNotSupported {
+<a href=#365 id=365 data-nosnippet>365</a>                phase: <span class="string">"retention-sweep"</span>.to_string()
+<a href=#366 id=366 data-nosnippet>366</a>            }
+<a href=#367 id=367 data-nosnippet>367</a>        );
+<a href=#368 id=368 data-nosnippet>368</a>    }
+<a href=#369 id=369 data-nosnippet>369</a>
+<a href=#370 id=370 data-nosnippet>370</a>    <span class="attr">#[actix_web::test]
+<a href=#371 id=371 data-nosnippet>371</a>    </span><span class="kw">async fn </span>an_invented_phase_name_is_rejected() {
+<a href=#372 id=372 data-nosnippet>372</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">true</span>, <span class="string">"?phase=materialise"</span>).<span class="kw">await</span>;
+<a href=#373 id=373 data-nosnippet>373</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::BAD_REQUEST);
+<a href=#374 id=374 data-nosnippet>374</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
+<a href=#375 id=375 data-nosnippet>375</a>        <span class="macro">assert_eq!</span>(
+<a href=#376 id=376 data-nosnippet>376</a>            body,
+<a href=#377 id=377 data-nosnippet>377</a>            PhaseTickResult::UnknownPhase {
+<a href=#378 id=378 data-nosnippet>378</a>                phase: <span class="prelude-val">Some</span>(<span class="string">"materialise"</span>.to_string()),
+<a href=#379 id=379 data-nosnippet>379</a>                known_phases: known_phase_names(),
+<a href=#380 id=380 data-nosnippet>380</a>            }
+<a href=#381 id=381 data-nosnippet>381</a>        );
+<a href=#382 id=382 data-nosnippet>382</a>    }
+<a href=#383 id=383 data-nosnippet>383</a>}
 </code></pre></div></section></main></body></html>
