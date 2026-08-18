@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_user_by_upstream_id"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_migration_status_by_upstream_id","get_user_by_upstream_id"],"struct":["UserMigrationStatusResponse"]};
