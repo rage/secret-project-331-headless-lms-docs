@@ -105,8 +105,8 @@ this <code>Receiver</code>, or until all <a href="struct.Sender.html" title="str
 <p>Returns a <a href="error/struct.RecvError.html" title="struct headless_lms_models::re_exports::tokio::sync::watch::error::RecvError"><code>RecvError</code></a> if the channel has been closed <strong>AND</strong>
 the current value is seen.</p>
 <h5 id="cancel-safety"><a class="doc-anchor" href="#cancel-safety">§</a>Cancel safety</h5>
-<p>This method is cancel safe. If you use it as the event in a
-<a href="../../macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> statement and some other branch
+<p>This method is cancel safe. If you use it as a branch in
+<a href="../../macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> and another branch
 completes first, then it is guaranteed that no values have been marked
 seen by this call to <code>changed</code>.</p>
 <h5 id="examples-2"><a class="doc-anchor" href="#examples-2">§</a>Examples</h5>
@@ -152,8 +152,8 @@ half to block. It is recommended to keep the borrow as short-lived as
 possible. See the documentation of <code>borrow</code> for more information on
 this.</p>
 <h5 id="cancel-safety-1"><a class="doc-anchor" href="#cancel-safety-1">§</a>Cancel safety</h5>
-<p>This method is cancel safe. If you use it as the event in a
-<a href="../../macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> statement and some other branch
+<p>This method is cancel safe. If you use it as a branch in
+<a href="../../macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> and another branch
 completes first, then it is guaranteed that the last seen value <code>val</code>
 (if any) satisfies <code>f(val) == false</code>.</p>
 <h5 id="panics"><a class="doc-anchor" href="#panics">§</a>Panics</h5>

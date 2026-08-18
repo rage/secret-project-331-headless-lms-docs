@@ -14,6 +14,8 @@ and it could not be created otherwise. The specific error conditions for
 when a directory is being created (after it is determined to not exist) are
 outlined by <a href="https://doc.rust-lang.org/1.96.1/std/fs/fn.create_dir.html" title="fn std::fs::create_dir"><code>fs::create_dir</code></a>.</li>
 </ul>
+<p>If the final component at <code>path</code> already exists and is a directory, this
+function will also return successfully without error.</p>
 <p>Notable exception is made for situations where any of the directories
 specified in the <code>path</code> could not be created as it was being created concurrently.
 Such cases are considered to be successful. That is, calling <code>create_dir_all</code>

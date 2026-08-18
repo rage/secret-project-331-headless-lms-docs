@@ -628,8 +628,8 @@ returns the number of bytes peeked.</p>
 <p>Successive calls return the same data. This is accomplished by passing
 <code>MSG_PEEK</code> as a flag to the underlying <code>recv</code> system call.</p>
 <h5 id="cancel-safety-3"><a class="doc-anchor" href="#cancel-safety-3">§</a>Cancel safety</h5>
-<p>This method is cancel safe. If the method is used as the event in a
-<a href="../macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> statement and some other branch
+<p>This method is cancel safe. If the method is used as a branch in
+<a href="../macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> and another branch
 completes first, then it is guaranteed that no peek was performed, and
 that <code>buf</code> has not been modified.</p>
 <h5 id="examples-15"><a class="doc-anchor" href="#examples-15">§</a>Examples</h5>

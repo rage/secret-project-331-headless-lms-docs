@@ -8,10 +8,11 @@ sufficient, you may be interested in using
 <a href="../tokio/runtime/struct.Builder.html">Builder</a>, which provides a more
 powerful interface.</p>
 <p>Note: This macro can be used on any function and not just the <code>main</code>
-function. Using it on a non-main function makes the function behave as if it
-was synchronous by starting a new runtime each time it is called. If the
-function is called often, it is preferable to create the runtime using the
-runtime builder so the runtime can be reused across calls.</p>
+function. Although the function is written with <code>async fn</code>, this macro
+expands it to a synchronous function that starts a runtime each time it is
+called. If the function is called often, it is preferable to create the
+runtime using the runtime builder so the runtime can be reused across calls.
+For details on the expansion, see <a href="https://tokio.rs/tokio/topics/bridging#what-tokiomain-expands-to">Bridging with sync code</a>.</p>
 <h2 id="non-worker-async-function"><a class="doc-anchor" href="#non-worker-async-function">§</a>Non-worker async function</h2>
 <p>Note that the async function marked with this macro does not run as a
 worker. The expectation is that other tasks are spawned by the function here.

@@ -1469,7 +1469,17 @@ member itself is always contained in the results.
     K: ToRedisArgs,
     G: ToRedisArgs,
     I: ToRedisArgs,
-    RV: FromRedisValue,</div></h4></section></summary><div class='docblock'>Ack pending stream messages checked out by a consumer. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.xadd" class="method trait-impl"><a href="#method.xadd" class="anchor">§</a><h4 class="code-header">fn <a class="fn">xadd</a>&lt;'a, K, ID, F, V, RV&gt;(
+    RV: FromRedisValue,</div></h4></section></summary><div class='docblock'>Ack pending stream messages checked out by a consumer. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.xnack" class="method trait-impl"><a href="#method.xnack" class="anchor">§</a><h4 class="code-header">fn <a class="fn">xnack</a>&lt;'a, K, G, ID, RV&gt;(
+    &amp;mut self,
+    key: K,
+    group: G,
+    ids: &amp;'a <a class="primitive" href="https://doc.rust-lang.org/1.96.1/std/primitive.slice.html">[ID]</a>,
+    options: &amp;'a StreamNackOptions,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.96.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;RV, RedisError&gt;<div class="where">where
+    K: ToSingleRedisArg,
+    G: ToSingleRedisArg,
+    ID: ToSingleRedisArg,
+    RV: FromRedisValue,</div></h4></section></summary><div class='docblock'>Negatively acknowledge (NACK) one or more pending stream messages. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.xadd" class="method trait-impl"><a href="#method.xadd" class="anchor">§</a><h4 class="code-header">fn <a class="fn">xadd</a>&lt;'a, K, ID, F, V, RV&gt;(
     &amp;mut self,
     key: K,
     id: ID,
@@ -3252,7 +3262,16 @@ member itself is always contained in the results.
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.96.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.96.1/std/primitive.usize.html">usize</a>, RedisError&gt;<div class="where">where
     K: ToRedisArgs + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'a,
     G: ToRedisArgs + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'a,
-    I: ToRedisArgs + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'a,</div></h4></section></summary><div class='docblock'>Ack pending stream messages checked out by a consumer. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.xadd-1" class="method trait-impl"><a href="#method.xadd-1" class="anchor">§</a><h4 class="code-header">fn <a class="fn">xadd</a>&lt;'a, K, ID, F, V&gt;(
+    I: ToRedisArgs + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'a,</div></h4></section></summary><div class='docblock'>Ack pending stream messages checked out by a consumer. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.xnack-1" class="method trait-impl"><a href="#method.xnack-1" class="anchor">§</a><h4 class="code-header">fn <a class="fn">xnack</a>&lt;'a, K, G, ID&gt;(
+    &amp;'a mut self,
+    key: K,
+    group: G,
+    ids: &amp;'a <a class="primitive" href="https://doc.rust-lang.org/1.96.1/std/primitive.slice.html">[ID]</a>,
+    options: &amp;'a StreamNackOptions,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.96.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.96.1/std/primitive.usize.html">usize</a>, RedisError&gt;<div class="where">where
+    K: ToSingleRedisArg + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'a,
+    G: ToSingleRedisArg + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'a,
+    ID: ToSingleRedisArg + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'a,</div></h4></section></summary><div class='docblock'>Negatively acknowledge (NACK) one or more pending stream messages. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.xadd-1" class="method trait-impl"><a href="#method.xadd-1" class="anchor">§</a><h4 class="code-header">fn <a class="fn">xadd</a>&lt;'a, K, ID, F, V&gt;(
     &amp;'a mut self,
     key: K,
     id: ID,

@@ -17,8 +17,8 @@ this function returns <code>Ok</code>.</p>
 being called or the <a href="struct.Receiver.html" title="struct headless_lms_models::re_exports::tokio::sync::mpsc::Receiver"><code>Receiver</code></a> handle dropping, the function returns
 an error. The error includes the value passed to <code>send</code>.</p>
 <h5 id="cancel-safety"><a class="doc-anchor" href="#cancel-safety">§</a>Cancel safety</h5>
-<p>If <code>send</code> is used as the event in a <a href="../../macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a>
-statement and some other branch completes first, then it is guaranteed
+<p>If <code>send</code> is used as a branch in <a href="../../macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> and
+another branch completes first, then it is guaranteed
 that the message was not sent. <strong>However, in that case, the message
 is dropped and will be lost.</strong></p>
 <p>To avoid losing messages, use <a href="struct.Sender.html#method.reserve" title="method headless_lms_models::re_exports::tokio::sync::mpsc::Sender::reserve"><code>reserve</code></a> to reserve

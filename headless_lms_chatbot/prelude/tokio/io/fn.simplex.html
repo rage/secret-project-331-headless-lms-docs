@@ -2,7 +2,7 @@
     max_buf_size: <a class="primitive" href="https://doc.rust-lang.org/1.96.1/std/primitive.usize.html">usize</a>,
 ) -&gt; (<a class="struct" href="struct.ReadHalf.html" title="struct headless_lms_chatbot::prelude::tokio::io::ReadHalf">ReadHalf</a>&lt;<a class="struct" href="struct.SimplexStream.html" title="struct headless_lms_chatbot::prelude::tokio::io::SimplexStream">SimplexStream</a>&gt;, <a class="struct" href="struct.WriteHalf.html" title="struct headless_lms_chatbot::prelude::tokio::io::WriteHalf">WriteHalf</a>&lt;<a class="struct" href="struct.SimplexStream.html" title="struct headless_lms_chatbot::prelude::tokio::io::SimplexStream">SimplexStream</a>&gt;)</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Creates unidirectional buffer that acts like in memory pipe.</p>
 <p>The <code>max_buf_size</code> argument is the maximum amount of bytes that can be
-written to a buffer before the it returns <code>Poll::Pending</code>.</p>
+written to a buffer before it returns <code>Poll::Pending</code>.</p>
 <h2 id="unify-reader-and-writer"><a class="doc-anchor" href="#unify-reader-and-writer">§</a>Unify reader and writer</h2>
 <p>The reader and writer half can be unified into a single structure
 of <code>SimplexStream</code> that supports both reading and writing or

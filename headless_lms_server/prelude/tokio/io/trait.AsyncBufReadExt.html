@@ -37,8 +37,8 @@ will otherwise return any errors returned by <a href="trait.AsyncBufRead.html#ty
 <p>If an I/O error is encountered then all bytes read so far will be
 present in <code>buf</code> and its length will have been adjusted appropriately.</p>
 <h5 id="cancel-safety"><a class="doc-anchor" href="#cancel-safety">§</a>Cancel safety</h5>
-<p>If the method is used as the event in a
-<a href="../macro.select.html" title="macro headless_lms_server::prelude::tokio::select"><code>tokio::select!</code></a> statement and some other branch
+<p>If used as a branch in
+<a href="../macro.select.html" title="macro headless_lms_server::prelude::tokio::select"><code>tokio::select!</code></a> and another branch
 completes first, then some data may have been partially read. Any
 partially read bytes are appended to <code>buf</code>, and the method can be
 called again to continue reading until <code>byte</code>.</p>
@@ -98,9 +98,9 @@ also return an error if the read bytes are not valid UTF-8. If an I/O
 error is encountered then <code>buf</code> may contain some bytes already read in
 the event that all data read so far was valid UTF-8.</p>
 <h5 id="cancel-safety-1"><a class="doc-anchor" href="#cancel-safety-1">§</a>Cancel safety</h5>
-<p>This method is not cancellation safe. If the method is used as the
-event in a <a href="../macro.select.html" title="macro headless_lms_server::prelude::tokio::select"><code>tokio::select!</code></a> statement and some
-other branch completes first, then some data may have been partially
+<p>This method is not cancel safe. If the method is used as a
+branch in <a href="../macro.select.html" title="macro headless_lms_server::prelude::tokio::select"><code>tokio::select!</code></a> and another
+branch completes first, then some data may have been partially
 read, and this data is lost. There are no guarantees regarding the
 contents of <code>buf</code> when the call is cancelled. The current
 implementation replaces <code>buf</code> with the empty string, but this may
@@ -184,8 +184,8 @@ to ensure that the bytes are never returned twice.</p>
 <p>This function will return an I/O error if the underlying reader was
 read, but returned an error.</p>
 <h5 id="cancel-safety-2"><a class="doc-anchor" href="#cancel-safety-2">§</a>Cancel safety</h5>
-<p>This method is cancel safe. If you use it as the event in a
-<a href="../macro.select.html" title="macro headless_lms_server::prelude::tokio::select"><code>tokio::select!</code></a> statement and some other branch
+<p>This method is cancel safe. If used as a branch in
+<a href="../macro.select.html" title="macro headless_lms_server::prelude::tokio::select"><code>tokio::select!</code></a> and another branch
 completes first, then it is guaranteed that no data was read.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.consume" class="method"><h4 class="code-header">fn <a href="#method.consume" class="fn">consume</a>(&amp;mut self, amt: <a class="primitive" href="https://doc.rust-lang.org/1.96.1/std/primitive.usize.html">usize</a>)<div class="where">where
     Self: <a class="trait" href="https://doc.rust-lang.org/1.96.1/core/marker/trait.Unpin.html" title="trait core::marker::Unpin">Unpin</a>,</div></h4></section></summary><div class="docblock"><p>Tells this buffer that <code>amt</code> bytes have been consumed from the

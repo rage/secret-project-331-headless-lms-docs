@@ -14,9 +14,9 @@ the channel is closed.  Note that if <a href="struct.Receiver.html#method.close"
 still outstanding <a href="struct.Permit.html" title="struct headless_lms_utils::prelude::tokio::sync::mpsc::Permit"><code>Permits</code></a> from before it was closed, the channel is
 not considered closed by <code>recv</code> until the permits are released.</p>
 <h5 id="cancel-safety"><a class="doc-anchor" href="#cancel-safety">§</a>Cancel safety</h5>
-<p>This method is cancel safe. If <code>recv</code> is used as the event in a
-<a href="../../macro.select.html" title="macro headless_lms_utils::prelude::tokio::select"><code>tokio::select!</code></a> statement and some other branch
-completes first, it is guaranteed that no messages were received on this
+<p>This method is cancel safe. If <code>recv</code> is used as a branch in
+<a href="../../macro.select.html" title="macro headless_lms_utils::prelude::tokio::select"><code>tokio::select!</code></a> and another branch completes first,
+it is guaranteed that no messages were received on this
 channel.</p>
 <h5 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>tokio::sync::mpsc;
@@ -56,9 +56,9 @@ received from this <code>Receiver</code>. The channel is closed when all senders
 have been dropped, or when <a href="struct.Receiver.html#method.close" title="method headless_lms_utils::prelude::tokio::sync::mpsc::Receiver::close"><code>close</code></a> is called.</p>
 <p>The capacity of <code>buffer</code> is increased as needed.</p>
 <h5 id="cancel-safety-1"><a class="doc-anchor" href="#cancel-safety-1">§</a>Cancel safety</h5>
-<p>This method is cancel safe. If <code>recv_many</code> is used as the event in a
-<a href="../../macro.select.html" title="macro headless_lms_utils::prelude::tokio::select"><code>tokio::select!</code></a> statement and some other branch
-completes first, it is guaranteed that no messages were received on this
+<p>This method is cancel safe. If <code>recv_many</code> is used as a branch in
+<a href="../../macro.select.html" title="macro headless_lms_utils::prelude::tokio::select"><code>tokio::select!</code></a> and another branch completes first,
+it is guaranteed that no messages were received on this
 channel.</p>
 <h5 id="examples-1"><a class="doc-anchor" href="#examples-1">§</a>Examples</h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>tokio::sync::mpsc;

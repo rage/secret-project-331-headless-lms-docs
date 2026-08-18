@@ -59,8 +59,8 @@ occurs as expected after listening for specific signals.</p>
 <p>Although this returns <code>Option&lt;()&gt;</code>, it will never actually return <code>None</code>.
 This was accidentally exposed and would be a breaking change to be removed.</p>
 <h5 id="cancel-safety"><a class="doc-anchor" href="#cancel-safety">§</a>Cancel safety</h5>
-<p>This method is cancel safe. If you use it as the event in a
-<a href="../../../../re_exports/tokio/macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> statement and some other branch
+<p>This method is cancel safe. If you use it as a branch in
+<a href="../../../../re_exports/tokio/macro.select.html" title="macro headless_lms_models::re_exports::tokio::select"><code>tokio::select!</code></a> and another branch
 completes first, then it is guaranteed that no signal is lost.</p>
 <h5 id="examples-1"><a class="doc-anchor" href="#examples-1">§</a>Examples</h5>
 <p>Wait for <code>SIGHUP</code></p>

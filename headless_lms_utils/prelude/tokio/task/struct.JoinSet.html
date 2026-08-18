@@ -107,19 +107,19 @@ provided runtime and store it in this <code>JoinSet</code>, returning an
 <a href="struct.AbortHandle.html" title="struct headless_lms_utils::prelude::tokio::task::AbortHandle"><code>AbortHandle</code></a> that can be used to remotely cancel the task.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.join_next" class="method"><h4 class="code-header">pub async fn <a href="#method.join_next" class="fn">join_next</a>(&amp;mut self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.96.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.96.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;T, <a class="struct" href="struct.JoinError.html" title="struct headless_lms_utils::prelude::tokio::task::JoinError">JoinError</a>&gt;&gt;</h4></section></summary><div class="docblock"><p>Waits until one of the tasks in the set completes and returns its output.</p>
 <p>Returns <code>None</code> if the set is empty.</p>
-<h5 id="cancel-safety"><a class="doc-anchor" href="#cancel-safety">§</a>Cancel Safety</h5>
-<p>This method is cancel safe. If <code>join_next</code> is used as the event in a <code>tokio::select!</code>
-statement and some other branch completes first, it is guaranteed that no tasks were
-removed from this <code>JoinSet</code>.</p>
+<h5 id="cancel-safety"><a class="doc-anchor" href="#cancel-safety">§</a>Cancel safety</h5>
+<p>This method is cancel safe. If <code>join_next</code> is used as a branch in
+<code>tokio::select!</code> and another branch completes first, it is guaranteed
+that no tasks were removed from this <code>JoinSet</code>.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.join_next_with_id" class="method"><h4 class="code-header">pub async fn <a href="#method.join_next_with_id" class="fn">join_next_with_id</a>(&amp;mut self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.96.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.96.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;(<a class="struct" href="struct.Id.html" title="struct headless_lms_utils::prelude::tokio::task::Id">Id</a>, T), <a class="struct" href="struct.JoinError.html" title="struct headless_lms_utils::prelude::tokio::task::JoinError">JoinError</a>&gt;&gt;</h4></section></summary><div class="docblock"><p>Waits until one of the tasks in the set completes and returns its
 output, along with the <a href="struct.Id.html" title="struct headless_lms_utils::prelude::tokio::task::Id">task ID</a> of the completed task.</p>
 <p>Returns <code>None</code> if the set is empty.</p>
 <p>When this method returns an error, then the id of the task that failed can be accessed
 using the <a href="struct.JoinError.html#method.id" title="method headless_lms_utils::prelude::tokio::task::JoinError::id"><code>JoinError::id</code></a> method.</p>
-<h5 id="cancel-safety-1"><a class="doc-anchor" href="#cancel-safety-1">§</a>Cancel Safety</h5>
-<p>This method is cancel safe. If <code>join_next_with_id</code> is used as the event in a <code>tokio::select!</code>
-statement and some other branch completes first, it is guaranteed that no tasks were
-removed from this <code>JoinSet</code>.</p>
+<h5 id="cancel-safety-1"><a class="doc-anchor" href="#cancel-safety-1">§</a>Cancel safety</h5>
+<p>This method is cancel safe. If <code>join_next_with_id</code> is used as a branch
+in <code>tokio::select!</code> and another branch completes first, it is
+guaranteed that no tasks were removed from this <code>JoinSet</code>.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.try_join_next" class="method"><h4 class="code-header">pub fn <a href="#method.try_join_next" class="fn">try_join_next</a>(&amp;mut self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.96.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.96.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;T, <a class="struct" href="struct.JoinError.html" title="struct headless_lms_utils::prelude::tokio::task::JoinError">JoinError</a>&gt;&gt;</h4></section></summary><div class="docblock"><p>Tries to join one of the tasks in the set that has completed and return its output.</p>
 <p>Returns <code>None</code> if there are no completed tasks, or if the set is empty.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.try_join_next_with_id" class="method"><h4 class="code-header">pub fn <a href="#method.try_join_next_with_id" class="fn">try_join_next_with_id</a>(&amp;mut self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.96.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.96.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;(<a class="struct" href="struct.Id.html" title="struct headless_lms_utils::prelude::tokio::task::Id">Id</a>, T), <a class="struct" href="struct.JoinError.html" title="struct headless_lms_utils::prelude::tokio::task::JoinError">JoinError</a>&gt;&gt;</h4></section></summary><div class="docblock"><p>Tries to join one of the tasks in the set that has completed and return its output,

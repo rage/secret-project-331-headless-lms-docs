@@ -36,7 +36,7 @@ way.</p>
 <p>Binding with a port number of 0 will request that the OS assigns a port
 to this listener. The port allocated can be queried via the <code>local_addr</code>
 method.</p>
-<p>The address type can be any implementor of the <a href="trait.ToSocketAddrs.html" title="trait headless_lms_chatbot::prelude::tokio::net::ToSocketAddrs"><code>ToSocketAddrs</code></a> trait.
+<p>The address type can be any implementer of the <a href="trait.ToSocketAddrs.html" title="trait headless_lms_chatbot::prelude::tokio::net::ToSocketAddrs"><code>ToSocketAddrs</code></a> trait.
 If <code>addr</code> yields multiple addresses, bind will be attempted with each of
 the addresses until one succeeds and returns the listener. If none of
 the addresses succeed in creating a listener, the error returned from
@@ -60,8 +60,8 @@ type.</p>
 established, the corresponding <a href="struct.TcpStream.html" title="struct headless_lms_chatbot::prelude::tokio::net::TcpStream"><code>TcpStream</code></a> and the remote peer’s
 address will be returned.</p>
 <h5 id="cancel-safety"><a class="doc-anchor" href="#cancel-safety">§</a>Cancel safety</h5>
-<p>This method is cancel safe. If the method is used as the event in a
-<a href="../macro.select.html" title="macro headless_lms_chatbot::prelude::tokio::select"><code>tokio::select!</code></a> statement and some other branch
+<p>This method is cancel safe. If the method is used as a branch in
+<a href="../macro.select.html" title="macro headless_lms_chatbot::prelude::tokio::select"><code>tokio::select!</code></a> and another branch
 completes first, then it is guaranteed that no new connections were
 accepted by this method.</p>
 <h5 id="examples-2"><a class="doc-anchor" href="#examples-2">§</a>Examples</h5>

@@ -106,6 +106,10 @@ you should make sure that the receive call is cancellation safe to avoid
 losing messages. This section goes through various common methods and
 describes whether they are cancel safe.  The lists in this section are not
 exhaustive.</p>
+<p>Cancellation safety describes what happens when a future is dropped
+before it completes. Whether something is cancellation safe depends on
+the behavior of the future passed to <code>select!</code>, which may come from an
+async method, an async expression, or another future-producing operation.</p>
 <p>The following methods are cancellation safe:</p>
 <ul>
 <li><a href="sync/mpsc/struct.Receiver.html#method.recv" title="method headless_lms_models::re_exports::tokio::sync::mpsc::Receiver::recv"><code>tokio::sync::mpsc::Receiver::recv</code></a></li>
