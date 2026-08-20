@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_REFERENCED_ROWS"],"fn":["_add_routes","get_suotar_api_call","list_suotar_api_calls","resolve_ledger_references","to_call_row"],"struct":["ListSuotarApiCallsQuery","SuotarApiCallDetails","SuotarApiCallEvent","SuotarApiCallLedgerReference","SuotarApiCallRow","SuotarApiCallsPage"]};

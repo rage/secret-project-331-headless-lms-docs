@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PAGE_SIZE"],"fn":["export_credit_registrations","optional_time","wire_value"],"struct":["CreditRegistrationsExportOperation"]};

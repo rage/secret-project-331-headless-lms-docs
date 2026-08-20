@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["exists","get_stalest_product_ids_for_enabled_modules","set_paused","upsert"],"struct":["CourseModuleSuotarConfiguration","SuotarPause"]};
+window.SIDEBAR_ITEMS = {"fn":["count_modules_failing_config_check","exists","get_config_facts_for_enabled_modules","get_module_overviews","get_stalest_product_ids_for_enabled_modules","record_config_check","set_paused","upsert"],"struct":["CourseModuleSuotarConfiguration","SuotarConfigCheck","SuotarModuleConfigFacts","SuotarModuleOverview","SuotarPause"]};

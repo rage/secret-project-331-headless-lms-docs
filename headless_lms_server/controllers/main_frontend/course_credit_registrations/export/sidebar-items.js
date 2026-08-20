@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","export_course_credit_registrations"]};

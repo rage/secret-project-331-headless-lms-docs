@@ -304,147 +304,167 @@
 <a href=#304 id=304 data-nosnippet>304</a>                            .or(result.previous_attainment.as_ref())
 <a href=#305 id=305 data-nosnippet>305</a>                    });
 <a href=#306 id=306 data-nosnippet>306</a>                    record_attainment(conn, row, attainment).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#307 id=307 data-nosnippet>307</a>                    apply_outcome(
-<a href=#308 id=308 data-nosnippet>308</a>                        conn,
-<a href=#309 id=309 data-nosnippet>309</a>                        row,
-<a href=#310 id=310 data-nosnippet>310</a>                        <span class="kw-2">&amp;</span>Outcome::to(state),
-<a href=#311 id=311 data-nosnippet>311</a>                        OutcomeEvent {
-<a href=#312 id=312 data-nosnippet>312</a>                            message: settled_message(state),
-<a href=#313 id=313 data-nosnippet>313</a>                            ..event
-<a href=#314 id=314 data-nosnippet>314</a>                        },
-<a href=#315 id=315 data-nosnippet>315</a>                        <span class="prelude-val">Some</span>(CreditRegistrationState::Submitting),
-<a href=#316 id=316 data-nosnippet>316</a>                    )
-<a href=#317 id=317 data-nosnippet>317</a>                    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#318 id=318 data-nosnippet>318</a>                    <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-<a href=#319 id=319 data-nosnippet>319</a>                }
-<a href=#320 id=320 data-nosnippet>320</a>            }
-<a href=#321 id=321 data-nosnippet>321</a>        }
-<a href=#322 id=322 data-nosnippet>322</a>    }
-<a href=#323 id=323 data-nosnippet>323</a>}
-<a href=#324 id=324 data-nosnippet>324</a>
-<a href=#325 id=325 data-nosnippet>325</a><span class="kw">fn </span>settled_message(state: CreditRegistrationState) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
-<a href=#326 id=326 data-nosnippet>326</a>    <span class="kw">match </span>state {
-<a href=#327 id=327 data-nosnippet>327</a>        CreditRegistrationState::Duplicate =&gt; {
-<a href=#328 id=328 data-nosnippet>328</a>            <span class="prelude-val">Some</span>(<span class="string">"The study registry already held a matching attainment."</span>)
-<a href=#329 id=329 data-nosnippet>329</a>        }
-<a href=#330 id=330 data-nosnippet>330</a>        CreditRegistrationState::NotImproved =&gt; {
-<a href=#331 id=331 data-nosnippet>331</a>            <span class="prelude-val">Some</span>(<span class="string">"The study registry already holds an equal or better attainment."</span>)
-<a href=#332 id=332 data-nosnippet>332</a>        }
-<a href=#333 id=333 data-nosnippet>333</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#334 id=334 data-nosnippet>334</a>    }
-<a href=#335 id=335 data-nosnippet>335</a>}
-<a href=#336 id=336 data-nosnippet>336</a>
-<a href=#337 id=337 data-nosnippet>337</a><span class="kw">async fn </span>record_attainment(
-<a href=#338 id=338 data-nosnippet>338</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#339 id=339 data-nosnippet>339</a>    row: <span class="kw-2">&amp;</span>CreditRegistration,
-<a href=#340 id=340 data-nosnippet>340</a>    attainment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SuotarAttainment&gt;,
-<a href=#341 id=341 data-nosnippet>341</a>) -&gt; anyhow::Result&lt;()&gt; {
-<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(attainment) = attainment {
-<a href=#343 id=343 data-nosnippet>343</a>        set_sisu_attainment_if_unclaimed(
-<a href=#344 id=344 data-nosnippet>344</a>            conn,
-<a href=#345 id=345 data-nosnippet>345</a>            row.id,
-<a href=#346 id=346 data-nosnippet>346</a>            <span class="kw-2">&amp;</span>attainment.id,
-<a href=#347 id=347 data-nosnippet>347</a>            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>attainment.attainment_type),
-<a href=#348 id=348 data-nosnippet>348</a>        )
-<a href=#349 id=349 data-nosnippet>349</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#350 id=350 data-nosnippet>350</a>    }
-<a href=#351 id=351 data-nosnippet>351</a>    <span class="prelude-val">Ok</span>(())
-<a href=#352 id=352 data-nosnippet>352</a>}
-<a href=#353 id=353 data-nosnippet>353</a>
-<a href=#354 id=354 data-nosnippet>354</a><span class="doccomment">/// A frozen snapshot that cannot be sent; either would come back as a request-level rejection that
-<a href=#355 id=355 data-nosnippet>355</a>/// takes the rest of the batch with it.
-<a href=#356 id=356 data-nosnippet>356</a></span><span class="kw">enum </span>Unsendable {
-<a href=#357 id=357 data-nosnippet>357</a>    Incomplete,
-<a href=#358 id=358 data-nosnippet>358</a>    UnknownGrade,
-<a href=#359 id=359 data-nosnippet>359</a>}
-<a href=#360 id=360 data-nosnippet>360</a>
-<a href=#361 id=361 data-nosnippet>361</a><span class="kw">impl </span>Unsendable {
-<a href=#362 id=362 data-nosnippet>362</a>    <span class="kw">fn </span>transition(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Transition {
-<a href=#363 id=363 data-nosnippet>363</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#364 id=364 data-nosnippet>364</a>            <span class="self">Self</span>::Incomplete =&gt; Transition {
-<a href=#365 id=365 data-nosnippet>365</a>                event_kind: CreditRegistrationEventKind::StateChanged,
-<a href=#366 id=366 data-nosnippet>366</a>                event_message: <span class="prelude-val">Some</span>(
-<a href=#367 id=367 data-nosnippet>367</a>                    <span class="string">"The frozen payload is incomplete, so the enrolment is resolved again."
-<a href=#368 id=368 data-nosnippet>368</a>                        </span>.to_string(),
-<a href=#369 id=369 data-nosnippet>369</a>                ),
-<a href=#370 id=370 data-nosnippet>370</a>                ..Transition::to(CreditRegistrationState::ReadyToSubmit)
-<a href=#371 id=371 data-nosnippet>371</a>            },
-<a href=#372 id=372 data-nosnippet>372</a>            <span class="self">Self</span>::UnknownGrade =&gt; Transition {
-<a href=#373 id=373 data-nosnippet>373</a>                error_code: <span class="prelude-val">Some</span>(CreditRegistrationErrorCode::NoGradeScaleMapping),
-<a href=#374 id=374 data-nosnippet>374</a>                needs_admin_attention: <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
-<a href=#375 id=375 data-nosnippet>375</a>                event_message: <span class="prelude-val">Some</span>(
-<a href=#376 id=376 data-nosnippet>376</a>                    <span class="string">"The frozen grade is not one the study registry accepts."</span>.to_string(),
-<a href=#377 id=377 data-nosnippet>377</a>                ),
-<a href=#378 id=378 data-nosnippet>378</a>                ..Transition::to(CreditRegistrationState::FailedPermanent)
-<a href=#379 id=379 data-nosnippet>379</a>            },
-<a href=#380 id=380 data-nosnippet>380</a>        }
-<a href=#381 id=381 data-nosnippet>381</a>    }
-<a href=#382 id=382 data-nosnippet>382</a>}
-<a href=#383 id=383 data-nosnippet>383</a>
-<a href=#384 id=384 data-nosnippet>384</a><span class="doccomment">/// Builds the request item from the frozen snapshot, or says why the row cannot go into a batch.
-<a href=#385 id=385 data-nosnippet>385</a></span><span class="kw">fn </span>request_item(row: <span class="kw-2">&amp;</span>CreditRegistration) -&gt; <span class="prelude-ty">Result</span>&lt;ImportAttainmentRequestItem, Unsendable&gt; {
-<a href=#386 id=386 data-nosnippet>386</a>    <span class="kw">let </span>(
-<a href=#387 id=387 data-nosnippet>387</a>        <span class="prelude-val">Some</span>(student_number),
-<a href=#388 id=388 data-nosnippet>388</a>        <span class="prelude-val">Some</span>(course_code),
-<a href=#389 id=389 data-nosnippet>389</a>        <span class="prelude-val">Some</span>(enrolment_id),
-<a href=#390 id=390 data-nosnippet>390</a>        <span class="prelude-val">Some</span>(attainment_date),
-<a href=#391 id=391 data-nosnippet>391</a>        <span class="prelude-val">Some</span>(attainment_language),
-<a href=#392 id=392 data-nosnippet>392</a>        <span class="prelude-val">Some</span>(grade_scale_id),
-<a href=#393 id=393 data-nosnippet>393</a>        <span class="prelude-val">Some</span>(grade_id),
-<a href=#394 id=394 data-nosnippet>394</a>        <span class="prelude-val">Some</span>(credits),
-<a href=#395 id=395 data-nosnippet>395</a>    ) = (
-<a href=#396 id=396 data-nosnippet>396</a>        row.student_number.as_deref(),
-<a href=#397 id=397 data-nosnippet>397</a>        row.uh_course_code.as_deref(),
-<a href=#398 id=398 data-nosnippet>398</a>        row.selected_enrolment_id.as_deref(),
-<a href=#399 id=399 data-nosnippet>399</a>        row.attainment_date,
-<a href=#400 id=400 data-nosnippet>400</a>        row.attainment_language.as_deref(),
-<a href=#401 id=401 data-nosnippet>401</a>        row.grade_scale_id.as_deref(),
-<a href=#402 id=402 data-nosnippet>402</a>        row.grade_id.as_deref(),
-<a href=#403 id=403 data-nosnippet>403</a>        row.credits,
-<a href=#404 id=404 data-nosnippet>404</a>    )
-<a href=#405 id=405 data-nosnippet>405</a>    <span class="kw">else </span>{
-<a href=#406 id=406 data-nosnippet>406</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(Unsendable::Incomplete);
-<a href=#407 id=407 data-nosnippet>407</a>    };
-<a href=#408 id=408 data-nosnippet>408</a>    <span class="comment">// The registry rejects an unknown scale or grade for the whole request, so this row leaves the
-<a href=#409 id=409 data-nosnippet>409</a>    // batch rather than failing the rows around it.
-<a href=#410 id=410 data-nosnippet>410</a>    </span><span class="kw">if </span>!is_known_grade(grade_scale_id, grade_id) {
-<a href=#411 id=411 data-nosnippet>411</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(Unsendable::UnknownGrade);
-<a href=#412 id=412 data-nosnippet>412</a>    }
-<a href=#413 id=413 data-nosnippet>413</a>    <span class="prelude-val">Ok</span>(ImportAttainmentRequestItem {
-<a href=#414 id=414 data-nosnippet>414</a>        request_item_id: row.request_item_id.clone(),
-<a href=#415 id=415 data-nosnippet>415</a>        student_number: student_number.to_string(),
-<a href=#416 id=416 data-nosnippet>416</a>        course_code: course_code.to_string(),
-<a href=#417 id=417 data-nosnippet>417</a>        enrolment_id: enrolment_id.to_string(),
-<a href=#418 id=418 data-nosnippet>418</a>        attainment_date,
-<a href=#419 id=419 data-nosnippet>419</a>        attainment_language: attainment_language.to_string(),
-<a href=#420 id=420 data-nosnippet>420</a>        grade_scale_id: grade_scale_id.to_string(),
-<a href=#421 id=421 data-nosnippet>421</a>        grade_id: grade_id.to_string(),
-<a href=#422 id=422 data-nosnippet>422</a>        credits: round_credits(credits),
-<a href=#423 id=423 data-nosnippet>423</a>    })
-<a href=#424 id=424 data-nosnippet>424</a>}
-<a href=#425 id=425 data-nosnippet>425</a>
-<a href=#426 id=426 data-nosnippet>426</a><span class="doccomment">/// Rounds away the f32-to-f64 widening error before the value goes on the wire: ECTS credits are
-<a href=#427 id=427 data-nosnippet>427</a>/// never finer than a hundredth, and 2.7f32 would otherwise be sent as 2.700000047683716.
-<a href=#428 id=428 data-nosnippet>428</a></span><span class="kw">fn </span>round_credits(credits: f32) -&gt; f64 {
-<a href=#429 id=429 data-nosnippet>429</a>    (f64::from(credits) * <span class="number">1000.0</span>).round() / <span class="number">1000.0
-<a href=#430 id=430 data-nosnippet>430</a></span>}
-<a href=#431 id=431 data-nosnippet>431</a>
-<a href=#432 id=432 data-nosnippet>432</a><span class="attr">#[cfg(test)]
-<a href=#433 id=433 data-nosnippet>433</a></span><span class="kw">mod </span>tests {
-<a href=#434 id=434 data-nosnippet>434</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
-<a href=#435 id=435 data-nosnippet>435</a>
-<a href=#436 id=436 data-nosnippet>436</a>    <span class="attr">#[test]
-<a href=#437 id=437 data-nosnippet>437</a>    </span><span class="kw">fn </span>the_claim_states_cannot_reach_a_row_that_may_already_have_been_sent() {
-<a href=#438 id=438 data-nosnippet>438</a>        <span class="kw">for </span>state <span class="kw">in </span>[
-<a href=#439 id=439 data-nosnippet>439</a>            CreditRegistrationState::Submitting,
-<a href=#440 id=440 data-nosnippet>440</a>            CreditRegistrationState::SubmissionUncertain,
-<a href=#441 id=441 data-nosnippet>441</a>            CreditRegistrationState::AwaitingVerification,
-<a href=#442 id=442 data-nosnippet>442</a>            CreditRegistrationState::Registered,
-<a href=#443 id=443 data-nosnippet>443</a>            CreditRegistrationState::AbandonedByConsentWithdrawal,
-<a href=#444 id=444 data-nosnippet>444</a>            CreditRegistrationState::ResolvingEnrolment,
-<a href=#445 id=445 data-nosnippet>445</a>        ] {
-<a href=#446 id=446 data-nosnippet>446</a>            <span class="macro">assert!</span>(!CLAIMED_STATES.contains(<span class="kw-2">&amp;</span>state), <span class="string">"{state:?}"</span>);
-<a href=#447 id=447 data-nosnippet>447</a>        }
-<a href=#448 id=448 data-nosnippet>448</a>    }
-<a href=#449 id=449 data-nosnippet>449</a>}
+<a href=#307 id=307 data-nosnippet>307</a>                    <span class="kw">let </span>message = settled_message(state, attainment);
+<a href=#308 id=308 data-nosnippet>308</a>                    apply_outcome(
+<a href=#309 id=309 data-nosnippet>309</a>                        conn,
+<a href=#310 id=310 data-nosnippet>310</a>                        row,
+<a href=#311 id=311 data-nosnippet>311</a>                        <span class="kw-2">&amp;</span>Outcome::to(state),
+<a href=#312 id=312 data-nosnippet>312</a>                        OutcomeEvent {
+<a href=#313 id=313 data-nosnippet>313</a>                            message: message.as_deref(),
+<a href=#314 id=314 data-nosnippet>314</a>                            ..event
+<a href=#315 id=315 data-nosnippet>315</a>                        },
+<a href=#316 id=316 data-nosnippet>316</a>                        <span class="prelude-val">Some</span>(CreditRegistrationState::Submitting),
+<a href=#317 id=317 data-nosnippet>317</a>                    )
+<a href=#318 id=318 data-nosnippet>318</a>                    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#319 id=319 data-nosnippet>319</a>                    <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
+<a href=#320 id=320 data-nosnippet>320</a>                }
+<a href=#321 id=321 data-nosnippet>321</a>            }
+<a href=#322 id=322 data-nosnippet>322</a>        }
+<a href=#323 id=323 data-nosnippet>323</a>    }
+<a href=#324 id=324 data-nosnippet>324</a>}
+<a href=#325 id=325 data-nosnippet>325</a>
+<a href=#326 id=326 data-nosnippet>326</a><span class="doccomment">/// The timeline line for an answer that settled the row. `not_improved` names the grade the registry
+<a href=#327 id=327 data-nosnippet>327</a>/// held, because "already equal or better" without it reads as a bug to whoever raised the grade.
+<a href=#328 id=328 data-nosnippet>328</a></span><span class="kw">fn </span>settled_message(
+<a href=#329 id=329 data-nosnippet>329</a>    state: CreditRegistrationState,
+<a href=#330 id=330 data-nosnippet>330</a>    attainment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SuotarAttainment&gt;,
+<a href=#331 id=331 data-nosnippet>331</a>) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+<a href=#332 id=332 data-nosnippet>332</a>    <span class="kw">match </span>state {
+<a href=#333 id=333 data-nosnippet>333</a>        CreditRegistrationState::Duplicate =&gt; {
+<a href=#334 id=334 data-nosnippet>334</a>            <span class="prelude-val">Some</span>(<span class="string">"The study registry already held a matching attainment."</span>.to_string())
+<a href=#335 id=335 data-nosnippet>335</a>        }
+<a href=#336 id=336 data-nosnippet>336</a>        CreditRegistrationState::NotImproved =&gt; <span class="prelude-val">Some</span>(<span class="kw">match </span>held_grade(attainment) {
+<a href=#337 id=337 data-nosnippet>337</a>            <span class="prelude-val">Some</span>(grade) =&gt; <span class="macro">format!</span>(
+<a href=#338 id=338 data-nosnippet>338</a>                <span class="string">"The study registry already holds an equal or better attainment, graded {grade}."
+<a href=#339 id=339 data-nosnippet>339</a>            </span>),
+<a href=#340 id=340 data-nosnippet>340</a>            <span class="prelude-val">None </span>=&gt; <span class="string">"The study registry already holds an equal or better attainment."</span>.to_string(),
+<a href=#341 id=341 data-nosnippet>341</a>        }),
+<a href=#342 id=342 data-nosnippet>342</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#343 id=343 data-nosnippet>343</a>    }
+<a href=#344 id=344 data-nosnippet>344</a>}
+<a href=#345 id=345 data-nosnippet>345</a>
+<a href=#346 id=346 data-nosnippet>346</a><span class="doccomment">/// The registry's own grade for an attainment, with its scale named: "1" is a pass on one scale and
+<a href=#347 id=347 data-nosnippet>347</a>/// a one out of five on the other.
+<a href=#348 id=348 data-nosnippet>348</a></span><span class="kw">fn </span>held_grade(attainment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SuotarAttainment&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+<a href=#349 id=349 data-nosnippet>349</a>    <span class="kw">let </span>attainment = attainment<span class="question-mark">?</span>;
+<a href=#350 id=350 data-nosnippet>350</a>    <span class="kw">let </span>grade_id = attainment.grade_id.as_deref()<span class="question-mark">?</span>;
+<a href=#351 id=351 data-nosnippet>351</a>    <span class="prelude-val">Some</span>(<span class="kw">match </span>attainment.grade_scale_id.as_deref() {
+<a href=#352 id=352 data-nosnippet>352</a>        <span class="prelude-val">Some</span>(scale) =&gt; <span class="macro">format!</span>(<span class="string">"{grade_id} on {scale}"</span>),
+<a href=#353 id=353 data-nosnippet>353</a>        <span class="prelude-val">None </span>=&gt; grade_id.to_string(),
+<a href=#354 id=354 data-nosnippet>354</a>    })
+<a href=#355 id=355 data-nosnippet>355</a>}
+<a href=#356 id=356 data-nosnippet>356</a>
+<a href=#357 id=357 data-nosnippet>357</a><span class="kw">async fn </span>record_attainment(
+<a href=#358 id=358 data-nosnippet>358</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#359 id=359 data-nosnippet>359</a>    row: <span class="kw-2">&amp;</span>CreditRegistration,
+<a href=#360 id=360 data-nosnippet>360</a>    attainment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SuotarAttainment&gt;,
+<a href=#361 id=361 data-nosnippet>361</a>) -&gt; anyhow::Result&lt;()&gt; {
+<a href=#362 id=362 data-nosnippet>362</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(attainment) = attainment {
+<a href=#363 id=363 data-nosnippet>363</a>        set_sisu_attainment_if_unclaimed(
+<a href=#364 id=364 data-nosnippet>364</a>            conn,
+<a href=#365 id=365 data-nosnippet>365</a>            row.id,
+<a href=#366 id=366 data-nosnippet>366</a>            <span class="kw-2">&amp;</span>attainment.id,
+<a href=#367 id=367 data-nosnippet>367</a>            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>attainment.attainment_type),
+<a href=#368 id=368 data-nosnippet>368</a>        )
+<a href=#369 id=369 data-nosnippet>369</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#370 id=370 data-nosnippet>370</a>    }
+<a href=#371 id=371 data-nosnippet>371</a>    <span class="prelude-val">Ok</span>(())
+<a href=#372 id=372 data-nosnippet>372</a>}
+<a href=#373 id=373 data-nosnippet>373</a>
+<a href=#374 id=374 data-nosnippet>374</a><span class="doccomment">/// A frozen snapshot that cannot be sent; either would come back as a request-level rejection that
+<a href=#375 id=375 data-nosnippet>375</a>/// takes the rest of the batch with it.
+<a href=#376 id=376 data-nosnippet>376</a></span><span class="kw">enum </span>Unsendable {
+<a href=#377 id=377 data-nosnippet>377</a>    Incomplete,
+<a href=#378 id=378 data-nosnippet>378</a>    UnknownGrade,
+<a href=#379 id=379 data-nosnippet>379</a>}
+<a href=#380 id=380 data-nosnippet>380</a>
+<a href=#381 id=381 data-nosnippet>381</a><span class="kw">impl </span>Unsendable {
+<a href=#382 id=382 data-nosnippet>382</a>    <span class="kw">fn </span>transition(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Transition {
+<a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#384 id=384 data-nosnippet>384</a>            <span class="self">Self</span>::Incomplete =&gt; Transition {
+<a href=#385 id=385 data-nosnippet>385</a>                event_kind: CreditRegistrationEventKind::StateChanged,
+<a href=#386 id=386 data-nosnippet>386</a>                event_message: <span class="prelude-val">Some</span>(
+<a href=#387 id=387 data-nosnippet>387</a>                    <span class="string">"The frozen payload is incomplete, so the enrolment is resolved again."
+<a href=#388 id=388 data-nosnippet>388</a>                        </span>.to_string(),
+<a href=#389 id=389 data-nosnippet>389</a>                ),
+<a href=#390 id=390 data-nosnippet>390</a>                ..Transition::to(CreditRegistrationState::ReadyToSubmit)
+<a href=#391 id=391 data-nosnippet>391</a>            },
+<a href=#392 id=392 data-nosnippet>392</a>            <span class="self">Self</span>::UnknownGrade =&gt; Transition {
+<a href=#393 id=393 data-nosnippet>393</a>                error_code: <span class="prelude-val">Some</span>(CreditRegistrationErrorCode::NoGradeScaleMapping),
+<a href=#394 id=394 data-nosnippet>394</a>                needs_admin_attention: <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
+<a href=#395 id=395 data-nosnippet>395</a>                event_message: <span class="prelude-val">Some</span>(
+<a href=#396 id=396 data-nosnippet>396</a>                    <span class="string">"The frozen grade is not one the study registry accepts."</span>.to_string(),
+<a href=#397 id=397 data-nosnippet>397</a>                ),
+<a href=#398 id=398 data-nosnippet>398</a>                ..Transition::to(CreditRegistrationState::FailedPermanent)
+<a href=#399 id=399 data-nosnippet>399</a>            },
+<a href=#400 id=400 data-nosnippet>400</a>        }
+<a href=#401 id=401 data-nosnippet>401</a>    }
+<a href=#402 id=402 data-nosnippet>402</a>}
+<a href=#403 id=403 data-nosnippet>403</a>
+<a href=#404 id=404 data-nosnippet>404</a><span class="doccomment">/// Builds the request item from the frozen snapshot, or says why the row cannot go into a batch.
+<a href=#405 id=405 data-nosnippet>405</a></span><span class="kw">fn </span>request_item(row: <span class="kw-2">&amp;</span>CreditRegistration) -&gt; <span class="prelude-ty">Result</span>&lt;ImportAttainmentRequestItem, Unsendable&gt; {
+<a href=#406 id=406 data-nosnippet>406</a>    <span class="kw">let </span>(
+<a href=#407 id=407 data-nosnippet>407</a>        <span class="prelude-val">Some</span>(student_number),
+<a href=#408 id=408 data-nosnippet>408</a>        <span class="prelude-val">Some</span>(course_code),
+<a href=#409 id=409 data-nosnippet>409</a>        <span class="prelude-val">Some</span>(enrolment_id),
+<a href=#410 id=410 data-nosnippet>410</a>        <span class="prelude-val">Some</span>(attainment_date),
+<a href=#411 id=411 data-nosnippet>411</a>        <span class="prelude-val">Some</span>(attainment_language),
+<a href=#412 id=412 data-nosnippet>412</a>        <span class="prelude-val">Some</span>(grade_scale_id),
+<a href=#413 id=413 data-nosnippet>413</a>        <span class="prelude-val">Some</span>(grade_id),
+<a href=#414 id=414 data-nosnippet>414</a>        <span class="prelude-val">Some</span>(credits),
+<a href=#415 id=415 data-nosnippet>415</a>    ) = (
+<a href=#416 id=416 data-nosnippet>416</a>        row.student_number.as_deref(),
+<a href=#417 id=417 data-nosnippet>417</a>        row.uh_course_code.as_deref(),
+<a href=#418 id=418 data-nosnippet>418</a>        row.selected_enrolment_id.as_deref(),
+<a href=#419 id=419 data-nosnippet>419</a>        row.attainment_date,
+<a href=#420 id=420 data-nosnippet>420</a>        row.attainment_language.as_deref(),
+<a href=#421 id=421 data-nosnippet>421</a>        row.grade_scale_id.as_deref(),
+<a href=#422 id=422 data-nosnippet>422</a>        row.grade_id.as_deref(),
+<a href=#423 id=423 data-nosnippet>423</a>        row.credits,
+<a href=#424 id=424 data-nosnippet>424</a>    )
+<a href=#425 id=425 data-nosnippet>425</a>    <span class="kw">else </span>{
+<a href=#426 id=426 data-nosnippet>426</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(Unsendable::Incomplete);
+<a href=#427 id=427 data-nosnippet>427</a>    };
+<a href=#428 id=428 data-nosnippet>428</a>    <span class="comment">// The registry rejects an unknown scale or grade for the whole request, so this row leaves the
+<a href=#429 id=429 data-nosnippet>429</a>    // batch rather than failing the rows around it.
+<a href=#430 id=430 data-nosnippet>430</a>    </span><span class="kw">if </span>!is_known_grade(grade_scale_id, grade_id) {
+<a href=#431 id=431 data-nosnippet>431</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(Unsendable::UnknownGrade);
+<a href=#432 id=432 data-nosnippet>432</a>    }
+<a href=#433 id=433 data-nosnippet>433</a>    <span class="prelude-val">Ok</span>(ImportAttainmentRequestItem {
+<a href=#434 id=434 data-nosnippet>434</a>        request_item_id: row.request_item_id.clone(),
+<a href=#435 id=435 data-nosnippet>435</a>        student_number: student_number.to_string(),
+<a href=#436 id=436 data-nosnippet>436</a>        course_code: course_code.to_string(),
+<a href=#437 id=437 data-nosnippet>437</a>        enrolment_id: enrolment_id.to_string(),
+<a href=#438 id=438 data-nosnippet>438</a>        attainment_date,
+<a href=#439 id=439 data-nosnippet>439</a>        attainment_language: attainment_language.to_string(),
+<a href=#440 id=440 data-nosnippet>440</a>        grade_scale_id: grade_scale_id.to_string(),
+<a href=#441 id=441 data-nosnippet>441</a>        grade_id: grade_id.to_string(),
+<a href=#442 id=442 data-nosnippet>442</a>        credits: round_credits(credits),
+<a href=#443 id=443 data-nosnippet>443</a>    })
+<a href=#444 id=444 data-nosnippet>444</a>}
+<a href=#445 id=445 data-nosnippet>445</a>
+<a href=#446 id=446 data-nosnippet>446</a><span class="doccomment">/// Rounds away the f32-to-f64 widening error before the value goes on the wire: ECTS credits are
+<a href=#447 id=447 data-nosnippet>447</a>/// never finer than a hundredth, and 2.7f32 would otherwise be sent as 2.700000047683716.
+<a href=#448 id=448 data-nosnippet>448</a></span><span class="kw">fn </span>round_credits(credits: f32) -&gt; f64 {
+<a href=#449 id=449 data-nosnippet>449</a>    (f64::from(credits) * <span class="number">1000.0</span>).round() / <span class="number">1000.0
+<a href=#450 id=450 data-nosnippet>450</a></span>}
+<a href=#451 id=451 data-nosnippet>451</a>
+<a href=#452 id=452 data-nosnippet>452</a><span class="attr">#[cfg(test)]
+<a href=#453 id=453 data-nosnippet>453</a></span><span class="kw">mod </span>tests {
+<a href=#454 id=454 data-nosnippet>454</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#455 id=455 data-nosnippet>455</a>
+<a href=#456 id=456 data-nosnippet>456</a>    <span class="attr">#[test]
+<a href=#457 id=457 data-nosnippet>457</a>    </span><span class="kw">fn </span>the_claim_states_cannot_reach_a_row_that_may_already_have_been_sent() {
+<a href=#458 id=458 data-nosnippet>458</a>        <span class="kw">for </span>state <span class="kw">in </span>[
+<a href=#459 id=459 data-nosnippet>459</a>            CreditRegistrationState::Submitting,
+<a href=#460 id=460 data-nosnippet>460</a>            CreditRegistrationState::SubmissionUncertain,
+<a href=#461 id=461 data-nosnippet>461</a>            CreditRegistrationState::AwaitingVerification,
+<a href=#462 id=462 data-nosnippet>462</a>            CreditRegistrationState::Registered,
+<a href=#463 id=463 data-nosnippet>463</a>            CreditRegistrationState::AbandonedByConsentWithdrawal,
+<a href=#464 id=464 data-nosnippet>464</a>            CreditRegistrationState::ResolvingEnrolment,
+<a href=#465 id=465 data-nosnippet>465</a>        ] {
+<a href=#466 id=466 data-nosnippet>466</a>            <span class="macro">assert!</span>(!CLAIMED_STATES.contains(<span class="kw-2">&amp;</span>state), <span class="string">"{state:?}"</span>);
+<a href=#467 id=467 data-nosnippet>467</a>        }
+<a href=#468 id=468 data-nosnippet>468</a>    }
+<a href=#469 id=469 data-nosnippet>469</a>}
 </code></pre></div></section></main></body></html>

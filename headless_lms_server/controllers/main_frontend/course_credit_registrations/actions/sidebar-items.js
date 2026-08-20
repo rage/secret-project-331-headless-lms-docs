@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_ACTIONS"],"fn":["_add_routes","get_course_credit_registration_actions"],"struct":["CourseCreditRegistrationAction"]};

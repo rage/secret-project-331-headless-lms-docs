@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MATERIALIZE_LIMIT"],"fn":["ensure_registration_rows_for_eligible_completions"]};
+window.SIDEBAR_ITEMS = {"constant":["GRADE_IMPROVEMENT_LIMIT","MATERIALIZE_LIMIT"],"fn":["ensure_registration_rows_for_eligible_completions","get_unmaterialised_eligible_completions","start_re_attempts_for_improved_grades"],"struct":["UnmaterialisedCompletion"]};

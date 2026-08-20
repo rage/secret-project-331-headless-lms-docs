@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["listable_course_code","reconcile","run","whole_request_failed"]};
+window.SIDEBAR_ITEMS = {"fn":["listable_course_code","reconcile","run","student_number_settings_url","whole_request_failed"],"struct":["FastTrackRun"]};

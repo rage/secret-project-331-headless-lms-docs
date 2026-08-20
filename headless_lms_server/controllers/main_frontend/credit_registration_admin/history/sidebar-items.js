@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_DAYS","MAX_DAYS"],"fn":["_add_routes","get_credit_registration_pipeline_history"],"struct":["CreditRegistrationHistory","CreditRegistrationHistoryDay","CreditRegistrationHistoryPoint","HistoryQuery"]};

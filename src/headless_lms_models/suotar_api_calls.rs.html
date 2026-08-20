@@ -396,229 +396,366 @@
 <a href=#396 id=396 data-nosnippet>396</a>    <span class="prelude-val">Ok</span>(res)
 <a href=#397 id=397 data-nosnippet>397</a>}
 <a href=#398 id=398 data-nosnippet>398</a>
-<a href=#399 id=399 data-nosnippet>399</a><span class="doccomment">/// One endpoint's traffic over a window, one of possibly several computed together by
-<a href=#400 id=400 data-nosnippet>400</a>/// [`get_endpoint_stats_for_windows`].
-<a href=#401 id=401 data-nosnippet>401</a>///
-<a href=#402 id=402 data-nosnippet>402</a>/// `duration_ms IS NULL` means still in flight, since the row is inserted before the request
-<a href=#403 id=403 data-nosnippet>403</a>/// leaves; the counts below take finished calls only, or one in progress would read as a failure.
-<a href=#404 id=404 data-nosnippet>404</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#405 id=405 data-nosnippet>405</a></span><span class="kw">pub struct </span>SuotarEndpointStatsForWindow {
-<a href=#406 id=406 data-nosnippet>406</a>    <span class="kw">pub </span>window_secs: i64,
-<a href=#407 id=407 data-nosnippet>407</a>    <span class="kw">pub </span>endpoint: SuotarEndpoint,
-<a href=#408 id=408 data-nosnippet>408</a>    <span class="kw">pub </span>call_count: i64,
-<a href=#409 id=409 data-nosnippet>409</a>    <span class="kw">pub </span>failed_call_count: i64,
-<a href=#410 id=410 data-nosnippet>410</a>    <span class="kw">pub </span>in_flight_count: i64,
-<a href=#411 id=411 data-nosnippet>411</a>    <span class="kw">pub </span>ok_item_count: i64,
-<a href=#412 id=412 data-nosnippet>412</a>    <span class="kw">pub </span>error_item_count: i64,
-<a href=#413 id=413 data-nosnippet>413</a>    <span class="kw">pub </span>p50_duration_ms: <span class="prelude-ty">Option</span>&lt;i32&gt;,
-<a href=#414 id=414 data-nosnippet>414</a>    <span class="kw">pub </span>p95_duration_ms: <span class="prelude-ty">Option</span>&lt;i32&gt;,
-<a href=#415 id=415 data-nosnippet>415</a>    <span class="kw">pub </span>last_success_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#416 id=416 data-nosnippet>416</a>    <span class="kw">pub </span>last_failure_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#417 id=417 data-nosnippet>417</a>    <span class="kw">pub </span>last_request_level_error_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#418 id=418 data-nosnippet>418</a>}
-<a href=#419 id=419 data-nosnippet>419</a>
-<a href=#420 id=420 data-nosnippet>420</a><span class="doccomment">/// One scan of the table joined against the window list, so several windows cost one pass rather
-<a href=#421 id=421 data-nosnippet>421</a>/// than one full pass each. A single window is just a one-element `window_secs`.
-<a href=#422 id=422 data-nosnippet>422</a></span><span class="kw">pub async fn </span>get_endpoint_stats_for_windows(
-<a href=#423 id=423 data-nosnippet>423</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#424 id=424 data-nosnippet>424</a>    window_secs: <span class="kw-2">&amp;</span>[i64],
-<a href=#425 id=425 data-nosnippet>425</a>) -&gt; ModelResult&lt;Vec&lt;SuotarEndpointStatsForWindow&gt;&gt; {
-<a href=#426 id=426 data-nosnippet>426</a>    <span class="kw">let </span>now = Utc::now();
-<a href=#427 id=427 data-nosnippet>427</a>    <span class="kw">let </span>window_secs = window_secs.to_vec();
-<a href=#428 id=428 data-nosnippet>428</a>    <span class="kw">let </span>since: Vec&lt;DateTime&lt;Utc&gt;&gt; = window_secs
-<a href=#429 id=429 data-nosnippet>429</a>        .iter()
-<a href=#430 id=430 data-nosnippet>430</a>        .map(|secs| now - chrono::Duration::seconds(<span class="kw-2">*</span>secs))
-<a href=#431 id=431 data-nosnippet>431</a>        .collect();
-<a href=#432 id=432 data-nosnippet>432</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
-<a href=#433 id=433 data-nosnippet>433</a>        SuotarEndpointStatsForWindow,
-<a href=#434 id=434 data-nosnippet>434</a>        <span class="string">r#"
-<a href=#435 id=435 data-nosnippet>435</a>WITH windows AS (
-<a href=#436 id=436 data-nosnippet>436</a>  SELECT * FROM UNNEST($1::bigint [], $2::timestamptz []) AS w(window_secs, since)
-<a href=#437 id=437 data-nosnippet>437</a>)
-<a href=#438 id=438 data-nosnippet>438</a>SELECT w.window_secs AS "window_secs!",
-<a href=#439 id=439 data-nosnippet>439</a>  c.endpoint,
-<a href=#440 id=440 data-nosnippet>440</a>  COUNT(*) FILTER (WHERE c.duration_ms IS NOT NULL) AS "call_count!",
-<a href=#441 id=441 data-nosnippet>441</a>  COUNT(*) FILTER (
-<a href=#442 id=442 data-nosnippet>442</a>    WHERE c.duration_ms IS NOT NULL
-<a href=#443 id=443 data-nosnippet>443</a>      AND NOT c.succeeded
-<a href=#444 id=444 data-nosnippet>444</a>  ) AS "failed_call_count!",
-<a href=#445 id=445 data-nosnippet>445</a>  COUNT(*) FILTER (WHERE c.duration_ms IS NULL) AS "in_flight_count!",
-<a href=#446 id=446 data-nosnippet>446</a>  COALESCE(SUM(c.ok_item_count), 0) AS "ok_item_count!",
-<a href=#447 id=447 data-nosnippet>447</a>  COALESCE(SUM(c.error_item_count), 0) AS "error_item_count!",
-<a href=#448 id=448 data-nosnippet>448</a>  PERCENTILE_DISC(0.5) WITHIN GROUP (
-<a href=#449 id=449 data-nosnippet>449</a>    ORDER BY c.duration_ms
-<a href=#450 id=450 data-nosnippet>450</a>  ) AS "p50_duration_ms",
-<a href=#451 id=451 data-nosnippet>451</a>  PERCENTILE_DISC(0.95) WITHIN GROUP (
-<a href=#452 id=452 data-nosnippet>452</a>    ORDER BY c.duration_ms
-<a href=#453 id=453 data-nosnippet>453</a>  ) AS "p95_duration_ms",
-<a href=#454 id=454 data-nosnippet>454</a>  MAX(c.started_at) FILTER (WHERE c.succeeded) AS "last_success_at",
-<a href=#455 id=455 data-nosnippet>455</a>  MAX(c.started_at) FILTER (
-<a href=#456 id=456 data-nosnippet>456</a>    WHERE c.duration_ms IS NOT NULL
-<a href=#457 id=457 data-nosnippet>457</a>      AND NOT c.succeeded
-<a href=#458 id=458 data-nosnippet>458</a>  ) AS "last_failure_at",
-<a href=#459 id=459 data-nosnippet>459</a>  (
-<a href=#460 id=460 data-nosnippet>460</a>    ARRAY_AGG(
-<a href=#461 id=461 data-nosnippet>461</a>      c.request_level_error_code
-<a href=#462 id=462 data-nosnippet>462</a>      ORDER BY c.started_at DESC
-<a href=#463 id=463 data-nosnippet>463</a>    ) FILTER (
-<a href=#464 id=464 data-nosnippet>464</a>      WHERE c.duration_ms IS NOT NULL
-<a href=#465 id=465 data-nosnippet>465</a>        AND NOT c.succeeded
-<a href=#466 id=466 data-nosnippet>466</a>        AND c.request_level_error_code IS NOT NULL
-<a href=#467 id=467 data-nosnippet>467</a>    )
-<a href=#468 id=468 data-nosnippet>468</a>  ) [1] AS "last_request_level_error_code"
-<a href=#469 id=469 data-nosnippet>469</a>FROM windows w
-<a href=#470 id=470 data-nosnippet>470</a>  JOIN suotar_api_calls c ON c.started_at &gt;= w.since
-<a href=#471 id=471 data-nosnippet>471</a>  AND c.deleted_at IS NULL
-<a href=#472 id=472 data-nosnippet>472</a>GROUP BY w.window_secs,
-<a href=#473 id=473 data-nosnippet>473</a>  c.endpoint
-<a href=#474 id=474 data-nosnippet>474</a>        "#</span>,
-<a href=#475 id=475 data-nosnippet>475</a>        <span class="kw-2">&amp;</span>window_secs,
-<a href=#476 id=476 data-nosnippet>476</a>        <span class="kw-2">&amp;</span>since,
-<a href=#477 id=477 data-nosnippet>477</a>    )
-<a href=#478 id=478 data-nosnippet>478</a>    .fetch_all(conn)
-<a href=#479 id=479 data-nosnippet>479</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#480 id=480 data-nosnippet>480</a>    <span class="prelude-val">Ok</span>(rows)
-<a href=#481 id=481 data-nosnippet>481</a>}
-<a href=#482 id=482 data-nosnippet>482</a>
-<a href=#483 id=483 data-nosnippet>483</a><span class="doccomment">/// Where one endpoint stands right now.
-<a href=#484 id=484 data-nosnippet>484</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#485 id=485 data-nosnippet>485</a></span><span class="kw">pub struct </span>SuotarEndpointStanding {
-<a href=#486 id=486 data-nosnippet>486</a>    <span class="kw">pub </span>endpoint: SuotarEndpoint,
-<a href=#487 id=487 data-nosnippet>487</a>    <span class="kw">pub </span>last_success_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#488 id=488 data-nosnippet>488</a>    <span class="kw">pub </span>last_failure_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#489 id=489 data-nosnippet>489</a>    <span class="doccomment">/// Finished failures since the last success, within the retention window.
-<a href=#490 id=490 data-nosnippet>490</a>    </span><span class="kw">pub </span>consecutive_failures: i64,
-<a href=#491 id=491 data-nosnippet>491</a>}
-<a href=#492 id=492 data-nosnippet>492</a>
-<a href=#493 id=493 data-nosnippet>493</a><span class="doccomment">/// Bounded to the last [`RETENTION_DAYS`]: this table grows one row per Suotar batch call, and the
-<a href=#494 id=494 data-nosnippet>494</a>/// Overview and the health tab each poll this every 30 seconds.
-<a href=#495 id=495 data-nosnippet>495</a></span><span class="kw">pub async fn </span>get_endpoint_standings(
-<a href=#496 id=496 data-nosnippet>496</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#497 id=497 data-nosnippet>497</a>) -&gt; ModelResult&lt;Vec&lt;SuotarEndpointStanding&gt;&gt; {
-<a href=#498 id=498 data-nosnippet>498</a>    <span class="kw">let </span>since = Utc::now() - chrono::Duration::days(RETENTION_DAYS);
-<a href=#499 id=499 data-nosnippet>499</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
-<a href=#500 id=500 data-nosnippet>500</a>        SuotarEndpointStanding,
-<a href=#501 id=501 data-nosnippet>501</a>        <span class="string">r#"
-<a href=#502 id=502 data-nosnippet>502</a>WITH last_success AS (
-<a href=#503 id=503 data-nosnippet>503</a>  SELECT endpoint,
-<a href=#504 id=504 data-nosnippet>504</a>    MAX(started_at) AS at
-<a href=#505 id=505 data-nosnippet>505</a>  FROM suotar_api_calls
-<a href=#506 id=506 data-nosnippet>506</a>  WHERE succeeded
-<a href=#507 id=507 data-nosnippet>507</a>    AND started_at &gt;= $1
-<a href=#508 id=508 data-nosnippet>508</a>    AND deleted_at IS NULL
-<a href=#509 id=509 data-nosnippet>509</a>  GROUP BY endpoint
-<a href=#510 id=510 data-nosnippet>510</a>)
-<a href=#511 id=511 data-nosnippet>511</a>SELECT c.endpoint AS "endpoint!: SuotarEndpoint",
-<a href=#512 id=512 data-nosnippet>512</a>  ls.at AS "last_success_at",
-<a href=#513 id=513 data-nosnippet>513</a>  MAX(c.started_at) FILTER (
-<a href=#514 id=514 data-nosnippet>514</a>    WHERE c.duration_ms IS NOT NULL
-<a href=#515 id=515 data-nosnippet>515</a>      AND NOT c.succeeded
-<a href=#516 id=516 data-nosnippet>516</a>  ) AS "last_failure_at",
-<a href=#517 id=517 data-nosnippet>517</a>  COUNT(*) FILTER (
-<a href=#518 id=518 data-nosnippet>518</a>    WHERE c.duration_ms IS NOT NULL
-<a href=#519 id=519 data-nosnippet>519</a>      AND NOT c.succeeded
-<a href=#520 id=520 data-nosnippet>520</a>      AND (
-<a href=#521 id=521 data-nosnippet>521</a>        ls.at IS NULL
-<a href=#522 id=522 data-nosnippet>522</a>        OR c.started_at &gt; ls.at
-<a href=#523 id=523 data-nosnippet>523</a>      )
-<a href=#524 id=524 data-nosnippet>524</a>  ) AS "consecutive_failures!"
-<a href=#525 id=525 data-nosnippet>525</a>FROM suotar_api_calls c
-<a href=#526 id=526 data-nosnippet>526</a>  LEFT JOIN last_success ls ON ls.endpoint = c.endpoint
-<a href=#527 id=527 data-nosnippet>527</a>WHERE c.started_at &gt;= $1
-<a href=#528 id=528 data-nosnippet>528</a>  AND c.deleted_at IS NULL
-<a href=#529 id=529 data-nosnippet>529</a>GROUP BY c.endpoint,
-<a href=#530 id=530 data-nosnippet>530</a>  ls.at
-<a href=#531 id=531 data-nosnippet>531</a>        "#</span>,
-<a href=#532 id=532 data-nosnippet>532</a>        since,
-<a href=#533 id=533 data-nosnippet>533</a>    )
-<a href=#534 id=534 data-nosnippet>534</a>    .fetch_all(conn)
-<a href=#535 id=535 data-nosnippet>535</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#536 id=536 data-nosnippet>536</a>    <span class="prelude-val">Ok</span>(rows)
-<a href=#537 id=537 data-nosnippet>537</a>}
-<a href=#538 id=538 data-nosnippet>538</a>
-<a href=#539 id=539 data-nosnippet>539</a><span class="doccomment">/// A run of failures the health rules key on.
-<a href=#540 id=540 data-nosnippet>540</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#541 id=541 data-nosnippet>541</a></span><span class="kw">pub struct </span>SuotarFailureRun {
-<a href=#542 id=542 data-nosnippet>542</a>    <span class="kw">pub </span>count: i64,
-<a href=#543 id=543 data-nosnippet>543</a>    <span class="kw">pub </span>last_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#544 id=544 data-nosnippet>544</a>}
-<a href=#545 id=545 data-nosnippet>545</a>
-<a href=#546 id=546 data-nosnippet>546</a><span class="doccomment">/// Calls Suotar refused our credentials on. One is enough to stop everything registering.
-<a href=#547 id=547 data-nosnippet>547</a></span><span class="kw">pub async fn </span>count_credential_rejections_since(
-<a href=#548 id=548 data-nosnippet>548</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#549 id=549 data-nosnippet>549</a>    since: DateTime&lt;Utc&gt;,
-<a href=#550 id=550 data-nosnippet>550</a>) -&gt; ModelResult&lt;SuotarFailureRun&gt; {
-<a href=#551 id=551 data-nosnippet>551</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query_as!</span>(
-<a href=#552 id=552 data-nosnippet>552</a>        SuotarFailureRun,
-<a href=#553 id=553 data-nosnippet>553</a>        <span class="string">r#"
-<a href=#554 id=554 data-nosnippet>554</a>SELECT COUNT(*) AS "count!",
-<a href=#555 id=555 data-nosnippet>555</a>  MAX(started_at) AS "last_at"
-<a href=#556 id=556 data-nosnippet>556</a>FROM suotar_api_calls
-<a href=#557 id=557 data-nosnippet>557</a>WHERE started_at &gt;= $1
-<a href=#558 id=558 data-nosnippet>558</a>  AND deleted_at IS NULL
-<a href=#559 id=559 data-nosnippet>559</a>  AND (
-<a href=#560 id=560 data-nosnippet>560</a>    http_status IN (401, 403)
-<a href=#561 id=561 data-nosnippet>561</a>    OR request_level_error_code = 'unauthorized'
-<a href=#562 id=562 data-nosnippet>562</a>  )
-<a href=#563 id=563 data-nosnippet>563</a>        "#</span>,
-<a href=#564 id=564 data-nosnippet>564</a>        since,
-<a href=#565 id=565 data-nosnippet>565</a>    )
-<a href=#566 id=566 data-nosnippet>566</a>    .fetch_one(conn)
-<a href=#567 id=567 data-nosnippet>567</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#568 id=568 data-nosnippet>568</a>    <span class="prelude-val">Ok</span>(row)
-<a href=#569 id=569 data-nosnippet>569</a>}
-<a href=#570 id=570 data-nosnippet>570</a>
-<a href=#571 id=571 data-nosnippet>571</a><span class="doccomment">/// The unbroken run of "Suotar did not answer usefully" at the end of the window. A transport
-<a href=#572 id=572 data-nosnippet>572</a>/// failure carries no HTTP status, which is how it is told from a refusal Suotar composed itself.
-<a href=#573 id=573 data-nosnippet>573</a></span><span class="kw">pub async fn </span>count_unreachable_run_since(
-<a href=#574 id=574 data-nosnippet>574</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#575 id=575 data-nosnippet>575</a>    since: DateTime&lt;Utc&gt;,
-<a href=#576 id=576 data-nosnippet>576</a>) -&gt; ModelResult&lt;SuotarFailureRun&gt; {
-<a href=#577 id=577 data-nosnippet>577</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query_as!</span>(
-<a href=#578 id=578 data-nosnippet>578</a>        SuotarFailureRun,
-<a href=#579 id=579 data-nosnippet>579</a>        <span class="string">r#"
-<a href=#580 id=580 data-nosnippet>580</a>WITH last_success AS (
-<a href=#581 id=581 data-nosnippet>581</a>  SELECT MAX(started_at) AS at
-<a href=#582 id=582 data-nosnippet>582</a>  FROM suotar_api_calls
-<a href=#583 id=583 data-nosnippet>583</a>  WHERE succeeded
-<a href=#584 id=584 data-nosnippet>584</a>    AND started_at &gt;= $1
-<a href=#585 id=585 data-nosnippet>585</a>    AND deleted_at IS NULL
-<a href=#586 id=586 data-nosnippet>586</a>)
-<a href=#587 id=587 data-nosnippet>587</a>SELECT COUNT(*) AS "count!",
-<a href=#588 id=588 data-nosnippet>588</a>  MAX(c.started_at) AS "last_at"
-<a href=#589 id=589 data-nosnippet>589</a>FROM suotar_api_calls c
-<a href=#590 id=590 data-nosnippet>590</a>  CROSS JOIN last_success ls
-<a href=#591 id=591 data-nosnippet>591</a>WHERE c.started_at &gt;= $1
+<a href=#399 id=399 data-nosnippet>399</a><span class="doccomment">/// The narrowings the API log applies, all of them in SQL.
+<a href=#400 id=400 data-nosnippet>400</a></span><span class="attr">#[derive(Debug, Clone, Default)]
+<a href=#401 id=401 data-nosnippet>401</a></span><span class="kw">pub struct </span>SuotarApiCallFilters {
+<a href=#402 id=402 data-nosnippet>402</a>    <span class="kw">pub </span>endpoint: <span class="prelude-ty">Option</span>&lt;SuotarEndpoint&gt;,
+<a href=#403 id=403 data-nosnippet>403</a>    <span class="kw">pub </span>succeeded: <span class="prelude-ty">Option</span>&lt;bool&gt;,
+<a href=#404 id=404 data-nosnippet>404</a>    <span class="doccomment">/// The phase or manual action that made the call, matched exactly.
+<a href=#405 id=405 data-nosnippet>405</a>    </span><span class="kw">pub </span>worker_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#406 id=406 data-nosnippet>406</a>    <span class="kw">pub </span>started_after: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#407 id=407 data-nosnippet>407</a>    <span class="kw">pub </span>started_before: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#408 id=408 data-nosnippet>408</a>    <span class="doccomment">/// Searches the ledger rows a call covered, never the bodies: the bodies are scrubbed, so a
+<a href=#409 id=409 data-nosnippet>409</a>    /// student number is not in them to find.
+<a href=#410 id=410 data-nosnippet>410</a>    </span><span class="kw">pub </span>credit_registration_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#411 id=411 data-nosnippet>411</a>}
+<a href=#412 id=412 data-nosnippet>412</a>
+<a href=#413 id=413 data-nosnippet>413</a><span class="doccomment">/// A call with the page's total attached, so a page and its count cannot come from two queries.
+<a href=#414 id=414 data-nosnippet>414</a></span><span class="kw">pub struct </span>SuotarApiCallPageRow {
+<a href=#415 id=415 data-nosnippet>415</a>    <span class="kw">pub </span>call: SuotarApiCall,
+<a href=#416 id=416 data-nosnippet>416</a>    <span class="kw">pub </span>total_count: i64,
+<a href=#417 id=417 data-nosnippet>417</a>}
+<a href=#418 id=418 data-nosnippet>418</a>
+<a href=#419 id=419 data-nosnippet>419</a><span class="doccomment">/// A page of the call log, newest first. Bodies come back exactly as stored, which is scrubbed.
+<a href=#420 id=420 data-nosnippet>420</a></span><span class="kw">pub async fn </span>get_page(
+<a href=#421 id=421 data-nosnippet>421</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#422 id=422 data-nosnippet>422</a>    filters: <span class="kw-2">&amp;</span>SuotarApiCallFilters,
+<a href=#423 id=423 data-nosnippet>423</a>    limit: i64,
+<a href=#424 id=424 data-nosnippet>424</a>    offset: i64,
+<a href=#425 id=425 data-nosnippet>425</a>) -&gt; ModelResult&lt;Vec&lt;SuotarApiCallPageRow&gt;&gt; {
+<a href=#426 id=426 data-nosnippet>426</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query!</span>(
+<a href=#427 id=427 data-nosnippet>427</a>        <span class="string">r#"
+<a href=#428 id=428 data-nosnippet>428</a>SELECT id,
+<a href=#429 id=429 data-nosnippet>429</a>  created_at,
+<a href=#430 id=430 data-nosnippet>430</a>  updated_at,
+<a href=#431 id=431 data-nosnippet>431</a>  deleted_at,
+<a href=#432 id=432 data-nosnippet>432</a>  endpoint AS "endpoint!: SuotarEndpoint",
+<a href=#433 id=433 data-nosnippet>433</a>  request_item_count,
+<a href=#434 id=434 data-nosnippet>434</a>  http_status,
+<a href=#435 id=435 data-nosnippet>435</a>  duration_ms,
+<a href=#436 id=436 data-nosnippet>436</a>  succeeded,
+<a href=#437 id=437 data-nosnippet>437</a>  ok_item_count,
+<a href=#438 id=438 data-nosnippet>438</a>  error_item_count,
+<a href=#439 id=439 data-nosnippet>439</a>  request_level_error_code,
+<a href=#440 id=440 data-nosnippet>440</a>  error_message,
+<a href=#441 id=441 data-nosnippet>441</a>  request_body_sample,
+<a href=#442 id=442 data-nosnippet>442</a>  response_body_sample,
+<a href=#443 id=443 data-nosnippet>443</a>  credit_registration_ids,
+<a href=#444 id=444 data-nosnippet>444</a>  worker_name,
+<a href=#445 id=445 data-nosnippet>445</a>  started_at,
+<a href=#446 id=446 data-nosnippet>446</a>  COUNT(*) OVER () AS "total_count!"
+<a href=#447 id=447 data-nosnippet>447</a>FROM suotar_api_calls
+<a href=#448 id=448 data-nosnippet>448</a>WHERE deleted_at IS NULL
+<a href=#449 id=449 data-nosnippet>449</a>  AND (
+<a href=#450 id=450 data-nosnippet>450</a>    $1::suotar_endpoint IS NULL
+<a href=#451 id=451 data-nosnippet>451</a>    OR endpoint = $1
+<a href=#452 id=452 data-nosnippet>452</a>  )
+<a href=#453 id=453 data-nosnippet>453</a>  AND ($2::bool IS NULL OR succeeded = $2)
+<a href=#454 id=454 data-nosnippet>454</a>  AND ($3::text IS NULL OR worker_name = $3)
+<a href=#455 id=455 data-nosnippet>455</a>  AND ($4::timestamptz IS NULL OR started_at &gt;= $4)
+<a href=#456 id=456 data-nosnippet>456</a>  AND ($5::timestamptz IS NULL OR started_at &lt;= $5)
+<a href=#457 id=457 data-nosnippet>457</a>  AND (
+<a href=#458 id=458 data-nosnippet>458</a>    $6::uuid IS NULL
+<a href=#459 id=459 data-nosnippet>459</a>    OR credit_registration_ids @&gt; ARRAY [$6::uuid]
+<a href=#460 id=460 data-nosnippet>460</a>  )
+<a href=#461 id=461 data-nosnippet>461</a>ORDER BY started_at DESC,
+<a href=#462 id=462 data-nosnippet>462</a>  id
+<a href=#463 id=463 data-nosnippet>463</a>LIMIT $7 OFFSET $8
+<a href=#464 id=464 data-nosnippet>464</a>        "#</span>,
+<a href=#465 id=465 data-nosnippet>465</a>        filters.endpoint <span class="kw">as </span><span class="prelude-ty">Option</span>&lt;SuotarEndpoint&gt;,
+<a href=#466 id=466 data-nosnippet>466</a>        filters.succeeded,
+<a href=#467 id=467 data-nosnippet>467</a>        filters.worker_name.as_deref(),
+<a href=#468 id=468 data-nosnippet>468</a>        filters.started_after,
+<a href=#469 id=469 data-nosnippet>469</a>        filters.started_before,
+<a href=#470 id=470 data-nosnippet>470</a>        filters.credit_registration_id,
+<a href=#471 id=471 data-nosnippet>471</a>        limit,
+<a href=#472 id=472 data-nosnippet>472</a>        offset,
+<a href=#473 id=473 data-nosnippet>473</a>    )
+<a href=#474 id=474 data-nosnippet>474</a>    .fetch_all(conn)
+<a href=#475 id=475 data-nosnippet>475</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#476 id=476 data-nosnippet>476</a>    <span class="prelude-val">Ok</span>(rows
+<a href=#477 id=477 data-nosnippet>477</a>        .into_iter()
+<a href=#478 id=478 data-nosnippet>478</a>        .map(|row| SuotarApiCallPageRow {
+<a href=#479 id=479 data-nosnippet>479</a>            total_count: row.total_count,
+<a href=#480 id=480 data-nosnippet>480</a>            call: SuotarApiCall {
+<a href=#481 id=481 data-nosnippet>481</a>                id: row.id,
+<a href=#482 id=482 data-nosnippet>482</a>                created_at: row.created_at,
+<a href=#483 id=483 data-nosnippet>483</a>                updated_at: row.updated_at,
+<a href=#484 id=484 data-nosnippet>484</a>                deleted_at: row.deleted_at,
+<a href=#485 id=485 data-nosnippet>485</a>                endpoint: row.endpoint,
+<a href=#486 id=486 data-nosnippet>486</a>                request_item_count: row.request_item_count,
+<a href=#487 id=487 data-nosnippet>487</a>                http_status: row.http_status,
+<a href=#488 id=488 data-nosnippet>488</a>                duration_ms: row.duration_ms,
+<a href=#489 id=489 data-nosnippet>489</a>                succeeded: row.succeeded,
+<a href=#490 id=490 data-nosnippet>490</a>                ok_item_count: row.ok_item_count,
+<a href=#491 id=491 data-nosnippet>491</a>                error_item_count: row.error_item_count,
+<a href=#492 id=492 data-nosnippet>492</a>                request_level_error_code: row.request_level_error_code,
+<a href=#493 id=493 data-nosnippet>493</a>                error_message: row.error_message,
+<a href=#494 id=494 data-nosnippet>494</a>                request_body_sample: row.request_body_sample,
+<a href=#495 id=495 data-nosnippet>495</a>                response_body_sample: row.response_body_sample,
+<a href=#496 id=496 data-nosnippet>496</a>                credit_registration_ids: row.credit_registration_ids,
+<a href=#497 id=497 data-nosnippet>497</a>                worker_name: row.worker_name,
+<a href=#498 id=498 data-nosnippet>498</a>                started_at: row.started_at,
+<a href=#499 id=499 data-nosnippet>499</a>            },
+<a href=#500 id=500 data-nosnippet>500</a>        })
+<a href=#501 id=501 data-nosnippet>501</a>        .collect())
+<a href=#502 id=502 data-nosnippet>502</a>}
+<a href=#503 id=503 data-nosnippet>503</a>
+<a href=#504 id=504 data-nosnippet>504</a><span class="doccomment">/// The distinct `worker_name` values in the log, so the filter offers what exists rather than a
+<a href=#505 id=505 data-nosnippet>505</a>/// hardcoded list of phase names.
+<a href=#506 id=506 data-nosnippet>506</a></span><span class="kw">pub async fn </span>get_worker_names(conn: <span class="kw-2">&amp;mut </span>PgConnection) -&gt; ModelResult&lt;Vec&lt;String&gt;&gt; {
+<a href=#507 id=507 data-nosnippet>507</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_scalar!</span>(
+<a href=#508 id=508 data-nosnippet>508</a>        <span class="string">r#"
+<a href=#509 id=509 data-nosnippet>509</a>SELECT DISTINCT worker_name
+<a href=#510 id=510 data-nosnippet>510</a>FROM suotar_api_calls
+<a href=#511 id=511 data-nosnippet>511</a>WHERE deleted_at IS NULL
+<a href=#512 id=512 data-nosnippet>512</a>ORDER BY worker_name
+<a href=#513 id=513 data-nosnippet>513</a>        "#</span>,
+<a href=#514 id=514 data-nosnippet>514</a>    )
+<a href=#515 id=515 data-nosnippet>515</a>    .fetch_all(conn)
+<a href=#516 id=516 data-nosnippet>516</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#517 id=517 data-nosnippet>517</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#518 id=518 data-nosnippet>518</a>}
+<a href=#519 id=519 data-nosnippet>519</a>
+<a href=#520 id=520 data-nosnippet>520</a><span class="doccomment">/// One endpoint's traffic over a window, one of possibly several computed together by
+<a href=#521 id=521 data-nosnippet>521</a>/// [`get_endpoint_stats_for_windows`].
+<a href=#522 id=522 data-nosnippet>522</a>///
+<a href=#523 id=523 data-nosnippet>523</a>/// `duration_ms IS NULL` means still in flight, since the row is inserted before the request
+<a href=#524 id=524 data-nosnippet>524</a>/// leaves; the counts below take finished calls only, or one in progress would read as a failure.
+<a href=#525 id=525 data-nosnippet>525</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#526 id=526 data-nosnippet>526</a></span><span class="kw">pub struct </span>SuotarEndpointStatsForWindow {
+<a href=#527 id=527 data-nosnippet>527</a>    <span class="kw">pub </span>window_secs: i64,
+<a href=#528 id=528 data-nosnippet>528</a>    <span class="kw">pub </span>endpoint: SuotarEndpoint,
+<a href=#529 id=529 data-nosnippet>529</a>    <span class="kw">pub </span>call_count: i64,
+<a href=#530 id=530 data-nosnippet>530</a>    <span class="kw">pub </span>failed_call_count: i64,
+<a href=#531 id=531 data-nosnippet>531</a>    <span class="kw">pub </span>in_flight_count: i64,
+<a href=#532 id=532 data-nosnippet>532</a>    <span class="kw">pub </span>ok_item_count: i64,
+<a href=#533 id=533 data-nosnippet>533</a>    <span class="kw">pub </span>error_item_count: i64,
+<a href=#534 id=534 data-nosnippet>534</a>    <span class="kw">pub </span>p50_duration_ms: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+<a href=#535 id=535 data-nosnippet>535</a>    <span class="kw">pub </span>p95_duration_ms: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+<a href=#536 id=536 data-nosnippet>536</a>    <span class="kw">pub </span>last_success_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#537 id=537 data-nosnippet>537</a>    <span class="kw">pub </span>last_failure_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#538 id=538 data-nosnippet>538</a>    <span class="kw">pub </span>last_request_level_error_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#539 id=539 data-nosnippet>539</a>}
+<a href=#540 id=540 data-nosnippet>540</a>
+<a href=#541 id=541 data-nosnippet>541</a><span class="doccomment">/// One scan of the table joined against the window list, so several windows cost one pass rather
+<a href=#542 id=542 data-nosnippet>542</a>/// than one full pass each. A single window is just a one-element `window_secs`.
+<a href=#543 id=543 data-nosnippet>543</a></span><span class="kw">pub async fn </span>get_endpoint_stats_for_windows(
+<a href=#544 id=544 data-nosnippet>544</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#545 id=545 data-nosnippet>545</a>    window_secs: <span class="kw-2">&amp;</span>[i64],
+<a href=#546 id=546 data-nosnippet>546</a>) -&gt; ModelResult&lt;Vec&lt;SuotarEndpointStatsForWindow&gt;&gt; {
+<a href=#547 id=547 data-nosnippet>547</a>    <span class="kw">let </span>now = Utc::now();
+<a href=#548 id=548 data-nosnippet>548</a>    <span class="kw">let </span>window_secs = window_secs.to_vec();
+<a href=#549 id=549 data-nosnippet>549</a>    <span class="kw">let </span>since: Vec&lt;DateTime&lt;Utc&gt;&gt; = window_secs
+<a href=#550 id=550 data-nosnippet>550</a>        .iter()
+<a href=#551 id=551 data-nosnippet>551</a>        .map(|secs| now - chrono::Duration::seconds(<span class="kw-2">*</span>secs))
+<a href=#552 id=552 data-nosnippet>552</a>        .collect();
+<a href=#553 id=553 data-nosnippet>553</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
+<a href=#554 id=554 data-nosnippet>554</a>        SuotarEndpointStatsForWindow,
+<a href=#555 id=555 data-nosnippet>555</a>        <span class="string">r#"
+<a href=#556 id=556 data-nosnippet>556</a>WITH windows AS (
+<a href=#557 id=557 data-nosnippet>557</a>  SELECT * FROM UNNEST($1::bigint [], $2::timestamptz []) AS w(window_secs, since)
+<a href=#558 id=558 data-nosnippet>558</a>)
+<a href=#559 id=559 data-nosnippet>559</a>SELECT w.window_secs AS "window_secs!",
+<a href=#560 id=560 data-nosnippet>560</a>  c.endpoint,
+<a href=#561 id=561 data-nosnippet>561</a>  COUNT(*) FILTER (WHERE c.duration_ms IS NOT NULL) AS "call_count!",
+<a href=#562 id=562 data-nosnippet>562</a>  COUNT(*) FILTER (
+<a href=#563 id=563 data-nosnippet>563</a>    WHERE c.duration_ms IS NOT NULL
+<a href=#564 id=564 data-nosnippet>564</a>      AND NOT c.succeeded
+<a href=#565 id=565 data-nosnippet>565</a>  ) AS "failed_call_count!",
+<a href=#566 id=566 data-nosnippet>566</a>  COUNT(*) FILTER (WHERE c.duration_ms IS NULL) AS "in_flight_count!",
+<a href=#567 id=567 data-nosnippet>567</a>  COALESCE(SUM(c.ok_item_count), 0) AS "ok_item_count!",
+<a href=#568 id=568 data-nosnippet>568</a>  COALESCE(SUM(c.error_item_count), 0) AS "error_item_count!",
+<a href=#569 id=569 data-nosnippet>569</a>  PERCENTILE_DISC(0.5) WITHIN GROUP (
+<a href=#570 id=570 data-nosnippet>570</a>    ORDER BY c.duration_ms
+<a href=#571 id=571 data-nosnippet>571</a>  ) AS "p50_duration_ms",
+<a href=#572 id=572 data-nosnippet>572</a>  PERCENTILE_DISC(0.95) WITHIN GROUP (
+<a href=#573 id=573 data-nosnippet>573</a>    ORDER BY c.duration_ms
+<a href=#574 id=574 data-nosnippet>574</a>  ) AS "p95_duration_ms",
+<a href=#575 id=575 data-nosnippet>575</a>  MAX(c.started_at) FILTER (WHERE c.succeeded) AS "last_success_at",
+<a href=#576 id=576 data-nosnippet>576</a>  MAX(c.started_at) FILTER (
+<a href=#577 id=577 data-nosnippet>577</a>    WHERE c.duration_ms IS NOT NULL
+<a href=#578 id=578 data-nosnippet>578</a>      AND NOT c.succeeded
+<a href=#579 id=579 data-nosnippet>579</a>  ) AS "last_failure_at",
+<a href=#580 id=580 data-nosnippet>580</a>  (
+<a href=#581 id=581 data-nosnippet>581</a>    ARRAY_AGG(
+<a href=#582 id=582 data-nosnippet>582</a>      c.request_level_error_code
+<a href=#583 id=583 data-nosnippet>583</a>      ORDER BY c.started_at DESC
+<a href=#584 id=584 data-nosnippet>584</a>    ) FILTER (
+<a href=#585 id=585 data-nosnippet>585</a>      WHERE c.duration_ms IS NOT NULL
+<a href=#586 id=586 data-nosnippet>586</a>        AND NOT c.succeeded
+<a href=#587 id=587 data-nosnippet>587</a>        AND c.request_level_error_code IS NOT NULL
+<a href=#588 id=588 data-nosnippet>588</a>    )
+<a href=#589 id=589 data-nosnippet>589</a>  ) [1] AS "last_request_level_error_code"
+<a href=#590 id=590 data-nosnippet>590</a>FROM windows w
+<a href=#591 id=591 data-nosnippet>591</a>  JOIN suotar_api_calls c ON c.started_at &gt;= w.since
 <a href=#592 id=592 data-nosnippet>592</a>  AND c.deleted_at IS NULL
-<a href=#593 id=593 data-nosnippet>593</a>  AND c.duration_ms IS NOT NULL
-<a href=#594 id=594 data-nosnippet>594</a>  AND NOT c.succeeded
-<a href=#595 id=595 data-nosnippet>595</a>  AND (
-<a href=#596 id=596 data-nosnippet>596</a>    c.http_status IS NULL
-<a href=#597 id=597 data-nosnippet>597</a>    OR c.http_status &gt;= 500
-<a href=#598 id=598 data-nosnippet>598</a>  )
-<a href=#599 id=599 data-nosnippet>599</a>  AND (
-<a href=#600 id=600 data-nosnippet>600</a>    ls.at IS NULL
-<a href=#601 id=601 data-nosnippet>601</a>    OR c.started_at &gt; ls.at
-<a href=#602 id=602 data-nosnippet>602</a>  )
-<a href=#603 id=603 data-nosnippet>603</a>        "#</span>,
-<a href=#604 id=604 data-nosnippet>604</a>        since,
-<a href=#605 id=605 data-nosnippet>605</a>    )
-<a href=#606 id=606 data-nosnippet>606</a>    .fetch_one(conn)
-<a href=#607 id=607 data-nosnippet>607</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#608 id=608 data-nosnippet>608</a>    <span class="prelude-val">Ok</span>(row)
-<a href=#609 id=609 data-nosnippet>609</a>}
-<a href=#610 id=610 data-nosnippet>610</a>
-<a href=#611 id=611 data-nosnippet>611</a><span class="doccomment">/// Hard-deletes rows past the retention window: the stored bodies must stop existing.
-<a href=#612 id=612 data-nosnippet>612</a></span><span class="kw">pub async fn </span>delete_older_than(conn: <span class="kw-2">&amp;mut </span>PgConnection, cutoff: DateTime&lt;Utc&gt;) -&gt; ModelResult&lt;u64&gt; {
-<a href=#613 id=613 data-nosnippet>613</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
-<a href=#614 id=614 data-nosnippet>614</a>        <span class="string">r#"
-<a href=#615 id=615 data-nosnippet>615</a>DELETE FROM suotar_api_calls
-<a href=#616 id=616 data-nosnippet>616</a>WHERE started_at &lt; $1
-<a href=#617 id=617 data-nosnippet>617</a>        "#</span>,
-<a href=#618 id=618 data-nosnippet>618</a>        cutoff
-<a href=#619 id=619 data-nosnippet>619</a>    )
-<a href=#620 id=620 data-nosnippet>620</a>    .execute(conn)
-<a href=#621 id=621 data-nosnippet>621</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#622 id=622 data-nosnippet>622</a>    <span class="prelude-val">Ok</span>(res.rows_affected())
-<a href=#623 id=623 data-nosnippet>623</a>}
+<a href=#593 id=593 data-nosnippet>593</a>GROUP BY w.window_secs,
+<a href=#594 id=594 data-nosnippet>594</a>  c.endpoint
+<a href=#595 id=595 data-nosnippet>595</a>        "#</span>,
+<a href=#596 id=596 data-nosnippet>596</a>        <span class="kw-2">&amp;</span>window_secs,
+<a href=#597 id=597 data-nosnippet>597</a>        <span class="kw-2">&amp;</span>since,
+<a href=#598 id=598 data-nosnippet>598</a>    )
+<a href=#599 id=599 data-nosnippet>599</a>    .fetch_all(conn)
+<a href=#600 id=600 data-nosnippet>600</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#601 id=601 data-nosnippet>601</a>    <span class="prelude-val">Ok</span>(rows)
+<a href=#602 id=602 data-nosnippet>602</a>}
+<a href=#603 id=603 data-nosnippet>603</a>
+<a href=#604 id=604 data-nosnippet>604</a><span class="doccomment">/// Where one endpoint stands right now.
+<a href=#605 id=605 data-nosnippet>605</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#606 id=606 data-nosnippet>606</a></span><span class="kw">pub struct </span>SuotarEndpointStanding {
+<a href=#607 id=607 data-nosnippet>607</a>    <span class="kw">pub </span>endpoint: SuotarEndpoint,
+<a href=#608 id=608 data-nosnippet>608</a>    <span class="kw">pub </span>last_success_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#609 id=609 data-nosnippet>609</a>    <span class="kw">pub </span>last_failure_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#610 id=610 data-nosnippet>610</a>    <span class="doccomment">/// Finished failures since the last success, within the retention window.
+<a href=#611 id=611 data-nosnippet>611</a>    </span><span class="kw">pub </span>consecutive_failures: i64,
+<a href=#612 id=612 data-nosnippet>612</a>}
+<a href=#613 id=613 data-nosnippet>613</a>
+<a href=#614 id=614 data-nosnippet>614</a><span class="doccomment">/// Bounded to the last [`RETENTION_DAYS`]: this table grows one row per Suotar batch call, and the
+<a href=#615 id=615 data-nosnippet>615</a>/// Overview and the health tab each poll this every 30 seconds.
+<a href=#616 id=616 data-nosnippet>616</a></span><span class="kw">pub async fn </span>get_endpoint_standings(
+<a href=#617 id=617 data-nosnippet>617</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#618 id=618 data-nosnippet>618</a>) -&gt; ModelResult&lt;Vec&lt;SuotarEndpointStanding&gt;&gt; {
+<a href=#619 id=619 data-nosnippet>619</a>    <span class="kw">let </span>since = Utc::now() - chrono::Duration::days(RETENTION_DAYS);
+<a href=#620 id=620 data-nosnippet>620</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
+<a href=#621 id=621 data-nosnippet>621</a>        SuotarEndpointStanding,
+<a href=#622 id=622 data-nosnippet>622</a>        <span class="string">r#"
+<a href=#623 id=623 data-nosnippet>623</a>WITH last_success AS (
+<a href=#624 id=624 data-nosnippet>624</a>  SELECT endpoint,
+<a href=#625 id=625 data-nosnippet>625</a>    MAX(started_at) AS at
+<a href=#626 id=626 data-nosnippet>626</a>  FROM suotar_api_calls
+<a href=#627 id=627 data-nosnippet>627</a>  WHERE succeeded
+<a href=#628 id=628 data-nosnippet>628</a>    AND started_at &gt;= $1
+<a href=#629 id=629 data-nosnippet>629</a>    AND deleted_at IS NULL
+<a href=#630 id=630 data-nosnippet>630</a>  GROUP BY endpoint
+<a href=#631 id=631 data-nosnippet>631</a>)
+<a href=#632 id=632 data-nosnippet>632</a>SELECT c.endpoint AS "endpoint!: SuotarEndpoint",
+<a href=#633 id=633 data-nosnippet>633</a>  ls.at AS "last_success_at",
+<a href=#634 id=634 data-nosnippet>634</a>  MAX(c.started_at) FILTER (
+<a href=#635 id=635 data-nosnippet>635</a>    WHERE c.duration_ms IS NOT NULL
+<a href=#636 id=636 data-nosnippet>636</a>      AND NOT c.succeeded
+<a href=#637 id=637 data-nosnippet>637</a>  ) AS "last_failure_at",
+<a href=#638 id=638 data-nosnippet>638</a>  COUNT(*) FILTER (
+<a href=#639 id=639 data-nosnippet>639</a>    WHERE c.duration_ms IS NOT NULL
+<a href=#640 id=640 data-nosnippet>640</a>      AND NOT c.succeeded
+<a href=#641 id=641 data-nosnippet>641</a>      AND (
+<a href=#642 id=642 data-nosnippet>642</a>        ls.at IS NULL
+<a href=#643 id=643 data-nosnippet>643</a>        OR c.started_at &gt; ls.at
+<a href=#644 id=644 data-nosnippet>644</a>      )
+<a href=#645 id=645 data-nosnippet>645</a>  ) AS "consecutive_failures!"
+<a href=#646 id=646 data-nosnippet>646</a>FROM suotar_api_calls c
+<a href=#647 id=647 data-nosnippet>647</a>  LEFT JOIN last_success ls ON ls.endpoint = c.endpoint
+<a href=#648 id=648 data-nosnippet>648</a>WHERE c.started_at &gt;= $1
+<a href=#649 id=649 data-nosnippet>649</a>  AND c.deleted_at IS NULL
+<a href=#650 id=650 data-nosnippet>650</a>GROUP BY c.endpoint,
+<a href=#651 id=651 data-nosnippet>651</a>  ls.at
+<a href=#652 id=652 data-nosnippet>652</a>        "#</span>,
+<a href=#653 id=653 data-nosnippet>653</a>        since,
+<a href=#654 id=654 data-nosnippet>654</a>    )
+<a href=#655 id=655 data-nosnippet>655</a>    .fetch_all(conn)
+<a href=#656 id=656 data-nosnippet>656</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#657 id=657 data-nosnippet>657</a>    <span class="prelude-val">Ok</span>(rows)
+<a href=#658 id=658 data-nosnippet>658</a>}
+<a href=#659 id=659 data-nosnippet>659</a>
+<a href=#660 id=660 data-nosnippet>660</a><span class="doccomment">/// A run of failures the health rules key on.
+<a href=#661 id=661 data-nosnippet>661</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#662 id=662 data-nosnippet>662</a></span><span class="kw">pub struct </span>SuotarFailureRun {
+<a href=#663 id=663 data-nosnippet>663</a>    <span class="kw">pub </span>count: i64,
+<a href=#664 id=664 data-nosnippet>664</a>    <span class="kw">pub </span>last_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#665 id=665 data-nosnippet>665</a>}
+<a href=#666 id=666 data-nosnippet>666</a>
+<a href=#667 id=667 data-nosnippet>667</a><span class="doccomment">/// Calls Suotar refused our credentials on. One is enough to stop everything registering.
+<a href=#668 id=668 data-nosnippet>668</a></span><span class="kw">pub async fn </span>count_credential_rejections_since(
+<a href=#669 id=669 data-nosnippet>669</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#670 id=670 data-nosnippet>670</a>    since: DateTime&lt;Utc&gt;,
+<a href=#671 id=671 data-nosnippet>671</a>) -&gt; ModelResult&lt;SuotarFailureRun&gt; {
+<a href=#672 id=672 data-nosnippet>672</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query_as!</span>(
+<a href=#673 id=673 data-nosnippet>673</a>        SuotarFailureRun,
+<a href=#674 id=674 data-nosnippet>674</a>        <span class="string">r#"
+<a href=#675 id=675 data-nosnippet>675</a>SELECT COUNT(*) AS "count!",
+<a href=#676 id=676 data-nosnippet>676</a>  MAX(started_at) AS "last_at"
+<a href=#677 id=677 data-nosnippet>677</a>FROM suotar_api_calls
+<a href=#678 id=678 data-nosnippet>678</a>WHERE started_at &gt;= $1
+<a href=#679 id=679 data-nosnippet>679</a>  AND deleted_at IS NULL
+<a href=#680 id=680 data-nosnippet>680</a>  AND (
+<a href=#681 id=681 data-nosnippet>681</a>    http_status IN (401, 403)
+<a href=#682 id=682 data-nosnippet>682</a>    OR request_level_error_code = 'unauthorized'
+<a href=#683 id=683 data-nosnippet>683</a>  )
+<a href=#684 id=684 data-nosnippet>684</a>        "#</span>,
+<a href=#685 id=685 data-nosnippet>685</a>        since,
+<a href=#686 id=686 data-nosnippet>686</a>    )
+<a href=#687 id=687 data-nosnippet>687</a>    .fetch_one(conn)
+<a href=#688 id=688 data-nosnippet>688</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#689 id=689 data-nosnippet>689</a>    <span class="prelude-val">Ok</span>(row)
+<a href=#690 id=690 data-nosnippet>690</a>}
+<a href=#691 id=691 data-nosnippet>691</a>
+<a href=#692 id=692 data-nosnippet>692</a><span class="doccomment">/// The unbroken run of "Suotar did not answer usefully" at the end of the window. A transport
+<a href=#693 id=693 data-nosnippet>693</a>/// failure carries no HTTP status, which is how it is told from a refusal Suotar composed itself.
+<a href=#694 id=694 data-nosnippet>694</a></span><span class="kw">pub async fn </span>count_unreachable_run_since(
+<a href=#695 id=695 data-nosnippet>695</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#696 id=696 data-nosnippet>696</a>    since: DateTime&lt;Utc&gt;,
+<a href=#697 id=697 data-nosnippet>697</a>) -&gt; ModelResult&lt;SuotarFailureRun&gt; {
+<a href=#698 id=698 data-nosnippet>698</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query_as!</span>(
+<a href=#699 id=699 data-nosnippet>699</a>        SuotarFailureRun,
+<a href=#700 id=700 data-nosnippet>700</a>        <span class="string">r#"
+<a href=#701 id=701 data-nosnippet>701</a>WITH last_success AS (
+<a href=#702 id=702 data-nosnippet>702</a>  SELECT MAX(started_at) AS at
+<a href=#703 id=703 data-nosnippet>703</a>  FROM suotar_api_calls
+<a href=#704 id=704 data-nosnippet>704</a>  WHERE succeeded
+<a href=#705 id=705 data-nosnippet>705</a>    AND started_at &gt;= $1
+<a href=#706 id=706 data-nosnippet>706</a>    AND deleted_at IS NULL
+<a href=#707 id=707 data-nosnippet>707</a>)
+<a href=#708 id=708 data-nosnippet>708</a>SELECT COUNT(*) AS "count!",
+<a href=#709 id=709 data-nosnippet>709</a>  MAX(c.started_at) AS "last_at"
+<a href=#710 id=710 data-nosnippet>710</a>FROM suotar_api_calls c
+<a href=#711 id=711 data-nosnippet>711</a>  CROSS JOIN last_success ls
+<a href=#712 id=712 data-nosnippet>712</a>WHERE c.started_at &gt;= $1
+<a href=#713 id=713 data-nosnippet>713</a>  AND c.deleted_at IS NULL
+<a href=#714 id=714 data-nosnippet>714</a>  AND c.duration_ms IS NOT NULL
+<a href=#715 id=715 data-nosnippet>715</a>  AND NOT c.succeeded
+<a href=#716 id=716 data-nosnippet>716</a>  AND (
+<a href=#717 id=717 data-nosnippet>717</a>    c.http_status IS NULL
+<a href=#718 id=718 data-nosnippet>718</a>    OR c.http_status &gt;= 500
+<a href=#719 id=719 data-nosnippet>719</a>  )
+<a href=#720 id=720 data-nosnippet>720</a>  AND (
+<a href=#721 id=721 data-nosnippet>721</a>    ls.at IS NULL
+<a href=#722 id=722 data-nosnippet>722</a>    OR c.started_at &gt; ls.at
+<a href=#723 id=723 data-nosnippet>723</a>  )
+<a href=#724 id=724 data-nosnippet>724</a>        "#</span>,
+<a href=#725 id=725 data-nosnippet>725</a>        since,
+<a href=#726 id=726 data-nosnippet>726</a>    )
+<a href=#727 id=727 data-nosnippet>727</a>    .fetch_one(conn)
+<a href=#728 id=728 data-nosnippet>728</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#729 id=729 data-nosnippet>729</a>    <span class="prelude-val">Ok</span>(row)
+<a href=#730 id=730 data-nosnippet>730</a>}
+<a href=#731 id=731 data-nosnippet>731</a>
+<a href=#732 id=732 data-nosnippet>732</a><span class="doccomment">/// Hard-deletes rows past the retention window: the stored bodies must stop existing.
+<a href=#733 id=733 data-nosnippet>733</a>///
+<a href=#734 id=734 data-nosnippet>734</a>/// Bounded, because the first sweep after the window opens has ninety days of traffic to clear and
+<a href=#735 id=735 data-nosnippet>735</a>/// one unbounded statement would hold every `credit_registration_events` row referencing them
+<a href=#736 id=736 data-nosnippet>736</a>/// locked while `ON DELETE SET NULL` fires. Returns how many were deleted, so the caller can tell a
+<a href=#737 id=737 data-nosnippet>737</a>/// finished sweep from one that hit the bound.
+<a href=#738 id=738 data-nosnippet>738</a></span><span class="kw">pub async fn </span>delete_older_than(
+<a href=#739 id=739 data-nosnippet>739</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#740 id=740 data-nosnippet>740</a>    cutoff: DateTime&lt;Utc&gt;,
+<a href=#741 id=741 data-nosnippet>741</a>    limit: i64,
+<a href=#742 id=742 data-nosnippet>742</a>) -&gt; ModelResult&lt;u64&gt; {
+<a href=#743 id=743 data-nosnippet>743</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
+<a href=#744 id=744 data-nosnippet>744</a>        <span class="string">r#"
+<a href=#745 id=745 data-nosnippet>745</a>DELETE FROM suotar_api_calls
+<a href=#746 id=746 data-nosnippet>746</a>WHERE id IN (
+<a href=#747 id=747 data-nosnippet>747</a>    SELECT id
+<a href=#748 id=748 data-nosnippet>748</a>    FROM suotar_api_calls
+<a href=#749 id=749 data-nosnippet>749</a>    WHERE started_at &lt; $1
+<a href=#750 id=750 data-nosnippet>750</a>    ORDER BY started_at
+<a href=#751 id=751 data-nosnippet>751</a>    LIMIT $2
+<a href=#752 id=752 data-nosnippet>752</a>  )
+<a href=#753 id=753 data-nosnippet>753</a>        "#</span>,
+<a href=#754 id=754 data-nosnippet>754</a>        cutoff,
+<a href=#755 id=755 data-nosnippet>755</a>        limit,
+<a href=#756 id=756 data-nosnippet>756</a>    )
+<a href=#757 id=757 data-nosnippet>757</a>    .execute(conn)
+<a href=#758 id=758 data-nosnippet>758</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#759 id=759 data-nosnippet>759</a>    <span class="prelude-val">Ok</span>(res.rows_affected())
+<a href=#760 id=760 data-nosnippet>760</a>}
 </code></pre></div></section></main></body></html>

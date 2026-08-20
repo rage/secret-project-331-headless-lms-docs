@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","list_credit_registration_phases","to_phase_row"],"struct":["CreditRegistrationPhaseList","CreditRegistrationPhaseRow"]};

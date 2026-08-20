@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["seed_account_linking_templates","seed_email_ownership_verification_templates","seed_generic_emails"]};
+window.SIDEBAR_ITEMS = {"fn":["seed_account_linking_templates","seed_email_ownership_verification_templates","seed_generic_emails","seed_student_notification_templates","seed_student_number_linked_templates"]};

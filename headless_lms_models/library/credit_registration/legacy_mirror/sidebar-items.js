@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["LEGACY_MIRROR_LIMIT"],"fn":["mirror_successes_to_legacy_ledger"]};
+window.SIDEBAR_ITEMS = {"constant":["LEGACY_MIRROR_LIMIT"],"fn":["get_legacy_ledger_divergences","mirror_successes_to_legacy_ledger"],"struct":["LegacyLedgerDivergence"]};

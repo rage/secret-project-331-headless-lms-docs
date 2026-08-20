@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["OPEN_UNIVERSITY_ENROLMENT_BASE_URL"],"fn":["enrolment_url","get_all","get_by_product_id","record_refresh_failure","soft_delete","upsert"],"struct":["NewOpenUniversityProductAccessToken","OpenUniversityProductAccessToken"]};
+window.SIDEBAR_ITEMS = {"constant":["OPEN_UNIVERSITY_ENROLMENT_BASE_URL"],"fn":["enrolment_url","enrolment_url_for_product","get_all","get_by_product_id","record_refresh_failure","soft_delete","upsert"],"struct":["NewOpenUniversityProductAccessToken","OpenUniversityProductAccessToken"]};
