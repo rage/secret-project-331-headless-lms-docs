@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes"],"mod":["authorize","authorized_clients","consent","discovery","introspect","revoke","token","userinfo"],"struct":["MainFrontendOauthApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes"],"mod":["authorize","authorized_clients","consent","device","discovery","introspect","revoke","token","userinfo"],"struct":["MainFrontendOauthApiDoc"]};

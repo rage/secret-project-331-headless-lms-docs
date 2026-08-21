@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExerciseTaskSubmissionStatus","GradingProgress"],"struct":["Course","CourseProgress","ExerciseProgress","ExerciseSlide","ExerciseSlideSubmission","ExerciseSlideSubmissionListItem","ExerciseTask","ExerciseTaskSubmissionResult","PasteResult","SubmissionFiles","UploadedFile","UploadedFiles"],"type":["Token"]};

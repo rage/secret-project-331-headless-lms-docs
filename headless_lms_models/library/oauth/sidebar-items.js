@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["digest","grant_type","pkce","tokens"]};
+window.SIDEBAR_ITEMS = {"mod":["digest","grant_type","pkce","scopes","tokens"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","introspect"],"struct":["MainFrontendOauthIntrospectApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","authenticate_introspecting_client","introspect","resolve_gated_bearer_allowed","resolve_gated_upstream_id"],"struct":["MainFrontendOauthIntrospectApiDoc"]};

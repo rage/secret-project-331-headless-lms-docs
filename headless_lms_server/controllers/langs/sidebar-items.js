@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_course","get_course_exercises","get_courses","get_exercise","get_submission_grading","submit_exercise"],"struct":["SubmissionForm"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["generate_token_pair","process_token_grant"],"struct":["TokenGrantRequest","TokenGrantResult","TokenPair"]};
+window.SIDEBAR_ITEMS = {"fn":["generate_token_pair","process_device_code_grant","process_token_grant","resolve_refresh_scopes","revoke_family_on_refresh_token_reuse"],"struct":["TokenGrantRequest","TokenGrantResult","TokenPair"]};

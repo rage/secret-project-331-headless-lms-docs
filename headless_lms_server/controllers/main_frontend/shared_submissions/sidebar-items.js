@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_shared_submission_info","list_own_shares","revoke_share","revoke_shares_of_submission"],"struct":["MainFrontendSharedSubmissionsApiDoc"]};

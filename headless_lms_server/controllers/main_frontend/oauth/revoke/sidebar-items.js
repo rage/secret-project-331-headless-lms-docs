@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","revoke"],"struct":["MainFrontendOauthRevokeApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","not_found_or_storage_error","revoke","revoke_access_token_of_client","revoke_refresh_grant_of_client"],"struct":["MainFrontendOauthRevokeApiDoc"]};

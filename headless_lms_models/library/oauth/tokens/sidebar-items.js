@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["ACCESS_TOKEN_LENGTH"],"fn":["generate_access_token","token_digest_sha256"]};
+window.SIDEBAR_ITEMS = {"constant":["ACCESS_TOKEN_LENGTH","USER_CODE_ALPHABET","USER_CODE_GROUP_LEN"],"fn":["generate_access_token","generate_user_code","token_digest_sha256"]};

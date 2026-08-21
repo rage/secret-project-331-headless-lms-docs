@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["seed_oauth_clients"],"struct":["SeedOAuthClientsResult"]};
+window.SIDEBAR_ITEMS = {"constant":["DEV_OAUTH_TOKEN_HMAC_KEY","INTROSPECTION_SECRET_DIGEST_HEX","TEST_CLIENT_SECRET_DIGEST_HEX"],"fn":["seed_oauth_clients"],"struct":["SeedOAuthClientsResult"]};

@@ -605,19 +605,18 @@
 <a href=#605 id=605 data-nosnippet>605</a>            Predicate::StudentNumber(<span class="string">"900000101"</span>.to_string()),
 <a href=#606 id=606 data-nosnippet>606</a>        ];
 <a href=#607 id=607 data-nosnippet>607</a>        <span class="kw">let </span>problem = validate(<span class="kw-2">&amp;</span>unresolvable, <span class="kw-2">&amp;</span>transient(<span class="bool-val">true</span>), <span class="bool-val">false</span>)
-<a href=#608 id=608 data-nosnippet>608</a>            .err()
-<a href=#609 id=609 data-nosnippet>609</a>            .expect(<span class="string">"list-by-course carries no student number"</span>);
-<a href=#610 id=610 data-nosnippet>610</a>        <span class="macro">assert!</span>(problem.message.contains(<span class="string">"courseCode"</span>));
-<a href=#611 id=611 data-nosnippet>611</a>
-<a href=#612 id=612 data-nosnippet>612</a>        <span class="kw">let </span>indirect = <span class="macro">vec!</span>[
-<a href=#613 id=613 data-nosnippet>613</a>            Predicate::Endpoint(SuotarEndpoint::VerifyAttainments),
-<a href=#614 id=614 data-nosnippet>614</a>            Predicate::Stage(Stage::Resolve),
-<a href=#615 id=615 data-nosnippet>615</a>            Predicate::Owner(OwnerRef {
-<a href=#616 id=616 data-nosnippet>616</a>                user: <span class="prelude-val">Some</span>(<span class="string">"someone@example.com"</span>.to_string()),
-<a href=#617 id=617 data-nosnippet>617</a>                course: <span class="prelude-val">None</span>,
-<a href=#618 id=618 data-nosnippet>618</a>            }),
-<a href=#619 id=619 data-nosnippet>619</a>        ];
-<a href=#620 id=620 data-nosnippet>620</a>        <span class="macro">assert!</span>(validate(<span class="kw-2">&amp;</span>indirect, <span class="kw-2">&amp;</span>transient(<span class="bool-val">true</span>), <span class="bool-val">false</span>).is_ok());
-<a href=#621 id=621 data-nosnippet>621</a>    }
-<a href=#622 id=622 data-nosnippet>622</a>}
+<a href=#608 id=608 data-nosnippet>608</a>            .expect_err(<span class="string">"list-by-course carries no student number"</span>);
+<a href=#609 id=609 data-nosnippet>609</a>        <span class="macro">assert!</span>(problem.message.contains(<span class="string">"courseCode"</span>));
+<a href=#610 id=610 data-nosnippet>610</a>
+<a href=#611 id=611 data-nosnippet>611</a>        <span class="kw">let </span>indirect = <span class="macro">vec!</span>[
+<a href=#612 id=612 data-nosnippet>612</a>            Predicate::Endpoint(SuotarEndpoint::VerifyAttainments),
+<a href=#613 id=613 data-nosnippet>613</a>            Predicate::Stage(Stage::Resolve),
+<a href=#614 id=614 data-nosnippet>614</a>            Predicate::Owner(OwnerRef {
+<a href=#615 id=615 data-nosnippet>615</a>                user: <span class="prelude-val">Some</span>(<span class="string">"someone@example.com"</span>.to_string()),
+<a href=#616 id=616 data-nosnippet>616</a>                course: <span class="prelude-val">None</span>,
+<a href=#617 id=617 data-nosnippet>617</a>            }),
+<a href=#618 id=618 data-nosnippet>618</a>        ];
+<a href=#619 id=619 data-nosnippet>619</a>        <span class="macro">assert!</span>(validate(<span class="kw-2">&amp;</span>indirect, <span class="kw-2">&amp;</span>transient(<span class="bool-val">true</span>), <span class="bool-val">false</span>).is_ok());
+<a href=#620 id=620 data-nosnippet>620</a>    }
+<a href=#621 id=621 data-nosnippet>621</a>}
 </code></pre></div></section></main></body></html>

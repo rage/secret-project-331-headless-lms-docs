@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["oauth_error","oauth_invalid_client","oauth_invalid_grant","oauth_invalid_request","ok_json_no_cache","scope_has_openid"]};
+window.SIDEBAR_ITEMS = {"enum":["ClientAuthError"],"fn":["authenticate_oauth_client","oauth_error","oauth_invalid_client","oauth_invalid_grant","oauth_invalid_request","oauth_invalid_scope","oauth_unauthorized_client","ok_json_no_cache","scope_has_openid","split_and_validate_scopes"]};

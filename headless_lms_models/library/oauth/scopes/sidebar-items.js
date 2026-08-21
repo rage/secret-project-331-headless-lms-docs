@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["EXERCISE_SERVICES_SCOPE"]};

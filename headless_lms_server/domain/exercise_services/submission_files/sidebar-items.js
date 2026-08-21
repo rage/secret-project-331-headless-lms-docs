@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ANSWER_FILE_PATH_PREFIX","MAX_ANSWER_FILES","MAX_ANSWER_FILE_BYTES"],"fn":["create_and_record","discard_materialized","discard_written_answer_files","materialize_answer_files","record_answer_files","submit_recording_answer_files"],"struct":["MaterializedAnswerFiles","WrittenAnswerFile"]};

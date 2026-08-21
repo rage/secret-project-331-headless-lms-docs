@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["submission_files","submission_sharing","token"]};

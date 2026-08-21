@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AuthApiDoc","CmsApiDoc","CourseMaterialApiDoc","ErrorsApiDoc","MainFrontendApiDoc"]};
+window.SIDEBAR_ITEMS = {"struct":["AuthApiDoc","CmsApiDoc","CourseMaterialApiDoc","ErrorsApiDoc","ExerciseServicesClientApiDoc","ExerciseServicesClientSecurityAddon","MainFrontendApiDoc"]};

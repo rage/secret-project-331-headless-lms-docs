@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_by_id","insert","list_by_creator","revoke","revoke_all_for_submission"],"struct":["ExerciseSlideSubmissionShare"]};

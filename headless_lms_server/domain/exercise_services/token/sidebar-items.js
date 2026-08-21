@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CACHE_KEY_CONTEXT","MAX_CACHE_TTL"],"fn":["cache_ttl_for_token","cache_user","delete_user_and_invalidate_cached_tokens","digest_to_cache_key","forbidden","invalidate_cached_user","invalidate_cached_users","load_user","lookup_error","resolve_oauth_user","unauthorized"],"struct":["UserFromOAuthToken"]};

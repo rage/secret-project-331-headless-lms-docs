@@ -916,7 +916,7 @@
 <a href=#916 id=916 data-nosnippet>916</a>                <span class="kw">let </span>s3_id = Uuid::parse_str(<span class="string">"462a6493-a506-42e6-869d-10220b2885b8"</span>).unwrap();
 <a href=#917 id=917 data-nosnippet>917</a>
 <a href=#918 id=918 data-nosnippet>918</a>                <span class="kw">let </span>res = calculate_peer_review_weighted_points(
-<a href=#919 id=919 data-nosnippet>919</a>                    <span class="kw-2">&amp;</span><span class="macro">vec!</span>[
+<a href=#919 id=919 data-nosnippet>919</a>                    <span class="kw-2">&amp;</span>[
 <a href=#920 id=920 data-nosnippet>920</a>                        create_peer_review_question_scale(q1_id, <span class="number">0.25</span>),
 <a href=#921 id=921 data-nosnippet>921</a>                        create_peer_review_question_scale(q2_id, <span class="number">0.25</span>),
 <a href=#922 id=922 data-nosnippet>922</a>                        create_peer_review_question_scale(q3_id, <span class="number">0.25</span>),
@@ -924,7 +924,7 @@
 <a href=#924 id=924 data-nosnippet>924</a>                        <span class="comment">// Extra one to check that ignoring questions works
 <a href=#925 id=925 data-nosnippet>925</a>                        </span>create_peer_review_question_essay(e1_id, <span class="number">0.25</span>),
 <a href=#926 id=926 data-nosnippet>926</a>                    ],
-<a href=#927 id=927 data-nosnippet>927</a>                    <span class="kw-2">&amp;</span><span class="macro">vec!</span>[
+<a href=#927 id=927 data-nosnippet>927</a>                    <span class="kw-2">&amp;</span>[
 <a href=#928 id=928 data-nosnippet>928</a>                        <span class="comment">// First student
 <a href=#929 id=929 data-nosnippet>929</a>                        </span>create_peer_review_question_submission_with_ids(<span class="number">5.0</span>, q1_id, s1_id),
 <a href=#930 id=930 data-nosnippet>930</a>                        create_peer_review_question_submission_with_ids(<span class="number">4.0</span>, q2_id, s1_id),

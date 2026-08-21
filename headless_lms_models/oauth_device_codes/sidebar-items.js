@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DeviceCodeStatus"],"struct":["DeviceCodePoll","NewDeviceCodeParams","OAuthDeviceCode"]};

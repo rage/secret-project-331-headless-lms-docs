@@ -1,9 +1,9 @@
 (function() {
-    const implementors = Object.fromEntries([["headless_lms_server",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.96.1/core/ops/deref/trait.DerefMut.html\" title=\"trait core::ops::deref::DerefMut\">DerefMut</a> for <a class=\"struct\" href=\"headless_lms_server/domain/langs/token/struct.UserFromTMCAccessToken.html\" title=\"struct headless_lms_server::domain::langs::token::UserFromTMCAccessToken\">UserFromTMCAccessToken</a>",0]]]]);
+    const implementors = Object.fromEntries([["headless_lms_server",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.96.1/core/ops/deref/trait.DerefMut.html\" title=\"trait core::ops::deref::DerefMut\">DerefMut</a> for <a class=\"struct\" href=\"headless_lms_server/domain/exercise_services/token/struct.UserFromOAuthToken.html\" title=\"struct headless_lms_server::domain::exercise_services::token::UserFromOAuthToken\">UserFromOAuthToken</a>",0]]],["headless_lms_server",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.96.1/core/ops/deref/trait.DerefMut.html\" title=\"trait core::ops::deref::DerefMut\">DerefMut</a> for <a class=\"struct\" href=\"headless_lms_server/domain/langs/token/struct.UserFromTMCAccessToken.html\" title=\"struct headless_lms_server::domain::langs::token::UserFromTMCAccessToken\">UserFromTMCAccessToken</a>",0]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
         window.pending_implementors = implementors;
     }
 })()
-//{"start":59,"fragment_lengths":[405]}
+//{"start":59,"fragment_lengths":[417,406]}

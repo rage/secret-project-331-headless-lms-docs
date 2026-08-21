@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["grading_update"]};
+window.SIDEBAR_ITEMS = {"fn":["apply_grading_update","grading_update","verify_claim_matches_submission"]};
