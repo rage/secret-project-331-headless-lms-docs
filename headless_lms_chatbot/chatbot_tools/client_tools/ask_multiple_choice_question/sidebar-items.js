@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_CHOICES","MIN_CHOICES"],"struct":["AskMultipleChoiceQuestionArguments","AskMultipleChoiceQuestionTool","MultipleChoiceAnswer","RawArguments"]};

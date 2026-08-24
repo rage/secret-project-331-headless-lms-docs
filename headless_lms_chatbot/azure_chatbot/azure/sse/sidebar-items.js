@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ALL_EXPECTED_EVENTS"],"enum":["AzureStreamEvent","ParsedResponseLine"],"fn":["classified","detect_response_kind","parser_for_item","sse_field"],"struct":["ClassifiedResponse"]};

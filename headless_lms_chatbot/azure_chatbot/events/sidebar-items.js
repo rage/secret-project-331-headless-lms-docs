@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ChatbotChatStreamEvent","StreamItem","TurnEvent"],"fn":["error_event_from_error","error_event_from_text","finished_tool_call","ndjson_line","single_event_stream","stream_event_for"],"struct":["StreamEventError"]};

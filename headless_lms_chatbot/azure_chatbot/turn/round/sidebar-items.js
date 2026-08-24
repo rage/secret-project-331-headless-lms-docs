@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PendingRoundItem","PlannedToolCall","StoragePlan"],"fn":["is_stored_by_round","item_without_reasoning_payload","parse_tool","plan_tool_call","record_tool_call","recover_or_terminate","storage_plan","store_output_item","store_search_output_with_citations","tool_failure_output_for_llm"],"struct":["ToolRound"]};

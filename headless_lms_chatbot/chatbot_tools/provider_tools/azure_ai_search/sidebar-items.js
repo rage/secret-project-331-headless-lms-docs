@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_azure_ai_search_tool_definition"],"struct":["AzureAISearch","AzureAISearchToolDefinition","EmbeddingDependency","FieldsMapping","SearchIndex"]};
+window.SIDEBAR_ITEMS = {"constant":["CONTENT_FIELD_SEPARATOR"],"fn":["get_azure_ai_search_tool_definition"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["DOCUMENT_3"],"fn":["_add_routes","mock_document_storage"]};
+window.SIDEBAR_ITEMS = {"constant":["DOCUMENT_3_CHUNK"],"fn":["_add_routes","mock_document_storage"],"static":["MOCK_DOCUMENTS"],"struct":["MockDocument"]};

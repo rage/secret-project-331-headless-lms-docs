@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["SYSTEM_PROMPT","USER_PROMPT"],"fn":["create_conversation_from_msgs","create_msg_string","generate_suggested_messages"],"struct":["ChatbotNextMessageSuggestionResponse"]};
+window.SIDEBAR_ITEMS = {"constant":["RECENT_MESSAGES_IN_PROMPT","RESPONSE_FORMAT_NAME","SYSTEM_PROMPT","USER_PROMPT"],"fn":["create_conversation_from_msgs","create_msg_string","generate_suggested_messages","response_format"],"struct":["ChatbotNextMessageSuggestionResponse"]};

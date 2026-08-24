@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["AZURE_AI_SEARCH_TOOL_NAME"],"enum":["AzureLLMToolDefinition","LLMToolType"],"struct":["AzureAISearch","AzureAISearchToolDefinition","AzureLLMFunctionToolDefinition","EmbeddingDependency","FieldsMapping","SearchIndex"]};

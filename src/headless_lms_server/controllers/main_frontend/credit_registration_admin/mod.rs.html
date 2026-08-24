@@ -75,106 +75,107 @@
 <a href=#75 id=75 data-nosnippet>75</a>        Res::GlobalPermissions,
 <a href=#76 id=76 data-nosnippet>76</a>    )
 <a href=#77 id=77 data-nosnippet>77</a>    .<span class="kw">await
-<a href=#78 id=78 data-nosnippet>78</a></span>}
-<a href=#79 id=79 data-nosnippet>79</a>
-<a href=#80 id=80 data-nosnippet>80</a><span class="doccomment">/// Refuses an empty or whitespace reason. Every audited action names one.
-<a href=#81 id=81 data-nosnippet>81</a></span><span class="kw">fn </span>required_reason(reason: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>str, ControllerError&gt; {
-<a href=#82 id=82 data-nosnippet>82</a>    <span class="kw">let </span>trimmed = reason.trim();
-<a href=#83 id=83 data-nosnippet>83</a>    <span class="kw">if </span>trimmed.is_empty() {
-<a href=#84 id=84 data-nosnippet>84</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">controller_err!</span>(
-<a href=#85 id=85 data-nosnippet>85</a>            BadRequest,
-<a href=#86 id=86 data-nosnippet>86</a>            <span class="string">"A reason is required."</span>.to_string()
-<a href=#87 id=87 data-nosnippet>87</a>        ));
-<a href=#88 id=88 data-nosnippet>88</a>    }
-<a href=#89 id=89 data-nosnippet>89</a>    <span class="prelude-val">Ok</span>(trimmed)
-<a href=#90 id=90 data-nosnippet>90</a>}
-<a href=#91 id=91 data-nosnippet>91</a>
-<a href=#92 id=92 data-nosnippet>92</a><span class="doccomment">/// `serde_urlencoded` reads a single occurrence of a key as a scalar, not a one-element sequence, so
-<a href=#93 id=93 data-nosnippet>93</a>/// a `Vec` field otherwise refuses a query string that repeats the parameter zero or one times.
-<a href=#94 id=94 data-nosnippet>94</a></span><span class="kw">fn </span>one_or_many&lt;<span class="lifetime">'de</span>, D, T&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;T&gt;&gt;, D::Error&gt;
-<a href=#95 id=95 data-nosnippet>95</a><span class="kw">where
-<a href=#96 id=96 data-nosnippet>96</a>    </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
-<a href=#97 id=97 data-nosnippet>97</a>    T: Deserialize&lt;<span class="lifetime">'de</span>&gt;,
-<a href=#98 id=98 data-nosnippet>98</a>{
-<a href=#99 id=99 data-nosnippet>99</a>    <span class="attr">#[derive(Deserialize)]
-<a href=#100 id=100 data-nosnippet>100</a>    #[serde(untagged)]
-<a href=#101 id=101 data-nosnippet>101</a>    </span><span class="kw">enum </span>OneOrMany&lt;T&gt; {
-<a href=#102 id=102 data-nosnippet>102</a>        One(T),
-<a href=#103 id=103 data-nosnippet>103</a>        Many(Vec&lt;T&gt;),
-<a href=#104 id=104 data-nosnippet>104</a>    }
-<a href=#105 id=105 data-nosnippet>105</a>    <span class="prelude-val">Ok</span>(
-<a href=#106 id=106 data-nosnippet>106</a>        Option::&lt;OneOrMany&lt;T&gt;&gt;::deserialize(deserializer)<span class="question-mark">?</span>.map(|repr| <span class="kw">match </span>repr {
-<a href=#107 id=107 data-nosnippet>107</a>            OneOrMany::One(value) =&gt; <span class="macro">vec!</span>[value],
-<a href=#108 id=108 data-nosnippet>108</a>            OneOrMany::Many(values) =&gt; values,
-<a href=#109 id=109 data-nosnippet>109</a>        }),
-<a href=#110 id=110 data-nosnippet>110</a>    )
-<a href=#111 id=111 data-nosnippet>111</a>}
-<a href=#112 id=112 data-nosnippet>112</a>
-<a href=#113 id=113 data-nosnippet>113</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#114 id=114 data-nosnippet>114</a></span><span class="kw">pub struct </span>AdminLinkingEmail {
-<a href=#115 id=115 data-nosnippet>115</a>    <span class="kw">pub </span>id: Uuid,
-<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">pub </span>course_id: Uuid,
-<a href=#117 id=117 data-nosnippet>117</a>    <span class="kw">pub </span>student_number: String,
-<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">pub </span>sisu_person_id: String,
-<a href=#119 id=119 data-nosnippet>119</a>    <span class="doccomment">/// In full.
-<a href=#120 id=120 data-nosnippet>120</a>    </span><span class="kw">pub </span>emailed_to: String,
-<a href=#121 id=121 data-nosnippet>121</a>    <span class="kw">pub </span>claimed_at: DateTime&lt;Utc&gt;,
-<a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">pub </span>send_status: EmailSendStatusReport,
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">pub </span>token_claimed_by_user_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
-<a href=#124 id=124 data-nosnippet>124</a>    <span class="kw">pub </span>token_used_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#125 id=125 data-nosnippet>125</a>    <span class="kw">pub </span>token_expires_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#126 id=126 data-nosnippet>126</a>}
-<a href=#127 id=127 data-nosnippet>127</a>
-<a href=#128 id=128 data-nosnippet>128</a><span class="doccomment">/// Shared by the ledger detail view and the account-linking admin views: both show a person's linking
-<a href=#129 id=129 data-nosnippet>129</a>/// mails alongside the token each one carries.
-<a href=#130 id=130 data-nosnippet>130</a></span><span class="kw">async fn </span>build_linking_emails(
-<a href=#131 id=131 data-nosnippet>131</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#132 id=132 data-nosnippet>132</a>    mails: Vec&lt;CreditRegistrationAccountLinkingEmail&gt;,
-<a href=#133 id=133 data-nosnippet>133</a>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;AdminLinkingEmail&gt;, ControllerError&gt; {
-<a href=#134 id=134 data-nosnippet>134</a>    <span class="kw">let </span>ids: Vec&lt;Uuid&gt; = mails.iter().map(|mail| mail.id).collect();
-<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">let </span>reports =
-<a href=#136 id=136 data-nosnippet>136</a>        credit_registration_account_linking_emails::get_send_status_reports(conn, <span class="kw-2">&amp;</span>ids).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#137 id=137 data-nosnippet>137</a>    <span class="kw">let </span>token_ids: Vec&lt;Uuid&gt; = mails
-<a href=#138 id=138 data-nosnippet>138</a>        .iter()
-<a href=#139 id=139 data-nosnippet>139</a>        .filter_map(|mail| mail.student_number_verification_token_id)
-<a href=#140 id=140 data-nosnippet>140</a>        .collect();
-<a href=#141 id=141 data-nosnippet>141</a>    <span class="kw">let </span>tokens = student_number_verification_tokens::get_by_ids(conn, <span class="kw-2">&amp;</span>token_ids).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#142 id=142 data-nosnippet>142</a>    <span class="prelude-val">Ok</span>(mails
-<a href=#143 id=143 data-nosnippet>143</a>        .into_iter()
-<a href=#144 id=144 data-nosnippet>144</a>        .map(|mail| {
-<a href=#145 id=145 data-nosnippet>145</a>            <span class="kw">let </span>token = mail
-<a href=#146 id=146 data-nosnippet>146</a>                .student_number_verification_token_id
-<a href=#147 id=147 data-nosnippet>147</a>                .and_then(|token_id| tokens.get(<span class="kw-2">&amp;</span>token_id));
-<a href=#148 id=148 data-nosnippet>148</a>            AdminLinkingEmail {
-<a href=#149 id=149 data-nosnippet>149</a>                send_status: reports.get(<span class="kw-2">&amp;</span>mail.id).cloned().unwrap_or_else(
-<a href=#150 id=150 data-nosnippet>150</a>                    credit_registration_account_linking_emails::not_handed_over_yet,
-<a href=#151 id=151 data-nosnippet>151</a>                ),
-<a href=#152 id=152 data-nosnippet>152</a>                id: mail.id,
-<a href=#153 id=153 data-nosnippet>153</a>                course_id: mail.course_id,
-<a href=#154 id=154 data-nosnippet>154</a>                student_number: mail.student_number,
-<a href=#155 id=155 data-nosnippet>155</a>                sisu_person_id: mail.sisu_person_id,
-<a href=#156 id=156 data-nosnippet>156</a>                emailed_to: mail.emailed_to,
-<a href=#157 id=157 data-nosnippet>157</a>                claimed_at: mail.sent_at,
-<a href=#158 id=158 data-nosnippet>158</a>                token_claimed_by_user_id: token.and_then(|row| row.claimed_by_user_id),
-<a href=#159 id=159 data-nosnippet>159</a>                token_used_at: token.and_then(|row| row.used_at),
-<a href=#160 id=160 data-nosnippet>160</a>                token_expires_at: token.map(|row| row.expires_at),
-<a href=#161 id=161 data-nosnippet>161</a>            }
-<a href=#162 id=162 data-nosnippet>162</a>        })
-<a href=#163 id=163 data-nosnippet>163</a>        .collect())
-<a href=#164 id=164 data-nosnippet>164</a>}
-<a href=#165 id=165 data-nosnippet>165</a>
-<a href=#166 id=166 data-nosnippet>166</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#167 id=167 data-nosnippet>167</a>    dashboard::_add_routes(cfg);
-<a href=#168 id=168 data-nosnippet>168</a>    ledger::_add_routes(cfg);
-<a href=#169 id=169 data-nosnippet>169</a>    errors::_add_routes(cfg);
-<a href=#170 id=170 data-nosnippet>170</a>    phases::_add_routes(cfg);
-<a href=#171 id=171 data-nosnippet>171</a>    api_log::_add_routes(cfg);
-<a href=#172 id=172 data-nosnippet>172</a>    courses::_add_routes(cfg);
-<a href=#173 id=173 data-nosnippet>173</a>    reconciliation::_add_routes(cfg);
-<a href=#174 id=174 data-nosnippet>174</a>    audit::_add_routes(cfg);
-<a href=#175 id=175 data-nosnippet>175</a>    history::_add_routes(cfg);
-<a href=#176 id=176 data-nosnippet>176</a>    account_linking::_add_routes(cfg);
-<a href=#177 id=177 data-nosnippet>177</a>    student_numbers::_add_routes(cfg);
-<a href=#178 id=178 data-nosnippet>178</a>    materialize::_add_routes(cfg);
-<a href=#179 id=179 data-nosnippet>179</a>}
+<a href=#78 id=78 data-nosnippet>78</a>    </span>.map_err(Into::into)
+<a href=#79 id=79 data-nosnippet>79</a>}
+<a href=#80 id=80 data-nosnippet>80</a>
+<a href=#81 id=81 data-nosnippet>81</a><span class="doccomment">/// Refuses an empty or whitespace reason. Every audited action names one.
+<a href=#82 id=82 data-nosnippet>82</a></span><span class="kw">fn </span>required_reason(reason: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>str, ControllerError&gt; {
+<a href=#83 id=83 data-nosnippet>83</a>    <span class="kw">let </span>trimmed = reason.trim();
+<a href=#84 id=84 data-nosnippet>84</a>    <span class="kw">if </span>trimmed.is_empty() {
+<a href=#85 id=85 data-nosnippet>85</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">controller_err!</span>(
+<a href=#86 id=86 data-nosnippet>86</a>            BadRequest,
+<a href=#87 id=87 data-nosnippet>87</a>            <span class="string">"A reason is required."</span>.to_string()
+<a href=#88 id=88 data-nosnippet>88</a>        ));
+<a href=#89 id=89 data-nosnippet>89</a>    }
+<a href=#90 id=90 data-nosnippet>90</a>    <span class="prelude-val">Ok</span>(trimmed)
+<a href=#91 id=91 data-nosnippet>91</a>}
+<a href=#92 id=92 data-nosnippet>92</a>
+<a href=#93 id=93 data-nosnippet>93</a><span class="doccomment">/// `serde_urlencoded` reads a single occurrence of a key as a scalar, not a one-element sequence, so
+<a href=#94 id=94 data-nosnippet>94</a>/// a `Vec` field otherwise refuses a query string that repeats the parameter zero or one times.
+<a href=#95 id=95 data-nosnippet>95</a></span><span class="kw">fn </span>one_or_many&lt;<span class="lifetime">'de</span>, D, T&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;T&gt;&gt;, D::Error&gt;
+<a href=#96 id=96 data-nosnippet>96</a><span class="kw">where
+<a href=#97 id=97 data-nosnippet>97</a>    </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
+<a href=#98 id=98 data-nosnippet>98</a>    T: Deserialize&lt;<span class="lifetime">'de</span>&gt;,
+<a href=#99 id=99 data-nosnippet>99</a>{
+<a href=#100 id=100 data-nosnippet>100</a>    <span class="attr">#[derive(Deserialize)]
+<a href=#101 id=101 data-nosnippet>101</a>    #[serde(untagged)]
+<a href=#102 id=102 data-nosnippet>102</a>    </span><span class="kw">enum </span>OneOrMany&lt;T&gt; {
+<a href=#103 id=103 data-nosnippet>103</a>        One(T),
+<a href=#104 id=104 data-nosnippet>104</a>        Many(Vec&lt;T&gt;),
+<a href=#105 id=105 data-nosnippet>105</a>    }
+<a href=#106 id=106 data-nosnippet>106</a>    <span class="prelude-val">Ok</span>(
+<a href=#107 id=107 data-nosnippet>107</a>        Option::&lt;OneOrMany&lt;T&gt;&gt;::deserialize(deserializer)<span class="question-mark">?</span>.map(|repr| <span class="kw">match </span>repr {
+<a href=#108 id=108 data-nosnippet>108</a>            OneOrMany::One(value) =&gt; <span class="macro">vec!</span>[value],
+<a href=#109 id=109 data-nosnippet>109</a>            OneOrMany::Many(values) =&gt; values,
+<a href=#110 id=110 data-nosnippet>110</a>        }),
+<a href=#111 id=111 data-nosnippet>111</a>    )
+<a href=#112 id=112 data-nosnippet>112</a>}
+<a href=#113 id=113 data-nosnippet>113</a>
+<a href=#114 id=114 data-nosnippet>114</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#115 id=115 data-nosnippet>115</a></span><span class="kw">pub struct </span>AdminLinkingEmail {
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">pub </span>id: Uuid,
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="kw">pub </span>course_id: Uuid,
+<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">pub </span>student_number: String,
+<a href=#119 id=119 data-nosnippet>119</a>    <span class="kw">pub </span>sisu_person_id: String,
+<a href=#120 id=120 data-nosnippet>120</a>    <span class="doccomment">/// In full.
+<a href=#121 id=121 data-nosnippet>121</a>    </span><span class="kw">pub </span>emailed_to: String,
+<a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">pub </span>claimed_at: DateTime&lt;Utc&gt;,
+<a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">pub </span>send_status: EmailSendStatusReport,
+<a href=#124 id=124 data-nosnippet>124</a>    <span class="kw">pub </span>token_claimed_by_user_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="kw">pub </span>token_used_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#126 id=126 data-nosnippet>126</a>    <span class="kw">pub </span>token_expires_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#127 id=127 data-nosnippet>127</a>}
+<a href=#128 id=128 data-nosnippet>128</a>
+<a href=#129 id=129 data-nosnippet>129</a><span class="doccomment">/// Shared by the ledger detail view and the account-linking admin views: both show a person's linking
+<a href=#130 id=130 data-nosnippet>130</a>/// mails alongside the token each one carries.
+<a href=#131 id=131 data-nosnippet>131</a></span><span class="kw">async fn </span>build_linking_emails(
+<a href=#132 id=132 data-nosnippet>132</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#133 id=133 data-nosnippet>133</a>    mails: Vec&lt;CreditRegistrationAccountLinkingEmail&gt;,
+<a href=#134 id=134 data-nosnippet>134</a>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;AdminLinkingEmail&gt;, ControllerError&gt; {
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">let </span>ids: Vec&lt;Uuid&gt; = mails.iter().map(|mail| mail.id).collect();
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="kw">let </span>reports =
+<a href=#137 id=137 data-nosnippet>137</a>        credit_registration_account_linking_emails::get_send_status_reports(conn, <span class="kw-2">&amp;</span>ids).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">let </span>token_ids: Vec&lt;Uuid&gt; = mails
+<a href=#139 id=139 data-nosnippet>139</a>        .iter()
+<a href=#140 id=140 data-nosnippet>140</a>        .filter_map(|mail| mail.student_number_verification_token_id)
+<a href=#141 id=141 data-nosnippet>141</a>        .collect();
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="kw">let </span>tokens = student_number_verification_tokens::get_by_ids(conn, <span class="kw-2">&amp;</span>token_ids).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="prelude-val">Ok</span>(mails
+<a href=#144 id=144 data-nosnippet>144</a>        .into_iter()
+<a href=#145 id=145 data-nosnippet>145</a>        .map(|mail| {
+<a href=#146 id=146 data-nosnippet>146</a>            <span class="kw">let </span>token = mail
+<a href=#147 id=147 data-nosnippet>147</a>                .student_number_verification_token_id
+<a href=#148 id=148 data-nosnippet>148</a>                .and_then(|token_id| tokens.get(<span class="kw-2">&amp;</span>token_id));
+<a href=#149 id=149 data-nosnippet>149</a>            AdminLinkingEmail {
+<a href=#150 id=150 data-nosnippet>150</a>                send_status: reports.get(<span class="kw-2">&amp;</span>mail.id).cloned().unwrap_or_else(
+<a href=#151 id=151 data-nosnippet>151</a>                    credit_registration_account_linking_emails::not_handed_over_yet,
+<a href=#152 id=152 data-nosnippet>152</a>                ),
+<a href=#153 id=153 data-nosnippet>153</a>                id: mail.id,
+<a href=#154 id=154 data-nosnippet>154</a>                course_id: mail.course_id,
+<a href=#155 id=155 data-nosnippet>155</a>                student_number: mail.student_number,
+<a href=#156 id=156 data-nosnippet>156</a>                sisu_person_id: mail.sisu_person_id,
+<a href=#157 id=157 data-nosnippet>157</a>                emailed_to: mail.emailed_to,
+<a href=#158 id=158 data-nosnippet>158</a>                claimed_at: mail.sent_at,
+<a href=#159 id=159 data-nosnippet>159</a>                token_claimed_by_user_id: token.and_then(|row| row.claimed_by_user_id),
+<a href=#160 id=160 data-nosnippet>160</a>                token_used_at: token.and_then(|row| row.used_at),
+<a href=#161 id=161 data-nosnippet>161</a>                token_expires_at: token.map(|row| row.expires_at),
+<a href=#162 id=162 data-nosnippet>162</a>            }
+<a href=#163 id=163 data-nosnippet>163</a>        })
+<a href=#164 id=164 data-nosnippet>164</a>        .collect())
+<a href=#165 id=165 data-nosnippet>165</a>}
+<a href=#166 id=166 data-nosnippet>166</a>
+<a href=#167 id=167 data-nosnippet>167</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#168 id=168 data-nosnippet>168</a>    dashboard::_add_routes(cfg);
+<a href=#169 id=169 data-nosnippet>169</a>    ledger::_add_routes(cfg);
+<a href=#170 id=170 data-nosnippet>170</a>    errors::_add_routes(cfg);
+<a href=#171 id=171 data-nosnippet>171</a>    phases::_add_routes(cfg);
+<a href=#172 id=172 data-nosnippet>172</a>    api_log::_add_routes(cfg);
+<a href=#173 id=173 data-nosnippet>173</a>    courses::_add_routes(cfg);
+<a href=#174 id=174 data-nosnippet>174</a>    reconciliation::_add_routes(cfg);
+<a href=#175 id=175 data-nosnippet>175</a>    audit::_add_routes(cfg);
+<a href=#176 id=176 data-nosnippet>176</a>    history::_add_routes(cfg);
+<a href=#177 id=177 data-nosnippet>177</a>    account_linking::_add_routes(cfg);
+<a href=#178 id=178 data-nosnippet>178</a>    student_numbers::_add_routes(cfg);
+<a href=#179 id=179 data-nosnippet>179</a>    materialize::_add_routes(cfg);
+<a href=#180 id=180 data-nosnippet>180</a>}
 </code></pre></div></section></main></body></html>

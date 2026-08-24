@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["SYSTEM_PROMPT","USER_PROMPT"],"fn":["generate_description"],"struct":["Module","SisuDescriptionResponse"]};
+window.SIDEBAR_ITEMS = {"constant":["RESPONSE_FORMAT_NAME","SYSTEM_PROMPT","USER_PROMPT"],"fn":["generate_description","response_format"],"struct":["Module","SisuDescriptionResponse"]};

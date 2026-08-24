@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["SYSTEM_PROMPT","USER_PROMPT_PREFIX"],"fn":["action_instruction","generate_paragraph_suggestions"],"struct":["CmsParagraphSuggestionInput","CmsParagraphSuggestionResponse"]};
+window.SIDEBAR_ITEMS = {"constant":["RESPONSE_FORMAT_NAME","SYSTEM_PROMPT","USER_PROMPT_PREFIX"],"fn":["action_instruction","generate_paragraph_suggestions","response_format"],"struct":["CmsParagraphSuggestionInput","CmsParagraphSuggestionResponse"]};

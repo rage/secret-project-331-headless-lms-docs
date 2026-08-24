@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["ask_multiple_choice_question"]};

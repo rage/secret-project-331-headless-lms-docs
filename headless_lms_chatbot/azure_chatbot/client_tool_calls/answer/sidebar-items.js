@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["apply_client_tool_answer","client_tool_output_for_answer","missing_tool_call_error","rejected_tool_answer_error"],"struct":["AnsweredClientToolCall"]};

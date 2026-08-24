@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","current_conversation_info","get_default_chatbot_configuration_for_course","new_conversation","send_message"],"struct":["CourseMaterialChatbotApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","authorize_access_to_conversation","current_conversation_info","get_default_chatbot_configuration_for_course","new_conversation","send_message","tool_response"],"struct":["ChatbotToolResponse","CourseMaterialChatbotApiDoc","SendChatbotMessage"]};

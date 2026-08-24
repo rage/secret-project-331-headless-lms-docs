@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_TOOL_CALL_ROUNDS_PER_TURN"],"enum":["TurnStart"],"fn":["answer_tool_call_and_resume_stream","begin_turn","recover_and_summarize","recover_from_round_error","send_chat_request_and_parse_stream","stream_turn"],"mod":["cancellation","round","text_response"]};
