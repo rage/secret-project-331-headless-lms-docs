@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["delete_batch","get_by_course_id","get_course_ids_by_prerequisite_vectors","insert_course_prerequisites"],"struct":["CoursePrerequisite","NewCoursePrerequisite"]};
+window.SIDEBAR_ITEMS = {"fn":["delete_batch","get_all_edit_course_prerequisites","get_by_course_id","get_course_ids_by_prerequisite_vectors","get_edit_course_prerequisites_by_course_id","insert_course_prerequisites","upsert_course_prerequisites"],"struct":["CoursePrerequisite","EditCoursePrerequisite"]};

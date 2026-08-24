@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_courses_for_auditing","update_course_auditing_data"],"struct":["MainFrontendCourseAuditingApiDoc"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["delete_batch","get_by_course_id","get_course_ids_by_audience_vectors","insert_course_audiences"],"struct":["CourseAudience","NewCourseAudience"]};
+window.SIDEBAR_ITEMS = {"fn":["delete_batch","get_all_edit_course_audiences","get_by_course_id","get_course_ids_by_audience_vectors","get_edit_course_audiences_by_course_id","insert_course_audiences","upsert_course_audiences"],"struct":["CourseAudience","EditCourseAudience"]};
