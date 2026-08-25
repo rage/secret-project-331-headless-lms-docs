@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_page","get_page_info","get_page_navigation","update_page"],"struct":["CmsPagesApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_exercises_with_submissions","get_page","get_page_info","get_page_navigation","update_page"],"struct":["CmsPagesApiDoc"]};
