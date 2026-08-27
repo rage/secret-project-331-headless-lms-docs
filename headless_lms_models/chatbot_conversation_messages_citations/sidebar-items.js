@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["attach_turn_citations_to_message","get_by_conversation_id","get_by_message_id","insert","insert_batch"],"struct":["ChatbotConversationMessageCitation"]};
+window.SIDEBAR_ITEMS = {"fn":["attach_turn_citations_to_message","get_by_conversation_id","get_by_message_id","insert","insert_batch","max_citation_number_in_turn"],"struct":["ChatbotConversationMessageCitation"]};

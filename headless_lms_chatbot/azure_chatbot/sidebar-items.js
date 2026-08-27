@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["azure","client_tool_calls","events","request","turn"]};
+window.SIDEBAR_ITEMS = {"mod":["azure","client_tool_calls","events","request","search_grounding","turn"]};

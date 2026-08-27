@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["COURSE_ID_ARGUMENT_DESCRIPTION"],"fn":["material_requirements","resolve_course_scope"]};

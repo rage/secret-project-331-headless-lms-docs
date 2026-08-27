@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ToolKind"],"fn":["delete","get_by_conversation_and_tool_call_id","get_by_id","get_by_message_id","get_unanswered_tool_calls_for_conversation","insert"],"struct":["ChatbotConversationMessageToolCall"]};
+window.SIDEBAR_ITEMS = {"enum":["ToolKind"],"fn":["delete","get_by_conversation_and_tool_call_id","get_by_id","get_by_message_id","get_unanswered_tool_calls_for_conversation","insert","lock_unanswered_for_execution"],"struct":["ChatbotConversationMessageToolCall"]};

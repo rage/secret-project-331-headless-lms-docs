@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_CANDIDATES","MIN_FUZZY_QUERY_LENGTH"],"enum":["FindUserKind"],"fn":["build_arguments","find_auto","find_by_upstream_id","find_by_user_id"],"struct":["FindUserArguments","FindUserOutput","FindUserState","RawFindUserArguments","UserCandidateOutput"],"type":["FindUserTool"]};

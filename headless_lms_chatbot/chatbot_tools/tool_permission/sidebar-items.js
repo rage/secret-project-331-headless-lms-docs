@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ToolPermission"],"fn":["holds_course_permission"]};

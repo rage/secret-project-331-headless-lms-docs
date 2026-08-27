@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["course_finder","course_progress","course_structure","document_lookup"]};
+window.SIDEBAR_ITEMS = {"mod":["course_configuration","course_finder","course_material_search","course_progress","course_structure","document_lookup","find_course","find_user","user_course_state","user_overview"]};

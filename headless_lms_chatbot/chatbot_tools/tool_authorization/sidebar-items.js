@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ToolRequirement"],"fn":["authorize_requirements","authorize_tool_call","requirements_are_satisfied"],"struct":["ToolAuthorization"]};

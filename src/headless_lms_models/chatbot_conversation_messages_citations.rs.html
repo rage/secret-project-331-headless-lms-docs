@@ -213,193 +213,232 @@
 <a href=#213 id=213 data-nosnippet>213</a>    <span class="prelude-val">Ok</span>(res)
 <a href=#214 id=214 data-nosnippet>214</a>}
 <a href=#215 id=215 data-nosnippet>215</a>
-<a href=#216 id=216 data-nosnippet>216</a><span class="attr">#[cfg(test)]
-<a href=#217 id=217 data-nosnippet>217</a></span><span class="kw">mod </span>tests {
-<a href=#218 id=218 data-nosnippet>218</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
-<a href=#219 id=219 data-nosnippet>219</a>    <span class="kw">use </span>crate::{
-<a href=#220 id=220 data-nosnippet>220</a>        chatbot_conversation_message_messages::MessageRole,
-<a href=#221 id=221 data-nosnippet>221</a>        chatbot_conversation_message_tool_calls::ToolKind,
-<a href=#222 id=222 data-nosnippet>222</a>        chatbot_conversation_messages::{<span class="self">self</span>, ChatbotConversationMessage},
-<a href=#223 id=223 data-nosnippet>223</a>        test_helper::<span class="kw-2">*</span>,
-<a href=#224 id=224 data-nosnippet>224</a>    };
-<a href=#225 id=225 data-nosnippet>225</a>
-<a href=#226 id=226 data-nosnippet>226</a>    <span class="kw">async fn </span>insert_text_message(
-<a href=#227 id=227 data-nosnippet>227</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#228 id=228 data-nosnippet>228</a>        conversation_id: Uuid,
-<a href=#229 id=229 data-nosnippet>229</a>        role: MessageRole,
-<a href=#230 id=230 data-nosnippet>230</a>        response_id: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-<a href=#231 id=231 data-nosnippet>231</a>    ) -&gt; ChatbotConversationMessage {
-<a href=#232 id=232 data-nosnippet>232</a>        chatbot_conversation_messages::insert(
-<a href=#233 id=233 data-nosnippet>233</a>            conn,
-<a href=#234 id=234 data-nosnippet>234</a>            chatbot_text_message(conversation_id, role, <span class="string">"text"</span>, response_id),
-<a href=#235 id=235 data-nosnippet>235</a>        )
-<a href=#236 id=236 data-nosnippet>236</a>        .<span class="kw">await
-<a href=#237 id=237 data-nosnippet>237</a>        </span>.unwrap()
-<a href=#238 id=238 data-nosnippet>238</a>    }
-<a href=#239 id=239 data-nosnippet>239</a>
-<a href=#240 id=240 data-nosnippet>240</a>    <span class="kw">async fn </span>insert_tool_call(
-<a href=#241 id=241 data-nosnippet>241</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#242 id=242 data-nosnippet>242</a>        conversation_id: Uuid,
-<a href=#243 id=243 data-nosnippet>243</a>        tool_call_id: <span class="kw-2">&amp;</span>str,
-<a href=#244 id=244 data-nosnippet>244</a>        response_id: <span class="kw-2">&amp;</span>str,
-<a href=#245 id=245 data-nosnippet>245</a>    ) -&gt; ChatbotConversationMessage {
-<a href=#246 id=246 data-nosnippet>246</a>        chatbot_conversation_messages::insert(
-<a href=#247 id=247 data-nosnippet>247</a>            conn,
-<a href=#248 id=248 data-nosnippet>248</a>            chatbot_tool_call_message(
-<a href=#249 id=249 data-nosnippet>249</a>                conversation_id,
-<a href=#250 id=250 data-nosnippet>250</a>                tool_call_id,
-<a href=#251 id=251 data-nosnippet>251</a>                ToolKind::ClientTool,
-<a href=#252 id=252 data-nosnippet>252</a>                response_id,
-<a href=#253 id=253 data-nosnippet>253</a>            ),
-<a href=#254 id=254 data-nosnippet>254</a>        )
-<a href=#255 id=255 data-nosnippet>255</a>        .<span class="kw">await
-<a href=#256 id=256 data-nosnippet>256</a>        </span>.unwrap()
-<a href=#257 id=257 data-nosnippet>257</a>    }
-<a href=#258 id=258 data-nosnippet>258</a>
-<a href=#259 id=259 data-nosnippet>259</a>    <span class="kw">async fn </span>insert_tool_output(
-<a href=#260 id=260 data-nosnippet>260</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#261 id=261 data-nosnippet>261</a>        conversation_id: Uuid,
-<a href=#262 id=262 data-nosnippet>262</a>        tool_call_id: <span class="kw-2">&amp;</span>str,
-<a href=#263 id=263 data-nosnippet>263</a>        response_id: <span class="kw-2">&amp;</span>str,
-<a href=#264 id=264 data-nosnippet>264</a>    ) -&gt; ChatbotConversationMessage {
-<a href=#265 id=265 data-nosnippet>265</a>        chatbot_conversation_messages::insert(
-<a href=#266 id=266 data-nosnippet>266</a>            conn,
-<a href=#267 id=267 data-nosnippet>267</a>            chatbot_tool_output_message(
-<a href=#268 id=268 data-nosnippet>268</a>                conversation_id,
-<a href=#269 id=269 data-nosnippet>269</a>                tool_call_id,
-<a href=#270 id=270 data-nosnippet>270</a>                ToolKind::ClientTool,
-<a href=#271 id=271 data-nosnippet>271</a>                response_id,
-<a href=#272 id=272 data-nosnippet>272</a>            ),
-<a href=#273 id=273 data-nosnippet>273</a>        )
-<a href=#274 id=274 data-nosnippet>274</a>        .<span class="kw">await
-<a href=#275 id=275 data-nosnippet>275</a>        </span>.unwrap()
-<a href=#276 id=276 data-nosnippet>276</a>    }
-<a href=#277 id=277 data-nosnippet>277</a>
-<a href=#278 id=278 data-nosnippet>278</a>    <span class="kw">fn </span>citation_ids(citations: <span class="kw-2">&amp;</span>[ChatbotConversationMessageCitation]) -&gt; Vec&lt;Uuid&gt; {
-<a href=#279 id=279 data-nosnippet>279</a>        citations.iter().map(|citation| citation.id).collect()
-<a href=#280 id=280 data-nosnippet>280</a>    }
-<a href=#281 id=281 data-nosnippet>281</a>
-<a href=#282 id=282 data-nosnippet>282</a>    <span class="kw">async fn </span>insert_citation(
-<a href=#283 id=283 data-nosnippet>283</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#284 id=284 data-nosnippet>284</a>        conversation_id: Uuid,
-<a href=#285 id=285 data-nosnippet>285</a>        conversation_message_id: Uuid,
-<a href=#286 id=286 data-nosnippet>286</a>    ) -&gt; ChatbotConversationMessageCitation {
-<a href=#287 id=287 data-nosnippet>287</a>        insert(
-<a href=#288 id=288 data-nosnippet>288</a>            conn,
-<a href=#289 id=289 data-nosnippet>289</a>            ChatbotConversationMessageCitation {
-<a href=#290 id=290 data-nosnippet>290</a>                conversation_id,
-<a href=#291 id=291 data-nosnippet>291</a>                conversation_message_id,
-<a href=#292 id=292 data-nosnippet>292</a>                title: <span class="string">"A page"</span>.to_string(),
-<a href=#293 id=293 data-nosnippet>293</a>                content: <span class="string">"Cited content"</span>.to_string(),
-<a href=#294 id=294 data-nosnippet>294</a>                document_url: <span class="string">"https://example.com/page"</span>.to_string(),
-<a href=#295 id=295 data-nosnippet>295</a>                ..Default::default()
-<a href=#296 id=296 data-nosnippet>296</a>            },
-<a href=#297 id=297 data-nosnippet>297</a>        )
-<a href=#298 id=298 data-nosnippet>298</a>        .<span class="kw">await
-<a href=#299 id=299 data-nosnippet>299</a>        </span>.unwrap()
-<a href=#300 id=300 data-nosnippet>300</a>    }
-<a href=#301 id=301 data-nosnippet>301</a>
-<a href=#302 id=302 data-nosnippet>302</a>    <span class="doccomment">/// A turn that suspends on a client tool call answers in a later request, under an Azure
-<a href=#303 id=303 data-nosnippet>303</a>    /// response id of its own, so the search that produced the citations happened under a
-<a href=#304 id=304 data-nosnippet>304</a>    /// different one. The learner is shown the citation markers of the answer either way, so a
-<a href=#305 id=305 data-nosnippet>305</a>    /// citation left behind on the search output is a marker with nothing behind it.
-<a href=#306 id=306 data-nosnippet>306</a>    </span><span class="attr">#[tokio::test]
-<a href=#307 id=307 data-nosnippet>307</a>    </span><span class="kw">async fn </span>citations_of_a_suspended_turn_reach_the_message_that_cites_them() {
-<a href=#308 id=308 data-nosnippet>308</a>        <span class="macro">insert_data!</span>(:tx);
-<a href=#309 id=309 data-nosnippet>309</a>        <span class="kw">let </span>(_configuration, conversation) = insert_chatbot_conversation(tx.as_mut()).<span class="kw">await</span>;
-<a href=#310 id=310 data-nosnippet>310</a>        insert_text_message(tx.as_mut(), conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
-<a href=#311 id=311 data-nosnippet>311</a>        <span class="kw">let </span>search_output =
-<a href=#312 id=312 data-nosnippet>312</a>            insert_tool_output(tx.as_mut(), conversation, <span class="string">"call_search"</span>, <span class="string">"resp_search"</span>).<span class="kw">await</span>;
-<a href=#313 id=313 data-nosnippet>313</a>        <span class="kw">let </span>citation = insert_citation(tx.as_mut(), conversation, search_output.id).<span class="kw">await</span>;
-<a href=#314 id=314 data-nosnippet>314</a>        insert_tool_call(tx.as_mut(), conversation, <span class="string">"call_question"</span>, <span class="string">"resp_question"</span>).<span class="kw">await</span>;
-<a href=#315 id=315 data-nosnippet>315</a>        insert_tool_output(tx.as_mut(), conversation, <span class="string">"call_question"</span>, <span class="string">"resp_question"</span>).<span class="kw">await</span>;
-<a href=#316 id=316 data-nosnippet>316</a>        <span class="kw">let </span>answer = insert_text_message(
-<a href=#317 id=317 data-nosnippet>317</a>            tx.as_mut(),
-<a href=#318 id=318 data-nosnippet>318</a>            conversation,
-<a href=#319 id=319 data-nosnippet>319</a>            MessageRole::Assistant,
-<a href=#320 id=320 data-nosnippet>320</a>            <span class="prelude-val">Some</span>(<span class="string">"resp_answer"</span>),
-<a href=#321 id=321 data-nosnippet>321</a>        )
-<a href=#322 id=322 data-nosnippet>322</a>        .<span class="kw">await</span>;
-<a href=#323 id=323 data-nosnippet>323</a>
-<a href=#324 id=324 data-nosnippet>324</a>        attach_turn_citations_to_message(tx.as_mut(), conversation, answer.id)
-<a href=#325 id=325 data-nosnippet>325</a>            .<span class="kw">await
-<a href=#326 id=326 data-nosnippet>326</a>            </span>.unwrap();
-<a href=#327 id=327 data-nosnippet>327</a>
-<a href=#328 id=328 data-nosnippet>328</a>        <span class="kw">let </span>reachable = get_by_message_id(tx.as_mut(), answer.id).<span class="kw">await</span>.unwrap();
-<a href=#329 id=329 data-nosnippet>329</a>        <span class="macro">assert_eq!</span>(citation_ids(<span class="kw-2">&amp;</span>reachable), <span class="macro">vec!</span>[citation.id]);
-<a href=#330 id=330 data-nosnippet>330</a>    }
-<a href=#331 id=331 data-nosnippet>331</a>
-<a href=#332 id=332 data-nosnippet>332</a>    <span class="doccomment">/// Citations of a turn that never answered belong to no message the learner reads, and moving
-<a href=#333 id=333 data-nosnippet>333</a>    /// them to the next turn's answer would credit it with sources it never cited.
-<a href=#334 id=334 data-nosnippet>334</a>    </span><span class="attr">#[tokio::test]
-<a href=#335 id=335 data-nosnippet>335</a>    </span><span class="kw">async fn </span>citations_of_an_earlier_turn_are_left_where_they_are() {
-<a href=#336 id=336 data-nosnippet>336</a>        <span class="macro">insert_data!</span>(:tx);
-<a href=#337 id=337 data-nosnippet>337</a>        <span class="kw">let </span>(_configuration, conversation) = insert_chatbot_conversation(tx.as_mut()).<span class="kw">await</span>;
-<a href=#338 id=338 data-nosnippet>338</a>        insert_text_message(tx.as_mut(), conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
-<a href=#339 id=339 data-nosnippet>339</a>        <span class="kw">let </span>abandoned_search =
-<a href=#340 id=340 data-nosnippet>340</a>            insert_tool_output(tx.as_mut(), conversation, <span class="string">"call_search"</span>, <span class="string">"resp_search"</span>).<span class="kw">await</span>;
-<a href=#341 id=341 data-nosnippet>341</a>        <span class="kw">let </span>orphan = insert_citation(tx.as_mut(), conversation, abandoned_search.id).<span class="kw">await</span>;
-<a href=#342 id=342 data-nosnippet>342</a>        insert_text_message(tx.as_mut(), conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
-<a href=#343 id=343 data-nosnippet>343</a>        <span class="kw">let </span>answer = insert_text_message(
-<a href=#344 id=344 data-nosnippet>344</a>            tx.as_mut(),
-<a href=#345 id=345 data-nosnippet>345</a>            conversation,
-<a href=#346 id=346 data-nosnippet>346</a>            MessageRole::Assistant,
-<a href=#347 id=347 data-nosnippet>347</a>            <span class="prelude-val">Some</span>(<span class="string">"resp_answer"</span>),
-<a href=#348 id=348 data-nosnippet>348</a>        )
-<a href=#349 id=349 data-nosnippet>349</a>        .<span class="kw">await</span>;
-<a href=#350 id=350 data-nosnippet>350</a>
-<a href=#351 id=351 data-nosnippet>351</a>        attach_turn_citations_to_message(tx.as_mut(), conversation, answer.id)
-<a href=#352 id=352 data-nosnippet>352</a>            .<span class="kw">await
-<a href=#353 id=353 data-nosnippet>353</a>            </span>.unwrap();
-<a href=#354 id=354 data-nosnippet>354</a>
-<a href=#355 id=355 data-nosnippet>355</a>        <span class="macro">assert!</span>(
-<a href=#356 id=356 data-nosnippet>356</a>            get_by_message_id(tx.as_mut(), answer.id)
-<a href=#357 id=357 data-nosnippet>357</a>                .<span class="kw">await
-<a href=#358 id=358 data-nosnippet>358</a>                </span>.unwrap()
-<a href=#359 id=359 data-nosnippet>359</a>                .is_empty()
-<a href=#360 id=360 data-nosnippet>360</a>        );
-<a href=#361 id=361 data-nosnippet>361</a>        <span class="kw">let </span>left = get_by_message_id(tx.as_mut(), abandoned_search.id)
-<a href=#362 id=362 data-nosnippet>362</a>            .<span class="kw">await
-<a href=#363 id=363 data-nosnippet>363</a>            </span>.unwrap();
-<a href=#364 id=364 data-nosnippet>364</a>        <span class="macro">assert_eq!</span>(citation_ids(<span class="kw-2">&amp;</span>left), <span class="macro">vec!</span>[orphan.id]);
-<a href=#365 id=365 data-nosnippet>365</a>    }
+<a href=#216 id=216 data-nosnippet>216</a><span class="doccomment">/// The highest citation number already used by a tool call in the turn still in progress, or
+<a href=#217 id=217 data-nosnippet>217</a>/// `None` if the turn has cited nothing yet. A new search tool numbers its own hits starting
+<a href=#218 id=218 data-nosnippet>218</a>/// after this rather than from zero, since a whole turn's citations end up on one message (see
+<a href=#219 id=219 data-nosnippet>219</a>/// [`attach_turn_citations_to_message`]) and would otherwise collide with an earlier search's
+<a href=#220 id=220 data-nosnippet>220</a>/// numbers. Scoped identically to that function's own subquery.
+<a href=#221 id=221 data-nosnippet>221</a></span><span class="kw">pub async fn </span>max_citation_number_in_turn(
+<a href=#222 id=222 data-nosnippet>222</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#223 id=223 data-nosnippet>223</a>    conversation_id: Uuid,
+<a href=#224 id=224 data-nosnippet>224</a>) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;i32&gt;&gt; {
+<a href=#225 id=225 data-nosnippet>225</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_scalar!</span>(
+<a href=#226 id=226 data-nosnippet>226</a>        <span class="string">r#"
+<a href=#227 id=227 data-nosnippet>227</a>SELECT MAX(citation.citation_number)
+<a href=#228 id=228 data-nosnippet>228</a>FROM chatbot_conversation_messages_citations citation
+<a href=#229 id=229 data-nosnippet>229</a>  JOIN chatbot_conversation_messages message ON message.id = citation.conversation_message_id
+<a href=#230 id=230 data-nosnippet>230</a>  JOIN chatbot_conversation_message_tool_outputs tool_output ON tool_output.chatbot_conversation_message_id = message.id
+<a href=#231 id=231 data-nosnippet>231</a>WHERE citation.conversation_id = $1
+<a href=#232 id=232 data-nosnippet>232</a>  AND citation.deleted_at IS NULL
+<a href=#233 id=233 data-nosnippet>233</a>  AND message.deleted_at IS NULL
+<a href=#234 id=234 data-nosnippet>234</a>  AND tool_output.deleted_at IS NULL
+<a href=#235 id=235 data-nosnippet>235</a>  AND message.order_number &gt; COALESCE(
+<a href=#236 id=236 data-nosnippet>236</a>    (
+<a href=#237 id=237 data-nosnippet>237</a>      SELECT MAX(user_message.order_number)
+<a href=#238 id=238 data-nosnippet>238</a>      FROM chatbot_conversation_messages user_message
+<a href=#239 id=239 data-nosnippet>239</a>        JOIN chatbot_conversation_message_messages text_message ON text_message.chatbot_conversation_message_id = user_message.id
+<a href=#240 id=240 data-nosnippet>240</a>      WHERE user_message.conversation_id = $1
+<a href=#241 id=241 data-nosnippet>241</a>        AND user_message.deleted_at IS NULL
+<a href=#242 id=242 data-nosnippet>242</a>        AND text_message.deleted_at IS NULL
+<a href=#243 id=243 data-nosnippet>243</a>        AND text_message.message_role = 'user'
+<a href=#244 id=244 data-nosnippet>244</a>    ),
+<a href=#245 id=245 data-nosnippet>245</a>    0
+<a href=#246 id=246 data-nosnippet>246</a>  )
+<a href=#247 id=247 data-nosnippet>247</a>        "#</span>,
+<a href=#248 id=248 data-nosnippet>248</a>        conversation_id
+<a href=#249 id=249 data-nosnippet>249</a>    )
+<a href=#250 id=250 data-nosnippet>250</a>    .fetch_one(conn)
+<a href=#251 id=251 data-nosnippet>251</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#252 id=252 data-nosnippet>252</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#253 id=253 data-nosnippet>253</a>}
+<a href=#254 id=254 data-nosnippet>254</a>
+<a href=#255 id=255 data-nosnippet>255</a><span class="attr">#[cfg(test)]
+<a href=#256 id=256 data-nosnippet>256</a></span><span class="kw">mod </span>tests {
+<a href=#257 id=257 data-nosnippet>257</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#258 id=258 data-nosnippet>258</a>    <span class="kw">use </span>crate::{
+<a href=#259 id=259 data-nosnippet>259</a>        chatbot_conversation_message_messages::MessageRole,
+<a href=#260 id=260 data-nosnippet>260</a>        chatbot_conversation_message_tool_calls::ToolKind,
+<a href=#261 id=261 data-nosnippet>261</a>        chatbot_conversation_messages::{<span class="self">self</span>, ChatbotConversationMessage},
+<a href=#262 id=262 data-nosnippet>262</a>        test_helper::<span class="kw-2">*</span>,
+<a href=#263 id=263 data-nosnippet>263</a>    };
+<a href=#264 id=264 data-nosnippet>264</a>
+<a href=#265 id=265 data-nosnippet>265</a>    <span class="kw">async fn </span>insert_text_message(
+<a href=#266 id=266 data-nosnippet>266</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#267 id=267 data-nosnippet>267</a>        conversation_id: Uuid,
+<a href=#268 id=268 data-nosnippet>268</a>        role: MessageRole,
+<a href=#269 id=269 data-nosnippet>269</a>        response_id: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+<a href=#270 id=270 data-nosnippet>270</a>    ) -&gt; ChatbotConversationMessage {
+<a href=#271 id=271 data-nosnippet>271</a>        chatbot_conversation_messages::insert(
+<a href=#272 id=272 data-nosnippet>272</a>            conn,
+<a href=#273 id=273 data-nosnippet>273</a>            chatbot_text_message(conversation_id, role, <span class="string">"text"</span>, response_id),
+<a href=#274 id=274 data-nosnippet>274</a>        )
+<a href=#275 id=275 data-nosnippet>275</a>        .<span class="kw">await
+<a href=#276 id=276 data-nosnippet>276</a>        </span>.unwrap()
+<a href=#277 id=277 data-nosnippet>277</a>    }
+<a href=#278 id=278 data-nosnippet>278</a>
+<a href=#279 id=279 data-nosnippet>279</a>    <span class="kw">async fn </span>insert_tool_call(
+<a href=#280 id=280 data-nosnippet>280</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#281 id=281 data-nosnippet>281</a>        conversation_id: Uuid,
+<a href=#282 id=282 data-nosnippet>282</a>        tool_call_id: <span class="kw-2">&amp;</span>str,
+<a href=#283 id=283 data-nosnippet>283</a>        response_id: <span class="kw-2">&amp;</span>str,
+<a href=#284 id=284 data-nosnippet>284</a>    ) -&gt; ChatbotConversationMessage {
+<a href=#285 id=285 data-nosnippet>285</a>        chatbot_conversation_messages::insert(
+<a href=#286 id=286 data-nosnippet>286</a>            conn,
+<a href=#287 id=287 data-nosnippet>287</a>            chatbot_tool_call_message(
+<a href=#288 id=288 data-nosnippet>288</a>                conversation_id,
+<a href=#289 id=289 data-nosnippet>289</a>                tool_call_id,
+<a href=#290 id=290 data-nosnippet>290</a>                ToolKind::ClientTool,
+<a href=#291 id=291 data-nosnippet>291</a>                response_id,
+<a href=#292 id=292 data-nosnippet>292</a>            ),
+<a href=#293 id=293 data-nosnippet>293</a>        )
+<a href=#294 id=294 data-nosnippet>294</a>        .<span class="kw">await
+<a href=#295 id=295 data-nosnippet>295</a>        </span>.unwrap()
+<a href=#296 id=296 data-nosnippet>296</a>    }
+<a href=#297 id=297 data-nosnippet>297</a>
+<a href=#298 id=298 data-nosnippet>298</a>    <span class="kw">async fn </span>insert_tool_output(
+<a href=#299 id=299 data-nosnippet>299</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#300 id=300 data-nosnippet>300</a>        conversation_id: Uuid,
+<a href=#301 id=301 data-nosnippet>301</a>        tool_call_id: <span class="kw-2">&amp;</span>str,
+<a href=#302 id=302 data-nosnippet>302</a>        response_id: <span class="kw-2">&amp;</span>str,
+<a href=#303 id=303 data-nosnippet>303</a>    ) -&gt; ChatbotConversationMessage {
+<a href=#304 id=304 data-nosnippet>304</a>        chatbot_conversation_messages::insert(
+<a href=#305 id=305 data-nosnippet>305</a>            conn,
+<a href=#306 id=306 data-nosnippet>306</a>            chatbot_tool_output_message(
+<a href=#307 id=307 data-nosnippet>307</a>                conversation_id,
+<a href=#308 id=308 data-nosnippet>308</a>                tool_call_id,
+<a href=#309 id=309 data-nosnippet>309</a>                ToolKind::ClientTool,
+<a href=#310 id=310 data-nosnippet>310</a>                response_id,
+<a href=#311 id=311 data-nosnippet>311</a>            ),
+<a href=#312 id=312 data-nosnippet>312</a>        )
+<a href=#313 id=313 data-nosnippet>313</a>        .<span class="kw">await
+<a href=#314 id=314 data-nosnippet>314</a>        </span>.unwrap()
+<a href=#315 id=315 data-nosnippet>315</a>    }
+<a href=#316 id=316 data-nosnippet>316</a>
+<a href=#317 id=317 data-nosnippet>317</a>    <span class="kw">fn </span>citation_ids(citations: <span class="kw-2">&amp;</span>[ChatbotConversationMessageCitation]) -&gt; Vec&lt;Uuid&gt; {
+<a href=#318 id=318 data-nosnippet>318</a>        citations.iter().map(|citation| citation.id).collect()
+<a href=#319 id=319 data-nosnippet>319</a>    }
+<a href=#320 id=320 data-nosnippet>320</a>
+<a href=#321 id=321 data-nosnippet>321</a>    <span class="kw">async fn </span>insert_citation(
+<a href=#322 id=322 data-nosnippet>322</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#323 id=323 data-nosnippet>323</a>        conversation_id: Uuid,
+<a href=#324 id=324 data-nosnippet>324</a>        conversation_message_id: Uuid,
+<a href=#325 id=325 data-nosnippet>325</a>    ) -&gt; ChatbotConversationMessageCitation {
+<a href=#326 id=326 data-nosnippet>326</a>        insert(
+<a href=#327 id=327 data-nosnippet>327</a>            conn,
+<a href=#328 id=328 data-nosnippet>328</a>            ChatbotConversationMessageCitation {
+<a href=#329 id=329 data-nosnippet>329</a>                conversation_id,
+<a href=#330 id=330 data-nosnippet>330</a>                conversation_message_id,
+<a href=#331 id=331 data-nosnippet>331</a>                title: <span class="string">"A page"</span>.to_string(),
+<a href=#332 id=332 data-nosnippet>332</a>                content: <span class="string">"Cited content"</span>.to_string(),
+<a href=#333 id=333 data-nosnippet>333</a>                document_url: <span class="string">"https://example.com/page"</span>.to_string(),
+<a href=#334 id=334 data-nosnippet>334</a>                ..Default::default()
+<a href=#335 id=335 data-nosnippet>335</a>            },
+<a href=#336 id=336 data-nosnippet>336</a>        )
+<a href=#337 id=337 data-nosnippet>337</a>        .<span class="kw">await
+<a href=#338 id=338 data-nosnippet>338</a>        </span>.unwrap()
+<a href=#339 id=339 data-nosnippet>339</a>    }
+<a href=#340 id=340 data-nosnippet>340</a>
+<a href=#341 id=341 data-nosnippet>341</a>    <span class="doccomment">/// A turn that suspends on a client tool call answers in a later request, under an Azure
+<a href=#342 id=342 data-nosnippet>342</a>    /// response id of its own, so the search that produced the citations happened under a
+<a href=#343 id=343 data-nosnippet>343</a>    /// different one. The learner is shown the citation markers of the answer either way, so a
+<a href=#344 id=344 data-nosnippet>344</a>    /// citation left behind on the search output is a marker with nothing behind it.
+<a href=#345 id=345 data-nosnippet>345</a>    </span><span class="attr">#[tokio::test]
+<a href=#346 id=346 data-nosnippet>346</a>    </span><span class="kw">async fn </span>citations_of_a_suspended_turn_reach_the_message_that_cites_them() {
+<a href=#347 id=347 data-nosnippet>347</a>        <span class="macro">insert_data!</span>(:tx);
+<a href=#348 id=348 data-nosnippet>348</a>        <span class="kw">let </span>(_configuration, conversation) = insert_chatbot_conversation(tx.as_mut()).<span class="kw">await</span>;
+<a href=#349 id=349 data-nosnippet>349</a>        insert_text_message(tx.as_mut(), conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
+<a href=#350 id=350 data-nosnippet>350</a>        <span class="kw">let </span>search_output =
+<a href=#351 id=351 data-nosnippet>351</a>            insert_tool_output(tx.as_mut(), conversation, <span class="string">"call_search"</span>, <span class="string">"resp_search"</span>).<span class="kw">await</span>;
+<a href=#352 id=352 data-nosnippet>352</a>        <span class="kw">let </span>citation = insert_citation(tx.as_mut(), conversation, search_output.id).<span class="kw">await</span>;
+<a href=#353 id=353 data-nosnippet>353</a>        insert_tool_call(tx.as_mut(), conversation, <span class="string">"call_question"</span>, <span class="string">"resp_question"</span>).<span class="kw">await</span>;
+<a href=#354 id=354 data-nosnippet>354</a>        insert_tool_output(tx.as_mut(), conversation, <span class="string">"call_question"</span>, <span class="string">"resp_question"</span>).<span class="kw">await</span>;
+<a href=#355 id=355 data-nosnippet>355</a>        <span class="kw">let </span>answer = insert_text_message(
+<a href=#356 id=356 data-nosnippet>356</a>            tx.as_mut(),
+<a href=#357 id=357 data-nosnippet>357</a>            conversation,
+<a href=#358 id=358 data-nosnippet>358</a>            MessageRole::Assistant,
+<a href=#359 id=359 data-nosnippet>359</a>            <span class="prelude-val">Some</span>(<span class="string">"resp_answer"</span>),
+<a href=#360 id=360 data-nosnippet>360</a>        )
+<a href=#361 id=361 data-nosnippet>361</a>        .<span class="kw">await</span>;
+<a href=#362 id=362 data-nosnippet>362</a>
+<a href=#363 id=363 data-nosnippet>363</a>        attach_turn_citations_to_message(tx.as_mut(), conversation, answer.id)
+<a href=#364 id=364 data-nosnippet>364</a>            .<span class="kw">await
+<a href=#365 id=365 data-nosnippet>365</a>            </span>.unwrap();
 <a href=#366 id=366 data-nosnippet>366</a>
-<a href=#367 id=367 data-nosnippet>367</a>    <span class="doccomment">/// A citation belongs to one conversation, and nothing outside that conversation may claim it,
-<a href=#368 id=368 data-nosnippet>368</a>    /// however the ids of a turn happen to repeat elsewhere.
-<a href=#369 id=369 data-nosnippet>369</a>    </span><span class="attr">#[tokio::test]
-<a href=#370 id=370 data-nosnippet>370</a>    </span><span class="kw">async fn </span>citations_of_another_conversation_are_not_touched() {
-<a href=#371 id=371 data-nosnippet>371</a>        <span class="macro">insert_data!</span>(:tx);
-<a href=#372 id=372 data-nosnippet>372</a>        <span class="kw">let </span>(_configuration, conversation) = insert_chatbot_conversation(tx.as_mut()).<span class="kw">await</span>;
-<a href=#373 id=373 data-nosnippet>373</a>        <span class="kw">let </span>(_other_configuration, other_conversation) =
-<a href=#374 id=374 data-nosnippet>374</a>            insert_chatbot_conversation(tx.as_mut()).<span class="kw">await</span>;
-<a href=#375 id=375 data-nosnippet>375</a>        insert_text_message(tx.as_mut(), other_conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
-<a href=#376 id=376 data-nosnippet>376</a>        <span class="kw">let </span>other_search = insert_tool_output(
-<a href=#377 id=377 data-nosnippet>377</a>            tx.as_mut(),
-<a href=#378 id=378 data-nosnippet>378</a>            other_conversation,
-<a href=#379 id=379 data-nosnippet>379</a>            <span class="string">"call_search"</span>,
-<a href=#380 id=380 data-nosnippet>380</a>            <span class="string">"resp_search"</span>,
-<a href=#381 id=381 data-nosnippet>381</a>        )
-<a href=#382 id=382 data-nosnippet>382</a>        .<span class="kw">await</span>;
-<a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">let </span>other_citation =
-<a href=#384 id=384 data-nosnippet>384</a>            insert_citation(tx.as_mut(), other_conversation, other_search.id).<span class="kw">await</span>;
-<a href=#385 id=385 data-nosnippet>385</a>        insert_text_message(tx.as_mut(), conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
-<a href=#386 id=386 data-nosnippet>386</a>        <span class="kw">let </span>answer = insert_text_message(
-<a href=#387 id=387 data-nosnippet>387</a>            tx.as_mut(),
-<a href=#388 id=388 data-nosnippet>388</a>            conversation,
-<a href=#389 id=389 data-nosnippet>389</a>            MessageRole::Assistant,
-<a href=#390 id=390 data-nosnippet>390</a>            <span class="prelude-val">Some</span>(<span class="string">"resp_answer"</span>),
-<a href=#391 id=391 data-nosnippet>391</a>        )
-<a href=#392 id=392 data-nosnippet>392</a>        .<span class="kw">await</span>;
+<a href=#367 id=367 data-nosnippet>367</a>        <span class="kw">let </span>reachable = get_by_message_id(tx.as_mut(), answer.id).<span class="kw">await</span>.unwrap();
+<a href=#368 id=368 data-nosnippet>368</a>        <span class="macro">assert_eq!</span>(citation_ids(<span class="kw-2">&amp;</span>reachable), <span class="macro">vec!</span>[citation.id]);
+<a href=#369 id=369 data-nosnippet>369</a>    }
+<a href=#370 id=370 data-nosnippet>370</a>
+<a href=#371 id=371 data-nosnippet>371</a>    <span class="doccomment">/// Citations of a turn that never answered belong to no message the learner reads, and moving
+<a href=#372 id=372 data-nosnippet>372</a>    /// them to the next turn's answer would credit it with sources it never cited.
+<a href=#373 id=373 data-nosnippet>373</a>    </span><span class="attr">#[tokio::test]
+<a href=#374 id=374 data-nosnippet>374</a>    </span><span class="kw">async fn </span>citations_of_an_earlier_turn_are_left_where_they_are() {
+<a href=#375 id=375 data-nosnippet>375</a>        <span class="macro">insert_data!</span>(:tx);
+<a href=#376 id=376 data-nosnippet>376</a>        <span class="kw">let </span>(_configuration, conversation) = insert_chatbot_conversation(tx.as_mut()).<span class="kw">await</span>;
+<a href=#377 id=377 data-nosnippet>377</a>        insert_text_message(tx.as_mut(), conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="kw">let </span>abandoned_search =
+<a href=#379 id=379 data-nosnippet>379</a>            insert_tool_output(tx.as_mut(), conversation, <span class="string">"call_search"</span>, <span class="string">"resp_search"</span>).<span class="kw">await</span>;
+<a href=#380 id=380 data-nosnippet>380</a>        <span class="kw">let </span>orphan = insert_citation(tx.as_mut(), conversation, abandoned_search.id).<span class="kw">await</span>;
+<a href=#381 id=381 data-nosnippet>381</a>        insert_text_message(tx.as_mut(), conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
+<a href=#382 id=382 data-nosnippet>382</a>        <span class="kw">let </span>answer = insert_text_message(
+<a href=#383 id=383 data-nosnippet>383</a>            tx.as_mut(),
+<a href=#384 id=384 data-nosnippet>384</a>            conversation,
+<a href=#385 id=385 data-nosnippet>385</a>            MessageRole::Assistant,
+<a href=#386 id=386 data-nosnippet>386</a>            <span class="prelude-val">Some</span>(<span class="string">"resp_answer"</span>),
+<a href=#387 id=387 data-nosnippet>387</a>        )
+<a href=#388 id=388 data-nosnippet>388</a>        .<span class="kw">await</span>;
+<a href=#389 id=389 data-nosnippet>389</a>
+<a href=#390 id=390 data-nosnippet>390</a>        attach_turn_citations_to_message(tx.as_mut(), conversation, answer.id)
+<a href=#391 id=391 data-nosnippet>391</a>            .<span class="kw">await
+<a href=#392 id=392 data-nosnippet>392</a>            </span>.unwrap();
 <a href=#393 id=393 data-nosnippet>393</a>
-<a href=#394 id=394 data-nosnippet>394</a>        <span class="kw">let </span>moved = attach_turn_citations_to_message(tx.as_mut(), conversation, answer.id)
-<a href=#395 id=395 data-nosnippet>395</a>            .<span class="kw">await
-<a href=#396 id=396 data-nosnippet>396</a>            </span>.unwrap();
-<a href=#397 id=397 data-nosnippet>397</a>
-<a href=#398 id=398 data-nosnippet>398</a>        <span class="macro">assert!</span>(moved.is_empty());
-<a href=#399 id=399 data-nosnippet>399</a>        <span class="kw">let </span>untouched = get_by_message_id(tx.as_mut(), other_search.id)
-<a href=#400 id=400 data-nosnippet>400</a>            .<span class="kw">await
-<a href=#401 id=401 data-nosnippet>401</a>            </span>.unwrap();
-<a href=#402 id=402 data-nosnippet>402</a>        <span class="macro">assert_eq!</span>(citation_ids(<span class="kw-2">&amp;</span>untouched), <span class="macro">vec!</span>[other_citation.id]);
-<a href=#403 id=403 data-nosnippet>403</a>    }
-<a href=#404 id=404 data-nosnippet>404</a>}
+<a href=#394 id=394 data-nosnippet>394</a>        <span class="macro">assert!</span>(
+<a href=#395 id=395 data-nosnippet>395</a>            get_by_message_id(tx.as_mut(), answer.id)
+<a href=#396 id=396 data-nosnippet>396</a>                .<span class="kw">await
+<a href=#397 id=397 data-nosnippet>397</a>                </span>.unwrap()
+<a href=#398 id=398 data-nosnippet>398</a>                .is_empty()
+<a href=#399 id=399 data-nosnippet>399</a>        );
+<a href=#400 id=400 data-nosnippet>400</a>        <span class="kw">let </span>left = get_by_message_id(tx.as_mut(), abandoned_search.id)
+<a href=#401 id=401 data-nosnippet>401</a>            .<span class="kw">await
+<a href=#402 id=402 data-nosnippet>402</a>            </span>.unwrap();
+<a href=#403 id=403 data-nosnippet>403</a>        <span class="macro">assert_eq!</span>(citation_ids(<span class="kw-2">&amp;</span>left), <span class="macro">vec!</span>[orphan.id]);
+<a href=#404 id=404 data-nosnippet>404</a>    }
+<a href=#405 id=405 data-nosnippet>405</a>
+<a href=#406 id=406 data-nosnippet>406</a>    <span class="doccomment">/// A citation belongs to one conversation, and nothing outside that conversation may claim it,
+<a href=#407 id=407 data-nosnippet>407</a>    /// however the ids of a turn happen to repeat elsewhere.
+<a href=#408 id=408 data-nosnippet>408</a>    </span><span class="attr">#[tokio::test]
+<a href=#409 id=409 data-nosnippet>409</a>    </span><span class="kw">async fn </span>citations_of_another_conversation_are_not_touched() {
+<a href=#410 id=410 data-nosnippet>410</a>        <span class="macro">insert_data!</span>(:tx);
+<a href=#411 id=411 data-nosnippet>411</a>        <span class="kw">let </span>(_configuration, conversation) = insert_chatbot_conversation(tx.as_mut()).<span class="kw">await</span>;
+<a href=#412 id=412 data-nosnippet>412</a>        <span class="kw">let </span>(_other_configuration, other_conversation) =
+<a href=#413 id=413 data-nosnippet>413</a>            insert_chatbot_conversation(tx.as_mut()).<span class="kw">await</span>;
+<a href=#414 id=414 data-nosnippet>414</a>        insert_text_message(tx.as_mut(), other_conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
+<a href=#415 id=415 data-nosnippet>415</a>        <span class="kw">let </span>other_search = insert_tool_output(
+<a href=#416 id=416 data-nosnippet>416</a>            tx.as_mut(),
+<a href=#417 id=417 data-nosnippet>417</a>            other_conversation,
+<a href=#418 id=418 data-nosnippet>418</a>            <span class="string">"call_search"</span>,
+<a href=#419 id=419 data-nosnippet>419</a>            <span class="string">"resp_search"</span>,
+<a href=#420 id=420 data-nosnippet>420</a>        )
+<a href=#421 id=421 data-nosnippet>421</a>        .<span class="kw">await</span>;
+<a href=#422 id=422 data-nosnippet>422</a>        <span class="kw">let </span>other_citation =
+<a href=#423 id=423 data-nosnippet>423</a>            insert_citation(tx.as_mut(), other_conversation, other_search.id).<span class="kw">await</span>;
+<a href=#424 id=424 data-nosnippet>424</a>        insert_text_message(tx.as_mut(), conversation, MessageRole::User, <span class="prelude-val">None</span>).<span class="kw">await</span>;
+<a href=#425 id=425 data-nosnippet>425</a>        <span class="kw">let </span>answer = insert_text_message(
+<a href=#426 id=426 data-nosnippet>426</a>            tx.as_mut(),
+<a href=#427 id=427 data-nosnippet>427</a>            conversation,
+<a href=#428 id=428 data-nosnippet>428</a>            MessageRole::Assistant,
+<a href=#429 id=429 data-nosnippet>429</a>            <span class="prelude-val">Some</span>(<span class="string">"resp_answer"</span>),
+<a href=#430 id=430 data-nosnippet>430</a>        )
+<a href=#431 id=431 data-nosnippet>431</a>        .<span class="kw">await</span>;
+<a href=#432 id=432 data-nosnippet>432</a>
+<a href=#433 id=433 data-nosnippet>433</a>        <span class="kw">let </span>moved = attach_turn_citations_to_message(tx.as_mut(), conversation, answer.id)
+<a href=#434 id=434 data-nosnippet>434</a>            .<span class="kw">await
+<a href=#435 id=435 data-nosnippet>435</a>            </span>.unwrap();
+<a href=#436 id=436 data-nosnippet>436</a>
+<a href=#437 id=437 data-nosnippet>437</a>        <span class="macro">assert!</span>(moved.is_empty());
+<a href=#438 id=438 data-nosnippet>438</a>        <span class="kw">let </span>untouched = get_by_message_id(tx.as_mut(), other_search.id)
+<a href=#439 id=439 data-nosnippet>439</a>            .<span class="kw">await
+<a href=#440 id=440 data-nosnippet>440</a>            </span>.unwrap();
+<a href=#441 id=441 data-nosnippet>441</a>        <span class="macro">assert_eq!</span>(citation_ids(<span class="kw-2">&amp;</span>untouched), <span class="macro">vec!</span>[other_citation.id]);
+<a href=#442 id=442 data-nosnippet>442</a>    }
+<a href=#443 id=443 data-nosnippet>443</a>}
 </code></pre></div></section></main></body></html>

@@ -1186,7 +1186,7 @@
 <a href=#1186 id=1186 data-nosnippet>1186</a>    default_chatbot,
 <a href=#1187 id=1187 data-nosnippet>1187</a>    enabled_to_students,
 <a href=#1188 id=1188 data-nosnippet>1188</a>    model_id,
-<a href=#1189 id=1189 data-nosnippet>1189</a>    use_tools
+<a href=#1189 id=1189 data-nosnippet>1189</a>    enabled_tool_categories
 <a href=#1190 id=1190 data-nosnippet>1190</a>  )
 <a href=#1191 id=1191 data-nosnippet>1191</a>SELECT
 <a href=#1192 id=1192 data-nosnippet>1192</a>  uuid_generate_v5($1, id::text),
@@ -1208,7 +1208,7 @@
 <a href=#1208 id=1208 data-nosnippet>1208</a>  default_chatbot,
 <a href=#1209 id=1209 data-nosnippet>1209</a>  enabled_to_students,
 <a href=#1210 id=1210 data-nosnippet>1210</a>  model_id,
-<a href=#1211 id=1211 data-nosnippet>1211</a>  use_tools
+<a href=#1211 id=1211 data-nosnippet>1211</a>  enabled_tool_categories
 <a href=#1212 id=1212 data-nosnippet>1212</a>FROM chatbot_configurations
 <a href=#1213 id=1213 data-nosnippet>1213</a>WHERE course_id = $2
 <a href=#1214 id=1214 data-nosnippet>1214</a>  AND deleted_at IS NULL;

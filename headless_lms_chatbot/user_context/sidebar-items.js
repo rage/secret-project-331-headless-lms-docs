@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ChatbotUserContext"]};
+window.SIDEBAR_ITEMS = {"struct":["ChatbotTurnContext"]};

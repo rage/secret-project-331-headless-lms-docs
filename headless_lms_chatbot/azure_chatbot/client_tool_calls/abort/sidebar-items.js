@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ToolCallAbortReason"],"fn":["permission_revoked_output"]};
+window.SIDEBAR_ITEMS = {"enum":["ToolCallAbortReason"],"fn":["refused_call_output"]};

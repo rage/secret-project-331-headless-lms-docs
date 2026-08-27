@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["EMAIL_DELIVERY_LIMIT"],"enum":["UserOverviewFacet","UserOverviewFacetValue"],"struct":["CheatingFlagFacet","EmailDeliveryFacet","EnrollmentFacet","ProfileFacet","RoleFacet","UserOverviewArguments","UserOverviewState"],"type":["UserOverviewTool"]};

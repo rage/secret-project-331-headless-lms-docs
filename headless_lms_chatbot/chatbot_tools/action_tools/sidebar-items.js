@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["display_field_matches","verify_display_field"],"mod":["edit_user_account","generate_password_reset_link","reset_exercises","update_cheating_status"],"struct":["ActionAuditFields","ConfirmAnswer","ExecutedAction"],"trait":["ConfirmableActionTool"]};

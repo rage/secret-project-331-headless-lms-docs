@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["CONTENT_FIELD_SEPARATOR"],"fn":["get_azure_ai_search_tool_definition"]};
+window.SIDEBAR_ITEMS = {"constant":["CATEGORY","CONTENT_FIELD_SEPARATOR"],"fn":["get_azure_ai_search_tool_definition"]};

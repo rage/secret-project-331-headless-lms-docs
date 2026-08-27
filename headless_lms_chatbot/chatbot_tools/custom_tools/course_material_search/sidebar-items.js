@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_QUERY_LENGTH","MAX_RESULTS"],"fn":["build_arguments","strip_headline_marks"],"struct":["CourseMaterialSearchArguments","CourseMaterialSearchState","Output","OutputCourse","OutputResult","RawArguments","SearchHit"],"type":["CourseMaterialSearchTool"]};

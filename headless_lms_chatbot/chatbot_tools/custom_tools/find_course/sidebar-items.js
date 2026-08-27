@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_CANDIDATES"],"struct":["CourseCandidate","CourseCandidateOutput","CourseInstanceOutput","FindCourseArguments","FindCourseState"],"type":["FindCourseTool"]};
