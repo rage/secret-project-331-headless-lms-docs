@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["parse_date_issued","verify_certificate_belongs_to_course"],"struct":["RawArguments","UpdateCertificateArguments","UpdateCertificateFacts","UpdateCertificateTool"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["PageType"],"struct":["CourseStructureArguments","CourseStructureState","PageDocumentInfo"],"type":["CourseStructureTool"]};
+window.SIDEBAR_ITEMS = {"constant":["MAX_PAGES_PER_GROUP","MAX_PAGE_GROUPS"],"enum":["PageType"],"struct":["CourseStructure","CourseStructureArguments","CourseStructureState","PageDocumentInfo","PageGroup","PageGroupKey"],"type":["CourseStructureTool"]};
