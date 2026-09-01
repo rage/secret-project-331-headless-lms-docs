@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["LinkingMailResendOutcome","ResendDecision"],"fn":["resend_linking_mail","resend_linking_mail_for_target","resolve_person"],"struct":["ResendAttempt","ResolvedPerson"]};
+window.SIDEBAR_ITEMS = {"enum":["LinkingMailResendOutcome","ResendDecision","ResendOutcome","ResolvePersonError"],"fn":["resend_linking_mail","resend_linking_mail_for_target","resolve_person"],"struct":["ResendAttempt","ResolvedPerson"]};

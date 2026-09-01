@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["count_blocked_students_for_course","get_by_user_and_course","get_by_user_id","get_consenting_user_and_course_ids","get_consenting_user_ids_for_course","upsert"],"struct":["CourseCreditRegistrationBlockedStudentCounts","CourseCreditRegistrationConsent"]};

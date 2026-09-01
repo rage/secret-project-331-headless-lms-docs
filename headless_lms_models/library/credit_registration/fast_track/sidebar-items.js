@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MATCHED_FIELD_PRIMARY"],"enum":["FastTrackDecision"],"fn":["decide_fast_track","find_fast_track_candidate","fold","link_by_email_match","names_loosely_match"],"struct":["FastTrackCandidate","FastTrackLink","RegistryName"]};
+window.SIDEBAR_ITEMS = {"constant":["MATCHED_FIELD_PRIMARY"],"enum":["FastTrackDecision"],"fn":["decide_fast_track","find_fast_track_candidate","find_fast_track_candidates","fold","link_by_email_match","names_loosely_match"],"struct":["FastTrackCandidate","FastTrackLink","FastTrackLookup","RegistryName"]};

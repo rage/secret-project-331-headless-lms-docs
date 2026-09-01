@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","list_credit_registration_admin_actions","to_action_row"],"struct":["CreditRegistrationAdminActionRow","CreditRegistrationAdminActionsPage","ListAdminActionsQuery"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","list_credit_registration_admin_actions","to_action_row"],"struct":["CreditRegistrationAdminActionRow","ListAdminActionsQuery"]};

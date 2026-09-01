@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["record_student_number_change"]};
+window.SIDEBAR_ITEMS = {"fn":["record_student_number_change","unlink_verified_student_number"]};

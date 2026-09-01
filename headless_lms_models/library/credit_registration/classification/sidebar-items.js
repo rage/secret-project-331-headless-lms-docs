@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Retryability"],"fn":["is_retryable_transient_wire_code","map_code","retryability","wire_code_retryability"]};
+window.SIDEBAR_ITEMS = {"enum":["Retryability","WireOutcome"],"fn":["is_retryable_transient_wire_code","map_code","outcome_of","retryability","settled_state","wire_code_retryability","wire_outcome"]};
