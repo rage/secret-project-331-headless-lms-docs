@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["RESPONSE_FORMAT_NAME","SYSTEM_PROMPT_1"],"fn":["generate_prompt","prompt_if_course","response_format"],"struct":["PromptCreationResponse"]};

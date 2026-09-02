@@ -73,9 +73,20 @@
 <a href=#73 id=73 data-nosnippet>73</a>    )
 <a href=#74 id=74 data-nosnippet>74</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#75 id=75 data-nosnippet>75</a>
-<a href=#76 id=76 data-nosnippet>76</a>    <span class="prelude-val">Ok</span>(SeedApplicationLLMsResult {
-<a href=#77 id=77 data-nosnippet>77</a>        llm_default_model_id: llm.id,
-<a href=#78 id=78 data-nosnippet>78</a>        llm_default_model_type: llm.model_type,
-<a href=#79 id=79 data-nosnippet>79</a>    })
-<a href=#80 id=80 data-nosnippet>80</a>}
+<a href=#76 id=76 data-nosnippet>76</a>    application_task_default_language_models::insert(
+<a href=#77 id=77 data-nosnippet>77</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#78 id=78 data-nosnippet>78</a>        ApplicationTaskDefaultLanguageModel {
+<a href=#79 id=79 data-nosnippet>79</a>            model_id: llm.id,
+<a href=#80 id=80 data-nosnippet>80</a>            task: ApplicationTask::PromptCreation,
+<a href=#81 id=81 data-nosnippet>81</a>            context_utilization: <span class="number">0.75</span>,
+<a href=#82 id=82 data-nosnippet>82</a>            ..Default::default()
+<a href=#83 id=83 data-nosnippet>83</a>        },
+<a href=#84 id=84 data-nosnippet>84</a>    )
+<a href=#85 id=85 data-nosnippet>85</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#86 id=86 data-nosnippet>86</a>
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="prelude-val">Ok</span>(SeedApplicationLLMsResult {
+<a href=#88 id=88 data-nosnippet>88</a>        llm_default_model_id: llm.id,
+<a href=#89 id=89 data-nosnippet>89</a>        llm_default_model_type: llm.model_type,
+<a href=#90 id=90 data-nosnippet>90</a>    })
+<a href=#91 id=91 data-nosnippet>91</a>}
 </code></pre></div></section></main></body></html>
