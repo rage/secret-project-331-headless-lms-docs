@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["lock_and_verify_uploads_are_usable","verify_answer_names_uploads","verify_uploads_are_distinct","verify_uploads_are_usable","verify_uploads_belong_to_exercise"]};

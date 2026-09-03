@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ARCHIVE_CHANNEL_CAPACITY","MIME_EXTENSIONS"],"fn":["content_disposition","entry_name","extension_for_mime","filename_component","stream_exercise_answer_files","write_archive"],"struct":["ArchiveSink"]};

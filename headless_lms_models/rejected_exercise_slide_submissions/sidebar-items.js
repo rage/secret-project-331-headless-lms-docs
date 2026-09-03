@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["insert_rejected_exercise_slide_submission","insert_rejected_exercise_task_submission"],"struct":["RejectedExerciseSlideSubmission"]};
+window.SIDEBAR_ITEMS = {"fn":["count_with_slide_and_user_ids","insert_rejected_exercise_slide_submission","insert_rejected_exercise_task_submission","insert_rejected_exercise_task_submission_files"],"struct":["RejectedExerciseSlideSubmission"]};

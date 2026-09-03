@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","redirect_to_storage_service","serve_upload","upload_from_exercise_service"],"struct":["AuthorizationToken","ExerciseUploadBinary","FilesApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","redirect_claimed_file","redirect_to_storage_service","serve_upload","store_answer_uploads","upload_answer_files","upload_from_exercise_service"],"struct":["AnswerUploadDestination","AuthorizationToken","CmsFilesApiDoc","DownloadClaimQuery","ExerciseUploadBinary","FilesApiDoc"]};

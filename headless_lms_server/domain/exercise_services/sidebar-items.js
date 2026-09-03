@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["submission_files","submission_sharing","token"]};
+window.SIDEBAR_ITEMS = {"mod":["answer_uploads","submission_sharing","token"]};

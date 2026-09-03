@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["enforce_deadline","process_submission","resolve_course_or_exam_id_and_verify_that_user_can_submit"]};
+window.SIDEBAR_ITEMS = {"fn":["enforce_deadline","grade_submission","lock_and_verify_named_uploads","named_upload_ids","out_of_tries_error","process_submission","resolve_course_or_exam_id_and_verify_that_user_can_submit","resolve_course_or_exam_id_for_submitting","try_limit","verify_any_slide_has_tries_left","verify_named_uploads","verify_user_can_answer_exercise","verify_user_can_answer_exercise_slide"]};

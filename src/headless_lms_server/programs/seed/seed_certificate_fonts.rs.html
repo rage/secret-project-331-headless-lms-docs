@@ -12,16 +12,17 @@
 <a href=#12 id=12 data-nosnippet>12</a>            file_path,
 <a href=#13 id=13 data-nosnippet>13</a>            <span class="string">"application/octet-stream"</span>,
 <a href=#14 id=14 data-nosnippet>14</a>            <span class="prelude-val">None</span>,
-<a href=#15 id=15 data-nosnippet>15</a>        )
-<a href=#16 id=16 data-nosnippet>16</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#17 id=17 data-nosnippet>17</a>        <span class="kw">let </span>font = NewCertificateFont {
-<a href=#18 id=18 data-nosnippet>18</a>            file_path: file_path.to_string(),
-<a href=#19 id=19 data-nosnippet>19</a>            file_upload_id,
-<a href=#20 id=20 data-nosnippet>20</a>            display_name: display_name.to_string(),
-<a href=#21 id=21 data-nosnippet>21</a>        };
-<a href=#22 id=22 data-nosnippet>22</a>        models::certificate_fonts::insert(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>font).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#23 id=23 data-nosnippet>23</a>    }
-<a href=#24 id=24 data-nosnippet>24</a>
-<a href=#25 id=25 data-nosnippet>25</a>    <span class="prelude-val">Ok</span>(())
-<a href=#26 id=26 data-nosnippet>26</a>}
+<a href=#15 id=15 data-nosnippet>15</a>            <span class="prelude-val">None</span>,
+<a href=#16 id=16 data-nosnippet>16</a>        )
+<a href=#17 id=17 data-nosnippet>17</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#18 id=18 data-nosnippet>18</a>        <span class="kw">let </span>font = NewCertificateFont {
+<a href=#19 id=19 data-nosnippet>19</a>            file_path: file_path.to_string(),
+<a href=#20 id=20 data-nosnippet>20</a>            file_upload_id,
+<a href=#21 id=21 data-nosnippet>21</a>            display_name: display_name.to_string(),
+<a href=#22 id=22 data-nosnippet>22</a>        };
+<a href=#23 id=23 data-nosnippet>23</a>        models::certificate_fonts::insert(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>font).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#24 id=24 data-nosnippet>24</a>    }
+<a href=#25 id=25 data-nosnippet>25</a>
+<a href=#26 id=26 data-nosnippet>26</a>    <span class="prelude-val">Ok</span>(())
+<a href=#27 id=27 data-nosnippet>27</a>}
 </code></pre></div></section></main></body></html>

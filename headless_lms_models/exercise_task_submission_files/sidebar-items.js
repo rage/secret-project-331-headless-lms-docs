@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_by_task_submission_ids","insert_many"],"struct":["SubmissionFile"]};
+window.SIDEBAR_ITEMS = {"fn":["delete_by_task_submission_and_file_upload_ids","exercise_has_answer_files","get_answer_files_by_exercise_id","get_by_task_submission_ids","get_positions_by_task_submission_id","insert_many"],"struct":["ExerciseAnswerFile","SubmissionFile"]};
