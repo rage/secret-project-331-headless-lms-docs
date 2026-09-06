@@ -78,119 +78,128 @@
 <a href=#78 id=78 data-nosnippet>78</a>        author_user_id,
 <a href=#79 id=79 data-nosnippet>79</a>        restored_from_id
 <a href=#80 id=80 data-nosnippet>80</a>    )
-<a href=#81 id=81 data-nosnippet>81</a>    .fetch_one(conn)
+<a href=#81 id=81 data-nosnippet>81</a>    .fetch_one(<span class="kw-2">&amp;mut *</span>conn)
 <a href=#82 id=82 data-nosnippet>82</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#83 id=83 data-nosnippet>83</a>    <span class="prelude-val">Ok</span>(res.id)
-<a href=#84 id=84 data-nosnippet>84</a>}
-<a href=#85 id=85 data-nosnippet>85</a>
-<a href=#86 id=86 data-nosnippet>86</a><span class="kw">pub struct </span>PageHistoryData {
-<a href=#87 id=87 data-nosnippet>87</a>    <span class="kw">pub </span>content: PageHistoryContent,
-<a href=#88 id=88 data-nosnippet>88</a>    <span class="kw">pub </span>title: String,
-<a href=#89 id=89 data-nosnippet>89</a>    <span class="kw">pub </span>exam_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
-<a href=#90 id=90 data-nosnippet>90</a>}
-<a href=#91 id=91 data-nosnippet>91</a>
-<a href=#92 id=92 data-nosnippet>92</a><span class="kw">pub async fn </span>get_history_data(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;PageHistoryData&gt; {
-<a href=#93 id=93 data-nosnippet>93</a>    <span class="kw">let </span>record = <span class="macro">sqlx::query!</span>(
-<a href=#94 id=94 data-nosnippet>94</a>        <span class="string">"
-<a href=#95 id=95 data-nosnippet>95</a>SELECT page_history.content,
-<a href=#96 id=96 data-nosnippet>96</a>  page_history.title,
-<a href=#97 id=97 data-nosnippet>97</a>  pages.exam_id
-<a href=#98 id=98 data-nosnippet>98</a>FROM page_history
-<a href=#99 id=99 data-nosnippet>99</a>  JOIN pages ON pages.id = page_history.page_id
-<a href=#100 id=100 data-nosnippet>100</a>WHERE page_history.id = $1
-<a href=#101 id=101 data-nosnippet>101</a>  AND pages.deleted_at IS NULL
-<a href=#102 id=102 data-nosnippet>102</a>  AND page_history.deleted_at IS NULL
-<a href=#103 id=103 data-nosnippet>103</a>        "</span>,
-<a href=#104 id=104 data-nosnippet>104</a>        id,
-<a href=#105 id=105 data-nosnippet>105</a>    )
-<a href=#106 id=106 data-nosnippet>106</a>    .fetch_one(conn)
-<a href=#107 id=107 data-nosnippet>107</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#108 id=108 data-nosnippet>108</a>    <span class="prelude-val">Ok</span>(PageHistoryData {
-<a href=#109 id=109 data-nosnippet>109</a>        content: serde_json::from_value(record.content)<span class="question-mark">?</span>,
-<a href=#110 id=110 data-nosnippet>110</a>        title: record.title,
-<a href=#111 id=111 data-nosnippet>111</a>        exam_id: record.exam_id,
-<a href=#112 id=112 data-nosnippet>112</a>    })
-<a href=#113 id=113 data-nosnippet>113</a>}
-<a href=#114 id=114 data-nosnippet>114</a>
-<a href=#115 id=115 data-nosnippet>115</a><span class="kw">pub async fn </span>get_by_id(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;PageHistory&gt; {
-<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#117 id=117 data-nosnippet>117</a>        PageHistory,
-<a href=#118 id=118 data-nosnippet>118</a>        <span class="string">r#"
-<a href=#119 id=119 data-nosnippet>119</a>SELECT *
-<a href=#120 id=120 data-nosnippet>120</a>FROM page_history
-<a href=#121 id=121 data-nosnippet>121</a>WHERE id = $1
-<a href=#122 id=122 data-nosnippet>122</a>  AND deleted_at IS NULL
-<a href=#123 id=123 data-nosnippet>123</a>        "#</span>,
-<a href=#124 id=124 data-nosnippet>124</a>        id
-<a href=#125 id=125 data-nosnippet>125</a>    )
-<a href=#126 id=126 data-nosnippet>126</a>    .fetch_one(conn)
-<a href=#127 id=127 data-nosnippet>127</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#128 id=128 data-nosnippet>128</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#129 id=129 data-nosnippet>129</a>}
-<a href=#130 id=130 data-nosnippet>130</a>
-<a href=#131 id=131 data-nosnippet>131</a><span class="kw">pub async fn </span>history(
-<a href=#132 id=132 data-nosnippet>132</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#133 id=133 data-nosnippet>133</a>    page_id: Uuid,
-<a href=#134 id=134 data-nosnippet>134</a>    pagination: Pagination,
-<a href=#135 id=135 data-nosnippet>135</a>) -&gt; ModelResult&lt;Vec&lt;PageHistory&gt;&gt; {
-<a href=#136 id=136 data-nosnippet>136</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#137 id=137 data-nosnippet>137</a>        PageHistory,
-<a href=#138 id=138 data-nosnippet>138</a>        <span class="string">r#"
-<a href=#139 id=139 data-nosnippet>139</a>SELECT *
-<a href=#140 id=140 data-nosnippet>140</a>FROM page_history
-<a href=#141 id=141 data-nosnippet>141</a>WHERE page_id = $1
-<a href=#142 id=142 data-nosnippet>142</a>AND deleted_at IS NULL
-<a href=#143 id=143 data-nosnippet>143</a>ORDER BY created_at DESC, id
-<a href=#144 id=144 data-nosnippet>144</a>LIMIT $2
-<a href=#145 id=145 data-nosnippet>145</a>OFFSET $3
-<a href=#146 id=146 data-nosnippet>146</a>"#</span>,
-<a href=#147 id=147 data-nosnippet>147</a>        page_id,
-<a href=#148 id=148 data-nosnippet>148</a>        pagination.limit(),
-<a href=#149 id=149 data-nosnippet>149</a>        pagination.offset()
-<a href=#150 id=150 data-nosnippet>150</a>    )
-<a href=#151 id=151 data-nosnippet>151</a>    .fetch_all(conn)
-<a href=#152 id=152 data-nosnippet>152</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#153 id=153 data-nosnippet>153</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#154 id=154 data-nosnippet>154</a>}
-<a href=#155 id=155 data-nosnippet>155</a>
-<a href=#156 id=156 data-nosnippet>156</a><span class="kw">pub async fn </span>history_count(conn: <span class="kw-2">&amp;mut </span>PgConnection, page_id: Uuid) -&gt; ModelResult&lt;i64&gt; {
-<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
-<a href=#158 id=158 data-nosnippet>158</a>        <span class="string">"
-<a href=#159 id=159 data-nosnippet>159</a>SELECT COUNT(*) AS count
-<a href=#160 id=160 data-nosnippet>160</a>FROM page_history
-<a href=#161 id=161 data-nosnippet>161</a>WHERE page_id = $1
-<a href=#162 id=162 data-nosnippet>162</a>AND deleted_at IS NULL
-<a href=#163 id=163 data-nosnippet>163</a>"</span>,
-<a href=#164 id=164 data-nosnippet>164</a>        page_id
-<a href=#165 id=165 data-nosnippet>165</a>    )
-<a href=#166 id=166 data-nosnippet>166</a>    .fetch_one(conn)
-<a href=#167 id=167 data-nosnippet>167</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#168 id=168 data-nosnippet>168</a>    <span class="prelude-val">Ok</span>(res.count.unwrap_or_default())
-<a href=#169 id=169 data-nosnippet>169</a>}
-<a href=#170 id=170 data-nosnippet>170</a>
-<a href=#171 id=171 data-nosnippet>171</a><span class="doccomment">/// Latest non-deleted `page_history` row id per page for pages in the given courses.
-<a href=#172 id=172 data-nosnippet>172</a></span><span class="kw">pub async fn </span>get_latest_page_history_ids_by_course_ids(
-<a href=#173 id=173 data-nosnippet>173</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#174 id=174 data-nosnippet>174</a>    course_ids: <span class="kw-2">&amp;</span>[Uuid],
-<a href=#175 id=175 data-nosnippet>175</a>) -&gt; ModelResult&lt;HashMap&lt;Uuid, Uuid&gt;&gt; {
-<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query!</span>(
-<a href=#177 id=177 data-nosnippet>177</a>        <span class="string">r#"
-<a href=#178 id=178 data-nosnippet>178</a>SELECT DISTINCT ON (ph.page_id)
-<a href=#179 id=179 data-nosnippet>179</a>  ph.id,
-<a href=#180 id=180 data-nosnippet>180</a>  ph.page_id
-<a href=#181 id=181 data-nosnippet>181</a>FROM page_history ph
-<a href=#182 id=182 data-nosnippet>182</a>  INNER JOIN pages p ON p.id = ph.page_id
-<a href=#183 id=183 data-nosnippet>183</a>WHERE p.course_id = ANY($1)
-<a href=#184 id=184 data-nosnippet>184</a>  AND ph.deleted_at IS NULL
-<a href=#185 id=185 data-nosnippet>185</a>ORDER BY ph.page_id,
-<a href=#186 id=186 data-nosnippet>186</a>  ph.created_at DESC,
-<a href=#187 id=187 data-nosnippet>187</a>  ph.id DESC
-<a href=#188 id=188 data-nosnippet>188</a>"#</span>,
-<a href=#189 id=189 data-nosnippet>189</a>        course_ids
-<a href=#190 id=190 data-nosnippet>190</a>    )
-<a href=#191 id=191 data-nosnippet>191</a>    .fetch_all(conn)
-<a href=#192 id=192 data-nosnippet>192</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#193 id=193 data-nosnippet>193</a>
-<a href=#194 id=194 data-nosnippet>194</a>    <span class="prelude-val">Ok</span>(rows.into_iter().map(|row| (row.page_id, row.id)).collect())
-<a href=#195 id=195 data-nosnippet>195</a>}
+<a href=#83 id=83 data-nosnippet>83</a>    <span class="comment">// A restore has to be able to bring back the private specs in this snapshot, so the files they
+<a href=#84 id=84 data-nosnippet>84</a>    // name must stay out of the abandoned-upload reaper's reach for as long as the snapshot exists.
+<a href=#85 id=85 data-nosnippet>85</a>    // Only the private ones: a restore re-derives the other two from them.
+<a href=#86 id=86 data-nosnippet>86</a>    </span><span class="kw">let </span>spec_files: Vec&lt;Uuid&gt; = content
+<a href=#87 id=87 data-nosnippet>87</a>        .exercise_tasks
+<a href=#88 id=88 data-nosnippet>88</a>        .iter()
+<a href=#89 id=89 data-nosnippet>89</a>        .flat_map(|task| task.private_spec_files.iter().copied())
+<a href=#90 id=90 data-nosnippet>90</a>        .collect();
+<a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">crate</span>::page_history_spec_files::insert_many(conn, res.id, <span class="kw-2">&amp;</span>spec_files).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#92 id=92 data-nosnippet>92</a>    <span class="prelude-val">Ok</span>(res.id)
+<a href=#93 id=93 data-nosnippet>93</a>}
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a><span class="kw">pub struct </span>PageHistoryData {
+<a href=#96 id=96 data-nosnippet>96</a>    <span class="kw">pub </span>content: PageHistoryContent,
+<a href=#97 id=97 data-nosnippet>97</a>    <span class="kw">pub </span>title: String,
+<a href=#98 id=98 data-nosnippet>98</a>    <span class="kw">pub </span>exam_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#99 id=99 data-nosnippet>99</a>}
+<a href=#100 id=100 data-nosnippet>100</a>
+<a href=#101 id=101 data-nosnippet>101</a><span class="kw">pub async fn </span>get_history_data(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;PageHistoryData&gt; {
+<a href=#102 id=102 data-nosnippet>102</a>    <span class="kw">let </span>record = <span class="macro">sqlx::query!</span>(
+<a href=#103 id=103 data-nosnippet>103</a>        <span class="string">"
+<a href=#104 id=104 data-nosnippet>104</a>SELECT page_history.content,
+<a href=#105 id=105 data-nosnippet>105</a>  page_history.title,
+<a href=#106 id=106 data-nosnippet>106</a>  pages.exam_id
+<a href=#107 id=107 data-nosnippet>107</a>FROM page_history
+<a href=#108 id=108 data-nosnippet>108</a>  JOIN pages ON pages.id = page_history.page_id
+<a href=#109 id=109 data-nosnippet>109</a>WHERE page_history.id = $1
+<a href=#110 id=110 data-nosnippet>110</a>  AND pages.deleted_at IS NULL
+<a href=#111 id=111 data-nosnippet>111</a>  AND page_history.deleted_at IS NULL
+<a href=#112 id=112 data-nosnippet>112</a>        "</span>,
+<a href=#113 id=113 data-nosnippet>113</a>        id,
+<a href=#114 id=114 data-nosnippet>114</a>    )
+<a href=#115 id=115 data-nosnippet>115</a>    .fetch_one(conn)
+<a href=#116 id=116 data-nosnippet>116</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="prelude-val">Ok</span>(PageHistoryData {
+<a href=#118 id=118 data-nosnippet>118</a>        content: serde_json::from_value(record.content)<span class="question-mark">?</span>,
+<a href=#119 id=119 data-nosnippet>119</a>        title: record.title,
+<a href=#120 id=120 data-nosnippet>120</a>        exam_id: record.exam_id,
+<a href=#121 id=121 data-nosnippet>121</a>    })
+<a href=#122 id=122 data-nosnippet>122</a>}
+<a href=#123 id=123 data-nosnippet>123</a>
+<a href=#124 id=124 data-nosnippet>124</a><span class="kw">pub async fn </span>get_by_id(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;PageHistory&gt; {
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#126 id=126 data-nosnippet>126</a>        PageHistory,
+<a href=#127 id=127 data-nosnippet>127</a>        <span class="string">r#"
+<a href=#128 id=128 data-nosnippet>128</a>SELECT *
+<a href=#129 id=129 data-nosnippet>129</a>FROM page_history
+<a href=#130 id=130 data-nosnippet>130</a>WHERE id = $1
+<a href=#131 id=131 data-nosnippet>131</a>  AND deleted_at IS NULL
+<a href=#132 id=132 data-nosnippet>132</a>        "#</span>,
+<a href=#133 id=133 data-nosnippet>133</a>        id
+<a href=#134 id=134 data-nosnippet>134</a>    )
+<a href=#135 id=135 data-nosnippet>135</a>    .fetch_one(conn)
+<a href=#136 id=136 data-nosnippet>136</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#137 id=137 data-nosnippet>137</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#138 id=138 data-nosnippet>138</a>}
+<a href=#139 id=139 data-nosnippet>139</a>
+<a href=#140 id=140 data-nosnippet>140</a><span class="kw">pub async fn </span>history(
+<a href=#141 id=141 data-nosnippet>141</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#142 id=142 data-nosnippet>142</a>    page_id: Uuid,
+<a href=#143 id=143 data-nosnippet>143</a>    pagination: Pagination,
+<a href=#144 id=144 data-nosnippet>144</a>) -&gt; ModelResult&lt;Vec&lt;PageHistory&gt;&gt; {
+<a href=#145 id=145 data-nosnippet>145</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#146 id=146 data-nosnippet>146</a>        PageHistory,
+<a href=#147 id=147 data-nosnippet>147</a>        <span class="string">r#"
+<a href=#148 id=148 data-nosnippet>148</a>SELECT *
+<a href=#149 id=149 data-nosnippet>149</a>FROM page_history
+<a href=#150 id=150 data-nosnippet>150</a>WHERE page_id = $1
+<a href=#151 id=151 data-nosnippet>151</a>AND deleted_at IS NULL
+<a href=#152 id=152 data-nosnippet>152</a>ORDER BY created_at DESC, id
+<a href=#153 id=153 data-nosnippet>153</a>LIMIT $2
+<a href=#154 id=154 data-nosnippet>154</a>OFFSET $3
+<a href=#155 id=155 data-nosnippet>155</a>"#</span>,
+<a href=#156 id=156 data-nosnippet>156</a>        page_id,
+<a href=#157 id=157 data-nosnippet>157</a>        pagination.limit(),
+<a href=#158 id=158 data-nosnippet>158</a>        pagination.offset()
+<a href=#159 id=159 data-nosnippet>159</a>    )
+<a href=#160 id=160 data-nosnippet>160</a>    .fetch_all(conn)
+<a href=#161 id=161 data-nosnippet>161</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#162 id=162 data-nosnippet>162</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#163 id=163 data-nosnippet>163</a>}
+<a href=#164 id=164 data-nosnippet>164</a>
+<a href=#165 id=165 data-nosnippet>165</a><span class="kw">pub async fn </span>history_count(conn: <span class="kw-2">&amp;mut </span>PgConnection, page_id: Uuid) -&gt; ModelResult&lt;i64&gt; {
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
+<a href=#167 id=167 data-nosnippet>167</a>        <span class="string">"
+<a href=#168 id=168 data-nosnippet>168</a>SELECT COUNT(*) AS count
+<a href=#169 id=169 data-nosnippet>169</a>FROM page_history
+<a href=#170 id=170 data-nosnippet>170</a>WHERE page_id = $1
+<a href=#171 id=171 data-nosnippet>171</a>AND deleted_at IS NULL
+<a href=#172 id=172 data-nosnippet>172</a>"</span>,
+<a href=#173 id=173 data-nosnippet>173</a>        page_id
+<a href=#174 id=174 data-nosnippet>174</a>    )
+<a href=#175 id=175 data-nosnippet>175</a>    .fetch_one(conn)
+<a href=#176 id=176 data-nosnippet>176</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#177 id=177 data-nosnippet>177</a>    <span class="prelude-val">Ok</span>(res.count.unwrap_or_default())
+<a href=#178 id=178 data-nosnippet>178</a>}
+<a href=#179 id=179 data-nosnippet>179</a>
+<a href=#180 id=180 data-nosnippet>180</a><span class="doccomment">/// Latest non-deleted `page_history` row id per page for pages in the given courses.
+<a href=#181 id=181 data-nosnippet>181</a></span><span class="kw">pub async fn </span>get_latest_page_history_ids_by_course_ids(
+<a href=#182 id=182 data-nosnippet>182</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#183 id=183 data-nosnippet>183</a>    course_ids: <span class="kw-2">&amp;</span>[Uuid],
+<a href=#184 id=184 data-nosnippet>184</a>) -&gt; ModelResult&lt;HashMap&lt;Uuid, Uuid&gt;&gt; {
+<a href=#185 id=185 data-nosnippet>185</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query!</span>(
+<a href=#186 id=186 data-nosnippet>186</a>        <span class="string">r#"
+<a href=#187 id=187 data-nosnippet>187</a>SELECT DISTINCT ON (ph.page_id)
+<a href=#188 id=188 data-nosnippet>188</a>  ph.id,
+<a href=#189 id=189 data-nosnippet>189</a>  ph.page_id
+<a href=#190 id=190 data-nosnippet>190</a>FROM page_history ph
+<a href=#191 id=191 data-nosnippet>191</a>  INNER JOIN pages p ON p.id = ph.page_id
+<a href=#192 id=192 data-nosnippet>192</a>WHERE p.course_id = ANY($1)
+<a href=#193 id=193 data-nosnippet>193</a>  AND ph.deleted_at IS NULL
+<a href=#194 id=194 data-nosnippet>194</a>ORDER BY ph.page_id,
+<a href=#195 id=195 data-nosnippet>195</a>  ph.created_at DESC,
+<a href=#196 id=196 data-nosnippet>196</a>  ph.id DESC
+<a href=#197 id=197 data-nosnippet>197</a>"#</span>,
+<a href=#198 id=198 data-nosnippet>198</a>        course_ids
+<a href=#199 id=199 data-nosnippet>199</a>    )
+<a href=#200 id=200 data-nosnippet>200</a>    .fetch_all(conn)
+<a href=#201 id=201 data-nosnippet>201</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#202 id=202 data-nosnippet>202</a>
+<a href=#203 id=203 data-nosnippet>203</a>    <span class="prelude-val">Ok</span>(rows.into_iter().map(|row| (row.page_id, row.id)).collect())
+<a href=#204 id=204 data-nosnippet>204</a>}
 </code></pre></div></section></main></body></html>
