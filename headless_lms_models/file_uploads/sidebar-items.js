@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["backdate","delete_and_fetch_path","get_filename","get_many","insert"],"struct":["FileUploadRef"]};
+window.SIDEBAR_ITEMS = {"fn":["backdate","delete_and_fetch_path","get_filename","get_many","insert","insert_with_id"],"struct":["FileUploadRef"]};
