@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["StudentFacingCreditRegistrationStatus"]};
+window.SIDEBAR_ITEMS = {"enum":["StudentFacingCreditRegistrationStatus"],"struct":["StageMatch"]};

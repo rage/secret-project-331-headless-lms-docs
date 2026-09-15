@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["non_empty"],"mod":["file_uploading","pagination"]};
+window.SIDEBAR_ITEMS = {"fn":["non_empty"],"mod":["file_uploading","multi_query","pagination"]};
