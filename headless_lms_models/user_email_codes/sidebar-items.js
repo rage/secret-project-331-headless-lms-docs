@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["UserEmailCodePurpose"],"fn":["generate_code","get_unused_user_email_code_with_user_id","insert_user_email_code","is_reset_user_email_code_valid","mark_user_email_code_used","record_failed_attempt"],"struct":["UserEmailCode"]};
+window.SIDEBAR_ITEMS = {"enum":["UserEmailCodePurpose"],"fn":["generate_code","get_outstanding_user_email_code","get_unused_user_email_code_with_user_id","insert_user_email_code","is_reset_user_email_code_valid","mark_user_email_code_used","record_failed_attempt"],"struct":["UserEmailCode"]};
