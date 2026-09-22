@@ -321,31 +321,33 @@
 <a href=#321 id=321 data-nosnippet>321</a>    <span class="macro">info!</span>(<span class="string">"Deleting user {id}"</span>);
 <a href=#322 id=322 data-nosnippet>322</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#323 id=323 data-nosnippet>323</a>    <span class="kw">crate</span>::email_deliveries::soft_delete_unsent_retryable_deliveries_for_user(<span class="kw-2">&amp;mut </span>tx, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#324 id=324 data-nosnippet>324</a>    <span class="macro">sqlx::query!</span>(<span class="string">"DELETE FROM user_details WHERE user_id = $1"</span>, id,)
-<a href=#325 id=325 data-nosnippet>325</a>        .execute(<span class="kw-2">&amp;mut *</span>tx)
-<a href=#326 id=326 data-nosnippet>326</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#327 id=327 data-nosnippet>327</a>    <span class="macro">sqlx::query!</span>(<span class="string">"DELETE FROM user_passwords WHERE user_id = $1"</span>, id,)
-<a href=#328 id=328 data-nosnippet>328</a>        .execute(<span class="kw-2">&amp;mut *</span>tx)
-<a href=#329 id=329 data-nosnippet>329</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#330 id=330 data-nosnippet>330</a>    <span class="macro">sqlx::query!</span>(
-<a href=#331 id=331 data-nosnippet>331</a>        <span class="string">"UPDATE users set deleted_at = now() WHERE id = $1 AND deleted_at IS NULL"</span>,
-<a href=#332 id=332 data-nosnippet>332</a>        id,
-<a href=#333 id=333 data-nosnippet>333</a>    )
-<a href=#334 id=334 data-nosnippet>334</a>    .execute(<span class="kw-2">&amp;mut *</span>tx)
-<a href=#335 id=335 data-nosnippet>335</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#336 id=336 data-nosnippet>336</a>    <span class="macro">sqlx::query!</span>(
-<a href=#337 id=337 data-nosnippet>337</a>        <span class="string">"UPDATE roles set deleted_at = now() WHERE user_id = $1 AND deleted_at IS NULL"</span>,
-<a href=#338 id=338 data-nosnippet>338</a>        id,
-<a href=#339 id=339 data-nosnippet>339</a>    )
-<a href=#340 id=340 data-nosnippet>340</a>    .execute(<span class="kw-2">&amp;mut *</span>tx)
-<a href=#341 id=341 data-nosnippet>341</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">let </span>revoked_access_digests =
-<a href=#343 id=343 data-nosnippet>343</a>        <span class="kw">crate</span>::oauth_refresh_tokens::OAuthRefreshTokens::revoke_all_grants_of_user_in_transaction(
-<a href=#344 id=344 data-nosnippet>344</a>            <span class="kw-2">&amp;mut </span>tx, id,
-<a href=#345 id=345 data-nosnippet>345</a>        )
-<a href=#346 id=346 data-nosnippet>346</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#347 id=347 data-nosnippet>347</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#348 id=348 data-nosnippet>348</a>    <span class="macro">info!</span>(<span class="string">"Deletion succeeded"</span>);
-<a href=#349 id=349 data-nosnippet>349</a>    <span class="prelude-val">Ok</span>(revoked_access_digests)
-<a href=#350 id=350 data-nosnippet>350</a>}
+<a href=#324 id=324 data-nosnippet>324</a>    <span class="kw">crate</span>::completion_registration_credit_justifications::delete_all_by_user_id(<span class="kw-2">&amp;mut </span>tx, id)
+<a href=#325 id=325 data-nosnippet>325</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#326 id=326 data-nosnippet>326</a>    <span class="macro">sqlx::query!</span>(<span class="string">"DELETE FROM user_details WHERE user_id = $1"</span>, id,)
+<a href=#327 id=327 data-nosnippet>327</a>        .execute(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#328 id=328 data-nosnippet>328</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#329 id=329 data-nosnippet>329</a>    <span class="macro">sqlx::query!</span>(<span class="string">"DELETE FROM user_passwords WHERE user_id = $1"</span>, id,)
+<a href=#330 id=330 data-nosnippet>330</a>        .execute(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#331 id=331 data-nosnippet>331</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#332 id=332 data-nosnippet>332</a>    <span class="macro">sqlx::query!</span>(
+<a href=#333 id=333 data-nosnippet>333</a>        <span class="string">"UPDATE users set deleted_at = now() WHERE id = $1 AND deleted_at IS NULL"</span>,
+<a href=#334 id=334 data-nosnippet>334</a>        id,
+<a href=#335 id=335 data-nosnippet>335</a>    )
+<a href=#336 id=336 data-nosnippet>336</a>    .execute(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#337 id=337 data-nosnippet>337</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#338 id=338 data-nosnippet>338</a>    <span class="macro">sqlx::query!</span>(
+<a href=#339 id=339 data-nosnippet>339</a>        <span class="string">"UPDATE roles set deleted_at = now() WHERE user_id = $1 AND deleted_at IS NULL"</span>,
+<a href=#340 id=340 data-nosnippet>340</a>        id,
+<a href=#341 id=341 data-nosnippet>341</a>    )
+<a href=#342 id=342 data-nosnippet>342</a>    .execute(<span class="kw-2">&amp;mut *</span>tx)
+<a href=#343 id=343 data-nosnippet>343</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#344 id=344 data-nosnippet>344</a>    <span class="kw">let </span>revoked_access_digests =
+<a href=#345 id=345 data-nosnippet>345</a>        <span class="kw">crate</span>::oauth_refresh_tokens::OAuthRefreshTokens::revoke_all_grants_of_user_in_transaction(
+<a href=#346 id=346 data-nosnippet>346</a>            <span class="kw-2">&amp;mut </span>tx, id,
+<a href=#347 id=347 data-nosnippet>347</a>        )
+<a href=#348 id=348 data-nosnippet>348</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#349 id=349 data-nosnippet>349</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#350 id=350 data-nosnippet>350</a>    <span class="macro">info!</span>(<span class="string">"Deletion succeeded"</span>);
+<a href=#351 id=351 data-nosnippet>351</a>    <span class="prelude-val">Ok</span>(revoked_access_digests)
+<a href=#352 id=352 data-nosnippet>352</a>}
 </code></pre></div></section></main></body></html>
