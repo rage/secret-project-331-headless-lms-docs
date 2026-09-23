@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","suggest_paragraph"],"struct":["CmsAiSuggestionsApiDoc","ParagraphSuggestionContext","ParagraphSuggestionMeta","ParagraphSuggestionRequest","ParagraphSuggestionResponse"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","generate_chart_spec","suggest_paragraph"],"struct":["ChartSpecGenerationRequest","ChartSpecGenerationResponse","CmsAiSuggestionsApiDoc","ParagraphSuggestionContext","ParagraphSuggestionMeta","ParagraphSuggestionRequest","ParagraphSuggestionResponse"]};

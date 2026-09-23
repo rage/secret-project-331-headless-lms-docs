@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["AUTHOR_IMAGE","CERTIFICATE_BACKGROUND","REPOSITORY_EXERCISE_1","REPOSITORY_EXERCISE_2"],"fn":["seed_file_storage"],"struct":["SeedFileStorageResult"]};
+window.SIDEBAR_ITEMS = {"constant":["AUTHOR_IMAGE","CERTIFICATE_BACKGROUND","CHART_EXAMPLE_DATA","REPOSITORY_EXERCISE_1","REPOSITORY_EXERCISE_2"],"fn":["seed_file_storage"],"struct":["SeedFileStorageResult"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["url_decode","url_encode"]};
+window.SIDEBAR_ITEMS = {"constant":["FRAGMENT_FORBIDDEN"],"fn":["percent_encode_fragment","url_decode","url_encode"]};
