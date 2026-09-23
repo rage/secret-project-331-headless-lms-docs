@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["build_course_url","build_courses_base_url"]};

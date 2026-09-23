@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_external_courses_by_embeddings"],"struct":["ExternalCourse","ExternalCourseOutput"]};
