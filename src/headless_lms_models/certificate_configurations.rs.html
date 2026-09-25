@@ -641,19 +641,41 @@
 <a href=#641 id=641 data-nosnippet>641</a>    <span class="prelude-val">Ok</span>(())
 <a href=#642 id=642 data-nosnippet>642</a>}
 <a href=#643 id=643 data-nosnippet>643</a>
-<a href=#644 id=644 data-nosnippet>644</a><span class="kw">pub async fn </span>get_first_configuration_id(conn: <span class="kw-2">&amp;mut </span>PgConnection) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;&gt; {
-<a href=#645 id=645 data-nosnippet>645</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query!</span>(
-<a href=#646 id=646 data-nosnippet>646</a>        <span class="string">r#"
-<a href=#647 id=647 data-nosnippet>647</a>        SELECT id
-<a href=#648 id=648 data-nosnippet>648</a>        FROM certificate_configurations
-<a href=#649 id=649 data-nosnippet>649</a>        WHERE deleted_at IS NULL
-<a href=#650 id=650 data-nosnippet>650</a>        ORDER BY created_at
-<a href=#651 id=651 data-nosnippet>651</a>        LIMIT 1
-<a href=#652 id=652 data-nosnippet>652</a>        "#</span>,
-<a href=#653 id=653 data-nosnippet>653</a>    )
-<a href=#654 id=654 data-nosnippet>654</a>    .fetch_optional(conn)
-<a href=#655 id=655 data-nosnippet>655</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#656 id=656 data-nosnippet>656</a>
-<a href=#657 id=657 data-nosnippet>657</a>    <span class="prelude-val">Ok</span>(row.map(|r| r.id))
-<a href=#658 id=658 data-nosnippet>658</a>}
+<a href=#644 id=644 data-nosnippet>644</a><span class="doccomment">/// Whether a live certificate configuration still points at this uploaded file.
+<a href=#645 id=645 data-nosnippet>645</a>///
+<a href=#646 id=646 data-nosnippet>646</a>/// Course copies share uploads with their source, so check this before deleting the blob.
+<a href=#647 id=647 data-nosnippet>647</a></span><span class="kw">pub async fn </span>file_upload_is_referenced(
+<a href=#648 id=648 data-nosnippet>648</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#649 id=649 data-nosnippet>649</a>    file_upload_id: Uuid,
+<a href=#650 id=650 data-nosnippet>650</a>) -&gt; ModelResult&lt;bool&gt; {
+<a href=#651 id=651 data-nosnippet>651</a>    <span class="kw">let </span>referenced = <span class="macro">sqlx::query_scalar!</span>(
+<a href=#652 id=652 data-nosnippet>652</a>        <span class="string">r#"
+<a href=#653 id=653 data-nosnippet>653</a>SELECT EXISTS(
+<a href=#654 id=654 data-nosnippet>654</a>  SELECT 1 FROM certificate_configurations
+<a href=#655 id=655 data-nosnippet>655</a>  WHERE (background_svg_file_upload_id = $1 OR overlay_svg_file_upload_id = $1)
+<a href=#656 id=656 data-nosnippet>656</a>    AND deleted_at IS NULL
+<a href=#657 id=657 data-nosnippet>657</a>) AS "exists!"
+<a href=#658 id=658 data-nosnippet>658</a>        "#</span>,
+<a href=#659 id=659 data-nosnippet>659</a>        file_upload_id
+<a href=#660 id=660 data-nosnippet>660</a>    )
+<a href=#661 id=661 data-nosnippet>661</a>    .fetch_one(conn)
+<a href=#662 id=662 data-nosnippet>662</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#663 id=663 data-nosnippet>663</a>    <span class="prelude-val">Ok</span>(referenced)
+<a href=#664 id=664 data-nosnippet>664</a>}
+<a href=#665 id=665 data-nosnippet>665</a>
+<a href=#666 id=666 data-nosnippet>666</a><span class="kw">pub async fn </span>get_first_configuration_id(conn: <span class="kw-2">&amp;mut </span>PgConnection) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;&gt; {
+<a href=#667 id=667 data-nosnippet>667</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query!</span>(
+<a href=#668 id=668 data-nosnippet>668</a>        <span class="string">r#"
+<a href=#669 id=669 data-nosnippet>669</a>        SELECT id
+<a href=#670 id=670 data-nosnippet>670</a>        FROM certificate_configurations
+<a href=#671 id=671 data-nosnippet>671</a>        WHERE deleted_at IS NULL
+<a href=#672 id=672 data-nosnippet>672</a>        ORDER BY created_at
+<a href=#673 id=673 data-nosnippet>673</a>        LIMIT 1
+<a href=#674 id=674 data-nosnippet>674</a>        "#</span>,
+<a href=#675 id=675 data-nosnippet>675</a>    )
+<a href=#676 id=676 data-nosnippet>676</a>    .fetch_optional(conn)
+<a href=#677 id=677 data-nosnippet>677</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#678 id=678 data-nosnippet>678</a>
+<a href=#679 id=679 data-nosnippet>679</a>    <span class="prelude-val">Ok</span>(row.map(|r| r.id))
+<a href=#680 id=680 data-nosnippet>680</a>}
 </code></pre></div></section></main></body></html>

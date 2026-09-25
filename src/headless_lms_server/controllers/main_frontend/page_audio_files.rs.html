@@ -160,71 +160,73 @@
 <a href=#160 id=160 data-nosnippet>160</a>        <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::Edit, <span class="prelude-val">Some</span>(user.id), Res::Course(course_id)).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#161 id=161 data-nosnippet>161</a>
 <a href=#162 id=162 data-nosnippet>162</a>        <span class="kw">let </span>path = models::page_audio_files::delete_page_audio(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>file_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#163 id=163 data-nosnippet>163</a>        file_store.delete(Path::new(<span class="kw-2">&amp;</span>path)).<span class="kw">await</span>.map_err(|<span class="kw">_</span>| {
-<a href=#164 id=164 data-nosnippet>164</a>            ControllerError::new(
-<a href=#165 id=165 data-nosnippet>165</a>                ControllerErrorType::BadRequest,
-<a href=#166 id=166 data-nosnippet>166</a>                <span class="string">"Could not delete the file from the file store"</span>.to_string(),
-<a href=#167 id=167 data-nosnippet>167</a>                <span class="prelude-val">None</span>,
-<a href=#168 id=168 data-nosnippet>168</a>            )
-<a href=#169 id=169 data-nosnippet>169</a>        })<span class="question-mark">?</span>;
-<a href=#170 id=170 data-nosnippet>170</a>        token.authorized_ok(web::Json(()))
-<a href=#171 id=171 data-nosnippet>171</a>    } <span class="kw">else </span>{
-<a href=#172 id=172 data-nosnippet>172</a>        <span class="prelude-val">Err</span>(ControllerError::new(
-<a href=#173 id=173 data-nosnippet>173</a>            ControllerErrorType::BadRequest,
-<a href=#174 id=174 data-nosnippet>174</a>            <span class="string">"The page needs to be related to a course."</span>.to_string(),
-<a href=#175 id=175 data-nosnippet>175</a>            <span class="prelude-val">None</span>,
-<a href=#176 id=176 data-nosnippet>176</a>        ))
-<a href=#177 id=177 data-nosnippet>177</a>    }
-<a href=#178 id=178 data-nosnippet>178</a>}
-<a href=#179 id=179 data-nosnippet>179</a>
-<a href=#180 id=180 data-nosnippet>180</a><span class="doccomment">/**
-<a href=#181 id=181 data-nosnippet>181</a>GET `/api/v0/main-fronted/page_audio/:page_id/files` - Get a page audio files
-<a href=#182 id=182 data-nosnippet>182</a>
-<a href=#183 id=183 data-nosnippet>183</a>Request: `GET /api/v0/cms/page_audio/40ca9bcf-8eaa-41ba-940e-0fd5dd0c3c02/files`
-<a href=#184 id=184 data-nosnippet>184</a>*/
-<a href=#185 id=185 data-nosnippet>185</a></span><span class="attr">#[instrument(skip(app_conf))]
-<a href=#186 id=186 data-nosnippet>186</a>#[utoipa::path(
-<a href=#187 id=187 data-nosnippet>187</a>    get,
-<a href=#188 id=188 data-nosnippet>188</a>    path = <span class="string">"/{page_id}/files"</span>,
-<a href=#189 id=189 data-nosnippet>189</a>    operation_id = <span class="string">"getPageAudioFiles"</span>,
-<a href=#190 id=190 data-nosnippet>190</a>    tag = <span class="string">"page_audio"</span>,
-<a href=#191 id=191 data-nosnippet>191</a>    params(
-<a href=#192 id=192 data-nosnippet>192</a>        (<span class="string">"page_id" </span>= Uuid, Path, description = <span class="string">"Page id"</span>)
-<a href=#193 id=193 data-nosnippet>193</a>    ),
-<a href=#194 id=194 data-nosnippet>194</a>    responses(
-<a href=#195 id=195 data-nosnippet>195</a>        (status = <span class="number">200</span>, description = <span class="string">"Page audio files"</span>, body = Vec&lt;PageAudioFile&gt;)
-<a href=#196 id=196 data-nosnippet>196</a>    )
-<a href=#197 id=197 data-nosnippet>197</a>)]
-<a href=#198 id=198 data-nosnippet>198</a></span><span class="kw">async fn </span>get_page_audio(
-<a href=#199 id=199 data-nosnippet>199</a>    page_id: web::Path&lt;Uuid&gt;,
-<a href=#200 id=200 data-nosnippet>200</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#201 id=201 data-nosnippet>201</a>    user: AuthUser,
-<a href=#202 id=202 data-nosnippet>202</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#203 id=203 data-nosnippet>203</a>) -&gt; ControllerResult&lt;web::Json&lt;Vec&lt;PageAudioFile&gt;&gt;&gt; {
-<a href=#204 id=204 data-nosnippet>204</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#205 id=205 data-nosnippet>205</a>    <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::Edit, <span class="prelude-val">Some</span>(user.id), Res::Page(<span class="kw-2">*</span>page_id)).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#206 id=206 data-nosnippet>206</a>
-<a href=#207 id=207 data-nosnippet>207</a>    <span class="kw">let </span><span class="kw-2">mut </span>page_audio_files =
-<a href=#208 id=208 data-nosnippet>208</a>        models::page_audio_files::get_page_audio_files(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>page_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#209 id=209 data-nosnippet>209</a>
-<a href=#210 id=210 data-nosnippet>210</a>    <span class="kw">let </span>base_url = <span class="kw-2">&amp;</span>app_conf.base_url;
-<a href=#211 id=211 data-nosnippet>211</a>    <span class="kw">for </span>audio <span class="kw">in </span>page_audio_files.iter_mut() {
-<a href=#212 id=212 data-nosnippet>212</a>        audio.path = <span class="macro">format!</span>(<span class="string">"{base_url}/api/v0/files/{}"</span>, audio.path);
-<a href=#213 id=213 data-nosnippet>213</a>    }
-<a href=#214 id=214 data-nosnippet>214</a>
-<a href=#215 id=215 data-nosnippet>215</a>    token.authorized_ok(web::Json(page_audio_files))
-<a href=#216 id=216 data-nosnippet>216</a>}
-<a href=#217 id=217 data-nosnippet>217</a>
-<a href=#218 id=218 data-nosnippet>218</a><span class="doccomment">/**
-<a href=#219 id=219 data-nosnippet>219</a>Add a route for each controller in this module.
-<a href=#220 id=220 data-nosnippet>220</a>
-<a href=#221 id=221 data-nosnippet>221</a>The name starts with an underline in order to appear before other functions in the module documentation.
+<a href=#163 id=163 data-nosnippet>163</a>        <span class="kw">if </span>!models::page_audio_files::path_is_referenced(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>path).<span class="kw">await</span><span class="question-mark">? </span>{
+<a href=#164 id=164 data-nosnippet>164</a>            file_store.delete(Path::new(<span class="kw-2">&amp;</span>path)).<span class="kw">await</span>.map_err(|<span class="kw">_</span>| {
+<a href=#165 id=165 data-nosnippet>165</a>                ControllerError::new(
+<a href=#166 id=166 data-nosnippet>166</a>                    ControllerErrorType::BadRequest,
+<a href=#167 id=167 data-nosnippet>167</a>                    <span class="string">"Could not delete the file from the file store"</span>.to_string(),
+<a href=#168 id=168 data-nosnippet>168</a>                    <span class="prelude-val">None</span>,
+<a href=#169 id=169 data-nosnippet>169</a>                )
+<a href=#170 id=170 data-nosnippet>170</a>            })<span class="question-mark">?</span>;
+<a href=#171 id=171 data-nosnippet>171</a>        }
+<a href=#172 id=172 data-nosnippet>172</a>        token.authorized_ok(web::Json(()))
+<a href=#173 id=173 data-nosnippet>173</a>    } <span class="kw">else </span>{
+<a href=#174 id=174 data-nosnippet>174</a>        <span class="prelude-val">Err</span>(ControllerError::new(
+<a href=#175 id=175 data-nosnippet>175</a>            ControllerErrorType::BadRequest,
+<a href=#176 id=176 data-nosnippet>176</a>            <span class="string">"The page needs to be related to a course."</span>.to_string(),
+<a href=#177 id=177 data-nosnippet>177</a>            <span class="prelude-val">None</span>,
+<a href=#178 id=178 data-nosnippet>178</a>        ))
+<a href=#179 id=179 data-nosnippet>179</a>    }
+<a href=#180 id=180 data-nosnippet>180</a>}
+<a href=#181 id=181 data-nosnippet>181</a>
+<a href=#182 id=182 data-nosnippet>182</a><span class="doccomment">/**
+<a href=#183 id=183 data-nosnippet>183</a>GET `/api/v0/main-fronted/page_audio/:page_id/files` - Get a page audio files
+<a href=#184 id=184 data-nosnippet>184</a>
+<a href=#185 id=185 data-nosnippet>185</a>Request: `GET /api/v0/cms/page_audio/40ca9bcf-8eaa-41ba-940e-0fd5dd0c3c02/files`
+<a href=#186 id=186 data-nosnippet>186</a>*/
+<a href=#187 id=187 data-nosnippet>187</a></span><span class="attr">#[instrument(skip(app_conf))]
+<a href=#188 id=188 data-nosnippet>188</a>#[utoipa::path(
+<a href=#189 id=189 data-nosnippet>189</a>    get,
+<a href=#190 id=190 data-nosnippet>190</a>    path = <span class="string">"/{page_id}/files"</span>,
+<a href=#191 id=191 data-nosnippet>191</a>    operation_id = <span class="string">"getPageAudioFiles"</span>,
+<a href=#192 id=192 data-nosnippet>192</a>    tag = <span class="string">"page_audio"</span>,
+<a href=#193 id=193 data-nosnippet>193</a>    params(
+<a href=#194 id=194 data-nosnippet>194</a>        (<span class="string">"page_id" </span>= Uuid, Path, description = <span class="string">"Page id"</span>)
+<a href=#195 id=195 data-nosnippet>195</a>    ),
+<a href=#196 id=196 data-nosnippet>196</a>    responses(
+<a href=#197 id=197 data-nosnippet>197</a>        (status = <span class="number">200</span>, description = <span class="string">"Page audio files"</span>, body = Vec&lt;PageAudioFile&gt;)
+<a href=#198 id=198 data-nosnippet>198</a>    )
+<a href=#199 id=199 data-nosnippet>199</a>)]
+<a href=#200 id=200 data-nosnippet>200</a></span><span class="kw">async fn </span>get_page_audio(
+<a href=#201 id=201 data-nosnippet>201</a>    page_id: web::Path&lt;Uuid&gt;,
+<a href=#202 id=202 data-nosnippet>202</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#203 id=203 data-nosnippet>203</a>    user: AuthUser,
+<a href=#204 id=204 data-nosnippet>204</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#205 id=205 data-nosnippet>205</a>) -&gt; ControllerResult&lt;web::Json&lt;Vec&lt;PageAudioFile&gt;&gt;&gt; {
+<a href=#206 id=206 data-nosnippet>206</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#207 id=207 data-nosnippet>207</a>    <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::Edit, <span class="prelude-val">Some</span>(user.id), Res::Page(<span class="kw-2">*</span>page_id)).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#208 id=208 data-nosnippet>208</a>
+<a href=#209 id=209 data-nosnippet>209</a>    <span class="kw">let </span><span class="kw-2">mut </span>page_audio_files =
+<a href=#210 id=210 data-nosnippet>210</a>        models::page_audio_files::get_page_audio_files(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>page_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#211 id=211 data-nosnippet>211</a>
+<a href=#212 id=212 data-nosnippet>212</a>    <span class="kw">let </span>base_url = <span class="kw-2">&amp;</span>app_conf.base_url;
+<a href=#213 id=213 data-nosnippet>213</a>    <span class="kw">for </span>audio <span class="kw">in </span>page_audio_files.iter_mut() {
+<a href=#214 id=214 data-nosnippet>214</a>        audio.path = <span class="macro">format!</span>(<span class="string">"{base_url}/api/v0/files/{}"</span>, audio.path);
+<a href=#215 id=215 data-nosnippet>215</a>    }
+<a href=#216 id=216 data-nosnippet>216</a>
+<a href=#217 id=217 data-nosnippet>217</a>    token.authorized_ok(web::Json(page_audio_files))
+<a href=#218 id=218 data-nosnippet>218</a>}
+<a href=#219 id=219 data-nosnippet>219</a>
+<a href=#220 id=220 data-nosnippet>220</a><span class="doccomment">/**
+<a href=#221 id=221 data-nosnippet>221</a>Add a route for each controller in this module.
 <a href=#222 id=222 data-nosnippet>222</a>
-<a href=#223 id=223 data-nosnippet>223</a>We add the routes by calling the route method instead of using the route annotations because this method preserves the function signatures for documentation.
-<a href=#224 id=224 data-nosnippet>224</a>*/
-<a href=#225 id=225 data-nosnippet>225</a></span><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#226 id=226 data-nosnippet>226</a>    cfg.route(<span class="string">"/{page_id}"</span>, web::post().to(set_page_audio))
-<a href=#227 id=227 data-nosnippet>227</a>        .route(<span class="string">"/{file_id}"</span>, web::delete().to(remove_page_audio))
-<a href=#228 id=228 data-nosnippet>228</a>        .route(<span class="string">"/{page_id}/files"</span>, web::get().to(get_page_audio));
-<a href=#229 id=229 data-nosnippet>229</a>}
+<a href=#223 id=223 data-nosnippet>223</a>The name starts with an underline in order to appear before other functions in the module documentation.
+<a href=#224 id=224 data-nosnippet>224</a>
+<a href=#225 id=225 data-nosnippet>225</a>We add the routes by calling the route method instead of using the route annotations because this method preserves the function signatures for documentation.
+<a href=#226 id=226 data-nosnippet>226</a>*/
+<a href=#227 id=227 data-nosnippet>227</a></span><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#228 id=228 data-nosnippet>228</a>    cfg.route(<span class="string">"/{page_id}"</span>, web::post().to(set_page_audio))
+<a href=#229 id=229 data-nosnippet>229</a>        .route(<span class="string">"/{file_id}"</span>, web::delete().to(remove_page_audio))
+<a href=#230 id=230 data-nosnippet>230</a>        .route(<span class="string">"/{page_id}/files"</span>, web::get().to(get_page_audio));
+<a href=#231 id=231 data-nosnippet>231</a>}
 </code></pre></div></section></main></body></html>
