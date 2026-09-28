@@ -2,7 +2,7 @@
     conn: &amp;mut <a class="struct" href="../../../prelude/struct.PgConnection.html" title="struct headless_lms_chatbot::prelude::PgConnection">PgConnection</a>,
     app_config: &amp;<a class="struct" href="../../../prelude/struct.ApplicationConfiguration.html" title="struct headless_lms_chatbot::prelude::ApplicationConfiguration">ApplicationConfiguration</a>,
     course_id: <a class="struct" href="../../../prelude/struct.Uuid.html" title="struct headless_lms_chatbot::prelude::Uuid">Uuid</a>,
-    modules: &amp;[<a class="struct" href="../../../../headless_lms_models/course_modules/struct.CourseModule.html" title="struct headless_lms_models::course_modules::CourseModule">CourseModule</a>],
+    modules: &amp;[CourseModule],
 ) -&gt; <a class="type" href="../../../chatbot_error/type.ChatbotResult.html" title="type headless_lms_chatbot::chatbot_error::ChatbotResult">ChatbotResult</a>&lt;<a class="struct" href="struct.StaffInfo.html" title="struct headless_lms_chatbot::chatbot_tools::custom_tools::course_configuration::StaffInfo">StaffInfo</a>&gt;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Staff contacts from role-based assignments, falling back to a best-effort Sisu lookup only
 when there are none and a Sisu code exists. Course instances also carry a static
 teacher-in-charge contact, but that field goes stale and is not surfaced here.</p>

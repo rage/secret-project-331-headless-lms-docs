@@ -2,7 +2,7 @@
     conn: &amp;mut PgConnection,
     action: <a class="enum" href="enum.Action.html" title="enum headless_lms_authorization::Action">Action</a>,
     resource: <a class="enum" href="enum.Resource.html" title="enum headless_lms_authorization::Resource">Resource</a>,
-    user_roles: &amp;[<a class="struct" href="../headless_lms_models/roles/struct.Role.html" title="struct headless_lms_models::roles::Role">Role</a>],
+    user_roles: &amp;[Role],
 ) -&gt; <a class="type" href="error/type.AuthorizationResult.html" title="type headless_lms_authorization::error::AuthorizationResult">AuthorizationResult</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.96.1/std/primitive.bool.html">bool</a>&gt;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Whether <code>user_roles</code> allow <code>action</code> on <code>resource</code>.</p>
 <p>The boolean answer for callers that ask a permission question instead of gating on it: a
 denial costs no error, and therefore no backtrace, span trace or roles dump. Errors only
