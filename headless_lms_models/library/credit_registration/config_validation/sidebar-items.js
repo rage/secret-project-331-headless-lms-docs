@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["COURSE_CODE_NOT_ALLOWED","NO_COURSE_CODE","NO_ECTS","NO_ENROLMENT_LINK"],"enum":["CourseCodeVerdict"],"fn":["check_module_config"]};
+window.SIDEBAR_ITEMS = {"constant":["COURSE_CODE_NOT_ALLOWED","NO_COURSE_CODE","NO_ECTS"],"enum":["CourseCodeVerdict"],"fn":["check_module_config"]};

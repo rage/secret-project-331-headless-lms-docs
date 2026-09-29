@@ -267,7 +267,7 @@
 <a href=#267 id=267 data-nosnippet>267</a>      -- the whole table down with it.
 <a href=#268 id=268 data-nosnippet>268</a>      COALESCE(cr.error_code = 'retry_window_expired', FALSE) AS retry_window_expired,
 <a href=#269 id=269 data-nosnippet>269</a>      cr.state = 'misregistered' AS misregistered,
-<a href=#270 id=270 data-nosnippet>270</a>      cr.submit_retry_count + cr.verify_attempt_count &gt;= $3 AS too_many_attempts,
+<a href=#270 id=270 data-nosnippet>270</a>      cr.submit_retry_count &gt;= $3 AS too_many_attempts,
 <a href=#271 id=271 data-nosnippet>271</a>      cr.state = 'submission_uncertain' AS outcome_uncertain
 <a href=#272 id=272 data-nosnippet>272</a>  ) d
 <a href=#273 id=273 data-nosnippet>273</a>  CROSS JOIN LATERAL (
