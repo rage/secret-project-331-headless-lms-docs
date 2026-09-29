@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ATTAINMENT_TYPE_COURSE_UNIT"],"enum":["RegistryErrorKind","RegistryOperation"],"struct":["CreditRange","DatePeriod","LocalizedName","RegistryAttainment","RegistryEnrolment","RosterEnrolment","RosterPerson"]};

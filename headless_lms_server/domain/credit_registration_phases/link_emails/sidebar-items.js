@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["QUEUE_LIMIT"],"fn":["placeholders","run"],"struct":["LinkEmailsPhase"]};

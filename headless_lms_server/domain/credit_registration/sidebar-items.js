@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["health"]};
+window.SIDEBAR_ITEMS = {"mod":["enrolment_recheck","health","linking_mail_resend","mail_status"]};

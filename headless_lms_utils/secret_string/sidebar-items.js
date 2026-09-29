@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["expose_option","serialize_exposed","serialize_exposed_option"]};

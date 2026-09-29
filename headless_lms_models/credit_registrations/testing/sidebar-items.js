@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["expire_enrolment_recheck_allowance_for_testing","make_enrolment_checks_due_for_testing","set_first_failed_at_for_testing","set_state_entered_at_for_testing","set_test_exclusive_hold_for_testing"]};

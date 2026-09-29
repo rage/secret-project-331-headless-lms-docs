@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["check_modules","distinct_course_codes","record_checks","run"]};

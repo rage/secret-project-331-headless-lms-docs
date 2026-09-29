@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["count_unresolved","get_unresolved","record_person_conflict"],"struct":["UnresolvedStudyRegistryConflict"]};

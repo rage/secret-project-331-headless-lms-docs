@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AdminAttention","TransitionPolicy","Transitioned"],"fn":["check_edge","lock_for_moves","settle_pending_supersessions","transition","transition_batch","transition_unless_moved_on","write_moves"],"struct":["BatchMove","Transition"]};

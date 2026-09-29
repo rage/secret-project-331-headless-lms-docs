@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["UNCHANGED_REPORT_REFRESH"],"enum":["ScopeKey"],"struct":["LastReported","ProcessLocalMap"]};

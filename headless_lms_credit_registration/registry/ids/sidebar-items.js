@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["AttainmentId","CourseCode","StudentNumber","SubmittedAttainmentRef"]};

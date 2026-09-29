@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","assert_enabled"],"mod":["api","commands","control","default_world","faults","fixtures","ids","logic","scenarios","store","wire","world"]};
+window.SIDEBAR_ITEMS = {"fn":["assert_enabled","contract_route","scope"],"mod":["api","commands","control"]};

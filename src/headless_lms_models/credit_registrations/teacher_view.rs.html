@@ -1,0 +1,407 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `models/src/credit_registrations/teacher_view.rs`."><title>teacher_view.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="headless_lms_models" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">headless_lms_models/credit_registrations/</div>teacher_view.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The ledger as a course's teacher surfaces show it, and what a teacher's bulk retry may move.
+<a href=#2 id=2 data-nosnippet>2</a>
+<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">super</span>::state::{CreditRegistrationErrorCode, CreditRegistrationState, ResubmissionFacts};
+<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::library::credit_registration::{
+<a href=#5 id=5 data-nosnippet>5</a>    PendingPreconditions, StageMatch, StudentFacingCreditRegistrationStatus,
+<a href=#6 id=6 data-nosnippet>6</a>};
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::library::students_view::escape_like_pattern;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::prelude::<span class="kw-2">*</span>;
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">crate</span>::verified_student_numbers::StudentNumberVerificationMethod;
+<a href=#10 id=10 data-nosnippet>10</a>
+<a href=#11 id=11 data-nosnippet>11</a><span class="doccomment">/// The course's live rows a bulk retry can actually move: failed for good, and not held open by
+<a href=#12 id=12 data-nosnippet>12</a>/// Suotar. Oldest first, capped by `limit`.
+<a href=#13 id=13 data-nosnippet>13</a>///
+<a href=#14 id=14 data-nosnippet>14</a>/// Deliberately only these. A row a retry always refuses keeps matching for as long as it exists,
+<a href=#15 id=15 data-nosnippet>15</a>/// so letting one into the batch would spend a slot of the cap on it forever: a course holding
+<a href=#16 id=16 data-nosnippet>16</a>/// `limit` of them could never retry anything again. [`count_submission_uncertain_by_course_id`] is
+<a href=#17 id=17 data-nosnippet>17</a>/// what reports them.
+<a href=#18 id=18 data-nosnippet>18</a></span><span class="kw">pub async fn </span>get_retryable_ids_by_course_id(
+<a href=#19 id=19 data-nosnippet>19</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#20 id=20 data-nosnippet>20</a>    course_id: Uuid,
+<a href=#21 id=21 data-nosnippet>21</a>    limit: i64,
+<a href=#22 id=22 data-nosnippet>22</a>) -&gt; ModelResult&lt;Vec&lt;Uuid&gt;&gt; {
+<a href=#23 id=23 data-nosnippet>23</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_scalar!</span>(
+<a href=#24 id=24 data-nosnippet>24</a>        <span class="string">r#"
+<a href=#25 id=25 data-nosnippet>25</a>SELECT id
+<a href=#26 id=26 data-nosnippet>26</a>FROM credit_registrations cr
+<a href=#27 id=27 data-nosnippet>27</a>WHERE cr.course_id = $1
+<a href=#28 id=28 data-nosnippet>28</a>  AND cr.state = 'failed_permanent'
+<a href=#29 id=29 data-nosnippet>29</a>  AND (
+<a href=#30 id=30 data-nosnippet>30</a>    cr.resubmit_not_before IS NULL
+<a href=#31 id=31 data-nosnippet>31</a>    OR cr.resubmit_not_before &lt;= now()
+<a href=#32 id=32 data-nosnippet>32</a>  )
+<a href=#33 id=33 data-nosnippet>33</a>  AND cr.superseded_by_id IS NULL
+<a href=#34 id=34 data-nosnippet>34</a>  AND cr.deleted_at IS NULL
+<a href=#35 id=35 data-nosnippet>35</a>ORDER BY cr.state_entered_at
+<a href=#36 id=36 data-nosnippet>36</a>LIMIT $2
+<a href=#37 id=37 data-nosnippet>37</a>        "#</span>,
+<a href=#38 id=38 data-nosnippet>38</a>        course_id,
+<a href=#39 id=39 data-nosnippet>39</a>        limit,
+<a href=#40 id=40 data-nosnippet>40</a>    )
+<a href=#41 id=41 data-nosnippet>41</a>    .fetch_all(conn)
+<a href=#42 id=42 data-nosnippet>42</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#43 id=43 data-nosnippet>43</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#44 id=44 data-nosnippet>44</a>}
+<a href=#45 id=45 data-nosnippet>45</a>
+<a href=#46 id=46 data-nosnippet>46</a><span class="doccomment">/// How many of a course's live rows a bulk retry has to refuse, all for the one remaining reason:
+<a href=#47 id=47 data-nosnippet>47</a>/// the submission may have landed, so only a human may move that row.
+<a href=#48 id=48 data-nosnippet>48</a>///
+<a href=#49 id=49 data-nosnippet>49</a>/// Counts the whole course, not a capped window: these are the rows
+<a href=#50 id=50 data-nosnippet>50</a>/// [`get_retryable_ids_by_course_id`] leaves out, and a teacher clicking again will never work
+<a href=#51 id=51 data-nosnippet>51</a>/// through them.
+<a href=#52 id=52 data-nosnippet>52</a></span><span class="kw">pub async fn </span>count_submission_uncertain_by_course_id(
+<a href=#53 id=53 data-nosnippet>53</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#54 id=54 data-nosnippet>54</a>    course_id: Uuid,
+<a href=#55 id=55 data-nosnippet>55</a>) -&gt; ModelResult&lt;i64&gt; {
+<a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">let </span>count = <span class="macro">sqlx::query_scalar!</span>(
+<a href=#57 id=57 data-nosnippet>57</a>        <span class="string">r#"
+<a href=#58 id=58 data-nosnippet>58</a>SELECT COUNT(*) AS "count!"
+<a href=#59 id=59 data-nosnippet>59</a>FROM credit_registrations cr
+<a href=#60 id=60 data-nosnippet>60</a>WHERE cr.course_id = $1
+<a href=#61 id=61 data-nosnippet>61</a>  AND cr.state = 'submission_uncertain'
+<a href=#62 id=62 data-nosnippet>62</a>  AND cr.superseded_by_id IS NULL
+<a href=#63 id=63 data-nosnippet>63</a>  AND cr.deleted_at IS NULL
+<a href=#64 id=64 data-nosnippet>64</a>        "#</span>,
+<a href=#65 id=65 data-nosnippet>65</a>        course_id,
+<a href=#66 id=66 data-nosnippet>66</a>    )
+<a href=#67 id=67 data-nosnippet>67</a>    .fetch_one(conn)
+<a href=#68 id=68 data-nosnippet>68</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#69 id=69 data-nosnippet>69</a>    <span class="prelude-val">Ok</span>(count)
+<a href=#70 id=70 data-nosnippet>70</a>}
+<a href=#71 id=71 data-nosnippet>71</a>
+<a href=#72 id=72 data-nosnippet>72</a><span class="doccomment">/// Live rows of one course grouped by module and state, with the preconditions a `pending` row is
+<a href=#73 id=73 data-nosnippet>73</a>/// waiting on and how many of each group the pipeline handed to support.
+<a href=#74 id=74 data-nosnippet>74</a>///
+<a href=#75 id=75 data-nosnippet>75</a>/// The preconditions travel with the group so a caller can classify it via
+<a href=#76 id=76 data-nosnippet>76</a>/// [`crate::library::credit_registration::StudentFacingCreditRegistrationStatus::of`] instead of
+<a href=#77 id=77 data-nosnippet>77</a>/// reimplementing that mapping in SQL — keeping per-module columns and per-row badges in sync.
+<a href=#78 id=78 data-nosnippet>78</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#79 id=79 data-nosnippet>79</a></span><span class="kw">pub struct </span>CourseModuleStateCount {
+<a href=#80 id=80 data-nosnippet>80</a>    <span class="kw">pub </span>course_module_id: Uuid,
+<a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">pub </span>state: CreditRegistrationState,
+<a href=#82 id=82 data-nosnippet>82</a>    <span class="kw">pub </span>completion_eligible: bool,
+<a href=#83 id=83 data-nosnippet>83</a>    <span class="kw">pub </span>has_verified_student_number: bool,
+<a href=#84 id=84 data-nosnippet>84</a>    <span class="kw">pub </span>course_code_allowed: bool,
+<a href=#85 id=85 data-nosnippet>85</a>    <span class="kw">pub </span>enrolment_resolved: bool,
+<a href=#86 id=86 data-nosnippet>86</a>    <span class="kw">pub </span>count: i64,
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="doccomment">/// Of `count`, how many carry the pipeline's flag.
+<a href=#88 id=88 data-nosnippet>88</a>    </span><span class="kw">pub </span>needs_admin_attention_count: i64,
+<a href=#89 id=89 data-nosnippet>89</a>}
+<a href=#90 id=90 data-nosnippet>90</a>
+<a href=#91 id=91 data-nosnippet>91</a><span class="doccomment">/// The course's live rows per module and state, narrowed to one instance where the caller names
+<a href=#92 id=92 data-nosnippet>92</a>/// one.
+<a href=#93 id=93 data-nosnippet>93</a></span><span class="kw">pub async fn </span>count_by_module_and_state_for_course(
+<a href=#94 id=94 data-nosnippet>94</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#95 id=95 data-nosnippet>95</a>    course_id: Uuid,
+<a href=#96 id=96 data-nosnippet>96</a>    course_instance_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#97 id=97 data-nosnippet>97</a>) -&gt; ModelResult&lt;Vec&lt;CourseModuleStateCount&gt;&gt; {
+<a href=#98 id=98 data-nosnippet>98</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#99 id=99 data-nosnippet>99</a>        CourseModuleStateCount,
+<a href=#100 id=100 data-nosnippet>100</a>        <span class="string">r#"
+<a href=#101 id=101 data-nosnippet>101</a>SELECT cr.course_module_id,
+<a href=#102 id=102 data-nosnippet>102</a>  cr.state,
+<a href=#103 id=103 data-nosnippet>103</a>  p.completion_eligible AS "completion_eligible!",
+<a href=#104 id=104 data-nosnippet>104</a>  p.has_verified_student_number AS "has_verified_student_number!",
+<a href=#105 id=105 data-nosnippet>105</a>  p.course_code_allowed AS "course_code_allowed!",
+<a href=#106 id=106 data-nosnippet>106</a>  cr.selected_enrolment_id IS NOT NULL AS "enrolment_resolved!",
+<a href=#107 id=107 data-nosnippet>107</a>  COUNT(*) AS "count!",
+<a href=#108 id=108 data-nosnippet>108</a>  COUNT(*) FILTER (
+<a href=#109 id=109 data-nosnippet>109</a>    WHERE cr.needs_admin_attention
+<a href=#110 id=110 data-nosnippet>110</a>  ) AS "needs_admin_attention_count!"
+<a href=#111 id=111 data-nosnippet>111</a>FROM credit_registrations cr
+<a href=#112 id=112 data-nosnippet>112</a>  JOIN credit_registration_preconditions p ON p.credit_registration_id = cr.id
+<a href=#113 id=113 data-nosnippet>113</a>WHERE cr.course_id = $1
+<a href=#114 id=114 data-nosnippet>114</a>  AND (
+<a href=#115 id=115 data-nosnippet>115</a>    $2::uuid IS NULL
+<a href=#116 id=116 data-nosnippet>116</a>    OR cr.course_instance_id = $2
+<a href=#117 id=117 data-nosnippet>117</a>  )
+<a href=#118 id=118 data-nosnippet>118</a>  AND cr.superseded_by_id IS NULL
+<a href=#119 id=119 data-nosnippet>119</a>  AND cr.deleted_at IS NULL
+<a href=#120 id=120 data-nosnippet>120</a>GROUP BY cr.course_module_id,
+<a href=#121 id=121 data-nosnippet>121</a>  cr.state,
+<a href=#122 id=122 data-nosnippet>122</a>  p.completion_eligible,
+<a href=#123 id=123 data-nosnippet>123</a>  p.has_verified_student_number,
+<a href=#124 id=124 data-nosnippet>124</a>  p.course_code_allowed,
+<a href=#125 id=125 data-nosnippet>125</a>  (cr.selected_enrolment_id IS NOT NULL)
+<a href=#126 id=126 data-nosnippet>126</a>        "#</span>,
+<a href=#127 id=127 data-nosnippet>127</a>        course_id,
+<a href=#128 id=128 data-nosnippet>128</a>        course_instance_id,
+<a href=#129 id=129 data-nosnippet>129</a>    )
+<a href=#130 id=130 data-nosnippet>130</a>    .fetch_all(conn)
+<a href=#131 id=131 data-nosnippet>131</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#132 id=132 data-nosnippet>132</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#133 id=133 data-nosnippet>133</a>}
+<a href=#134 id=134 data-nosnippet>134</a>
+<a href=#135 id=135 data-nosnippet>135</a><span class="doccomment">/// One ledger row as a teacher sees it: the raw state, the student's identity and the unmasked
+<a href=#136 id=136 data-nosnippet>136</a>/// verified student number, but never the study registry's own error text.
+<a href=#137 id=137 data-nosnippet>137</a></span><span class="attr">#[derive(Debug, Clone)]
+<a href=#138 id=138 data-nosnippet>138</a></span><span class="kw">pub struct </span>TeacherCreditRegistration {
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">pub </span>id: Uuid,
+<a href=#140 id=140 data-nosnippet>140</a>    <span class="kw">pub </span>user_id: Uuid,
+<a href=#141 id=141 data-nosnippet>141</a>    <span class="kw">pub </span>first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="kw">pub </span>last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="kw">pub </span>email: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#144 id=144 data-nosnippet>144</a>    <span class="kw">pub </span>course_id: Uuid,
+<a href=#145 id=145 data-nosnippet>145</a>    <span class="kw">pub </span>course_module_id: Uuid,
+<a href=#146 id=146 data-nosnippet>146</a>    <span class="kw">pub </span>course_module_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#147 id=147 data-nosnippet>147</a>    <span class="kw">pub </span>course_instance_id: Uuid,
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="kw">pub </span>course_module_completion_id: Uuid,
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">pub </span>completion_date: DateTime&lt;Utc&gt;,
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="kw">pub </span>state: CreditRegistrationState,
+<a href=#151 id=151 data-nosnippet>151</a>    <span class="kw">pub </span>state_entered_at: DateTime&lt;Utc&gt;,
+<a href=#152 id=152 data-nosnippet>152</a>    <span class="kw">pub </span>error_code: <span class="prelude-ty">Option</span>&lt;CreditRegistrationErrorCode&gt;,
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">pub </span>needs_admin_attention: bool,
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">pub </span>next_attempt_at: DateTime&lt;Utc&gt;,
+<a href=#155 id=155 data-nosnippet>155</a>    <span class="kw">pub </span>registered_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">pub </span>sisu_attainment_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">pub </span>grade_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">pub </span>credits: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">pub </span>attempt_number: i32,
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">pub </span>superseded_by_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#161 id=161 data-nosnippet>161</a>    <span class="kw">pub </span>submitted_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#162 id=162 data-nosnippet>162</a>    <span class="kw">pub </span>resubmit_not_before: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#163 id=163 data-nosnippet>163</a>    <span class="doccomment">/// Live only: a soft-deleted link is no longer a number we hold for this student.
+<a href=#164 id=164 data-nosnippet>164</a>    </span><span class="kw">pub </span>student_number: <span class="prelude-ty">Option</span>&lt;DbSecret&gt;,
+<a href=#165 id=165 data-nosnippet>165</a>    <span class="kw">pub </span>student_number_verified_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">pub </span>student_number_verified_via: <span class="prelude-ty">Option</span>&lt;StudentNumberVerificationMethod&gt;,
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="doccomment">/// Needed to find the account's linking mails, which are keyed on the Sisu person.
+<a href=#168 id=168 data-nosnippet>168</a>    </span><span class="kw">pub </span>sisu_person_id: <span class="prelude-ty">Option</span>&lt;DbSecret&gt;,
+<a href=#169 id=169 data-nosnippet>169</a>    <span class="kw">pub </span>enrolment_resolved: bool,
+<a href=#170 id=170 data-nosnippet>170</a>    <span class="kw">pub </span>enrolment_realisation_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#171 id=171 data-nosnippet>171</a>    <span class="kw">pub </span>enrolment_checked_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#172 id=172 data-nosnippet>172</a>    <span class="kw">pub </span>enrolment_check_requested_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#173 id=173 data-nosnippet>173</a>    <span class="kw">pub </span>completion_eligible: bool,
+<a href=#174 id=174 data-nosnippet>174</a>    <span class="kw">pub </span>course_code_allowed: bool,
+<a href=#175 id=175 data-nosnippet>175</a>    <span class="doccomment">/// The page's total row count, so a caller can read it off the first row instead of a second
+<a href=#176 id=176 data-nosnippet>176</a>    /// query.
+<a href=#177 id=177 data-nosnippet>177</a>    </span><span class="kw">pub </span>total_count: i64,
+<a href=#178 id=178 data-nosnippet>178</a>}
+<a href=#179 id=179 data-nosnippet>179</a>
+<a href=#180 id=180 data-nosnippet>180</a><span class="kw">impl </span>TeacherCreditRegistration {
+<a href=#181 id=181 data-nosnippet>181</a>    <span class="doccomment">/// What decides whether a human may move this row; see [`ResubmissionFacts`].
+<a href=#182 id=182 data-nosnippet>182</a>    </span><span class="kw">pub fn </span>resubmission_facts(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ResubmissionFacts {
+<a href=#183 id=183 data-nosnippet>183</a>        ResubmissionFacts {
+<a href=#184 id=184 data-nosnippet>184</a>            state: <span class="self">self</span>.state,
+<a href=#185 id=185 data-nosnippet>185</a>            is_superseded: <span class="self">self</span>.superseded_by_id.is_some(),
+<a href=#186 id=186 data-nosnippet>186</a>            resubmit_not_before: <span class="self">self</span>.resubmit_not_before,
+<a href=#187 id=187 data-nosnippet>187</a>            submitted_at: <span class="self">self</span>.submitted_at,
+<a href=#188 id=188 data-nosnippet>188</a>        }
+<a href=#189 id=189 data-nosnippet>189</a>    }
+<a href=#190 id=190 data-nosnippet>190</a>
+<a href=#191 id=191 data-nosnippet>191</a>    <span class="doccomment">/// What a `pending` row is waiting on. The linked number is the row's own `student_number`,
+<a href=#192 id=192 data-nosnippet>192</a>    /// which is the live link rather than the one a submitted payload froze.
+<a href=#193 id=193 data-nosnippet>193</a>    </span><span class="kw">pub fn </span>preconditions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PendingPreconditions {
+<a href=#194 id=194 data-nosnippet>194</a>        PendingPreconditions {
+<a href=#195 id=195 data-nosnippet>195</a>            completion_eligible: <span class="self">self</span>.completion_eligible,
+<a href=#196 id=196 data-nosnippet>196</a>            has_verified_student_number: <span class="self">self</span>.student_number.is_some(),
+<a href=#197 id=197 data-nosnippet>197</a>            course_code_allowed: <span class="self">self</span>.course_code_allowed,
+<a href=#198 id=198 data-nosnippet>198</a>        }
+<a href=#199 id=199 data-nosnippet>199</a>    }
+<a href=#200 id=200 data-nosnippet>200</a>}
+<a href=#201 id=201 data-nosnippet>201</a>
+<a href=#202 id=202 data-nosnippet>202</a><span class="doccomment">/// The optional narrowings a teacher surface applies, all of them in SQL.
+<a href=#203 id=203 data-nosnippet>203</a></span><span class="attr">#[derive(Debug, Clone, Default)]
+<a href=#204 id=204 data-nosnippet>204</a></span><span class="kw">pub struct </span>TeacherCreditRegistrationFilters&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#205 id=205 data-nosnippet>205</a>    <span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#206 id=206 data-nosnippet>206</a>    <span class="kw">pub </span>user_ids: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Uuid]&gt;,
+<a href=#207 id=207 data-nosnippet>207</a>    <span class="kw">pub </span>state: <span class="prelude-ty">Option</span>&lt;CreditRegistrationState&gt;,
+<a href=#208 id=208 data-nosnippet>208</a>    <span class="doccomment">/// Rows whose student-facing stage is one of these. Empty means no narrowing. The stage set the
+<a href=#209 id=209 data-nosnippet>209</a>    /// teacher surfaces filter by, so a row this returns always carries a badge the filter named.
+<a href=#210 id=210 data-nosnippet>210</a>    </span><span class="kw">pub </span>stages: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[StudentFacingCreditRegistrationStatus],
+<a href=#211 id=211 data-nosnippet>211</a>    <span class="doccomment">/// Matched against the student's name, email or verified student number.
+<a href=#212 id=212 data-nosnippet>212</a>    </span><span class="kw">pub </span>search: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
+<a href=#213 id=213 data-nosnippet>213</a>    <span class="kw">pub </span>course_instance_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#214 id=214 data-nosnippet>214</a>    <span class="doccomment">/// Narrows to every attempt of one completion.
+<a href=#215 id=215 data-nosnippet>215</a>    </span><span class="kw">pub </span>course_module_completion_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#216 id=216 data-nosnippet>216</a>}
+<a href=#217 id=217 data-nosnippet>217</a>
+<a href=#218 id=218 data-nosnippet>218</a><span class="doccomment">/// The one query behind every teacher-facing read, so a filter wired into a page cannot be missed
+<a href=#219 id=219 data-nosnippet>219</a>/// in its count. `total_count` is computed before the limit, which is why the count reads it with
+<a href=#220 id=220 data-nosnippet>220</a>/// `limit = 1`.
+<a href=#221 id=221 data-nosnippet>221</a></span><span class="kw">async fn </span>teacher_facing_page(
+<a href=#222 id=222 data-nosnippet>222</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#223 id=223 data-nosnippet>223</a>    course_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#224 id=224 data-nosnippet>224</a>    filters: <span class="kw-2">&amp;</span>TeacherCreditRegistrationFilters&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#225 id=225 data-nosnippet>225</a>    limit: i64,
+<a href=#226 id=226 data-nosnippet>226</a>    offset: i64,
+<a href=#227 id=227 data-nosnippet>227</a>) -&gt; ModelResult&lt;Vec&lt;TeacherCreditRegistration&gt;&gt; {
+<a href=#228 id=228 data-nosnippet>228</a>    <span class="kw">let </span>search_pattern = filters.search.map(search_pattern_of);
+<a href=#229 id=229 data-nosnippet>229</a>    <span class="kw">let </span>stages = StageMatch::of(filters.stages);
+<a href=#230 id=230 data-nosnippet>230</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#231 id=231 data-nosnippet>231</a>        TeacherCreditRegistration,
+<a href=#232 id=232 data-nosnippet>232</a>        <span class="string">r#"
+<a href=#233 id=233 data-nosnippet>233</a>SELECT cr.id,
+<a href=#234 id=234 data-nosnippet>234</a>  cr.user_id,
+<a href=#235 id=235 data-nosnippet>235</a>  ud.first_name AS "first_name?",
+<a href=#236 id=236 data-nosnippet>236</a>  ud.last_name AS "last_name?",
+<a href=#237 id=237 data-nosnippet>237</a>  ud.email AS "email?",
+<a href=#238 id=238 data-nosnippet>238</a>  cr.course_id,
+<a href=#239 id=239 data-nosnippet>239</a>  cr.course_module_id,
+<a href=#240 id=240 data-nosnippet>240</a>  cm.name AS course_module_name,
+<a href=#241 id=241 data-nosnippet>241</a>  cr.course_instance_id,
+<a href=#242 id=242 data-nosnippet>242</a>  cr.course_module_completion_id,
+<a href=#243 id=243 data-nosnippet>243</a>  cmc.completion_date,
+<a href=#244 id=244 data-nosnippet>244</a>  cr.state,
+<a href=#245 id=245 data-nosnippet>245</a>  cr.state_entered_at,
+<a href=#246 id=246 data-nosnippet>246</a>  cr.error_code AS "error_code?",
+<a href=#247 id=247 data-nosnippet>247</a>  cr.needs_admin_attention,
+<a href=#248 id=248 data-nosnippet>248</a>  cr.next_attempt_at,
+<a href=#249 id=249 data-nosnippet>249</a>  cr.registered_at,
+<a href=#250 id=250 data-nosnippet>250</a>  cr.sisu_attainment_id,
+<a href=#251 id=251 data-nosnippet>251</a>  cr.grade_id,
+<a href=#252 id=252 data-nosnippet>252</a>  cr.credits,
+<a href=#253 id=253 data-nosnippet>253</a>  cr.attempt_number,
+<a href=#254 id=254 data-nosnippet>254</a>  cr.superseded_by_id,
+<a href=#255 id=255 data-nosnippet>255</a>  cr.submitted_at,
+<a href=#256 id=256 data-nosnippet>256</a>  cr.resubmit_not_before,
+<a href=#257 id=257 data-nosnippet>257</a>  vsn.student_number AS "student_number?",
+<a href=#258 id=258 data-nosnippet>258</a>  vsn.verified_at AS "student_number_verified_at?",
+<a href=#259 id=259 data-nosnippet>259</a>  vsn.verified_via AS "student_number_verified_via?",
+<a href=#260 id=260 data-nosnippet>260</a>  vsn.sisu_person_id AS "sisu_person_id?",
+<a href=#261 id=261 data-nosnippet>261</a>  cr.selected_enrolment_id IS NOT NULL AS "enrolment_resolved!",
+<a href=#262 id=262 data-nosnippet>262</a>  COALESCE(
+<a href=#263 id=263 data-nosnippet>263</a>    cr.selected_enrolment_realisation_name-&gt;&gt;'fi',
+<a href=#264 id=264 data-nosnippet>264</a>    cr.selected_enrolment_realisation_name-&gt;&gt;'en',
+<a href=#265 id=265 data-nosnippet>265</a>    cr.selected_enrolment_realisation_name-&gt;&gt;'sv'
+<a href=#266 id=266 data-nosnippet>266</a>  ) AS "enrolment_realisation_name?",
+<a href=#267 id=267 data-nosnippet>267</a>  cr.enrolment_checked_at,
+<a href=#268 id=268 data-nosnippet>268</a>  cr.enrolment_check_requested_at,
+<a href=#269 id=269 data-nosnippet>269</a>  p.completion_eligible AS "completion_eligible!",
+<a href=#270 id=270 data-nosnippet>270</a>  p.course_code_allowed AS "course_code_allowed!",
+<a href=#271 id=271 data-nosnippet>271</a>  COUNT(*) OVER () AS "total_count!"
+<a href=#272 id=272 data-nosnippet>272</a>FROM credit_registrations cr
+<a href=#273 id=273 data-nosnippet>273</a>  JOIN course_modules cm ON cm.id = cr.course_module_id AND cm.deleted_at IS NULL
+<a href=#274 id=274 data-nosnippet>274</a>  JOIN course_module_completions cmc ON cmc.id = cr.course_module_completion_id AND cmc.deleted_at IS NULL
+<a href=#275 id=275 data-nosnippet>275</a>  JOIN credit_registration_preconditions p ON p.credit_registration_id = cr.id
+<a href=#276 id=276 data-nosnippet>276</a>  LEFT JOIN user_details ud ON ud.user_id = cr.user_id
+<a href=#277 id=277 data-nosnippet>277</a>  LEFT JOIN verified_student_numbers vsn ON vsn.user_id = cr.user_id
+<a href=#278 id=278 data-nosnippet>278</a>  AND vsn.deleted_at IS NULL
+<a href=#279 id=279 data-nosnippet>279</a>WHERE cr.deleted_at IS NULL
+<a href=#280 id=280 data-nosnippet>280</a>  AND ($1::uuid IS NULL OR cr.course_id = $1)
+<a href=#281 id=281 data-nosnippet>281</a>  AND ($2::uuid IS NULL OR cr.id = $2)
+<a href=#282 id=282 data-nosnippet>282</a>  AND ($3::uuid [] IS NULL OR cr.user_id = ANY($3))
+<a href=#283 id=283 data-nosnippet>283</a>  AND (
+<a href=#284 id=284 data-nosnippet>284</a>    $4::credit_registration_state IS NULL
+<a href=#285 id=285 data-nosnippet>285</a>    OR cr.state = $4
+<a href=#286 id=286 data-nosnippet>286</a>  )
+<a href=#287 id=287 data-nosnippet>287</a>  AND (
+<a href=#288 id=288 data-nosnippet>288</a>    $5::text IS NULL
+<a href=#289 id=289 data-nosnippet>289</a>    OR ud.name_search_helper LIKE '%' || $5 || '%' ESCAPE '\'
+<a href=#290 id=290 data-nosnippet>290</a>    OR ud.email_search_helper LIKE '%' || $5 || '%' ESCAPE '\'
+<a href=#291 id=291 data-nosnippet>291</a>    OR LOWER(vsn.student_number) LIKE '%' || $5 || '%' ESCAPE '\'
+<a href=#292 id=292 data-nosnippet>292</a>  )
+<a href=#293 id=293 data-nosnippet>293</a>  AND ($6::uuid IS NULL OR cr.course_instance_id = $6)
+<a href=#294 id=294 data-nosnippet>294</a>  AND ($7::uuid IS NULL OR cr.course_module_completion_id = $7)
+<a href=#295 id=295 data-nosnippet>295</a>  AND (
+<a href=#296 id=296 data-nosnippet>296</a>    CARDINALITY($10::credit_registration_state []) = 0
+<a href=#297 id=297 data-nosnippet>297</a>    OR EXISTS (
+<a href=#298 id=298 data-nosnippet>298</a>      SELECT 1
+<a href=#299 id=299 data-nosnippet>299</a>      FROM UNNEST(
+<a href=#300 id=300 data-nosnippet>300</a>          $10::credit_registration_state [],
+<a href=#301 id=301 data-nosnippet>301</a>          $11::boolean [],
+<a href=#302 id=302 data-nosnippet>302</a>          $12::boolean [],
+<a href=#303 id=303 data-nosnippet>303</a>          $13::boolean [],
+<a href=#304 id=304 data-nosnippet>304</a>          $14::boolean []
+<a href=#305 id=305 data-nosnippet>305</a>        ) AS stage(
+<a href=#306 id=306 data-nosnippet>306</a>          state,
+<a href=#307 id=307 data-nosnippet>307</a>          completion_eligible,
+<a href=#308 id=308 data-nosnippet>308</a>          has_verified_student_number,
+<a href=#309 id=309 data-nosnippet>309</a>          course_code_allowed,
+<a href=#310 id=310 data-nosnippet>310</a>          enrolment_resolved
+<a href=#311 id=311 data-nosnippet>311</a>        )
+<a href=#312 id=312 data-nosnippet>312</a>      WHERE stage.state = cr.state
+<a href=#313 id=313 data-nosnippet>313</a>        AND stage.completion_eligible = p.completion_eligible
+<a href=#314 id=314 data-nosnippet>314</a>        AND stage.has_verified_student_number = (vsn.student_number IS NOT NULL)
+<a href=#315 id=315 data-nosnippet>315</a>        AND stage.course_code_allowed = p.course_code_allowed
+<a href=#316 id=316 data-nosnippet>316</a>        AND stage.enrolment_resolved = (cr.selected_enrolment_id IS NOT NULL)
+<a href=#317 id=317 data-nosnippet>317</a>    )
+<a href=#318 id=318 data-nosnippet>318</a>  )
+<a href=#319 id=319 data-nosnippet>319</a>ORDER BY cmc.completion_date DESC,
+<a href=#320 id=320 data-nosnippet>320</a>  cr.attempt_number DESC,
+<a href=#321 id=321 data-nosnippet>321</a>  cr.id
+<a href=#322 id=322 data-nosnippet>322</a>LIMIT $8 OFFSET $9
+<a href=#323 id=323 data-nosnippet>323</a>        "#</span>,
+<a href=#324 id=324 data-nosnippet>324</a>        course_id,
+<a href=#325 id=325 data-nosnippet>325</a>        filters.id,
+<a href=#326 id=326 data-nosnippet>326</a>        filters.user_ids,
+<a href=#327 id=327 data-nosnippet>327</a>        filters.state <span class="kw">as </span><span class="prelude-ty">Option</span>&lt;CreditRegistrationState&gt;,
+<a href=#328 id=328 data-nosnippet>328</a>        search_pattern.as_deref(),
+<a href=#329 id=329 data-nosnippet>329</a>        filters.course_instance_id,
+<a href=#330 id=330 data-nosnippet>330</a>        filters.course_module_completion_id,
+<a href=#331 id=331 data-nosnippet>331</a>        limit,
+<a href=#332 id=332 data-nosnippet>332</a>        offset,
+<a href=#333 id=333 data-nosnippet>333</a>        <span class="kw-2">&amp;</span>stages.states <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#334 id=334 data-nosnippet>334</a>        <span class="kw-2">&amp;</span>stages.completion_eligible <span class="kw">as </span><span class="kw-2">&amp;</span>[bool],
+<a href=#335 id=335 data-nosnippet>335</a>        <span class="kw-2">&amp;</span>stages.has_verified_student_number <span class="kw">as </span><span class="kw-2">&amp;</span>[bool],
+<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw-2">&amp;</span>stages.course_code_allowed <span class="kw">as </span><span class="kw-2">&amp;</span>[bool],
+<a href=#337 id=337 data-nosnippet>337</a>        <span class="kw-2">&amp;</span>stages.enrolment_resolved <span class="kw">as </span><span class="kw-2">&amp;</span>[bool],
+<a href=#338 id=338 data-nosnippet>338</a>    )
+<a href=#339 id=339 data-nosnippet>339</a>    .fetch_all(conn)
+<a href=#340 id=340 data-nosnippet>340</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#341 id=341 data-nosnippet>341</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#342 id=342 data-nosnippet>342</a>}
+<a href=#343 id=343 data-nosnippet>343</a>
+<a href=#344 id=344 data-nosnippet>344</a><span class="doccomment">/// The course's ledger rows as the teacher surfaces show them, newest completion first.
+<a href=#345 id=345 data-nosnippet>345</a></span><span class="kw">pub async fn </span>get_teacher_facing_by_course_id(
+<a href=#346 id=346 data-nosnippet>346</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#347 id=347 data-nosnippet>347</a>    course_id: Uuid,
+<a href=#348 id=348 data-nosnippet>348</a>    filters: <span class="kw-2">&amp;</span>TeacherCreditRegistrationFilters&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#349 id=349 data-nosnippet>349</a>    limit: i64,
+<a href=#350 id=350 data-nosnippet>350</a>    offset: i64,
+<a href=#351 id=351 data-nosnippet>351</a>) -&gt; ModelResult&lt;Vec&lt;TeacherCreditRegistration&gt;&gt; {
+<a href=#352 id=352 data-nosnippet>352</a>    teacher_facing_page(conn, <span class="prelude-val">Some</span>(course_id), filters, limit, offset).<span class="kw">await
+<a href=#353 id=353 data-nosnippet>353</a></span>}
+<a href=#354 id=354 data-nosnippet>354</a>
+<a href=#355 id=355 data-nosnippet>355</a><span class="doccomment">/// How many rows [`get_teacher_facing_by_course_id`] would return without a page limit.
+<a href=#356 id=356 data-nosnippet>356</a></span><span class="kw">pub async fn </span>count_teacher_facing_by_course_id(
+<a href=#357 id=357 data-nosnippet>357</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#358 id=358 data-nosnippet>358</a>    course_id: Uuid,
+<a href=#359 id=359 data-nosnippet>359</a>    filters: <span class="kw-2">&amp;</span>TeacherCreditRegistrationFilters&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#360 id=360 data-nosnippet>360</a>) -&gt; ModelResult&lt;i64&gt; {
+<a href=#361 id=361 data-nosnippet>361</a>    <span class="kw">let </span>rows = teacher_facing_page(conn, <span class="prelude-val">Some</span>(course_id), filters, <span class="number">1</span>, <span class="number">0</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#362 id=362 data-nosnippet>362</a>    <span class="prelude-val">Ok</span>(rows.first().map_or(<span class="number">0</span>, |row| row.total_count))
+<a href=#363 id=363 data-nosnippet>363</a>}
+<a href=#364 id=364 data-nosnippet>364</a>
+<a href=#365 id=365 data-nosnippet>365</a><span class="doccomment">/// Lowercased and with metacharacters escaped, so a search for `%` matches a literal one.
+<a href=#366 id=366 data-nosnippet>366</a></span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>search_pattern_of(search: <span class="kw-2">&amp;</span>str) -&gt; String {
+<a href=#367 id=367 data-nosnippet>367</a>    escape_like_pattern(<span class="kw-2">&amp;</span>search.to_lowercase())
+<a href=#368 id=368 data-nosnippet>368</a>}
+<a href=#369 id=369 data-nosnippet>369</a>
+<a href=#370 id=370 data-nosnippet>370</a><span class="doccomment">/// One row for a teacher surface, by id. `None` when no such live row exists.
+<a href=#371 id=371 data-nosnippet>371</a></span><span class="kw">pub async fn </span>get_teacher_facing_by_id(
+<a href=#372 id=372 data-nosnippet>372</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#373 id=373 data-nosnippet>373</a>    id: Uuid,
+<a href=#374 id=374 data-nosnippet>374</a>) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;TeacherCreditRegistration&gt;&gt; {
+<a href=#375 id=375 data-nosnippet>375</a>    <span class="kw">let </span>rows = teacher_facing_page(
+<a href=#376 id=376 data-nosnippet>376</a>        conn,
+<a href=#377 id=377 data-nosnippet>377</a>        <span class="prelude-val">None</span>,
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="kw-2">&amp;</span>TeacherCreditRegistrationFilters {
+<a href=#379 id=379 data-nosnippet>379</a>            id: <span class="prelude-val">Some</span>(id),
+<a href=#380 id=380 data-nosnippet>380</a>            ..TeacherCreditRegistrationFilters::default()
+<a href=#381 id=381 data-nosnippet>381</a>        },
+<a href=#382 id=382 data-nosnippet>382</a>        <span class="number">1</span>,
+<a href=#383 id=383 data-nosnippet>383</a>        <span class="number">0</span>,
+<a href=#384 id=384 data-nosnippet>384</a>    )
+<a href=#385 id=385 data-nosnippet>385</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#386 id=386 data-nosnippet>386</a>    <span class="prelude-val">Ok</span>(rows.into_iter().next())
+<a href=#387 id=387 data-nosnippet>387</a>}
+<a href=#388 id=388 data-nosnippet>388</a>
+<a href=#389 id=389 data-nosnippet>389</a><span class="doccomment">/// Every attempt for the same completion as `row`, that one included, newest attempt first.
+<a href=#390 id=390 data-nosnippet>390</a></span><span class="kw">pub async fn </span>get_teacher_facing_attempts_for_completion(
+<a href=#391 id=391 data-nosnippet>391</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#392 id=392 data-nosnippet>392</a>    row: <span class="kw-2">&amp;</span>TeacherCreditRegistration,
+<a href=#393 id=393 data-nosnippet>393</a>) -&gt; ModelResult&lt;Vec&lt;TeacherCreditRegistration&gt;&gt; {
+<a href=#394 id=394 data-nosnippet>394</a>    get_teacher_facing_by_course_id(
+<a href=#395 id=395 data-nosnippet>395</a>        conn,
+<a href=#396 id=396 data-nosnippet>396</a>        row.course_id,
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw-2">&amp;</span>TeacherCreditRegistrationFilters {
+<a href=#398 id=398 data-nosnippet>398</a>            user_ids: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[row.user_id]),
+<a href=#399 id=399 data-nosnippet>399</a>            course_module_completion_id: <span class="prelude-val">Some</span>(row.course_module_completion_id),
+<a href=#400 id=400 data-nosnippet>400</a>            ..TeacherCreditRegistrationFilters::default()
+<a href=#401 id=401 data-nosnippet>401</a>        },
+<a href=#402 id=402 data-nosnippet>402</a>        i64::MAX,
+<a href=#403 id=403 data-nosnippet>403</a>        <span class="number">0</span>,
+<a href=#404 id=404 data-nosnippet>404</a>    )
+<a href=#405 id=405 data-nosnippet>405</a>    .<span class="kw">await
+<a href=#406 id=406 data-nosnippet>406</a></span>}
+</code></pre></div></section></main></body></html>

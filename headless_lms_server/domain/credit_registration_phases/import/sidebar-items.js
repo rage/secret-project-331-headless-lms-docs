@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["CLAIMED_STATES"],"enum":["Unsendable"],"fn":["apply_answer","held_grade","record_attainment","request_item","round_credits","run","settled_message"],"struct":["Import"]};

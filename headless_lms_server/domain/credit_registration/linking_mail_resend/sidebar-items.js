@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ResendOutcome"],"fn":["ensure_resend_possible"]};

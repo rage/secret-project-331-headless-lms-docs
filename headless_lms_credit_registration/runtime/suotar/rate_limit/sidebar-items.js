@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FLOOR_SHARE","LIMITED_ENDPOINTS","RAMP_DOUBLING_INTERVAL"],"fn":["available","burst_limit","drop_to_floor","endpoint_rate","overdraw","reset","snapshot","take","with_bucket"],"static":["BUCKETS","REPORTED"],"struct":["Bucket","EndpointRate","LimiterSnapshot"]};

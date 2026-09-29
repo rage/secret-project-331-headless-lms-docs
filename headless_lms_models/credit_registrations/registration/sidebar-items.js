@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["exists_for_user_and_course","get_by_course_id","get_by_id","get_by_ids_for_update","get_by_user_id","insert","is_waiting_for_enrolment"],"struct":["CreditRegistration","NewCreditRegistration"]};

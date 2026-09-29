@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EnrolmentReading","HeldCredit","ImportAnswer","PersonLookupError","PersonReading","VerificationReading"],"struct":["EnrolmentAnswer","FoundPerson","PersonAnswer","RegistryPerson","RosterListing","RosterSearch","VerificationAnswer"],"type":["CourseCodeVerdicts"]};

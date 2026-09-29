@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ResendOutcome"],"fn":["resend_for_target","resend_linking_mail"],"struct":["RateCapOverride","ResendAttempt"]};

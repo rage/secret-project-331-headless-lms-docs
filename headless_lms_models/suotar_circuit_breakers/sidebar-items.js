@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BreakerTarget"],"fn":["get_all","upsert"],"struct":["SuotarCircuitBreaker","SuotarCircuitBreakerReport"]};

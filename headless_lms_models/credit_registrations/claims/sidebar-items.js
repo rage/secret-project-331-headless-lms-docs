@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["LOOKUP_STATES","VERIFY_STATES"],"enum":["ClaimKind","VerifyFlow"],"fn":["claim","claim_due_for_import","claim_due_for_person_lookup","claim_due_for_resolve","claim_due_for_verify","claim_enrolment_checks","first_per"],"struct":["RegistrationScope"]};

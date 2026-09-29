@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ErrorSource"],"fn":["delete_expired","get_all_variants","insert","maybe_delete_expired"],"struct":["ErrorVariant","NewErrorReport"]};
+window.SIDEBAR_ITEMS = {"constant":["BEST_EFFORT_ACQUIRE_TIMEOUT"],"enum":["ErrorSource"],"fn":["delete_expired","get_all_variants","insert","insert_best_effort","maybe_delete_expired"],"struct":["ErrorVariant","NewErrorReport"]};

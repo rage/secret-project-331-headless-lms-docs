@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["apply_enrolment_answer"],"mod":["answer","request","resolution"],"struct":["LookupBasis","ResolveEnrolments"],"type":["Resolvable"]};

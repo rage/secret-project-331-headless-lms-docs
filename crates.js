@@ -1,2 +1,2 @@
-window.ALL_CRATES = ["doc_macro","exercise_services_api","headless_lms_authorization","headless_lms_base","headless_lms_certificates","headless_lms_chatbot","headless_lms_entrypoint","headless_lms_models","headless_lms_server","headless_lms_utils"];
-//{"start":21,"fragment_lengths":[11,24,29,20,28,23,26,22,22,21]}
+window.ALL_CRATES = ["doc_macro","exercise_services_api","headless_lms_authorization","headless_lms_base","headless_lms_certificates","headless_lms_chatbot","headless_lms_credit_registration","headless_lms_entrypoint","headless_lms_models","headless_lms_server","headless_lms_utils"];
+//{"start":21,"fragment_lengths":[11,24,29,20,28,23,35,26,22,22,21]}

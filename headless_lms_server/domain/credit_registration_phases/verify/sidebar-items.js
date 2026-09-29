@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["CLAIMED_STATES"],"fn":["add","apply_poll_answer","apply_recovery_answer","run"],"struct":["Poll","Recovery","UncertainRecovery","VerifyPoll"]};

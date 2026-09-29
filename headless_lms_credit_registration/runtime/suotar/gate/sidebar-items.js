@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Exchange","Verdict"],"fn":["record_study_registry_success","verdict"],"struct":["StudyRegistryGate","Tally","Unavailable"]};

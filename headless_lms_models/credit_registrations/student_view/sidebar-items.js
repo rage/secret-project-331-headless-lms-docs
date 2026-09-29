@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["dismiss_enrolment_banner","get_student_facing_by_user_id"],"struct":["StudentCreditRegistration","StudentRegistrationFilter"]};

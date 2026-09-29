@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["course_code_verdict","date_period","enrolment","enrolment_answer","error_message","found_person","import_answer","person_answer","person_lookup","registry_attainment","registry_error","roster","roster_person","verification_answer"]};

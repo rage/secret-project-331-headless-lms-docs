@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["template_language"],"struct":["MailQueueSummary","TemplateCache"]};

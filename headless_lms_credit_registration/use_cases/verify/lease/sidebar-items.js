@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["attempt_facts","claim_and_lease"],"struct":["VerifyAttempt"],"type":["Leased"]};

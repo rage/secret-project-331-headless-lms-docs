@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["placeholders","run","status_page_url"],"struct":["ProductUrlCache","StudentNotificationsPhase"]};

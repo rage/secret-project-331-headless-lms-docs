@@ -258,7 +258,7 @@
 <a href=#258 id=258 data-nosnippet>258</a>                    <span class="string">"GOOGLE_APPLICATION_CREDENTIALS_JSON"</span>,
 <a href=#259 id=259 data-nosnippet>259</a>                    <span class="string">r#"{
 <a href=#260 id=260 data-nosnippet>260</a>                        "type": "service_account",
-<a href=#261 id=261 data-nosnippet>261</a>                        "client_email": "json-creds@example.iam.gserviceaccount.com",
+<a href=#261 id=261 data-nosnippet>261</a>                        "client_email": "json-creds@test-project.iam.example.com",
 <a href=#262 id=262 data-nosnippet>262</a>                        "private_key_id": "test-private-key-id",
 <a href=#263 id=263 data-nosnippet>263</a>                        "private_key": "not-a-real-private-key",
 <a href=#264 id=264 data-nosnippet>264</a>                        "project_id": "test-project-id"
@@ -276,7 +276,7 @@
 <a href=#276 id=276 data-nosnippet>276</a>            .client_email()
 <a href=#277 id=277 data-nosnippet>277</a>            .<span class="kw">await
 <a href=#278 id=278 data-nosnippet>278</a>            </span>.expect(<span class="string">"service account signer should expose client email without IAM API"</span>);
-<a href=#279 id=279 data-nosnippet>279</a>        <span class="macro">assert_eq!</span>(client_email, <span class="string">"json-creds@example.iam.gserviceaccount.com"</span>);
+<a href=#279 id=279 data-nosnippet>279</a>        <span class="macro">assert_eq!</span>(client_email, <span class="string">"json-creds@test-project.iam.example.com"</span>);
 <a href=#280 id=280 data-nosnippet>280</a>    }
 <a href=#281 id=281 data-nosnippet>281</a>}
 </code></pre></div></section></main></body></html>

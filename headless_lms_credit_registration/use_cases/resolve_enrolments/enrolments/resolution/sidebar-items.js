@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["freeze","freeze_message","resolve","unsent_duplicate"],"struct":["CompetingCredits"]};

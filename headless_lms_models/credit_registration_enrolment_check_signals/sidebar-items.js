@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["record_account_link_for_course","record_check_request","record_visit"]};

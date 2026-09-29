@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MOCK_NAMESPACE"],"fn":["assessment_item_id","course_unit_id","derived","enrolment_id","final_attainment_id","person_id","pushed_attainment_id","realisation_id","study_right_id","submitted_attainment_id"]};

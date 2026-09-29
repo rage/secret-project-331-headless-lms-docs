@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PollAnswer"],"fn":["decide_poll","decide_recovery","not_registered_decision","partially_registered_decision"]};

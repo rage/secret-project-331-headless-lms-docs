@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `credit-registration/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="headless_lms_credit_registration" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">headless_lms_credit_registration/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The credit registration pipeline: the phases that take a course module completion to a credit
+<a href=#2 id=2 data-nosnippet>2</a>//! in Sisu through Suotar, the worker loops that run them, and the account-linking actions an
+<a href=#3 id=3 data-nosnippet>3</a>//! admin or teacher sets off by hand.
+<a href=#4 id=4 data-nosnippet>4</a>//!
+<a href=#5 id=5 data-nosnippet>5</a>//! Modules:
+<a href=#6 id=6 data-nosnippet>6</a>//! - `runtime`: composition. The worker loop, the one-iteration dispatcher and the manual actions
+<a href=#7 id=7 data-nosnippet>7</a>//!   build a study registry and hand it to a use case.
+<a href=#8 id=8 data-nosnippet>8</a>//! - `use_cases`: one module per phase, and `account_linking` for the linking mail resend. They
+<a href=#9 id=9 data-nosnippet>9</a>//!   claim rows, ask the study registry, decide and write, calling the models crate directly.
+<a href=#10 id=10 data-nosnippet>10</a>//! - `registry`: the study registry as use cases see it: the `StudyRegistry` port a phase asks, the
+<a href=#11 id=11 data-nosnippet>11</a>//!   `InteractiveStudyRegistry` a manual action asks, their requests and their answers.
+<a href=#12 id=12 data-nosnippet>12</a>//! - `workflow`: the claim, the decision and its guarded write, and the accounting every phase
+<a href=#13 id=13 data-nosnippet>13</a>//!   shares.
+<a href=#14 id=14 data-nosnippet>14</a>//! - `phase`: which phases exist, which process owns each, and what each may be narrowed to.
+<a href=#15 id=15 data-nosnippet>15</a>//!
+<a href=#16 id=16 data-nosnippet>16</a>//! Dependencies point from `runtime` to `use_cases` to `registry` and `workflow`, and from
+<a href=#17 id=17 data-nosnippet>17</a>//! `workflow` to `registry`. `runtime::suotar` implements both registry traits and is the only code
+<a href=#18 id=18 data-nosnippet>18</a>//! that names Suotar's wire types and codes or sends through its client; the rest of `runtime` only
+<a href=#19 id=19 data-nosnippet>19</a>//! builds and passes the client, and nothing outside `runtime` can reach it.
+<a href=#20 id=20 data-nosnippet>20</a>//!
+<a href=#21 id=21 data-nosnippet>21</a>//! Where to look:
+<a href=#22 id=22 data-nosnippet>22</a>//! - phase list, spec, scope support, owning process: `phase.rs`
+<a href=#23 id=23 data-nosnippet>23</a>//! - one iteration's lifecycle and the phase dispatch: `runtime/dispatch.rs`
+<a href=#24 id=24 data-nosnippet>24</a>//! - worker loops: `runtime/worker_loop.rs`
+<a href=#25 id=25 data-nosnippet>25</a>//! - study registry operations: `registry/`
+<a href=#26 id=26 data-nosnippet>26</a>//! - Suotar encoding, decoding, limiter and breakers: `runtime/suotar/`, what each Suotar item code
+<a href=#27 id=27 data-nosnippet>27</a>//!   means in `runtime/suotar/codes.rs`, and the adapter's contract tests in
+<a href=#28 id=28 data-nosnippet>28</a>//!   `runtime/suotar/contract_tests.rs`
+<a href=#29 id=29 data-nosnippet>29</a>//! - what each move does to a row (state, error code, admin flag, backoff, timeline line): models'
+<a href=#30 id=30 data-nosnippet>30</a>//!   `library::credit_registration::outcomes`
+<a href=#31 id=31 data-nosnippet>31</a>//! - batch phase lifecycle (claim, send, split, apply, shutdown): `use_cases/batch_flow.rs`
+<a href=#32 id=32 data-nosnippet>32</a>//! - a decision and writing it to its row: `workflow/decision.rs`
+<a href=#33 id=33 data-nosnippet>33</a>//! - import: `use_cases/import/`
+<a href=#34 id=34 data-nosnippet>34</a>//! - enrolment resolution: `use_cases/resolve_enrolments/`
+<a href=#35 id=35 data-nosnippet>35</a>//! - verification: `use_cases/verify/`
+<a href=#36 id=36 data-nosnippet>36</a>//! - roster listing and account-linking mails: `use_cases/enrolment_discovery/`
+<a href=#37 id=37 data-nosnippet>37</a>//! - mail queue phases: `use_cases/link_emails.rs`, `use_cases/student_notifications.rs`, sharing
+<a href=#38 id=38 data-nosnippet>38</a>//!   `use_cases/mail_queue.rs`
+<a href=#39 id=39 data-nosnippet>39</a>//! - manual account-linking actions: `runtime/manual.rs`, and the resend in
+<a href=#40 id=40 data-nosnippet>40</a>//!   `use_cases/account_linking.rs`
+<a href=#41 id=41 data-nosnippet>41</a>//! - the admin "materialize now" button: [`materialize_now`], the `materialize` phase's own body
+<a href=#42 id=42 data-nosnippet>42</a>//! - an iteration's error: `error.rs`; what reaches the admin Errors page: `error_reports.rs`
+<a href=#43 id=43 data-nosnippet>43</a>//!
+<a href=#44 id=44 data-nosnippet>44</a>//! Both the worker loops and the test tick endpoint go through [`run_phase_once`], so a phase cannot
+<a href=#45 id=45 data-nosnippet>45</a>//! behave differently depending on who ran it.
+<a href=#46 id=46 data-nosnippet>46</a>
+<a href=#47 id=47 data-nosnippet>47</a></span><span class="attr">#[macro_use]
+<a href=#48 id=48 data-nosnippet>48</a></span><span class="kw">extern crate </span>tracing;
+<a href=#49 id=49 data-nosnippet>49</a>
+<a href=#50 id=50 data-nosnippet>50</a><span class="kw">pub mod </span>error;
+<a href=#51 id=51 data-nosnippet>51</a><span class="kw">mod </span>error_reports;
+<a href=#52 id=52 data-nosnippet>52</a><span class="kw">mod </span>phase;
+<a href=#53 id=53 data-nosnippet>53</a><span class="kw">mod </span>registry;
+<a href=#54 id=54 data-nosnippet>54</a><span class="kw">mod </span>runtime;
+<a href=#55 id=55 data-nosnippet>55</a><span class="attr">#[cfg(test)]
+<a href=#56 id=56 data-nosnippet>56</a></span><span class="kw">mod </span>test_fixtures;
+<a href=#57 id=57 data-nosnippet>57</a><span class="kw">mod </span>use_cases;
+<a href=#58 id=58 data-nosnippet>58</a><span class="kw">mod </span>workflow;
+<a href=#59 id=59 data-nosnippet>59</a>
+<a href=#60 id=60 data-nosnippet>60</a><span class="kw">pub use </span>phase::{CreditRegistrationPhase, PhaseSpec, ScopeSupport, WorkerProcess};
+<a href=#61 id=61 data-nosnippet>61</a><span class="kw">pub use </span>runtime::{PhaseContext, PhaseSkipReason, PhaseTick, Runner, run_phase_once, worker_loop};
+<a href=#62 id=62 data-nosnippet>62</a><span class="kw">pub use </span>use_cases::materialize::{Materialized, materialize_now};
+<a href=#63 id=63 data-nosnippet>63</a>
+<a href=#64 id=64 data-nosnippet>64</a><span class="doccomment">/// The account-linking actions an admin or a teacher sets off by hand, what they answer, and the
+<a href=#65 id=65 data-nosnippet>65</a>/// roster listing a student's own visit books.
+<a href=#66 id=66 data-nosnippet>66</a></span><span class="kw">pub mod </span>account_linking {
+<a href=#67 id=67 data-nosnippet>67</a>    <span class="kw">pub use </span><span class="kw">crate</span>::registry::{PersonLookupError, RegistryPerson};
+<a href=#68 id=68 data-nosnippet>68</a>    <span class="kw">pub use </span><span class="kw">crate</span>::runtime::{ManualActionContext, look_up_person, resend_linking_mail_for_target};
+<a href=#69 id=69 data-nosnippet>69</a>    <span class="kw">pub use </span><span class="kw">crate</span>::use_cases::account_linking::{RateCapOverride, ResendAttempt, ResendOutcome};
+<a href=#70 id=70 data-nosnippet>70</a>    <span class="kw">pub use </span><span class="kw">crate</span>::use_cases::enrolment_discovery::book_listing_for_unlinked_student;
+<a href=#71 id=71 data-nosnippet>71</a>}
+<a href=#72 id=72 data-nosnippet>72</a>
+<a href=#73 id=73 data-nosnippet>73</a><span class="doccomment">/// What the dashboard and the test controls read of the study registry, or reset: its circuit
+<a href=#74 id=74 data-nosnippet>74</a>/// breakers and limiter, and the Suotar endpoints each phase calls.
+<a href=#75 id=75 data-nosnippet>75</a></span><span class="kw">pub mod </span>registry_health {
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="kw">pub use </span><span class="kw">crate</span>::runtime::{
+<a href=#77 id=77 data-nosnippet>77</a>        endpoints_paused_by, is_waiting_to_probe, max_study_registry_wait, reset_rate_limits,
+<a href=#78 id=78 data-nosnippet>78</a>    };
+<a href=#79 id=79 data-nosnippet>79</a>}
+</code></pre></div></section></main></body></html>

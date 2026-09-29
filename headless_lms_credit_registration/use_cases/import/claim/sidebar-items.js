@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Preflight","Unsendable"],"fn":["build_submission","claim_import_candidates","hold_back","preflight_submission","required_field"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["macros","util_error"]};
+window.SIDEBAR_ITEMS = {"fn":["is_db_disconnect"],"mod":["macros","util_error"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Unaskable"],"fn":["enrolment_lookup"],"struct":["Askable"]};

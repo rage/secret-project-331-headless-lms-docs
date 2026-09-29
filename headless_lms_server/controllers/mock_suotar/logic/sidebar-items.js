@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["attained","attainment_reference","attainment_summary","duplicate_outcome","enrolment_dto","enrolments_for","existing_attainments","import_item","list_by_course_item","product_access_token_item","record_submission","register","resolve_enrolments_item","resolve_person_item","ripen","ripen_person_course","serde_plain","verify_item"]};

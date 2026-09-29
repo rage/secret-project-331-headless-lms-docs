@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["claim","counts","decision","refusal"]};

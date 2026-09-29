@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BatchReply","RefusedFor"],"struct":["AnsweredRow","BatchEntry","BatchOptions","ExchangeAudit","RefusedRow"],"trait":["BatchRequest"]};

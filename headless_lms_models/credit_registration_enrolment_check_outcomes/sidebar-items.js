@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["RETENTION_DAYS","VERY_LATE_SECS"],"fn":["delete_older_than","get_findings_since","get_lateness_since","get_population","insert"],"struct":["EnrolmentCheckFindings","EnrolmentCheckLateness","EnrolmentCheckPopulation","NewEnrolmentCheckOutcome"]};

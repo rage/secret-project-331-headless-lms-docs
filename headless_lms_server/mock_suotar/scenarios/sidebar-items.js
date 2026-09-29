@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PASS_FAIL_SCALE","SCENARIOS"],"fn":["apply","arm","arm_after_import","course_code","ensure_course","merge","plain","put_enrolment","put_person","string_field","timeout","unanswered"],"struct":["ScenarioArgs"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["TRANSIENT_CODE"],"enum":["Effect","FaultMatch","Predicate","Stage","WhenSpec"],"fn":["matches_item","matches_request","owner_matches","resolvable_keys","validate"],"struct":["Fault","FaultProblem","FaultSpec","FlatWhen","ItemAddress","Lifetime","OwnerRef","ResolvedOwner"]};

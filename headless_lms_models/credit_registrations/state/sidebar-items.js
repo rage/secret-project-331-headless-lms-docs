@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ADMIN_ONLY_TARGETS"],"enum":["CreditRegistrationErrorCode","CreditRegistrationState","PendingSupersessionEffect","ResubmissionRefusal","ResubmissionStrictness"],"struct":["ResubmissionFacts"]};

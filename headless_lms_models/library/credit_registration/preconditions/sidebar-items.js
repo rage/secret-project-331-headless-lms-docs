@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["PRECONDITIONS_LIMIT"],"fn":["pending_moves","recompute_preconditions","resume_state","transition_for"],"struct":["PendingMove"]};
+window.SIDEBAR_ITEMS = {"constant":["PRECONDITIONS_LIMIT"],"enum":["Target"],"fn":["pending_moves","precondition_move","precondition_target","recompute_preconditions","resume_state"],"struct":["CheckStartFacts","PendingMove"]};

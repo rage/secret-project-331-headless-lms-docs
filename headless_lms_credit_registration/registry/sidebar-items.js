@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RegistryOperation"],"mod":["answers","batch","ids","requests"],"struct":["RegistryError"],"trait":["InteractiveStudyRegistry","StudyRegistry"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Preflight"],"fn":["apply_answer","choose","improves_on","preflight","run"],"struct":["ResolveEnrolments","ResolveRequest"]};

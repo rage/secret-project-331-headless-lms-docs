@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["ensure_exists","exists","get_module_overviews"],"struct":["CourseModuleSuotarConfiguration","SuotarModuleOverview"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_recorded_credits_for_same_module","lock_live_successes_for_same_module","prepare_unsent_duplicate"],"struct":["LiveSuccessForModule","RecordedCredit"]};

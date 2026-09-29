@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Applied","PayloadChange"],"fn":["write_before_transition","write_decision","write_decision_committing_if_written","write_outcome","write_payload_change","write_unasked_move"],"struct":["AtomicChanges","Decision","PreTransitionChanges"]};

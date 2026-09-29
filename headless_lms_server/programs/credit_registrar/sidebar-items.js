@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["PROCESS_NAME"],"fn":["main","run_credit_registration_worker"]};

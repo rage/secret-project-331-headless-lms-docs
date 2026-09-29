@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["may_resend","record_row_write","release_unsent","run_registry_batch_flow","send_batches"],"struct":["BatchFlowContext","PendingBatch","Prepared","SentTally"],"trait":["RegistryBatchFlow"]};

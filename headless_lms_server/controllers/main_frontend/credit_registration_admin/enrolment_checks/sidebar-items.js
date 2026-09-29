@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_WINDOW_SECS","MAX_WINDOW_SECS","MIN_WINDOW_SECS"],"fn":["_add_routes","get_credit_registration_enrolment_checks"],"struct":["EnrolmentCheckDashboard","EnrolmentCheckDashboardQuery","EnrolmentCheckRosterCode"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PersonFill"],"fn":["found_person_outcome","refused_person_decision","unanswered_person_decision"]};
