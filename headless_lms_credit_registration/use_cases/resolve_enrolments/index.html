@@ -6,7 +6,7 @@
 preflight transaction commits. Landing in a state <code>import</code> does not claim keeps a second tick of
 <code>import</code> from sending a request before the enrolment this one resolves is known.</p>
 <p>A row parked in <code>no_usable_enrolment</code> is checked where it stands instead, under
-<a href="../../../headless_lms_models/credit_registrations/claims/fn.claim_enrolment_checks.html" title="fn headless_lms_models::credit_registrations::claims::claim_enrolment_checks"><code>claim_enrolment_checks</code></a>, so a check that finds nothing leaves it there with only its schedule
+[<code>claim_enrolment_checks</code>], so a check that finds nothing leaves it there with only its schedule
 and last check time moved.</p>
 <p>Each iteration first looks up the Sisu person for links that lack one; see <a href="persons/index.html" title="mod headless_lms_credit_registration::use_cases::resolve_enrolments::persons"><code>persons</code></a>.</p>
 </div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="enrolments/index.html" title="mod headless_lms_credit_registration::use_cases::resolve_enrolments::enrolments">enrolments</a><span title="Restricted Visibility">&nbsp;🔒</span> </dt><dd>The second half of a <code>resolve-enrolments</code> iteration: the enrolment lookup, and freezing the
