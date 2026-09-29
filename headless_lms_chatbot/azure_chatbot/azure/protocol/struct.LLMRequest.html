@@ -32,7 +32,7 @@ learner moved on, or finds the call already aborted. <code>page_context</code> i
 the message it gives context for.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.build_from_conversation" class="method"><a class="src rightside" href="../../../../src/headless_lms_chatbot/azure_chatbot/request.rs.html#205-220">Source</a><h4 class="code-header">pub(super) async fn <a href="#method.build_from_conversation" class="fn">build_from_conversation</a>(
     conn: &amp;mut <a class="struct" href="../../../prelude/struct.PgConnection.html" title="struct headless_lms_chatbot::prelude::PgConnection">PgConnection</a>,
-    configuration: &amp;ChatbotConfiguration,
+    configuration: &amp;<a class="struct" href="../../../../headless_lms_models/chatbot_configurations/struct.ChatbotConfiguration.html" title="struct headless_lms_models::chatbot_configurations::ChatbotConfiguration">ChatbotConfiguration</a>,
     conversation_id: <a class="struct" href="../../../prelude/struct.Uuid.html" title="struct headless_lms_chatbot::prelude::Uuid">Uuid</a>,
     user_context: &amp;<a class="struct" href="../../../user_context/struct.ChatbotTurnContext.html" title="struct headless_lms_chatbot::user_context::ChatbotTurnContext">ChatbotTurnContext</a>,
     app_config: &amp;<a class="struct" href="../../../prelude/struct.ApplicationConfiguration.html" title="struct headless_lms_chatbot::prelude::ApplicationConfiguration">ApplicationConfiguration</a>,
@@ -43,7 +43,7 @@ resumed one adding nothing of its own beyond the tool output that woke it. The t
 request offers depend on <code>user_context</code>, so a caller who has lost a role is not offered a
 tool that needs it again.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.assemble" class="method"><a class="src rightside" href="../../../../src/headless_lms_chatbot/azure_chatbot/request.rs.html#225-293">Source</a><h4 class="code-header">fn <a href="#method.assemble" class="fn">assemble</a>(
-    configuration: &amp;ChatbotConfiguration,
+    configuration: &amp;<a class="struct" href="../../../../headless_lms_models/chatbot_configurations/struct.ChatbotConfiguration.html" title="struct headless_lms_models::chatbot_configurations::ChatbotConfiguration">ChatbotConfiguration</a>,
     conversation_id: <a class="struct" href="../../../prelude/struct.Uuid.html" title="struct headless_lms_chatbot::prelude::Uuid">Uuid</a>,
     inputs: <a class="struct" href="../../request/struct.TurnInputs.html" title="struct headless_lms_chatbot::azure_chatbot::request::TurnInputs">TurnInputs</a>,
     app_config: &amp;<a class="struct" href="../../../prelude/struct.ApplicationConfiguration.html" title="struct headless_lms_chatbot::prelude::ApplicationConfiguration">ApplicationConfiguration</a>,
