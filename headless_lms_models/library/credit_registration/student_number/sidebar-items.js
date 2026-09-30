@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CHECK_DIGIT_WEIGHTS"],"enum":["InvalidStudentNumber"],"fn":["parse_student_number"]};

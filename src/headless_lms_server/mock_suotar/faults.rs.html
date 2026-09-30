@@ -571,7 +571,7 @@
 <a href=#571 id=571 data-nosnippet>571</a>        <span class="kw">let </span>unresolvable = <span class="macro">vec!</span>[
 <a href=#572 id=572 data-nosnippet>572</a>            Predicate::Endpoint(Endpoint::ListByCourse),
 <a href=#573 id=573 data-nosnippet>573</a>            Predicate::Stage(Stage::Resolve),
-<a href=#574 id=574 data-nosnippet>574</a>            Predicate::StudentNumber(<span class="string">"900000101"</span>.to_string()),
+<a href=#574 id=574 data-nosnippet>574</a>            Predicate::StudentNumber(<span class="string">"090001019"</span>.to_string()),
 <a href=#575 id=575 data-nosnippet>575</a>        ];
 <a href=#576 id=576 data-nosnippet>576</a>        <span class="kw">let </span>problem = validate(<span class="kw-2">&amp;</span>unresolvable, <span class="kw-2">&amp;</span>transient(<span class="bool-val">false</span>), <span class="bool-val">false</span>)
 <a href=#577 id=577 data-nosnippet>577</a>            .expect_err(<span class="string">"list-by-course carries no student number"</span>);
