@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExercisePointsStatus"],"fn":["get_user_course_module_points_breakdown"],"struct":["ChapterPointsBreakdown","ExercisePointsBreakdown","PagePointsBreakdown"]};
