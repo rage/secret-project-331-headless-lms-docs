@@ -16,8 +16,8 @@
 <a href=#16 id=16 data-nosnippet>16</a><span class="doccomment">/// A claimed row, leased where it stands, with the verify attempt the lease counted for it.
 <a href=#17 id=17 data-nosnippet>17</a></span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Leased = Claimed&lt;VerifyAttempt&gt;;
 <a href=#18 id=18 data-nosnippet>18</a>
-<a href=#19 id=19 data-nosnippet>19</a><span class="doccomment">/// The verify attempt a lease counted for its row, which sets the backoff the answer is scheduled
-<a href=#20 id=20 data-nosnippet>20</a>/// by. Only [`claim_and_lease`] makes one, so it is always the count the lease wrote.
+<a href=#19 id=19 data-nosnippet>19</a><span class="doccomment">/// The verify attempt a lease counted for its row, which sets the backoff an uncertain row's answer
+<a href=#20 id=20 data-nosnippet>20</a>/// is scheduled by. Only [`claim_and_lease`] makes one, so it is always the count the lease wrote.
 <a href=#21 id=21 data-nosnippet>21</a></span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>VerifyAttempt(i32);
 <a href=#22 id=22 data-nosnippet>22</a>
 <a href=#23 id=23 data-nosnippet>23</a><span class="doccomment">/// The row's facts under the attempt the lease counted, not the count the row was claimed with, so
@@ -30,7 +30,7 @@
 <a href=#30 id=30 data-nosnippet>30</a>}
 <a href=#31 id=31 data-nosnippet>31</a>
 <a href=#32 id=32 data-nosnippet>32</a><span class="doccomment">/// Claims up to `limit` of `flow`'s due rows, counts an attempt on each and leases it until its
-<a href=#33 id=33 data-nosnippet>33</a>/// poll's backoff, or the iteration's registry calls, run out, so a concurrent iteration cannot
+<a href=#33 id=33 data-nosnippet>33</a>/// next poll would be due, or the iteration's registry calls run out, so a concurrent iteration cannot
 <a href=#34 id=34 data-nosnippet>34</a>/// poll the same row. Each answer overwrites its own row's schedule.
 <a href=#35 id=35 data-nosnippet>35</a></span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>claim_and_lease(
 <a href=#36 id=36 data-nosnippet>36</a>    ctx: <span class="kw-2">&amp;</span>BatchFlowContext&lt;<span class="lifetime">'_</span>&gt;,
@@ -51,33 +51,34 @@
 <a href=#51 id=51 data-nosnippet>51</a>    )
 <a href=#52 id=52 data-nosnippet>52</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#53 id=53 data-nosnippet>53</a>    <span class="kw">let </span>now = Utc::now();
-<a href=#54 id=54 data-nosnippet>54</a>    <span class="kw">let </span>scheduled: Vec&lt;<span class="kw">_</span>&gt; = attempts
+<a href=#54 id=54 data-nosnippet>54</a>    <span class="kw">let </span>scheduled: Vec&lt;<span class="kw">_</span>&gt; = claimed
 <a href=#55 id=55 data-nosnippet>55</a>        .iter()
-<a href=#56 id=56 data-nosnippet>56</a>        .map(|(id, attempt)| {
-<a href=#57 id=57 data-nosnippet>57</a>            (
-<a href=#58 id=58 data-nosnippet>58</a>                <span class="kw-2">*</span>id,
-<a href=#59 id=59 data-nosnippet>59</a>                verify_poll_lease_until(now, <span class="kw-2">*</span>attempt, ctx.study_registry_wait),
-<a href=#60 id=60 data-nosnippet>60</a>            )
-<a href=#61 id=61 data-nosnippet>61</a>        })
-<a href=#62 id=62 data-nosnippet>62</a>        .collect();
-<a href=#63 id=63 data-nosnippet>63</a>    schedule_next_attempts(conn, <span class="kw-2">&amp;</span>scheduled).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#64 id=64 data-nosnippet>64</a>    <span class="prelude-val">Ok</span>(claimed
-<a href=#65 id=65 data-nosnippet>65</a>        .into_iter()
-<a href=#66 id=66 data-nosnippet>66</a>        .filter_map(|row| {
-<a href=#67 id=67 data-nosnippet>67</a>            <span class="comment">// Not expected while the claim holds the row's lock; if it happens anyway, the row is
-<a href=#68 id=68 data-nosnippet>68</a>            // left unpolled rather than polled under an attempt the lease never wrote.
-<a href=#69 id=69 data-nosnippet>69</a>            </span><span class="kw">let </span><span class="prelude-val">Some</span>(attempt) = attempts.get(<span class="kw-2">&amp;</span>row.id).copied() <span class="kw">else </span>{
-<a href=#70 id=70 data-nosnippet>70</a>                <span class="macro">warn!</span>(
-<a href=#71 id=71 data-nosnippet>71</a>                    credit_registration_id = %row.id,
-<a href=#72 id=72 data-nosnippet>72</a>                    <span class="string">"Verify attempt was not counted for a claimed credit registration; leaving it unpolled"
-<a href=#73 id=73 data-nosnippet>73</a>                </span>);
-<a href=#74 id=74 data-nosnippet>74</a>                <span class="kw">return </span><span class="prelude-val">None</span>;
-<a href=#75 id=75 data-nosnippet>75</a>            };
-<a href=#76 id=76 data-nosnippet>76</a>            <span class="prelude-val">Some</span>(Claimed {
-<a href=#77 id=77 data-nosnippet>77</a>                claim: ClaimedRegistration::left_in_place(row),
-<a href=#78 id=78 data-nosnippet>78</a>                extra: VerifyAttempt(attempt),
-<a href=#79 id=79 data-nosnippet>79</a>            })
-<a href=#80 id=80 data-nosnippet>80</a>        })
-<a href=#81 id=81 data-nosnippet>81</a>        .collect())
-<a href=#82 id=82 data-nosnippet>82</a>}
+<a href=#56 id=56 data-nosnippet>56</a>        .filter(|row| attempts.contains_key(<span class="kw-2">&amp;</span>row.id))
+<a href=#57 id=57 data-nosnippet>57</a>        .map(|row| {
+<a href=#58 id=58 data-nosnippet>58</a>            (
+<a href=#59 id=59 data-nosnippet>59</a>                row.id,
+<a href=#60 id=60 data-nosnippet>60</a>                verify_poll_lease_until(now, row.submitted_at, ctx.study_registry_wait),
+<a href=#61 id=61 data-nosnippet>61</a>            )
+<a href=#62 id=62 data-nosnippet>62</a>        })
+<a href=#63 id=63 data-nosnippet>63</a>        .collect();
+<a href=#64 id=64 data-nosnippet>64</a>    schedule_next_attempts(conn, <span class="kw-2">&amp;</span>scheduled).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#65 id=65 data-nosnippet>65</a>    <span class="prelude-val">Ok</span>(claimed
+<a href=#66 id=66 data-nosnippet>66</a>        .into_iter()
+<a href=#67 id=67 data-nosnippet>67</a>        .filter_map(|row| {
+<a href=#68 id=68 data-nosnippet>68</a>            <span class="comment">// Not expected while the claim holds the row's lock; if it happens anyway, the row is
+<a href=#69 id=69 data-nosnippet>69</a>            // left unpolled rather than polled under an attempt the lease never wrote.
+<a href=#70 id=70 data-nosnippet>70</a>            </span><span class="kw">let </span><span class="prelude-val">Some</span>(attempt) = attempts.get(<span class="kw-2">&amp;</span>row.id).copied() <span class="kw">else </span>{
+<a href=#71 id=71 data-nosnippet>71</a>                <span class="macro">warn!</span>(
+<a href=#72 id=72 data-nosnippet>72</a>                    credit_registration_id = %row.id,
+<a href=#73 id=73 data-nosnippet>73</a>                    <span class="string">"Verify attempt was not counted for a claimed credit registration; leaving it unpolled"
+<a href=#74 id=74 data-nosnippet>74</a>                </span>);
+<a href=#75 id=75 data-nosnippet>75</a>                <span class="kw">return </span><span class="prelude-val">None</span>;
+<a href=#76 id=76 data-nosnippet>76</a>            };
+<a href=#77 id=77 data-nosnippet>77</a>            <span class="prelude-val">Some</span>(Claimed {
+<a href=#78 id=78 data-nosnippet>78</a>                claim: ClaimedRegistration::left_in_place(row),
+<a href=#79 id=79 data-nosnippet>79</a>                extra: VerifyAttempt(attempt),
+<a href=#80 id=80 data-nosnippet>80</a>            })
+<a href=#81 id=81 data-nosnippet>81</a>        })
+<a href=#82 id=82 data-nosnippet>82</a>        .collect())
+<a href=#83 id=83 data-nosnippet>83</a>}
 </code></pre></div></section></main></body></html>

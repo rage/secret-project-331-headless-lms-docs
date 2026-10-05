@@ -13,8 +13,8 @@
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use </span><span class="kw">super</span>::enrolment_check_schedule::{
 <a href=#14 id=14 data-nosnippet>14</a>    BATCH_INTERVAL, BATCH_PULL_FORWARD, CHECK_REQUEST_MIN_INTERVAL, CHECK_REQUEST_RESTART_WINDOW,
 <a href=#15 id=15 data-nosnippet>15</a>    EnrolmentCheckGroup, EnrolmentCheckSource, MAX_CHECK_REQUEST_RESTARTS_PER_DAY,
-<a href=#16 id=16 data-nosnippet>16</a>    ScheduledEnrolmentCheck, TRANSIENT_FAILURE_RETRY, VISIT_RESTART_MIN_INTERVAL, first_check,
-<a href=#17 id=17 data-nosnippet>17</a>    never, next_check_after,
+<a href=#16 id=16 data-nosnippet>16</a>    STUDENT_CHECK_REQUEST_MIN_ROW_AGE, ScheduledEnrolmentCheck, TRANSIENT_FAILURE_RETRY,
+<a href=#17 id=17 data-nosnippet>17</a>    VISIT_RESTART_MIN_INTERVAL, first_check, never, next_check_after,
 <a href=#18 id=18 data-nosnippet>18</a>};
 <a href=#19 id=19 data-nosnippet>19</a><span class="kw">use </span><span class="kw">super</span>::study_registry::RegistryEnrolment;
 <a href=#20 id=20 data-nosnippet>20</a>
@@ -266,436 +266,445 @@
 <a href=#266 id=266 data-nosnippet>266</a>    ) || is_within(enrolment_checked_at, now, CHECK_REQUEST_MIN_INTERVAL)
 <a href=#267 id=267 data-nosnippet>267</a>}
 <a href=#268 id=268 data-nosnippet>268</a>
-<a href=#269 id=269 data-nosnippet>269</a><span class="doccomment">/// A visit to the registration page while it showed the enrolment instructions. Moves a
-<a href=#270 id=270 data-nosnippet>270</a>/// `completed` row onto the visited ladder; restarts a `visited` row at most once a day, and a
-<a href=#271 id=271 data-nosnippet>271</a>/// stopped row of any group. Returns whether the schedule restarted.
-<a href=#272 id=272 data-nosnippet>272</a></span><span class="kw">pub async fn </span>record_visit(
-<a href=#273 id=273 data-nosnippet>273</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#274 id=274 data-nosnippet>274</a>    id: Uuid,
-<a href=#275 id=275 data-nosnippet>275</a>    now: DateTime&lt;Utc&gt;,
-<a href=#276 id=276 data-nosnippet>276</a>) -&gt; ModelResult&lt;bool&gt; {
-<a href=#277 id=277 data-nosnippet>277</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#278 id=278 data-nosnippet>278</a>    <span class="kw">let </span>facts = lock_schedule(<span class="kw-2">&amp;mut </span>tx, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#279 id=279 data-nosnippet>279</a>    <span class="kw">if </span>!facts.is_waiting() {
-<a href=#280 id=280 data-nosnippet>280</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
-<a href=#281 id=281 data-nosnippet>281</a>    }
-<a href=#282 id=282 data-nosnippet>282</a>    <span class="kw">let </span>restart_is_due = !is_within(
-<a href=#283 id=283 data-nosnippet>283</a>        facts.enrolment_check_anchor_at,
-<a href=#284 id=284 data-nosnippet>284</a>        now,
-<a href=#285 id=285 data-nosnippet>285</a>        VISIT_RESTART_MIN_INTERVAL,
-<a href=#286 id=286 data-nosnippet>286</a>    );
-<a href=#287 id=287 data-nosnippet>287</a>    <span class="kw">let </span>restarts = facts.enrolment_check_group &lt; EnrolmentCheckGroup::Visited
-<a href=#288 id=288 data-nosnippet>288</a>        || (restart_is_due
-<a href=#289 id=289 data-nosnippet>289</a>            &amp;&amp; (facts.enrolment_checks_stopped_at.is_some()
-<a href=#290 id=290 data-nosnippet>290</a>                || facts.enrolment_check_group == EnrolmentCheckGroup::Visited));
-<a href=#291 id=291 data-nosnippet>291</a>    <span class="kw">if </span>!restarts {
-<a href=#292 id=292 data-nosnippet>292</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
-<a href=#293 id=293 data-nosnippet>293</a>    }
-<a href=#294 id=294 data-nosnippet>294</a>    <span class="kw">let </span>group = facts
-<a href=#295 id=295 data-nosnippet>295</a>        .enrolment_check_group
-<a href=#296 id=296 data-nosnippet>296</a>        .max(EnrolmentCheckGroup::Visited);
-<a href=#297 id=297 data-nosnippet>297</a>    <span class="kw">let </span>scheduled = first_check(group, now);
-<a href=#298 id=298 data-nosnippet>298</a>    write_schedule(
-<a href=#299 id=299 data-nosnippet>299</a>        <span class="kw-2">&amp;mut </span>tx,
-<a href=#300 id=300 data-nosnippet>300</a>        id,
-<a href=#301 id=301 data-nosnippet>301</a>        group,
-<a href=#302 id=302 data-nosnippet>302</a>        now,
-<a href=#303 id=303 data-nosnippet>303</a>        scheduled,
-<a href=#304 id=304 data-nosnippet>304</a>        EnrolmentCheckSource::Schedule,
-<a href=#305 id=305 data-nosnippet>305</a>        scheduled.map_or_else(never, |scheduled| scheduled.release_at()),
-<a href=#306 id=306 data-nosnippet>306</a>        <span class="bool-val">false</span>,
-<a href=#307 id=307 data-nosnippet>307</a>    )
-<a href=#308 id=308 data-nosnippet>308</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#309 id=309 data-nosnippet>309</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#310 id=310 data-nosnippet>310</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-<a href=#311 id=311 data-nosnippet>311</a>}
-<a href=#312 id=312 data-nosnippet>312</a>
-<a href=#313 id=313 data-nosnippet>313</a><span class="doccomment">/// Schedules the next check of a row an answer just parked in `no_usable_enrolment`: the first
-<a href=#314 id=314 data-nosnippet>314</a>/// rung after now, or stopped once the ladder has run out. A row with no schedule yet, such as one
-<a href=#315 id=315 data-nosnippet>315</a>/// import sent back, starts one now.
-<a href=#316 id=316 data-nosnippet>316</a>///
-<a href=#317 id=317 data-nosnippet>317</a>/// Reads the schedule under lock rather than from the snapshot the answer was decided on, so a
-<a href=#318 id=318 data-nosnippet>318</a>/// request that restarted the row while the check was out is kept.
-<a href=#319 id=319 data-nosnippet>319</a></span><span class="kw">pub async fn </span>schedule_next_check(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;()&gt; {
-<a href=#320 id=320 data-nosnippet>320</a>    <span class="kw">let </span>facts = lock_schedule(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#321 id=321 data-nosnippet>321</a>    <span class="kw">if </span>facts.state != CreditRegistrationState::NoUsableEnrolment {
-<a href=#322 id=322 data-nosnippet>322</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#323 id=323 data-nosnippet>323</a>    }
-<a href=#324 id=324 data-nosnippet>324</a>    <span class="kw">let </span>now = Utc::now();
-<a href=#325 id=325 data-nosnippet>325</a>    <span class="kw">let </span>anchor_at = facts.enrolment_check_anchor_at.unwrap_or(now);
-<a href=#326 id=326 data-nosnippet>326</a>    <span class="kw">let </span>scheduled = next_check_after(facts.enrolment_check_group, anchor_at, now);
-<a href=#327 id=327 data-nosnippet>327</a>    write_schedule(
-<a href=#328 id=328 data-nosnippet>328</a>        conn,
-<a href=#329 id=329 data-nosnippet>329</a>        id,
-<a href=#330 id=330 data-nosnippet>330</a>        facts.enrolment_check_group,
-<a href=#331 id=331 data-nosnippet>331</a>        anchor_at,
-<a href=#332 id=332 data-nosnippet>332</a>        scheduled,
-<a href=#333 id=333 data-nosnippet>333</a>        EnrolmentCheckSource::Schedule,
-<a href=#334 id=334 data-nosnippet>334</a>        scheduled.map_or_else(never, |scheduled| scheduled.release_at()),
-<a href=#335 id=335 data-nosnippet>335</a>        <span class="bool-val">true</span>,
-<a href=#336 id=336 data-nosnippet>336</a>    )
-<a href=#337 id=337 data-nosnippet>337</a>    .<span class="kw">await
-<a href=#338 id=338 data-nosnippet>338</a></span>}
-<a href=#339 id=339 data-nosnippet>339</a>
-<a href=#340 id=340 data-nosnippet>340</a><span class="doccomment">/// The schedule a row starts when it first waits for an enrolment, decided by the preconditions
-<a href=#341 id=341 data-nosnippet>341</a>/// recompute.
-<a href=#342 id=342 data-nosnippet>342</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#343 id=343 data-nosnippet>343</a></span><span class="kw">pub struct </span>EnrolmentCheckStart {
-<a href=#344 id=344 data-nosnippet>344</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
-<a href=#345 id=345 data-nosnippet>345</a>    <span class="kw">pub </span>group: EnrolmentCheckGroup,
-<a href=#346 id=346 data-nosnippet>346</a>    <span class="kw">pub </span>anchor_at: DateTime&lt;Utc&gt;,
-<a href=#347 id=347 data-nosnippet>347</a>    <span class="kw">pub </span>scheduled: ScheduledEnrolmentCheck,
-<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">pub </span>source: EnrolmentCheckSource,
-<a href=#349 id=349 data-nosnippet>349</a>}
-<a href=#350 id=350 data-nosnippet>350</a>
-<a href=#351 id=351 data-nosnippet>351</a><span class="doccomment">/// Writes the schedules rows start with, and ends the checks of the earlier attempts each new row
-<a href=#352 id=352 data-nosnippet>352</a>/// replaces for its student and module.
-<a href=#353 id=353 data-nosnippet>353</a>///
-<a href=#354 id=354 data-nosnippet>354</a>/// Only rows still in `expected_state`: one a phase moved since the decision keeps whatever that
-<a href=#355 id=355 data-nosnippet>355</a>/// phase wrote.
-<a href=#356 id=356 data-nosnippet>356</a></span><span class="kw">pub async fn </span>record_starts(
-<a href=#357 id=357 data-nosnippet>357</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#358 id=358 data-nosnippet>358</a>    starts: <span class="kw-2">&amp;</span>[EnrolmentCheckStart],
-<a href=#359 id=359 data-nosnippet>359</a>) -&gt; ModelResult&lt;()&gt; {
-<a href=#360 id=360 data-nosnippet>360</a>    <span class="kw">if </span>starts.is_empty() {
-<a href=#361 id=361 data-nosnippet>361</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#362 id=362 data-nosnippet>362</a>    }
-<a href=#363 id=363 data-nosnippet>363</a>    <span class="kw">let </span>ids: Vec&lt;Uuid&gt; = starts
-<a href=#364 id=364 data-nosnippet>364</a>        .iter()
-<a href=#365 id=365 data-nosnippet>365</a>        .map(|start| start.credit_registration_id)
-<a href=#366 id=366 data-nosnippet>366</a>        .collect();
-<a href=#367 id=367 data-nosnippet>367</a>    <span class="kw">let </span>groups: Vec&lt;EnrolmentCheckGroup&gt; = starts.iter().map(|start| start.group).collect();
-<a href=#368 id=368 data-nosnippet>368</a>    <span class="kw">let </span>anchors: Vec&lt;DateTime&lt;Utc&gt;&gt; = starts.iter().map(|start| start.anchor_at).collect();
-<a href=#369 id=369 data-nosnippet>369</a>    <span class="kw">let </span>steps: Vec&lt;i32&gt; = starts.iter().map(|start| start.scheduled.step).collect();
-<a href=#370 id=370 data-nosnippet>370</a>    <span class="kw">let </span>due_ats: Vec&lt;DateTime&lt;Utc&gt;&gt; = starts.iter().map(|start| start.scheduled.due_at).collect();
-<a href=#371 id=371 data-nosnippet>371</a>    <span class="kw">let </span>batched: Vec&lt;bool&gt; = starts
-<a href=#372 id=372 data-nosnippet>372</a>        .iter()
-<a href=#373 id=373 data-nosnippet>373</a>        .map(|start| start.scheduled.is_batched)
-<a href=#374 id=374 data-nosnippet>374</a>        .collect();
-<a href=#375 id=375 data-nosnippet>375</a>    <span class="kw">let </span>sources: Vec&lt;EnrolmentCheckSource&gt; = starts.iter().map(|start| start.source).collect();
-<a href=#376 id=376 data-nosnippet>376</a>    <span class="macro">sqlx::query!</span>(
-<a href=#377 id=377 data-nosnippet>377</a>        <span class="string">r#"
-<a href=#378 id=378 data-nosnippet>378</a>UPDATE credit_registrations cr
-<a href=#379 id=379 data-nosnippet>379</a>SET enrolment_check_group = GREATEST(cr.enrolment_check_group, started.enrolment_check_group),
-<a href=#380 id=380 data-nosnippet>380</a>  enrolment_check_anchor_at = started.anchor_at,
-<a href=#381 id=381 data-nosnippet>381</a>  enrolment_check_step = started.step,
-<a href=#382 id=382 data-nosnippet>382</a>  enrolment_check_due_at = started.due_at,
-<a href=#383 id=383 data-nosnippet>383</a>  is_enrolment_check_batched = started.is_batched,
-<a href=#384 id=384 data-nosnippet>384</a>  enrolment_checks_stopped_at = NULL,
-<a href=#385 id=385 data-nosnippet>385</a>  enrolment_check_source = started.source
-<a href=#386 id=386 data-nosnippet>386</a>FROM UNNEST(
-<a href=#387 id=387 data-nosnippet>387</a>    $1::uuid [],
-<a href=#388 id=388 data-nosnippet>388</a>    $2::enrolment_check_group [],
-<a href=#389 id=389 data-nosnippet>389</a>    $3::timestamptz [],
-<a href=#390 id=390 data-nosnippet>390</a>    $4::int [],
-<a href=#391 id=391 data-nosnippet>391</a>    $5::timestamptz [],
-<a href=#392 id=392 data-nosnippet>392</a>    $6::boolean [],
-<a href=#393 id=393 data-nosnippet>393</a>    $7::enrolment_check_source []
-<a href=#394 id=394 data-nosnippet>394</a>  ) AS started(
-<a href=#395 id=395 data-nosnippet>395</a>    id,
-<a href=#396 id=396 data-nosnippet>396</a>    enrolment_check_group,
-<a href=#397 id=397 data-nosnippet>397</a>    anchor_at,
-<a href=#398 id=398 data-nosnippet>398</a>    step,
-<a href=#399 id=399 data-nosnippet>399</a>    due_at,
-<a href=#400 id=400 data-nosnippet>400</a>    is_batched,
-<a href=#401 id=401 data-nosnippet>401</a>    source
-<a href=#402 id=402 data-nosnippet>402</a>  )
-<a href=#403 id=403 data-nosnippet>403</a>WHERE cr.id = started.id
-<a href=#404 id=404 data-nosnippet>404</a>  AND cr.state IN ('no_usable_enrolment', 'ready_to_submit')
-<a href=#405 id=405 data-nosnippet>405</a>  AND cr.deleted_at IS NULL
-<a href=#406 id=406 data-nosnippet>406</a>        "#</span>,
-<a href=#407 id=407 data-nosnippet>407</a>        <span class="kw-2">&amp;</span>ids,
-<a href=#408 id=408 data-nosnippet>408</a>        <span class="kw-2">&amp;</span>groups <span class="kw">as </span><span class="kw-2">&amp;</span>[EnrolmentCheckGroup],
-<a href=#409 id=409 data-nosnippet>409</a>        <span class="kw-2">&amp;</span>anchors,
-<a href=#410 id=410 data-nosnippet>410</a>        <span class="kw-2">&amp;</span>steps,
-<a href=#411 id=411 data-nosnippet>411</a>        <span class="kw-2">&amp;</span>due_ats,
-<a href=#412 id=412 data-nosnippet>412</a>        <span class="kw-2">&amp;</span>batched,
-<a href=#413 id=413 data-nosnippet>413</a>        <span class="kw-2">&amp;</span>sources <span class="kw">as </span><span class="kw-2">&amp;</span>[EnrolmentCheckSource],
-<a href=#414 id=414 data-nosnippet>414</a>    )
-<a href=#415 id=415 data-nosnippet>415</a>    .execute(<span class="kw-2">&amp;mut *</span>conn)
-<a href=#416 id=416 data-nosnippet>416</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#417 id=417 data-nosnippet>417</a>    <span class="macro">sqlx::query!</span>(
-<a href=#418 id=418 data-nosnippet>418</a>        <span class="string">r#"
-<a href=#419 id=419 data-nosnippet>419</a>UPDATE credit_registrations replaced
-<a href=#420 id=420 data-nosnippet>420</a>SET enrolment_check_anchor_at = COALESCE(replaced.enrolment_check_anchor_at, now()),
-<a href=#421 id=421 data-nosnippet>421</a>  enrolment_check_step = NULL,
-<a href=#422 id=422 data-nosnippet>422</a>  enrolment_check_due_at = NULL,
-<a href=#423 id=423 data-nosnippet>423</a>  is_enrolment_check_batched = FALSE,
-<a href=#424 id=424 data-nosnippet>424</a>  enrolment_checks_stopped_at = COALESCE(replaced.enrolment_checks_stopped_at, now()),
-<a href=#425 id=425 data-nosnippet>425</a>  next_attempt_at = $2
-<a href=#426 id=426 data-nosnippet>426</a>FROM credit_registrations started
-<a href=#427 id=427 data-nosnippet>427</a>WHERE started.id = ANY($1::uuid [])
-<a href=#428 id=428 data-nosnippet>428</a>  AND replaced.user_id = started.user_id
-<a href=#429 id=429 data-nosnippet>429</a>  AND replaced.course_module_id = started.course_module_id
-<a href=#430 id=430 data-nosnippet>430</a>  AND replaced.id &lt;&gt; started.id
-<a href=#431 id=431 data-nosnippet>431</a>  AND replaced.created_at &lt; started.created_at
-<a href=#432 id=432 data-nosnippet>432</a>  AND replaced.state = 'no_usable_enrolment'
-<a href=#433 id=433 data-nosnippet>433</a>  AND replaced.superseded_by_id IS NULL
-<a href=#434 id=434 data-nosnippet>434</a>  AND replaced.deleted_at IS NULL
-<a href=#435 id=435 data-nosnippet>435</a>        "#</span>,
-<a href=#436 id=436 data-nosnippet>436</a>        <span class="kw-2">&amp;</span>ids,
-<a href=#437 id=437 data-nosnippet>437</a>        never(),
-<a href=#438 id=438 data-nosnippet>438</a>    )
-<a href=#439 id=439 data-nosnippet>439</a>    .execute(conn)
-<a href=#440 id=440 data-nosnippet>440</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#441 id=441 data-nosnippet>441</a>    <span class="prelude-val">Ok</span>(())
-<a href=#442 id=442 data-nosnippet>442</a>}
-<a href=#443 id=443 data-nosnippet>443</a>
-<a href=#444 id=444 data-nosnippet>444</a><span class="doccomment">/// One student the roster lists on a module, with every enrolment id it lists them under.
-<a href=#445 id=445 data-nosnippet>445</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#446 id=446 data-nosnippet>446</a></span><span class="kw">pub struct </span>RosterEnrolee {
-<a href=#447 id=447 data-nosnippet>447</a>    <span class="kw">pub </span>user_id: Uuid,
-<a href=#448 id=448 data-nosnippet>448</a>    <span class="kw">pub </span>enrolment_ids: Vec&lt;String&gt;,
-<a href=#449 id=449 data-nosnippet>449</a>}
-<a href=#450 id=450 data-nosnippet>450</a>
-<a href=#451 id=451 data-nosnippet>451</a><span class="doccomment">/// Wakes this module's rows waiting for an enrolment when the roster lists their student under an
-<a href=#452 id=452 data-nosnippet>452</a>/// enrolment id the row has not seen, stopped rows included, and returns how many it touched.
-<a href=#453 id=453 data-nosnippet>453</a>///
-<a href=#454 id=454 data-nosnippet>454</a>/// A row never checked has seen nothing, so any listing wakes it. The listed ids count as seen from
-<a href=#455 id=455 data-nosnippet>455</a>/// here on, so one listing wakes a row once. A row a later attempt has replaced is left alone. Only
-<a href=#456 id=456 data-nosnippet>456</a>/// the clock moves: the enrolment is still resolved by a check rather than read off the roster.
-<a href=#457 id=457 data-nosnippet>457</a></span><span class="kw">pub async fn </span>wake_for_roster_listing(
-<a href=#458 id=458 data-nosnippet>458</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#459 id=459 data-nosnippet>459</a>    course_module_id: Uuid,
-<a href=#460 id=460 data-nosnippet>460</a>    enrolees: <span class="kw-2">&amp;</span>[RosterEnrolee],
-<a href=#461 id=461 data-nosnippet>461</a>) -&gt; ModelResult&lt;u64&gt; {
-<a href=#462 id=462 data-nosnippet>462</a>    <span class="kw">let </span><span class="kw-2">mut </span>user_ids = Vec::new();
-<a href=#463 id=463 data-nosnippet>463</a>    <span class="kw">let </span><span class="kw-2">mut </span>enrolment_ids: Vec&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; = Vec::new();
-<a href=#464 id=464 data-nosnippet>464</a>    <span class="kw">for </span>enrolee <span class="kw">in </span>enrolees {
-<a href=#465 id=465 data-nosnippet>465</a>        <span class="kw">if </span>enrolee.enrolment_ids.is_empty() {
-<a href=#466 id=466 data-nosnippet>466</a>            user_ids.push(enrolee.user_id);
-<a href=#467 id=467 data-nosnippet>467</a>            enrolment_ids.push(<span class="prelude-val">None</span>);
-<a href=#468 id=468 data-nosnippet>468</a>        }
-<a href=#469 id=469 data-nosnippet>469</a>        <span class="kw">for </span>enrolment_id <span class="kw">in </span><span class="kw-2">&amp;</span>enrolee.enrolment_ids {
-<a href=#470 id=470 data-nosnippet>470</a>            user_ids.push(enrolee.user_id);
-<a href=#471 id=471 data-nosnippet>471</a>            enrolment_ids.push(<span class="prelude-val">Some</span>(enrolment_id.clone()));
-<a href=#472 id=472 data-nosnippet>472</a>        }
-<a href=#473 id=473 data-nosnippet>473</a>    }
-<a href=#474 id=474 data-nosnippet>474</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
-<a href=#475 id=475 data-nosnippet>475</a>        <span class="string">r#"
-<a href=#476 id=476 data-nosnippet>476</a>WITH listed AS (
-<a href=#477 id=477 data-nosnippet>477</a>  SELECT user_id,
-<a href=#478 id=478 data-nosnippet>478</a>    ARRAY_REMOVE(ARRAY_AGG(enrolment_id), NULL) AS enrolment_ids
-<a href=#479 id=479 data-nosnippet>479</a>  FROM UNNEST($2::uuid [], $3::text []) AS listing(user_id, enrolment_id)
-<a href=#480 id=480 data-nosnippet>480</a>  GROUP BY user_id
-<a href=#481 id=481 data-nosnippet>481</a>)
-<a href=#482 id=482 data-nosnippet>482</a>UPDATE credit_registrations cr
-<a href=#483 id=483 data-nosnippet>483</a>SET enrolment_check_source = CASE
-<a href=#484 id=484 data-nosnippet>484</a>    WHEN cr.next_attempt_at &gt; now() THEN 'roster_listing'
-<a href=#485 id=485 data-nosnippet>485</a>    ELSE cr.enrolment_check_source
-<a href=#486 id=486 data-nosnippet>486</a>  END,
-<a href=#487 id=487 data-nosnippet>487</a>  next_attempt_at = LEAST(cr.next_attempt_at, now()),
-<a href=#488 id=488 data-nosnippet>488</a>  seen_enrolment_ids = ARRAY(
-<a href=#489 id=489 data-nosnippet>489</a>    SELECT DISTINCT UNNEST(COALESCE(cr.seen_enrolment_ids, '{}') || listed.enrolment_ids)
-<a href=#490 id=490 data-nosnippet>490</a>  )
-<a href=#491 id=491 data-nosnippet>491</a>FROM listed
-<a href=#492 id=492 data-nosnippet>492</a>WHERE cr.course_module_id = $1
-<a href=#493 id=493 data-nosnippet>493</a>  AND cr.user_id = listed.user_id
-<a href=#494 id=494 data-nosnippet>494</a>  AND cr.state = 'no_usable_enrolment'
-<a href=#495 id=495 data-nosnippet>495</a>  AND cr.superseded_by_id IS NULL
-<a href=#496 id=496 data-nosnippet>496</a>  AND cr.deleted_at IS NULL
-<a href=#497 id=497 data-nosnippet>497</a>  AND (
-<a href=#498 id=498 data-nosnippet>498</a>    cr.seen_enrolment_ids IS NULL
-<a href=#499 id=499 data-nosnippet>499</a>    OR NOT listed.enrolment_ids &lt;@ cr.seen_enrolment_ids
-<a href=#500 id=500 data-nosnippet>500</a>  )
-<a href=#501 id=501 data-nosnippet>501</a>  AND NOT EXISTS (
-<a href=#502 id=502 data-nosnippet>502</a>    SELECT 1
-<a href=#503 id=503 data-nosnippet>503</a>    FROM credit_registrations later
-<a href=#504 id=504 data-nosnippet>504</a>    WHERE later.user_id = cr.user_id
-<a href=#505 id=505 data-nosnippet>505</a>      AND later.course_module_id = cr.course_module_id
-<a href=#506 id=506 data-nosnippet>506</a>      AND later.created_at &gt; cr.created_at
-<a href=#507 id=507 data-nosnippet>507</a>      AND later.deleted_at IS NULL
-<a href=#508 id=508 data-nosnippet>508</a>  )
-<a href=#509 id=509 data-nosnippet>509</a>        "#</span>,
-<a href=#510 id=510 data-nosnippet>510</a>        course_module_id,
-<a href=#511 id=511 data-nosnippet>511</a>        <span class="kw-2">&amp;</span>user_ids,
-<a href=#512 id=512 data-nosnippet>512</a>        <span class="kw-2">&amp;</span>enrolment_ids <span class="kw">as </span><span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;String&gt;],
-<a href=#513 id=513 data-nosnippet>513</a>    )
-<a href=#514 id=514 data-nosnippet>514</a>    .execute(conn)
-<a href=#515 id=515 data-nosnippet>515</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#516 id=516 data-nosnippet>516</a>    <span class="prelude-val">Ok</span>(res.rows_affected())
-<a href=#517 id=517 data-nosnippet>517</a>}
-<a href=#518 id=518 data-nosnippet>518</a>
-<a href=#519 id=519 data-nosnippet>519</a><span class="doccomment">/// Adds the enrolment ids a check saw to the row's seen set, which also marks it checked for
-<a href=#520 id=520 data-nosnippet>520</a>/// [`wake_for_roster_listing`].
-<a href=#521 id=521 data-nosnippet>521</a></span><span class="kw">async fn </span>add_seen_enrolment_ids(
-<a href=#522 id=522 data-nosnippet>522</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#523 id=523 data-nosnippet>523</a>    id: Uuid,
-<a href=#524 id=524 data-nosnippet>524</a>    enrolment_ids: <span class="kw-2">&amp;</span>[String],
-<a href=#525 id=525 data-nosnippet>525</a>) -&gt; ModelResult&lt;()&gt; {
-<a href=#526 id=526 data-nosnippet>526</a>    <span class="macro">sqlx::query!</span>(
-<a href=#527 id=527 data-nosnippet>527</a>        <span class="string">r#"
-<a href=#528 id=528 data-nosnippet>528</a>UPDATE credit_registrations
-<a href=#529 id=529 data-nosnippet>529</a>SET seen_enrolment_ids = ARRAY(
-<a href=#530 id=530 data-nosnippet>530</a>    SELECT DISTINCT UNNEST(COALESCE(seen_enrolment_ids, '{}') || $2::text [])
-<a href=#531 id=531 data-nosnippet>531</a>  )
-<a href=#532 id=532 data-nosnippet>532</a>WHERE id = $1
-<a href=#533 id=533 data-nosnippet>533</a>        "#</span>,
-<a href=#534 id=534 data-nosnippet>534</a>        id,
-<a href=#535 id=535 data-nosnippet>535</a>        enrolment_ids,
-<a href=#536 id=536 data-nosnippet>536</a>    )
-<a href=#537 id=537 data-nosnippet>537</a>    .execute(conn)
-<a href=#538 id=538 data-nosnippet>538</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#539 id=539 data-nosnippet>539</a>    <span class="prelude-val">Ok</span>(())
-<a href=#540 id=540 data-nosnippet>540</a>}
-<a href=#541 id=541 data-nosnippet>541</a>
-<a href=#542 id=542 data-nosnippet>542</a><span class="doccomment">/// An answered check of a row waiting for an enrolment, logged with the write its answer makes.
-<a href=#543 id=543 data-nosnippet>543</a></span><span class="attr">#[derive(Clone, Copy)]
-<a href=#544 id=544 data-nosnippet>544</a></span><span class="kw">pub struct </span>EnrolmentCheckAnswer&lt;<span class="lifetime">'a</span>&gt; {
-<a href=#545 id=545 data-nosnippet>545</a>    <span class="doccomment">/// The row as it was claimed for the check.
-<a href=#546 id=546 data-nosnippet>546</a>    </span><span class="kw">pub </span>checked: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>CreditRegistration,
-<a href=#547 id=547 data-nosnippet>547</a>    <span class="doccomment">/// The enrolment the answer had to register against, however the row then settled.
-<a href=#548 id=548 data-nosnippet>548</a>    </span><span class="kw">pub </span>usable_enrolment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>RegistryEnrolment&gt;,
-<a href=#549 id=549 data-nosnippet>549</a>    <span class="kw">pub </span>listed_enrolments: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[RegistryEnrolment],
-<a href=#550 id=550 data-nosnippet>550</a>}
-<a href=#551 id=551 data-nosnippet>551</a>
-<a href=#552 id=552 data-nosnippet>552</a><span class="doccomment">/// Logs what a check found and remembers the enrolments it saw for the roster wake-ups, given the
-<a href=#553 id=553 data-nosnippet>553</a>/// row as the answer's write left it. A lookup that failed in transit was no check and leaves no
-<a href=#554 id=554 data-nosnippet>554</a>/// trace.
-<a href=#555 id=555 data-nosnippet>555</a></span><span class="kw">pub async fn </span>record_enrolment_check(
-<a href=#556 id=556 data-nosnippet>556</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#557 id=557 data-nosnippet>557</a>    check: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>EnrolmentCheckAnswer&lt;<span class="lifetime">'_</span>&gt;&gt;,
-<a href=#558 id=558 data-nosnippet>558</a>    after: <span class="kw-2">&amp;</span>CreditRegistration,
-<a href=#559 id=559 data-nosnippet>559</a>) -&gt; ModelResult&lt;()&gt; {
-<a href=#560 id=560 data-nosnippet>560</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(check) = check <span class="kw">else </span>{
-<a href=#561 id=561 data-nosnippet>561</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#562 id=562 data-nosnippet>562</a>    };
-<a href=#563 id=563 data-nosnippet>563</a>    <span class="kw">let </span>row = check.checked;
-<a href=#564 id=564 data-nosnippet>564</a>    <span class="kw">let </span>was_answered = after.state != CreditRegistrationState::NoUsableEnrolment
-<a href=#565 id=565 data-nosnippet>565</a>        || after.enrolment_checked_at != row.enrolment_checked_at;
-<a href=#566 id=566 data-nosnippet>566</a>    <span class="kw">if </span>!was_answered {
-<a href=#567 id=567 data-nosnippet>567</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#568 id=568 data-nosnippet>568</a>    }
-<a href=#569 id=569 data-nosnippet>569</a>    credit_registration_enrolment_check_outcomes::insert(
-<a href=#570 id=570 data-nosnippet>570</a>        conn,
-<a href=#571 id=571 data-nosnippet>571</a>        <span class="kw-2">&amp;</span>NewEnrolmentCheckOutcome {
-<a href=#572 id=572 data-nosnippet>572</a>            credit_registration_id: row.id,
-<a href=#573 id=573 data-nosnippet>573</a>            course_module_id: row.course_module_id,
-<a href=#574 id=574 data-nosnippet>574</a>            enrolment_check_group: row.enrolment_check_group,
-<a href=#575 id=575 data-nosnippet>575</a>            enrolment_check_step: row.enrolment_check_step,
-<a href=#576 id=576 data-nosnippet>576</a>            source: row.enrolment_check_source,
-<a href=#577 id=577 data-nosnippet>577</a>            due_at: row.enrolment_check_due_at,
-<a href=#578 id=578 data-nosnippet>578</a>            checked_at: after.enrolment_checked_at.unwrap_or_else(Utc::now),
-<a href=#579 id=579 data-nosnippet>579</a>            previous_checked_at: row.enrolment_checked_at,
-<a href=#580 id=580 data-nosnippet>580</a>            is_enrolment_found: check.usable_enrolment.is_some(),
-<a href=#581 id=581 data-nosnippet>581</a>            enrolled_at: check
-<a href=#582 id=582 data-nosnippet>582</a>                .usable_enrolment
-<a href=#583 id=583 data-nosnippet>583</a>                .and_then(|enrolment| enrolment.enrolment_date_time),
-<a href=#584 id=584 data-nosnippet>584</a>        },
-<a href=#585 id=585 data-nosnippet>585</a>    )
-<a href=#586 id=586 data-nosnippet>586</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#587 id=587 data-nosnippet>587</a>    <span class="kw">let </span>seen: Vec&lt;String&gt; = check
-<a href=#588 id=588 data-nosnippet>588</a>        .listed_enrolments
-<a href=#589 id=589 data-nosnippet>589</a>        .iter()
-<a href=#590 id=590 data-nosnippet>590</a>        .map(|enrolment| enrolment.id.clone())
-<a href=#591 id=591 data-nosnippet>591</a>        .collect();
-<a href=#592 id=592 data-nosnippet>592</a>    add_seen_enrolment_ids(conn, row.id, <span class="kw-2">&amp;</span>seen).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#593 id=593 data-nosnippet>593</a>    <span class="prelude-val">Ok</span>(())
-<a href=#594 id=594 data-nosnippet>594</a>}
-<a href=#595 id=595 data-nosnippet>595</a>
-<a href=#596 id=596 data-nosnippet>596</a><span class="doccomment">/// Moves the schedules of a module's rows past a pause of `paused_for`, so the pause spends none
-<a href=#597 id=597 data-nosnippet>597</a>/// of their ladder. A batched row stays on a batch boundary. Stopped rows are left as they are.
-<a href=#598 id=598 data-nosnippet>598</a></span><span class="kw">pub async fn </span>shift_past_pause(
-<a href=#599 id=599 data-nosnippet>599</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#600 id=600 data-nosnippet>600</a>    course_module_id: Uuid,
-<a href=#601 id=601 data-nosnippet>601</a>    paused_for: TimeDelta,
-<a href=#602 id=602 data-nosnippet>602</a>) -&gt; ModelResult&lt;u64&gt; {
-<a href=#603 id=603 data-nosnippet>603</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
-<a href=#604 id=604 data-nosnippet>604</a>        <span class="string">r#"
-<a href=#605 id=605 data-nosnippet>605</a>UPDATE credit_registrations
-<a href=#606 id=606 data-nosnippet>606</a>SET enrolment_check_anchor_at = enrolment_check_anchor_at + $2::interval,
-<a href=#607 id=607 data-nosnippet>607</a>  enrolment_check_due_at = enrolment_check_due_at + $2::interval,
-<a href=#608 id=608 data-nosnippet>608</a>  next_attempt_at = CASE
-<a href=#609 id=609 data-nosnippet>609</a>    WHEN state &lt;&gt; 'no_usable_enrolment'
-<a href=#610 id=610 data-nosnippet>610</a>    OR enrolment_check_source &lt;&gt; 'schedule' THEN next_attempt_at
-<a href=#611 id=611 data-nosnippet>611</a>    WHEN is_enrolment_check_batched THEN to_timestamp(
-<a href=#612 id=612 data-nosnippet>612</a>      CEIL(
-<a href=#613 id=613 data-nosnippet>613</a>        EXTRACT(
-<a href=#614 id=614 data-nosnippet>614</a>          EPOCH
-<a href=#615 id=615 data-nosnippet>615</a>          FROM next_attempt_at + $2::interval
-<a href=#616 id=616 data-nosnippet>616</a>        ) / $3::bigint
-<a href=#617 id=617 data-nosnippet>617</a>      ) * $3::bigint
-<a href=#618 id=618 data-nosnippet>618</a>    )
-<a href=#619 id=619 data-nosnippet>619</a>    ELSE next_attempt_at + $2::interval
-<a href=#620 id=620 data-nosnippet>620</a>  END
-<a href=#621 id=621 data-nosnippet>621</a>WHERE course_module_id = $1
-<a href=#622 id=622 data-nosnippet>622</a>  AND enrolment_check_anchor_at IS NOT NULL
-<a href=#623 id=623 data-nosnippet>623</a>  AND enrolment_checks_stopped_at IS NULL
-<a href=#624 id=624 data-nosnippet>624</a>  AND superseded_by_id IS NULL
-<a href=#625 id=625 data-nosnippet>625</a>  AND deleted_at IS NULL
-<a href=#626 id=626 data-nosnippet>626</a>        "#</span>,
-<a href=#627 id=627 data-nosnippet>627</a>        course_module_id,
-<a href=#628 id=628 data-nosnippet>628</a>        paused_for.max(TimeDelta::zero()) <span class="kw">as </span>TimeDelta,
-<a href=#629 id=629 data-nosnippet>629</a>        BATCH_INTERVAL.num_seconds(),
-<a href=#630 id=630 data-nosnippet>630</a>    )
-<a href=#631 id=631 data-nosnippet>631</a>    .execute(conn)
-<a href=#632 id=632 data-nosnippet>632</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#633 id=633 data-nosnippet>633</a>    <span class="prelude-val">Ok</span>(res.rows_affected())
-<a href=#634 id=634 data-nosnippet>634</a>}
-<a href=#635 id=635 data-nosnippet>635</a>
-<a href=#636 id=636 data-nosnippet>636</a><span class="doccomment">/// Brings the slow checks due within [`BATCH_PULL_FORWARD`] forward to now when another slow
-<a href=#637 id=637 data-nosnippet>637</a>/// check in `scope` is released and not yet claimed: they cost nothing extra in the request that
-<a href=#638 id=638 data-nosnippet>638</a>/// goes out for it. A row tried within [`TRANSIENT_FAILURE_RETRY`] keeps waiting out its failed
-<a href=#639 id=639 data-nosnippet>639</a>/// lookup.
-<a href=#640 id=640 data-nosnippet>640</a>///
-<a href=#641 id=641 data-nosnippet>641</a>/// Its test for a released check shares its filters with the claim behind
-<a href=#642 id=642 data-nosnippet>642</a>/// [`claim_due_for_resolve`](crate::credit_registrations::claim_due_for_resolve) and with
-<a href=#643 id=643 data-nosnippet>643</a>/// [`count_due_enrolment_checks`](crate::credit_registrations::count_due_enrolment_checks); change
-<a href=#644 id=644 data-nosnippet>644</a>/// all three together.
-<a href=#645 id=645 data-nosnippet>645</a></span><span class="kw">pub async fn </span>pull_forward_batched_checks(
-<a href=#646 id=646 data-nosnippet>646</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#647 id=647 data-nosnippet>647</a>    scope: <span class="kw-2">&amp;</span>RegistrationScope,
-<a href=#648 id=648 data-nosnippet>648</a>) -&gt; ModelResult&lt;()&gt; {
-<a href=#649 id=649 data-nosnippet>649</a>    <span class="macro">sqlx::query!</span>(
-<a href=#650 id=650 data-nosnippet>650</a>        <span class="string">r#"
-<a href=#651 id=651 data-nosnippet>651</a>WITH scoped AS (
-<a href=#652 id=652 data-nosnippet>652</a>  SELECT cr.id,
-<a href=#653 id=653 data-nosnippet>653</a>    cr.next_attempt_at,
-<a href=#654 id=654 data-nosnippet>654</a>    cr.enrolment_check_due_at,
-<a href=#655 id=655 data-nosnippet>655</a>    cr.last_attempt_at,
-<a href=#656 id=656 data-nosnippet>656</a>    cr.enrolment_check_claimed_until
-<a href=#657 id=657 data-nosnippet>657</a>  FROM credit_registrations cr
-<a href=#658 id=658 data-nosnippet>658</a>    JOIN credit_registration_active_course_modules acm ON acm.course_module_id = cr.course_module_id
-<a href=#659 id=659 data-nosnippet>659</a>  WHERE cr.state = 'no_usable_enrolment'
-<a href=#660 id=660 data-nosnippet>660</a>    AND cr.is_enrolment_check_batched
-<a href=#661 id=661 data-nosnippet>661</a>    AND cr.superseded_by_id IS NULL
-<a href=#662 id=662 data-nosnippet>662</a>    AND cr.deleted_at IS NULL
-<a href=#663 id=663 data-nosnippet>663</a>    AND ($1::uuid IS NULL OR cr.course_id = $1)
-<a href=#664 id=664 data-nosnippet>664</a>    AND ($2::uuid IS NULL OR cr.user_id = $2)
-<a href=#665 id=665 data-nosnippet>665</a>    AND (
-<a href=#666 id=666 data-nosnippet>666</a>      cardinality($3::uuid []) = 0
-<a href=#667 id=667 data-nosnippet>667</a>      OR cr.id = ANY($3::uuid [])
-<a href=#668 id=668 data-nosnippet>668</a>    )
-<a href=#669 id=669 data-nosnippet>669</a>)
-<a href=#670 id=670 data-nosnippet>670</a>UPDATE credit_registrations cr
-<a href=#671 id=671 data-nosnippet>671</a>SET next_attempt_at = now()
-<a href=#672 id=672 data-nosnippet>672</a>FROM scoped
-<a href=#673 id=673 data-nosnippet>673</a>WHERE cr.id = scoped.id
-<a href=#674 id=674 data-nosnippet>674</a>  AND scoped.next_attempt_at &gt; now()
-<a href=#675 id=675 data-nosnippet>675</a>  AND scoped.enrolment_check_due_at &gt; now()
-<a href=#676 id=676 data-nosnippet>676</a>  AND scoped.enrolment_check_due_at &lt;= now() + $4::interval
-<a href=#677 id=677 data-nosnippet>677</a>  AND (
-<a href=#678 id=678 data-nosnippet>678</a>    scoped.last_attempt_at IS NULL
-<a href=#679 id=679 data-nosnippet>679</a>    OR scoped.last_attempt_at &lt;= now() - $5::interval
-<a href=#680 id=680 data-nosnippet>680</a>  )
-<a href=#681 id=681 data-nosnippet>681</a>  AND EXISTS (
-<a href=#682 id=682 data-nosnippet>682</a>    SELECT 1
-<a href=#683 id=683 data-nosnippet>683</a>    FROM scoped released
-<a href=#684 id=684 data-nosnippet>684</a>    WHERE released.next_attempt_at &lt;= now()
-<a href=#685 id=685 data-nosnippet>685</a>      AND (
-<a href=#686 id=686 data-nosnippet>686</a>        released.enrolment_check_claimed_until IS NULL
-<a href=#687 id=687 data-nosnippet>687</a>        OR released.enrolment_check_claimed_until &lt;= now()
-<a href=#688 id=688 data-nosnippet>688</a>      )
+<a href=#269 id=269 data-nosnippet>269</a><span class="doccomment">/// Whether a row is too new for its student to ask for a check, which hides their buttons and turns
+<a href=#270 id=270 data-nosnippet>270</a>/// a request away as too soon. A teacher's request has no such wait.
+<a href=#271 id=271 data-nosnippet>271</a></span><span class="kw">pub fn </span>is_too_new_for_student_check_request(
+<a href=#272 id=272 data-nosnippet>272</a>    row_created_at: DateTime&lt;Utc&gt;,
+<a href=#273 id=273 data-nosnippet>273</a>    now: DateTime&lt;Utc&gt;,
+<a href=#274 id=274 data-nosnippet>274</a>) -&gt; bool {
+<a href=#275 id=275 data-nosnippet>275</a>    now - row_created_at &lt; STUDENT_CHECK_REQUEST_MIN_ROW_AGE
+<a href=#276 id=276 data-nosnippet>276</a>}
+<a href=#277 id=277 data-nosnippet>277</a>
+<a href=#278 id=278 data-nosnippet>278</a><span class="doccomment">/// A visit to the registration page while it showed the enrolment instructions. Moves a
+<a href=#279 id=279 data-nosnippet>279</a>/// `completed` row onto the visited ladder; restarts a `visited` row at most once a day, and a
+<a href=#280 id=280 data-nosnippet>280</a>/// stopped row of any group. Returns whether the schedule restarted.
+<a href=#281 id=281 data-nosnippet>281</a></span><span class="kw">pub async fn </span>record_visit(
+<a href=#282 id=282 data-nosnippet>282</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#283 id=283 data-nosnippet>283</a>    id: Uuid,
+<a href=#284 id=284 data-nosnippet>284</a>    now: DateTime&lt;Utc&gt;,
+<a href=#285 id=285 data-nosnippet>285</a>) -&gt; ModelResult&lt;bool&gt; {
+<a href=#286 id=286 data-nosnippet>286</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#287 id=287 data-nosnippet>287</a>    <span class="kw">let </span>facts = lock_schedule(<span class="kw-2">&amp;mut </span>tx, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#288 id=288 data-nosnippet>288</a>    <span class="kw">if </span>!facts.is_waiting() {
+<a href=#289 id=289 data-nosnippet>289</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+<a href=#290 id=290 data-nosnippet>290</a>    }
+<a href=#291 id=291 data-nosnippet>291</a>    <span class="kw">let </span>restart_is_due = !is_within(
+<a href=#292 id=292 data-nosnippet>292</a>        facts.enrolment_check_anchor_at,
+<a href=#293 id=293 data-nosnippet>293</a>        now,
+<a href=#294 id=294 data-nosnippet>294</a>        VISIT_RESTART_MIN_INTERVAL,
+<a href=#295 id=295 data-nosnippet>295</a>    );
+<a href=#296 id=296 data-nosnippet>296</a>    <span class="kw">let </span>restarts = facts.enrolment_check_group &lt; EnrolmentCheckGroup::Visited
+<a href=#297 id=297 data-nosnippet>297</a>        || (restart_is_due
+<a href=#298 id=298 data-nosnippet>298</a>            &amp;&amp; (facts.enrolment_checks_stopped_at.is_some()
+<a href=#299 id=299 data-nosnippet>299</a>                || facts.enrolment_check_group == EnrolmentCheckGroup::Visited));
+<a href=#300 id=300 data-nosnippet>300</a>    <span class="kw">if </span>!restarts {
+<a href=#301 id=301 data-nosnippet>301</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+<a href=#302 id=302 data-nosnippet>302</a>    }
+<a href=#303 id=303 data-nosnippet>303</a>    <span class="kw">let </span>group = facts
+<a href=#304 id=304 data-nosnippet>304</a>        .enrolment_check_group
+<a href=#305 id=305 data-nosnippet>305</a>        .max(EnrolmentCheckGroup::Visited);
+<a href=#306 id=306 data-nosnippet>306</a>    <span class="kw">let </span>scheduled = first_check(group, now);
+<a href=#307 id=307 data-nosnippet>307</a>    write_schedule(
+<a href=#308 id=308 data-nosnippet>308</a>        <span class="kw-2">&amp;mut </span>tx,
+<a href=#309 id=309 data-nosnippet>309</a>        id,
+<a href=#310 id=310 data-nosnippet>310</a>        group,
+<a href=#311 id=311 data-nosnippet>311</a>        now,
+<a href=#312 id=312 data-nosnippet>312</a>        scheduled,
+<a href=#313 id=313 data-nosnippet>313</a>        EnrolmentCheckSource::Schedule,
+<a href=#314 id=314 data-nosnippet>314</a>        scheduled.map_or_else(never, |scheduled| scheduled.release_at()),
+<a href=#315 id=315 data-nosnippet>315</a>        <span class="bool-val">false</span>,
+<a href=#316 id=316 data-nosnippet>316</a>    )
+<a href=#317 id=317 data-nosnippet>317</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#318 id=318 data-nosnippet>318</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#319 id=319 data-nosnippet>319</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+<a href=#320 id=320 data-nosnippet>320</a>}
+<a href=#321 id=321 data-nosnippet>321</a>
+<a href=#322 id=322 data-nosnippet>322</a><span class="doccomment">/// Schedules the next check of a row an answer just parked in `no_usable_enrolment`: the first
+<a href=#323 id=323 data-nosnippet>323</a>/// rung after now, or stopped once the ladder has run out. A row with no schedule yet, such as one
+<a href=#324 id=324 data-nosnippet>324</a>/// import sent back, starts one now.
+<a href=#325 id=325 data-nosnippet>325</a>///
+<a href=#326 id=326 data-nosnippet>326</a>/// Reads the schedule under lock rather than from the snapshot the answer was decided on, so a
+<a href=#327 id=327 data-nosnippet>327</a>/// request that restarted the row while the check was out is kept.
+<a href=#328 id=328 data-nosnippet>328</a></span><span class="kw">pub async fn </span>schedule_next_check(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;()&gt; {
+<a href=#329 id=329 data-nosnippet>329</a>    <span class="kw">let </span>facts = lock_schedule(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#330 id=330 data-nosnippet>330</a>    <span class="kw">if </span>facts.state != CreditRegistrationState::NoUsableEnrolment {
+<a href=#331 id=331 data-nosnippet>331</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#332 id=332 data-nosnippet>332</a>    }
+<a href=#333 id=333 data-nosnippet>333</a>    <span class="kw">let </span>now = Utc::now();
+<a href=#334 id=334 data-nosnippet>334</a>    <span class="kw">let </span>anchor_at = facts.enrolment_check_anchor_at.unwrap_or(now);
+<a href=#335 id=335 data-nosnippet>335</a>    <span class="kw">let </span>scheduled = next_check_after(facts.enrolment_check_group, anchor_at, now);
+<a href=#336 id=336 data-nosnippet>336</a>    write_schedule(
+<a href=#337 id=337 data-nosnippet>337</a>        conn,
+<a href=#338 id=338 data-nosnippet>338</a>        id,
+<a href=#339 id=339 data-nosnippet>339</a>        facts.enrolment_check_group,
+<a href=#340 id=340 data-nosnippet>340</a>        anchor_at,
+<a href=#341 id=341 data-nosnippet>341</a>        scheduled,
+<a href=#342 id=342 data-nosnippet>342</a>        EnrolmentCheckSource::Schedule,
+<a href=#343 id=343 data-nosnippet>343</a>        scheduled.map_or_else(never, |scheduled| scheduled.release_at()),
+<a href=#344 id=344 data-nosnippet>344</a>        <span class="bool-val">true</span>,
+<a href=#345 id=345 data-nosnippet>345</a>    )
+<a href=#346 id=346 data-nosnippet>346</a>    .<span class="kw">await
+<a href=#347 id=347 data-nosnippet>347</a></span>}
+<a href=#348 id=348 data-nosnippet>348</a>
+<a href=#349 id=349 data-nosnippet>349</a><span class="doccomment">/// The schedule a row starts when it first waits for an enrolment, decided by the preconditions
+<a href=#350 id=350 data-nosnippet>350</a>/// recompute.
+<a href=#351 id=351 data-nosnippet>351</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#352 id=352 data-nosnippet>352</a></span><span class="kw">pub struct </span>EnrolmentCheckStart {
+<a href=#353 id=353 data-nosnippet>353</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
+<a href=#354 id=354 data-nosnippet>354</a>    <span class="kw">pub </span>group: EnrolmentCheckGroup,
+<a href=#355 id=355 data-nosnippet>355</a>    <span class="kw">pub </span>anchor_at: DateTime&lt;Utc&gt;,
+<a href=#356 id=356 data-nosnippet>356</a>    <span class="kw">pub </span>scheduled: ScheduledEnrolmentCheck,
+<a href=#357 id=357 data-nosnippet>357</a>    <span class="kw">pub </span>source: EnrolmentCheckSource,
+<a href=#358 id=358 data-nosnippet>358</a>}
+<a href=#359 id=359 data-nosnippet>359</a>
+<a href=#360 id=360 data-nosnippet>360</a><span class="doccomment">/// Writes the schedules rows start with, and ends the checks of the earlier attempts each new row
+<a href=#361 id=361 data-nosnippet>361</a>/// replaces for its student and module.
+<a href=#362 id=362 data-nosnippet>362</a>///
+<a href=#363 id=363 data-nosnippet>363</a>/// Only rows still in `expected_state`: one a phase moved since the decision keeps whatever that
+<a href=#364 id=364 data-nosnippet>364</a>/// phase wrote.
+<a href=#365 id=365 data-nosnippet>365</a></span><span class="kw">pub async fn </span>record_starts(
+<a href=#366 id=366 data-nosnippet>366</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#367 id=367 data-nosnippet>367</a>    starts: <span class="kw-2">&amp;</span>[EnrolmentCheckStart],
+<a href=#368 id=368 data-nosnippet>368</a>) -&gt; ModelResult&lt;()&gt; {
+<a href=#369 id=369 data-nosnippet>369</a>    <span class="kw">if </span>starts.is_empty() {
+<a href=#370 id=370 data-nosnippet>370</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#371 id=371 data-nosnippet>371</a>    }
+<a href=#372 id=372 data-nosnippet>372</a>    <span class="kw">let </span>ids: Vec&lt;Uuid&gt; = starts
+<a href=#373 id=373 data-nosnippet>373</a>        .iter()
+<a href=#374 id=374 data-nosnippet>374</a>        .map(|start| start.credit_registration_id)
+<a href=#375 id=375 data-nosnippet>375</a>        .collect();
+<a href=#376 id=376 data-nosnippet>376</a>    <span class="kw">let </span>groups: Vec&lt;EnrolmentCheckGroup&gt; = starts.iter().map(|start| start.group).collect();
+<a href=#377 id=377 data-nosnippet>377</a>    <span class="kw">let </span>anchors: Vec&lt;DateTime&lt;Utc&gt;&gt; = starts.iter().map(|start| start.anchor_at).collect();
+<a href=#378 id=378 data-nosnippet>378</a>    <span class="kw">let </span>steps: Vec&lt;i32&gt; = starts.iter().map(|start| start.scheduled.step).collect();
+<a href=#379 id=379 data-nosnippet>379</a>    <span class="kw">let </span>due_ats: Vec&lt;DateTime&lt;Utc&gt;&gt; = starts.iter().map(|start| start.scheduled.due_at).collect();
+<a href=#380 id=380 data-nosnippet>380</a>    <span class="kw">let </span>batched: Vec&lt;bool&gt; = starts
+<a href=#381 id=381 data-nosnippet>381</a>        .iter()
+<a href=#382 id=382 data-nosnippet>382</a>        .map(|start| start.scheduled.is_batched)
+<a href=#383 id=383 data-nosnippet>383</a>        .collect();
+<a href=#384 id=384 data-nosnippet>384</a>    <span class="kw">let </span>sources: Vec&lt;EnrolmentCheckSource&gt; = starts.iter().map(|start| start.source).collect();
+<a href=#385 id=385 data-nosnippet>385</a>    <span class="macro">sqlx::query!</span>(
+<a href=#386 id=386 data-nosnippet>386</a>        <span class="string">r#"
+<a href=#387 id=387 data-nosnippet>387</a>UPDATE credit_registrations cr
+<a href=#388 id=388 data-nosnippet>388</a>SET enrolment_check_group = GREATEST(cr.enrolment_check_group, started.enrolment_check_group),
+<a href=#389 id=389 data-nosnippet>389</a>  enrolment_check_anchor_at = started.anchor_at,
+<a href=#390 id=390 data-nosnippet>390</a>  enrolment_check_step = started.step,
+<a href=#391 id=391 data-nosnippet>391</a>  enrolment_check_due_at = started.due_at,
+<a href=#392 id=392 data-nosnippet>392</a>  is_enrolment_check_batched = started.is_batched,
+<a href=#393 id=393 data-nosnippet>393</a>  enrolment_checks_stopped_at = NULL,
+<a href=#394 id=394 data-nosnippet>394</a>  enrolment_check_source = started.source
+<a href=#395 id=395 data-nosnippet>395</a>FROM UNNEST(
+<a href=#396 id=396 data-nosnippet>396</a>    $1::uuid [],
+<a href=#397 id=397 data-nosnippet>397</a>    $2::enrolment_check_group [],
+<a href=#398 id=398 data-nosnippet>398</a>    $3::timestamptz [],
+<a href=#399 id=399 data-nosnippet>399</a>    $4::int [],
+<a href=#400 id=400 data-nosnippet>400</a>    $5::timestamptz [],
+<a href=#401 id=401 data-nosnippet>401</a>    $6::boolean [],
+<a href=#402 id=402 data-nosnippet>402</a>    $7::enrolment_check_source []
+<a href=#403 id=403 data-nosnippet>403</a>  ) AS started(
+<a href=#404 id=404 data-nosnippet>404</a>    id,
+<a href=#405 id=405 data-nosnippet>405</a>    enrolment_check_group,
+<a href=#406 id=406 data-nosnippet>406</a>    anchor_at,
+<a href=#407 id=407 data-nosnippet>407</a>    step,
+<a href=#408 id=408 data-nosnippet>408</a>    due_at,
+<a href=#409 id=409 data-nosnippet>409</a>    is_batched,
+<a href=#410 id=410 data-nosnippet>410</a>    source
+<a href=#411 id=411 data-nosnippet>411</a>  )
+<a href=#412 id=412 data-nosnippet>412</a>WHERE cr.id = started.id
+<a href=#413 id=413 data-nosnippet>413</a>  AND cr.state IN ('no_usable_enrolment', 'ready_to_submit')
+<a href=#414 id=414 data-nosnippet>414</a>  AND cr.deleted_at IS NULL
+<a href=#415 id=415 data-nosnippet>415</a>        "#</span>,
+<a href=#416 id=416 data-nosnippet>416</a>        <span class="kw-2">&amp;</span>ids,
+<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw-2">&amp;</span>groups <span class="kw">as </span><span class="kw-2">&amp;</span>[EnrolmentCheckGroup],
+<a href=#418 id=418 data-nosnippet>418</a>        <span class="kw-2">&amp;</span>anchors,
+<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw-2">&amp;</span>steps,
+<a href=#420 id=420 data-nosnippet>420</a>        <span class="kw-2">&amp;</span>due_ats,
+<a href=#421 id=421 data-nosnippet>421</a>        <span class="kw-2">&amp;</span>batched,
+<a href=#422 id=422 data-nosnippet>422</a>        <span class="kw-2">&amp;</span>sources <span class="kw">as </span><span class="kw-2">&amp;</span>[EnrolmentCheckSource],
+<a href=#423 id=423 data-nosnippet>423</a>    )
+<a href=#424 id=424 data-nosnippet>424</a>    .execute(<span class="kw-2">&amp;mut *</span>conn)
+<a href=#425 id=425 data-nosnippet>425</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#426 id=426 data-nosnippet>426</a>    <span class="macro">sqlx::query!</span>(
+<a href=#427 id=427 data-nosnippet>427</a>        <span class="string">r#"
+<a href=#428 id=428 data-nosnippet>428</a>UPDATE credit_registrations replaced
+<a href=#429 id=429 data-nosnippet>429</a>SET enrolment_check_anchor_at = COALESCE(replaced.enrolment_check_anchor_at, now()),
+<a href=#430 id=430 data-nosnippet>430</a>  enrolment_check_step = NULL,
+<a href=#431 id=431 data-nosnippet>431</a>  enrolment_check_due_at = NULL,
+<a href=#432 id=432 data-nosnippet>432</a>  is_enrolment_check_batched = FALSE,
+<a href=#433 id=433 data-nosnippet>433</a>  enrolment_checks_stopped_at = COALESCE(replaced.enrolment_checks_stopped_at, now()),
+<a href=#434 id=434 data-nosnippet>434</a>  next_attempt_at = $2
+<a href=#435 id=435 data-nosnippet>435</a>FROM credit_registrations started
+<a href=#436 id=436 data-nosnippet>436</a>WHERE started.id = ANY($1::uuid [])
+<a href=#437 id=437 data-nosnippet>437</a>  AND replaced.user_id = started.user_id
+<a href=#438 id=438 data-nosnippet>438</a>  AND replaced.course_module_id = started.course_module_id
+<a href=#439 id=439 data-nosnippet>439</a>  AND replaced.id &lt;&gt; started.id
+<a href=#440 id=440 data-nosnippet>440</a>  AND replaced.created_at &lt; started.created_at
+<a href=#441 id=441 data-nosnippet>441</a>  AND replaced.state = 'no_usable_enrolment'
+<a href=#442 id=442 data-nosnippet>442</a>  AND replaced.superseded_by_id IS NULL
+<a href=#443 id=443 data-nosnippet>443</a>  AND replaced.deleted_at IS NULL
+<a href=#444 id=444 data-nosnippet>444</a>        "#</span>,
+<a href=#445 id=445 data-nosnippet>445</a>        <span class="kw-2">&amp;</span>ids,
+<a href=#446 id=446 data-nosnippet>446</a>        never(),
+<a href=#447 id=447 data-nosnippet>447</a>    )
+<a href=#448 id=448 data-nosnippet>448</a>    .execute(conn)
+<a href=#449 id=449 data-nosnippet>449</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#450 id=450 data-nosnippet>450</a>    <span class="prelude-val">Ok</span>(())
+<a href=#451 id=451 data-nosnippet>451</a>}
+<a href=#452 id=452 data-nosnippet>452</a>
+<a href=#453 id=453 data-nosnippet>453</a><span class="doccomment">/// One student the roster lists on a module, with every enrolment id it lists them under.
+<a href=#454 id=454 data-nosnippet>454</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#455 id=455 data-nosnippet>455</a></span><span class="kw">pub struct </span>RosterEnrolee {
+<a href=#456 id=456 data-nosnippet>456</a>    <span class="kw">pub </span>user_id: Uuid,
+<a href=#457 id=457 data-nosnippet>457</a>    <span class="kw">pub </span>enrolment_ids: Vec&lt;String&gt;,
+<a href=#458 id=458 data-nosnippet>458</a>}
+<a href=#459 id=459 data-nosnippet>459</a>
+<a href=#460 id=460 data-nosnippet>460</a><span class="doccomment">/// Wakes this module's rows waiting for an enrolment when the roster lists their student under an
+<a href=#461 id=461 data-nosnippet>461</a>/// enrolment id the row has not seen, stopped rows included, and returns how many it touched.
+<a href=#462 id=462 data-nosnippet>462</a>///
+<a href=#463 id=463 data-nosnippet>463</a>/// A row never checked has seen nothing, so any listing wakes it. The listed ids count as seen from
+<a href=#464 id=464 data-nosnippet>464</a>/// here on, so one listing wakes a row once. A row a later attempt has replaced is left alone. Only
+<a href=#465 id=465 data-nosnippet>465</a>/// the clock moves: the enrolment is still resolved by a check rather than read off the roster.
+<a href=#466 id=466 data-nosnippet>466</a></span><span class="kw">pub async fn </span>wake_for_roster_listing(
+<a href=#467 id=467 data-nosnippet>467</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#468 id=468 data-nosnippet>468</a>    course_module_id: Uuid,
+<a href=#469 id=469 data-nosnippet>469</a>    enrolees: <span class="kw-2">&amp;</span>[RosterEnrolee],
+<a href=#470 id=470 data-nosnippet>470</a>) -&gt; ModelResult&lt;u64&gt; {
+<a href=#471 id=471 data-nosnippet>471</a>    <span class="kw">let </span><span class="kw-2">mut </span>user_ids = Vec::new();
+<a href=#472 id=472 data-nosnippet>472</a>    <span class="kw">let </span><span class="kw-2">mut </span>enrolment_ids: Vec&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; = Vec::new();
+<a href=#473 id=473 data-nosnippet>473</a>    <span class="kw">for </span>enrolee <span class="kw">in </span>enrolees {
+<a href=#474 id=474 data-nosnippet>474</a>        <span class="kw">if </span>enrolee.enrolment_ids.is_empty() {
+<a href=#475 id=475 data-nosnippet>475</a>            user_ids.push(enrolee.user_id);
+<a href=#476 id=476 data-nosnippet>476</a>            enrolment_ids.push(<span class="prelude-val">None</span>);
+<a href=#477 id=477 data-nosnippet>477</a>        }
+<a href=#478 id=478 data-nosnippet>478</a>        <span class="kw">for </span>enrolment_id <span class="kw">in </span><span class="kw-2">&amp;</span>enrolee.enrolment_ids {
+<a href=#479 id=479 data-nosnippet>479</a>            user_ids.push(enrolee.user_id);
+<a href=#480 id=480 data-nosnippet>480</a>            enrolment_ids.push(<span class="prelude-val">Some</span>(enrolment_id.clone()));
+<a href=#481 id=481 data-nosnippet>481</a>        }
+<a href=#482 id=482 data-nosnippet>482</a>    }
+<a href=#483 id=483 data-nosnippet>483</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
+<a href=#484 id=484 data-nosnippet>484</a>        <span class="string">r#"
+<a href=#485 id=485 data-nosnippet>485</a>WITH listed AS (
+<a href=#486 id=486 data-nosnippet>486</a>  SELECT user_id,
+<a href=#487 id=487 data-nosnippet>487</a>    ARRAY_REMOVE(ARRAY_AGG(enrolment_id), NULL) AS enrolment_ids
+<a href=#488 id=488 data-nosnippet>488</a>  FROM UNNEST($2::uuid [], $3::text []) AS listing(user_id, enrolment_id)
+<a href=#489 id=489 data-nosnippet>489</a>  GROUP BY user_id
+<a href=#490 id=490 data-nosnippet>490</a>)
+<a href=#491 id=491 data-nosnippet>491</a>UPDATE credit_registrations cr
+<a href=#492 id=492 data-nosnippet>492</a>SET enrolment_check_source = CASE
+<a href=#493 id=493 data-nosnippet>493</a>    WHEN cr.next_attempt_at &gt; now() THEN 'roster_listing'
+<a href=#494 id=494 data-nosnippet>494</a>    ELSE cr.enrolment_check_source
+<a href=#495 id=495 data-nosnippet>495</a>  END,
+<a href=#496 id=496 data-nosnippet>496</a>  next_attempt_at = LEAST(cr.next_attempt_at, now()),
+<a href=#497 id=497 data-nosnippet>497</a>  seen_enrolment_ids = ARRAY(
+<a href=#498 id=498 data-nosnippet>498</a>    SELECT DISTINCT UNNEST(COALESCE(cr.seen_enrolment_ids, '{}') || listed.enrolment_ids)
+<a href=#499 id=499 data-nosnippet>499</a>  )
+<a href=#500 id=500 data-nosnippet>500</a>FROM listed
+<a href=#501 id=501 data-nosnippet>501</a>WHERE cr.course_module_id = $1
+<a href=#502 id=502 data-nosnippet>502</a>  AND cr.user_id = listed.user_id
+<a href=#503 id=503 data-nosnippet>503</a>  AND cr.state = 'no_usable_enrolment'
+<a href=#504 id=504 data-nosnippet>504</a>  AND cr.superseded_by_id IS NULL
+<a href=#505 id=505 data-nosnippet>505</a>  AND cr.deleted_at IS NULL
+<a href=#506 id=506 data-nosnippet>506</a>  AND (
+<a href=#507 id=507 data-nosnippet>507</a>    cr.seen_enrolment_ids IS NULL
+<a href=#508 id=508 data-nosnippet>508</a>    OR NOT listed.enrolment_ids &lt;@ cr.seen_enrolment_ids
+<a href=#509 id=509 data-nosnippet>509</a>  )
+<a href=#510 id=510 data-nosnippet>510</a>  AND NOT EXISTS (
+<a href=#511 id=511 data-nosnippet>511</a>    SELECT 1
+<a href=#512 id=512 data-nosnippet>512</a>    FROM credit_registrations later
+<a href=#513 id=513 data-nosnippet>513</a>    WHERE later.user_id = cr.user_id
+<a href=#514 id=514 data-nosnippet>514</a>      AND later.course_module_id = cr.course_module_id
+<a href=#515 id=515 data-nosnippet>515</a>      AND later.created_at &gt; cr.created_at
+<a href=#516 id=516 data-nosnippet>516</a>      AND later.deleted_at IS NULL
+<a href=#517 id=517 data-nosnippet>517</a>  )
+<a href=#518 id=518 data-nosnippet>518</a>        "#</span>,
+<a href=#519 id=519 data-nosnippet>519</a>        course_module_id,
+<a href=#520 id=520 data-nosnippet>520</a>        <span class="kw-2">&amp;</span>user_ids,
+<a href=#521 id=521 data-nosnippet>521</a>        <span class="kw-2">&amp;</span>enrolment_ids <span class="kw">as </span><span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;String&gt;],
+<a href=#522 id=522 data-nosnippet>522</a>    )
+<a href=#523 id=523 data-nosnippet>523</a>    .execute(conn)
+<a href=#524 id=524 data-nosnippet>524</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#525 id=525 data-nosnippet>525</a>    <span class="prelude-val">Ok</span>(res.rows_affected())
+<a href=#526 id=526 data-nosnippet>526</a>}
+<a href=#527 id=527 data-nosnippet>527</a>
+<a href=#528 id=528 data-nosnippet>528</a><span class="doccomment">/// Adds the enrolment ids a check saw to the row's seen set, which also marks it checked for
+<a href=#529 id=529 data-nosnippet>529</a>/// [`wake_for_roster_listing`].
+<a href=#530 id=530 data-nosnippet>530</a></span><span class="kw">async fn </span>add_seen_enrolment_ids(
+<a href=#531 id=531 data-nosnippet>531</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#532 id=532 data-nosnippet>532</a>    id: Uuid,
+<a href=#533 id=533 data-nosnippet>533</a>    enrolment_ids: <span class="kw-2">&amp;</span>[String],
+<a href=#534 id=534 data-nosnippet>534</a>) -&gt; ModelResult&lt;()&gt; {
+<a href=#535 id=535 data-nosnippet>535</a>    <span class="macro">sqlx::query!</span>(
+<a href=#536 id=536 data-nosnippet>536</a>        <span class="string">r#"
+<a href=#537 id=537 data-nosnippet>537</a>UPDATE credit_registrations
+<a href=#538 id=538 data-nosnippet>538</a>SET seen_enrolment_ids = ARRAY(
+<a href=#539 id=539 data-nosnippet>539</a>    SELECT DISTINCT UNNEST(COALESCE(seen_enrolment_ids, '{}') || $2::text [])
+<a href=#540 id=540 data-nosnippet>540</a>  )
+<a href=#541 id=541 data-nosnippet>541</a>WHERE id = $1
+<a href=#542 id=542 data-nosnippet>542</a>        "#</span>,
+<a href=#543 id=543 data-nosnippet>543</a>        id,
+<a href=#544 id=544 data-nosnippet>544</a>        enrolment_ids,
+<a href=#545 id=545 data-nosnippet>545</a>    )
+<a href=#546 id=546 data-nosnippet>546</a>    .execute(conn)
+<a href=#547 id=547 data-nosnippet>547</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#548 id=548 data-nosnippet>548</a>    <span class="prelude-val">Ok</span>(())
+<a href=#549 id=549 data-nosnippet>549</a>}
+<a href=#550 id=550 data-nosnippet>550</a>
+<a href=#551 id=551 data-nosnippet>551</a><span class="doccomment">/// An answered check of a row waiting for an enrolment, logged with the write its answer makes.
+<a href=#552 id=552 data-nosnippet>552</a></span><span class="attr">#[derive(Clone, Copy)]
+<a href=#553 id=553 data-nosnippet>553</a></span><span class="kw">pub struct </span>EnrolmentCheckAnswer&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#554 id=554 data-nosnippet>554</a>    <span class="doccomment">/// The row as it was claimed for the check.
+<a href=#555 id=555 data-nosnippet>555</a>    </span><span class="kw">pub </span>checked: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>CreditRegistration,
+<a href=#556 id=556 data-nosnippet>556</a>    <span class="doccomment">/// The enrolment the answer had to register against, however the row then settled.
+<a href=#557 id=557 data-nosnippet>557</a>    </span><span class="kw">pub </span>usable_enrolment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>RegistryEnrolment&gt;,
+<a href=#558 id=558 data-nosnippet>558</a>    <span class="kw">pub </span>listed_enrolments: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[RegistryEnrolment],
+<a href=#559 id=559 data-nosnippet>559</a>}
+<a href=#560 id=560 data-nosnippet>560</a>
+<a href=#561 id=561 data-nosnippet>561</a><span class="doccomment">/// Logs what a check found and remembers the enrolments it saw for the roster wake-ups, given the
+<a href=#562 id=562 data-nosnippet>562</a>/// row as the answer's write left it. A lookup that failed in transit was no check and leaves no
+<a href=#563 id=563 data-nosnippet>563</a>/// trace.
+<a href=#564 id=564 data-nosnippet>564</a></span><span class="kw">pub async fn </span>record_enrolment_check(
+<a href=#565 id=565 data-nosnippet>565</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#566 id=566 data-nosnippet>566</a>    check: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>EnrolmentCheckAnswer&lt;<span class="lifetime">'_</span>&gt;&gt;,
+<a href=#567 id=567 data-nosnippet>567</a>    after: <span class="kw-2">&amp;</span>CreditRegistration,
+<a href=#568 id=568 data-nosnippet>568</a>) -&gt; ModelResult&lt;()&gt; {
+<a href=#569 id=569 data-nosnippet>569</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(check) = check <span class="kw">else </span>{
+<a href=#570 id=570 data-nosnippet>570</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#571 id=571 data-nosnippet>571</a>    };
+<a href=#572 id=572 data-nosnippet>572</a>    <span class="kw">let </span>row = check.checked;
+<a href=#573 id=573 data-nosnippet>573</a>    <span class="kw">let </span>was_answered = after.state != CreditRegistrationState::NoUsableEnrolment
+<a href=#574 id=574 data-nosnippet>574</a>        || after.enrolment_checked_at != row.enrolment_checked_at;
+<a href=#575 id=575 data-nosnippet>575</a>    <span class="kw">if </span>!was_answered {
+<a href=#576 id=576 data-nosnippet>576</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#577 id=577 data-nosnippet>577</a>    }
+<a href=#578 id=578 data-nosnippet>578</a>    credit_registration_enrolment_check_outcomes::insert(
+<a href=#579 id=579 data-nosnippet>579</a>        conn,
+<a href=#580 id=580 data-nosnippet>580</a>        <span class="kw-2">&amp;</span>NewEnrolmentCheckOutcome {
+<a href=#581 id=581 data-nosnippet>581</a>            credit_registration_id: row.id,
+<a href=#582 id=582 data-nosnippet>582</a>            course_module_id: row.course_module_id,
+<a href=#583 id=583 data-nosnippet>583</a>            enrolment_check_group: row.enrolment_check_group,
+<a href=#584 id=584 data-nosnippet>584</a>            enrolment_check_step: row.enrolment_check_step,
+<a href=#585 id=585 data-nosnippet>585</a>            source: row.enrolment_check_source,
+<a href=#586 id=586 data-nosnippet>586</a>            due_at: row.enrolment_check_due_at,
+<a href=#587 id=587 data-nosnippet>587</a>            checked_at: after.enrolment_checked_at.unwrap_or_else(Utc::now),
+<a href=#588 id=588 data-nosnippet>588</a>            previous_checked_at: row.enrolment_checked_at,
+<a href=#589 id=589 data-nosnippet>589</a>            is_enrolment_found: check.usable_enrolment.is_some(),
+<a href=#590 id=590 data-nosnippet>590</a>            enrolled_at: check
+<a href=#591 id=591 data-nosnippet>591</a>                .usable_enrolment
+<a href=#592 id=592 data-nosnippet>592</a>                .and_then(|enrolment| enrolment.enrolment_date_time),
+<a href=#593 id=593 data-nosnippet>593</a>        },
+<a href=#594 id=594 data-nosnippet>594</a>    )
+<a href=#595 id=595 data-nosnippet>595</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#596 id=596 data-nosnippet>596</a>    <span class="kw">let </span>seen: Vec&lt;String&gt; = check
+<a href=#597 id=597 data-nosnippet>597</a>        .listed_enrolments
+<a href=#598 id=598 data-nosnippet>598</a>        .iter()
+<a href=#599 id=599 data-nosnippet>599</a>        .map(|enrolment| enrolment.id.clone())
+<a href=#600 id=600 data-nosnippet>600</a>        .collect();
+<a href=#601 id=601 data-nosnippet>601</a>    add_seen_enrolment_ids(conn, row.id, <span class="kw-2">&amp;</span>seen).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#602 id=602 data-nosnippet>602</a>    <span class="prelude-val">Ok</span>(())
+<a href=#603 id=603 data-nosnippet>603</a>}
+<a href=#604 id=604 data-nosnippet>604</a>
+<a href=#605 id=605 data-nosnippet>605</a><span class="doccomment">/// Moves the schedules of a module's rows past a pause of `paused_for`, so the pause spends none
+<a href=#606 id=606 data-nosnippet>606</a>/// of their ladder. A batched row stays on a batch boundary. Stopped rows are left as they are.
+<a href=#607 id=607 data-nosnippet>607</a></span><span class="kw">pub async fn </span>shift_past_pause(
+<a href=#608 id=608 data-nosnippet>608</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#609 id=609 data-nosnippet>609</a>    course_module_id: Uuid,
+<a href=#610 id=610 data-nosnippet>610</a>    paused_for: TimeDelta,
+<a href=#611 id=611 data-nosnippet>611</a>) -&gt; ModelResult&lt;u64&gt; {
+<a href=#612 id=612 data-nosnippet>612</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
+<a href=#613 id=613 data-nosnippet>613</a>        <span class="string">r#"
+<a href=#614 id=614 data-nosnippet>614</a>UPDATE credit_registrations
+<a href=#615 id=615 data-nosnippet>615</a>SET enrolment_check_anchor_at = enrolment_check_anchor_at + $2::interval,
+<a href=#616 id=616 data-nosnippet>616</a>  enrolment_check_due_at = enrolment_check_due_at + $2::interval,
+<a href=#617 id=617 data-nosnippet>617</a>  next_attempt_at = CASE
+<a href=#618 id=618 data-nosnippet>618</a>    WHEN state &lt;&gt; 'no_usable_enrolment'
+<a href=#619 id=619 data-nosnippet>619</a>    OR enrolment_check_source &lt;&gt; 'schedule' THEN next_attempt_at
+<a href=#620 id=620 data-nosnippet>620</a>    WHEN is_enrolment_check_batched THEN to_timestamp(
+<a href=#621 id=621 data-nosnippet>621</a>      CEIL(
+<a href=#622 id=622 data-nosnippet>622</a>        EXTRACT(
+<a href=#623 id=623 data-nosnippet>623</a>          EPOCH
+<a href=#624 id=624 data-nosnippet>624</a>          FROM next_attempt_at + $2::interval
+<a href=#625 id=625 data-nosnippet>625</a>        ) / $3::bigint
+<a href=#626 id=626 data-nosnippet>626</a>      ) * $3::bigint
+<a href=#627 id=627 data-nosnippet>627</a>    )
+<a href=#628 id=628 data-nosnippet>628</a>    ELSE next_attempt_at + $2::interval
+<a href=#629 id=629 data-nosnippet>629</a>  END
+<a href=#630 id=630 data-nosnippet>630</a>WHERE course_module_id = $1
+<a href=#631 id=631 data-nosnippet>631</a>  AND enrolment_check_anchor_at IS NOT NULL
+<a href=#632 id=632 data-nosnippet>632</a>  AND enrolment_checks_stopped_at IS NULL
+<a href=#633 id=633 data-nosnippet>633</a>  AND superseded_by_id IS NULL
+<a href=#634 id=634 data-nosnippet>634</a>  AND deleted_at IS NULL
+<a href=#635 id=635 data-nosnippet>635</a>        "#</span>,
+<a href=#636 id=636 data-nosnippet>636</a>        course_module_id,
+<a href=#637 id=637 data-nosnippet>637</a>        paused_for.max(TimeDelta::zero()) <span class="kw">as </span>TimeDelta,
+<a href=#638 id=638 data-nosnippet>638</a>        BATCH_INTERVAL.num_seconds(),
+<a href=#639 id=639 data-nosnippet>639</a>    )
+<a href=#640 id=640 data-nosnippet>640</a>    .execute(conn)
+<a href=#641 id=641 data-nosnippet>641</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#642 id=642 data-nosnippet>642</a>    <span class="prelude-val">Ok</span>(res.rows_affected())
+<a href=#643 id=643 data-nosnippet>643</a>}
+<a href=#644 id=644 data-nosnippet>644</a>
+<a href=#645 id=645 data-nosnippet>645</a><span class="doccomment">/// Brings the slow checks due within [`BATCH_PULL_FORWARD`] forward to now when another slow
+<a href=#646 id=646 data-nosnippet>646</a>/// check in `scope` is released and not yet claimed: they cost nothing extra in the request that
+<a href=#647 id=647 data-nosnippet>647</a>/// goes out for it. A row tried within [`TRANSIENT_FAILURE_RETRY`] keeps waiting out its failed
+<a href=#648 id=648 data-nosnippet>648</a>/// lookup.
+<a href=#649 id=649 data-nosnippet>649</a>///
+<a href=#650 id=650 data-nosnippet>650</a>/// Its test for a released check shares its filters with the claim behind
+<a href=#651 id=651 data-nosnippet>651</a>/// [`claim_due_for_resolve`](crate::credit_registrations::claim_due_for_resolve) and with
+<a href=#652 id=652 data-nosnippet>652</a>/// [`count_due_enrolment_checks`](crate::credit_registrations::count_due_enrolment_checks); change
+<a href=#653 id=653 data-nosnippet>653</a>/// all three together.
+<a href=#654 id=654 data-nosnippet>654</a></span><span class="kw">pub async fn </span>pull_forward_batched_checks(
+<a href=#655 id=655 data-nosnippet>655</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#656 id=656 data-nosnippet>656</a>    scope: <span class="kw-2">&amp;</span>RegistrationScope,
+<a href=#657 id=657 data-nosnippet>657</a>) -&gt; ModelResult&lt;()&gt; {
+<a href=#658 id=658 data-nosnippet>658</a>    <span class="macro">sqlx::query!</span>(
+<a href=#659 id=659 data-nosnippet>659</a>        <span class="string">r#"
+<a href=#660 id=660 data-nosnippet>660</a>WITH scoped AS (
+<a href=#661 id=661 data-nosnippet>661</a>  SELECT cr.id,
+<a href=#662 id=662 data-nosnippet>662</a>    cr.next_attempt_at,
+<a href=#663 id=663 data-nosnippet>663</a>    cr.enrolment_check_due_at,
+<a href=#664 id=664 data-nosnippet>664</a>    cr.last_attempt_at,
+<a href=#665 id=665 data-nosnippet>665</a>    cr.enrolment_check_claimed_until
+<a href=#666 id=666 data-nosnippet>666</a>  FROM credit_registrations cr
+<a href=#667 id=667 data-nosnippet>667</a>    JOIN credit_registration_active_course_modules acm ON acm.course_module_id = cr.course_module_id
+<a href=#668 id=668 data-nosnippet>668</a>  WHERE cr.state = 'no_usable_enrolment'
+<a href=#669 id=669 data-nosnippet>669</a>    AND cr.is_enrolment_check_batched
+<a href=#670 id=670 data-nosnippet>670</a>    AND cr.superseded_by_id IS NULL
+<a href=#671 id=671 data-nosnippet>671</a>    AND cr.deleted_at IS NULL
+<a href=#672 id=672 data-nosnippet>672</a>    AND ($1::uuid IS NULL OR cr.course_id = $1)
+<a href=#673 id=673 data-nosnippet>673</a>    AND ($2::uuid IS NULL OR cr.user_id = $2)
+<a href=#674 id=674 data-nosnippet>674</a>    AND (
+<a href=#675 id=675 data-nosnippet>675</a>      cardinality($3::uuid []) = 0
+<a href=#676 id=676 data-nosnippet>676</a>      OR cr.id = ANY($3::uuid [])
+<a href=#677 id=677 data-nosnippet>677</a>    )
+<a href=#678 id=678 data-nosnippet>678</a>)
+<a href=#679 id=679 data-nosnippet>679</a>UPDATE credit_registrations cr
+<a href=#680 id=680 data-nosnippet>680</a>SET next_attempt_at = now()
+<a href=#681 id=681 data-nosnippet>681</a>FROM scoped
+<a href=#682 id=682 data-nosnippet>682</a>WHERE cr.id = scoped.id
+<a href=#683 id=683 data-nosnippet>683</a>  AND scoped.next_attempt_at &gt; now()
+<a href=#684 id=684 data-nosnippet>684</a>  AND scoped.enrolment_check_due_at &gt; now()
+<a href=#685 id=685 data-nosnippet>685</a>  AND scoped.enrolment_check_due_at &lt;= now() + $4::interval
+<a href=#686 id=686 data-nosnippet>686</a>  AND (
+<a href=#687 id=687 data-nosnippet>687</a>    scoped.last_attempt_at IS NULL
+<a href=#688 id=688 data-nosnippet>688</a>    OR scoped.last_attempt_at &lt;= now() - $5::interval
 <a href=#689 id=689 data-nosnippet>689</a>  )
-<a href=#690 id=690 data-nosnippet>690</a>        "#</span>,
-<a href=#691 id=691 data-nosnippet>691</a>        scope.course_id,
-<a href=#692 id=692 data-nosnippet>692</a>        scope.user_id,
-<a href=#693 id=693 data-nosnippet>693</a>        <span class="kw-2">&amp;</span>scope.credit_registration_ids,
-<a href=#694 id=694 data-nosnippet>694</a>        BATCH_PULL_FORWARD <span class="kw">as </span>TimeDelta,
-<a href=#695 id=695 data-nosnippet>695</a>        TRANSIENT_FAILURE_RETRY <span class="kw">as </span>TimeDelta,
-<a href=#696 id=696 data-nosnippet>696</a>    )
-<a href=#697 id=697 data-nosnippet>697</a>    .execute(conn)
-<a href=#698 id=698 data-nosnippet>698</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#699 id=699 data-nosnippet>699</a>    <span class="prelude-val">Ok</span>(())
-<a href=#700 id=700 data-nosnippet>700</a>}
+<a href=#690 id=690 data-nosnippet>690</a>  AND EXISTS (
+<a href=#691 id=691 data-nosnippet>691</a>    SELECT 1
+<a href=#692 id=692 data-nosnippet>692</a>    FROM scoped released
+<a href=#693 id=693 data-nosnippet>693</a>    WHERE released.next_attempt_at &lt;= now()
+<a href=#694 id=694 data-nosnippet>694</a>      AND (
+<a href=#695 id=695 data-nosnippet>695</a>        released.enrolment_check_claimed_until IS NULL
+<a href=#696 id=696 data-nosnippet>696</a>        OR released.enrolment_check_claimed_until &lt;= now()
+<a href=#697 id=697 data-nosnippet>697</a>      )
+<a href=#698 id=698 data-nosnippet>698</a>  )
+<a href=#699 id=699 data-nosnippet>699</a>        "#</span>,
+<a href=#700 id=700 data-nosnippet>700</a>        scope.course_id,
+<a href=#701 id=701 data-nosnippet>701</a>        scope.user_id,
+<a href=#702 id=702 data-nosnippet>702</a>        <span class="kw-2">&amp;</span>scope.credit_registration_ids,
+<a href=#703 id=703 data-nosnippet>703</a>        BATCH_PULL_FORWARD <span class="kw">as </span>TimeDelta,
+<a href=#704 id=704 data-nosnippet>704</a>        TRANSIENT_FAILURE_RETRY <span class="kw">as </span>TimeDelta,
+<a href=#705 id=705 data-nosnippet>705</a>    )
+<a href=#706 id=706 data-nosnippet>706</a>    .execute(conn)
+<a href=#707 id=707 data-nosnippet>707</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#708 id=708 data-nosnippet>708</a>    <span class="prelude-val">Ok</span>(())
+<a href=#709 id=709 data-nosnippet>709</a>}
 </code></pre></div></section></main></body></html>

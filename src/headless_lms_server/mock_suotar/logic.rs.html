@@ -248,9 +248,9 @@
 <a href=#248 id=248 data-nosnippet>248</a>    }
 <a href=#249 id=249 data-nosnippet>249</a>
 <a href=#250 id=250 data-nosnippet>250</a>    <span class="kw">let </span>adjusted_attainment_date = <span class="kw">match </span><span class="kw-2">&amp;</span>enrolment.study_right {
-<a href=#251 id=251 data-nosnippet>251</a>        <span class="prelude-val">Some</span>(study_right) =&gt; clamp_into_study_right(item.attainment_date, study_right),
+<a href=#251 id=251 data-nosnippet>251</a>        <span class="prelude-val">Some</span>(study_right) =&gt; clamp_into_study_right(item.attainment_date(), study_right),
 <a href=#252 id=252 data-nosnippet>252</a>        <span class="prelude-val">None </span><span class="kw">if </span>person.behaviour.study_right_unresolvable =&gt; <span class="kw">return </span>error(<span class="string">"studyRightNotValid"</span>),
-<a href=#253 id=253 data-nosnippet>253</a>        <span class="prelude-val">None </span>=&gt; item.attainment_date,
+<a href=#253 id=253 data-nosnippet>253</a>        <span class="prelude-val">None </span>=&gt; item.attainment_date(),
 <a href=#254 id=254 data-nosnippet>254</a>    };
 <a href=#255 id=255 data-nosnippet>255</a>
 <a href=#256 id=256 data-nosnippet>256</a>    ImportResolution::Write(Box::new(MockSubmission {
@@ -263,7 +263,7 @@
 <a href=#263 id=263 data-nosnippet>263</a>        person_id: person.person_id.clone(),
 <a href=#264 id=264 data-nosnippet>264</a>        course_unit_id: course_unit.course_unit_id.clone(),
 <a href=#265 id=265 data-nosnippet>265</a>        assessment_item_id: realisation.assessment_item_id.clone(),
-<a href=#266 id=266 data-nosnippet>266</a>        attainment_date: item.attainment_date,
+<a href=#266 id=266 data-nosnippet>266</a>        attainment_date: item.attainment_date(),
 <a href=#267 id=267 data-nosnippet>267</a>        adjusted_attainment_date,
 <a href=#268 id=268 data-nosnippet>268</a>        attainment_language: item.attainment_language.clone(),
 <a href=#269 id=269 data-nosnippet>269</a>        grade_scale_id: item.grade_scale_id.clone(),
@@ -639,7 +639,7 @@
 <a href=#639 id=639 data-nosnippet>639</a>        IncomingGrade::Fail =&gt; !is_passed(attainment, working),
 <a href=#640 id=640 data-nosnippet>640</a>    };
 <a href=#641 id=641 data-nosnippet>641</a>    same_grade
-<a href=#642 id=642 data-nosnippet>642</a>        &amp;&amp; attainment.attainment_date == item.attainment_date
+<a href=#642 id=642 data-nosnippet>642</a>        &amp;&amp; attainment.attainment_date == item.attainment_date()
 <a href=#643 id=643 data-nosnippet>643</a>        &amp;&amp; credits_of(attainment, item) == item.credits
 <a href=#644 id=644 data-nosnippet>644</a>}
 <a href=#645 id=645 data-nosnippet>645</a>
@@ -653,7 +653,7 @@
 <a href=#653 id=653 data-nosnippet>653</a>) -&gt; bool {
 <a href=#654 id=654 data-nosnippet>654</a>    <span class="kw">let </span>credits = credits_of(attainment, item);
 <a href=#655 id=655 data-nosnippet>655</a>    <span class="kw">let </span>later_than =
-<a href=#656 id=656 data-nosnippet>656</a>        |days: i64| item.attainment_date - Duration::days(days) &gt; attainment.attainment_date;
+<a href=#656 id=656 data-nosnippet>656</a>        |days: i64| item.attainment_date() - Duration::days(days) &gt; attainment.attainment_date;
 <a href=#657 id=657 data-nosnippet>657</a>    <span class="kw">let </span>tie_break = |days: i64| {
 <a href=#658 id=658 data-nosnippet>658</a>        <span class="kw">if </span>credits != item.credits {
 <a href=#659 id=659 data-nosnippet>659</a>            credits &lt; item.credits
@@ -851,7 +851,7 @@
 <a href=#851 id=851 data-nosnippet>851</a>            student_number: STUDENT_NUMBER.to_string(),
 <a href=#852 id=852 data-nosnippet>852</a>            course_code: COURSE_CODE.to_string(),
 <a href=#853 id=853 data-nosnippet>853</a>            enrolment_id: ids::enrolment_id(STUDENT_NUMBER, COURSE_CODE, RealisationKind::Degree),
-<a href=#854 id=854 data-nosnippet>854</a>            attainment_date: Utc::now().date_naive(),
+<a href=#854 id=854 data-nosnippet>854</a>            attained_at: Utc::now(),
 <a href=#855 id=855 data-nosnippet>855</a>            attainment_language: <span class="string">"en"</span>.to_string(),
 <a href=#856 id=856 data-nosnippet>856</a>            grade_scale_id: <span class="string">"sis-hyl-hyv"</span>.to_string(),
 <a href=#857 id=857 data-nosnippet>857</a>            grade_id: <span class="string">"1"</span>.to_string(),

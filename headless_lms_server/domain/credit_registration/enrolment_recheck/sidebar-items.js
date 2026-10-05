@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["can_request_enrolment_recheck","start_enrolment_recheck"],"struct":["RecheckTarget"]};
+window.SIDEBAR_ITEMS = {"fn":["can_request_enrolment_recheck","can_student_request_enrolment_recheck","start_enrolment_recheck","start_recheck","start_student_enrolment_recheck"],"struct":["RecheckTarget"]};
