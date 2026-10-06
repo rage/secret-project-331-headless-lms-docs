@@ -32,495 +32,641 @@
 <a href=#32 id=32 data-nosnippet>32</a>    send_message,
 <a href=#33 id=33 data-nosnippet>33</a>    tool_response,
 <a href=#34 id=34 data-nosnippet>34</a>    new_conversation,
-<a href=#35 id=35 data-nosnippet>35</a>    current_conversation_info
-<a href=#36 id=36 data-nosnippet>36</a>))]
-<a href=#37 id=37 data-nosnippet>37</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CourseMaterialChatbotApiDoc;
-<a href=#38 id=38 data-nosnippet>38</a>
-<a href=#39 id=39 data-nosnippet>39</a><span class="doccomment">/**
-<a href=#40 id=40 data-nosnippet>40</a>GET `/api/v0/course-material/course-modules/chatbot/default-for-course/:course-id`
+<a href=#35 id=35 data-nosnippet>35</a>    conversation_info,
+<a href=#36 id=36 data-nosnippet>36</a>    current_conversation_id,
+<a href=#37 id=37 data-nosnippet>37</a>    all_user_conversations,
+<a href=#38 id=38 data-nosnippet>38</a>    update_title,
+<a href=#39 id=39 data-nosnippet>39</a>))]
+<a href=#40 id=40 data-nosnippet>40</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CourseMaterialChatbotApiDoc;
 <a href=#41 id=41 data-nosnippet>41</a>
-<a href=#42 id=42 data-nosnippet>42</a>Returns the default chatbot configuration id for a course if the default chatbot is enabled to students.
-<a href=#43 id=43 data-nosnippet>43</a>*/
-<a href=#44 id=44 data-nosnippet>44</a></span><span class="attr">#[utoipa::path(
-<a href=#45 id=45 data-nosnippet>45</a>    get,
-<a href=#46 id=46 data-nosnippet>46</a>    path = <span class="string">"/default-for-course/{course_id}"</span>,
-<a href=#47 id=47 data-nosnippet>47</a>    operation_id = <span class="string">"getDefaultChatbotConfigurationForCourse"</span>,
-<a href=#48 id=48 data-nosnippet>48</a>    tag = <span class="string">"course-material-chatbot"</span>,
-<a href=#49 id=49 data-nosnippet>49</a>    params(
-<a href=#50 id=50 data-nosnippet>50</a>        (<span class="string">"course_id" </span>= Uuid, Path, description = <span class="string">"Course id"</span>)
-<a href=#51 id=51 data-nosnippet>51</a>    ),
-<a href=#52 id=52 data-nosnippet>52</a>    responses(
-<a href=#53 id=53 data-nosnippet>53</a>        (status = <span class="number">200</span>, description = <span class="string">"Default chatbot configuration id"</span>, body = <span class="prelude-ty">Option</span>&lt;Uuid&gt;)
-<a href=#54 id=54 data-nosnippet>54</a>    )
-<a href=#55 id=55 data-nosnippet>55</a>)]
-<a href=#56 id=56 data-nosnippet>56</a>#[instrument(skip(pool))]
-<a href=#57 id=57 data-nosnippet>57</a></span><span class="kw">async fn </span>get_default_chatbot_configuration_for_course(
-<a href=#58 id=58 data-nosnippet>58</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#59 id=59 data-nosnippet>59</a>    course_id: web::Path&lt;Uuid&gt;,
-<a href=#60 id=60 data-nosnippet>60</a>) -&gt; ControllerResult&lt;web::Json&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;&gt;&gt; {
-<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#62 id=62 data-nosnippet>62</a>
-<a href=#63 id=63 data-nosnippet>63</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#64 id=64 data-nosnippet>64</a>    <span class="kw">let </span>chatbot_configurations =
-<a href=#65 id=65 data-nosnippet>65</a>        models::chatbot_configurations::get_for_course(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#66 id=66 data-nosnippet>66</a>
-<a href=#67 id=67 data-nosnippet>67</a>    <span class="kw">let </span>res = chatbot_configurations
-<a href=#68 id=68 data-nosnippet>68</a>        .into_iter()
-<a href=#69 id=69 data-nosnippet>69</a>        .filter(|c| c.enabled_to_students)
-<a href=#70 id=70 data-nosnippet>70</a>        .find(|c| c.default_chatbot)
-<a href=#71 id=71 data-nosnippet>71</a>        .map(|c| c.id);
-<a href=#72 id=72 data-nosnippet>72</a>
-<a href=#73 id=73 data-nosnippet>73</a>    token.authorized_ok(web::Json(res))
-<a href=#74 id=74 data-nosnippet>74</a>}
-<a href=#75 id=75 data-nosnippet>75</a>
-<a href=#76 id=76 data-nosnippet>76</a><span class="attr">#[derive(Debug, Deserialize, Serialize, ToSchema)]
-<a href=#77 id=77 data-nosnippet>77</a></span><span class="kw">pub struct </span>SendChatbotMessage {
-<a href=#78 id=78 data-nosnippet>78</a>    <span class="doccomment">/// What the learner wrote.
-<a href=#79 id=79 data-nosnippet>79</a>    </span><span class="kw">pub </span>message: String,
-<a href=#80 id=80 data-nosnippet>80</a>    <span class="doccomment">/// The course material page the learner has open, when they are on one.
-<a href=#81 id=81 data-nosnippet>81</a>    </span><span class="kw">pub </span>page_context: <span class="prelude-ty">Option</span>&lt;ChatbotPageContext&gt;,
+<a href=#42 id=42 data-nosnippet>42</a><span class="attr">#[derive(Deserialize, Debug)]
+<a href=#43 id=43 data-nosnippet>43</a></span><span class="kw">pub struct </span>ConversationQuery {
+<a href=#44 id=44 data-nosnippet>44</a>    <span class="kw">pub </span>conversation_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#45 id=45 data-nosnippet>45</a>}
+<a href=#46 id=46 data-nosnippet>46</a>
+<a href=#47 id=47 data-nosnippet>47</a><span class="doccomment">/**
+<a href=#48 id=48 data-nosnippet>48</a>GET `/api/v0/course-material/course-modules/chatbot/default-for-course/:course-id`
+<a href=#49 id=49 data-nosnippet>49</a>
+<a href=#50 id=50 data-nosnippet>50</a>Returns the default chatbot configuration id for a course if the default chatbot is enabled to students.
+<a href=#51 id=51 data-nosnippet>51</a>*/
+<a href=#52 id=52 data-nosnippet>52</a></span><span class="attr">#[utoipa::path(
+<a href=#53 id=53 data-nosnippet>53</a>    get,
+<a href=#54 id=54 data-nosnippet>54</a>    path = <span class="string">"/default-for-course/{course_id}"</span>,
+<a href=#55 id=55 data-nosnippet>55</a>    operation_id = <span class="string">"getDefaultChatbotConfigurationForCourse"</span>,
+<a href=#56 id=56 data-nosnippet>56</a>    tag = <span class="string">"course-material-chatbot"</span>,
+<a href=#57 id=57 data-nosnippet>57</a>    params(
+<a href=#58 id=58 data-nosnippet>58</a>        (<span class="string">"course_id" </span>= Uuid, Path, description = <span class="string">"Course id"</span>)
+<a href=#59 id=59 data-nosnippet>59</a>    ),
+<a href=#60 id=60 data-nosnippet>60</a>    responses(
+<a href=#61 id=61 data-nosnippet>61</a>        (status = <span class="number">200</span>, description = <span class="string">"Default chatbot configuration id"</span>, body = <span class="prelude-ty">Option</span>&lt;Uuid&gt;)
+<a href=#62 id=62 data-nosnippet>62</a>    )
+<a href=#63 id=63 data-nosnippet>63</a>)]
+<a href=#64 id=64 data-nosnippet>64</a>#[instrument(skip(pool))]
+<a href=#65 id=65 data-nosnippet>65</a></span><span class="kw">async fn </span>get_default_chatbot_configuration_for_course(
+<a href=#66 id=66 data-nosnippet>66</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#67 id=67 data-nosnippet>67</a>    course_id: web::Path&lt;Uuid&gt;,
+<a href=#68 id=68 data-nosnippet>68</a>) -&gt; ControllerResult&lt;web::Json&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;&gt;&gt; {
+<a href=#69 id=69 data-nosnippet>69</a>    <span class="kw">let </span>token = skip_authorize();
+<a href=#70 id=70 data-nosnippet>70</a>
+<a href=#71 id=71 data-nosnippet>71</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">let </span>chatbot_configurations =
+<a href=#73 id=73 data-nosnippet>73</a>        models::chatbot_configurations::get_for_course(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>course_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#74 id=74 data-nosnippet>74</a>
+<a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">let </span>res = chatbot_configurations
+<a href=#76 id=76 data-nosnippet>76</a>        .into_iter()
+<a href=#77 id=77 data-nosnippet>77</a>        .filter(|c| c.enabled_to_students)
+<a href=#78 id=78 data-nosnippet>78</a>        .find(|c| c.default_chatbot)
+<a href=#79 id=79 data-nosnippet>79</a>        .map(|c| c.id);
+<a href=#80 id=80 data-nosnippet>80</a>
+<a href=#81 id=81 data-nosnippet>81</a>    token.authorized_ok(web::Json(res))
 <a href=#82 id=82 data-nosnippet>82</a>}
 <a href=#83 id=83 data-nosnippet>83</a>
-<a href=#84 id=84 data-nosnippet>84</a><span class="doccomment">/**
-<a href=#85 id=85 data-nosnippet>85</a>POST `/api/v0/course-material/chatbot/:chatbot_configuration_id/conversations/:conversation_id/send-message`
-<a href=#86 id=86 data-nosnippet>86</a>
-<a href=#87 id=87 data-nosnippet>87</a>Sends a new chat message to the chatbot.
-<a href=#88 id=88 data-nosnippet>88</a>*/
-<a href=#89 id=89 data-nosnippet>89</a></span><span class="attr">#[utoipa::path(
-<a href=#90 id=90 data-nosnippet>90</a>    post,
-<a href=#91 id=91 data-nosnippet>91</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/send-message"</span>,
-<a href=#92 id=92 data-nosnippet>92</a>    operation_id = <span class="string">"sendChatbotMessage"</span>,
-<a href=#93 id=93 data-nosnippet>93</a>    tag = <span class="string">"course-material-chatbot"</span>,
-<a href=#94 id=94 data-nosnippet>94</a>    params(
-<a href=#95 id=95 data-nosnippet>95</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>),
-<a href=#96 id=96 data-nosnippet>96</a>        (<span class="string">"conversation_id" </span>= Uuid, Path, description = <span class="string">"Conversation id"</span>)
-<a href=#97 id=97 data-nosnippet>97</a>    ),
-<a href=#98 id=98 data-nosnippet>98</a>    request_body = SendChatbotMessage,
-<a href=#99 id=99 data-nosnippet>99</a>    responses(
-<a href=#100 id=100 data-nosnippet>100</a>        (
-<a href=#101 id=101 data-nosnippet>101</a>            status = <span class="number">200</span>,
-<a href=#102 id=102 data-nosnippet>102</a>            description = <span class="string">"Chatbot response stream"</span>,
-<a href=#103 id=103 data-nosnippet>103</a>            body = ChatbotChatStreamEvent,
-<a href=#104 id=104 data-nosnippet>104</a>            content_type = <span class="string">"application/x-ndjson"
-<a href=#105 id=105 data-nosnippet>105</a>        </span>)
-<a href=#106 id=106 data-nosnippet>106</a>    )
-<a href=#107 id=107 data-nosnippet>107</a>)]
-<a href=#108 id=108 data-nosnippet>108</a></span><span class="comment">// Neither the payload nor the request is recorded: the payload carries the learner's message, and
-<a href=#109 id=109 data-nosnippet>109</a>// `HttpRequest`'s Debug is a multi-line dump of every header.
-<a href=#110 id=110 data-nosnippet>110</a></span><span class="attr">#[instrument(
-<a href=#111 id=111 data-nosnippet>111</a>    skip(pool, cache, app_conf, payload, req),
-<a href=#112 id=112 data-nosnippet>112</a>    fields(has_page_context = payload.page_context.is_some())
-<a href=#113 id=113 data-nosnippet>113</a>)]
-<a href=#114 id=114 data-nosnippet>114</a></span><span class="kw">async fn </span>send_message(
-<a href=#115 id=115 data-nosnippet>115</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#116 id=116 data-nosnippet>116</a>    cache: web::Data&lt;Cache&gt;,
-<a href=#117 id=117 data-nosnippet>117</a>    params: web::Path&lt;(Uuid, Uuid)&gt;,
-<a href=#118 id=118 data-nosnippet>118</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
-<a href=#119 id=119 data-nosnippet>119</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#120 id=120 data-nosnippet>120</a>    payload: web::Json&lt;SendChatbotMessage&gt;,
-<a href=#121 id=121 data-nosnippet>121</a>    req: HttpRequest,
-<a href=#122 id=122 data-nosnippet>122</a>) -&gt; ControllerResult&lt;HttpResponse&gt; {
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">let </span>SendChatbotMessage {
-<a href=#124 id=124 data-nosnippet>124</a>        message,
-<a href=#125 id=125 data-nosnippet>125</a>        page_context,
-<a href=#126 id=126 data-nosnippet>126</a>    } = payload.into_inner();
-<a href=#127 id=127 data-nosnippet>127</a>    <span class="kw">let </span>chatbot_configuration_id = params.<span class="number">0</span>;
-<a href=#128 id=128 data-nosnippet>128</a>    <span class="kw">let </span>conversation_id = params.<span class="number">1</span>;
-<a href=#129 id=129 data-nosnippet>129</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#130 id=130 data-nosnippet>130</a>
-<a href=#131 id=131 data-nosnippet>131</a>    <span class="kw">let </span>(token, chatbot_user) = authorize_access_to_conversation(
-<a href=#132 id=132 data-nosnippet>132</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#133 id=133 data-nosnippet>133</a>        chatbot_configuration_id,
-<a href=#134 id=134 data-nosnippet>134</a>        conversation_id,
-<a href=#135 id=135 data-nosnippet>135</a>        user,
-<a href=#136 id=136 data-nosnippet>136</a>        req,
-<a href=#137 id=137 data-nosnippet>137</a>    )
-<a href=#138 id=138 data-nosnippet>138</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#139 id=139 data-nosnippet>139</a>
-<a href=#140 id=140 data-nosnippet>140</a>    <span class="kw">let </span>response_stream = send_chat_request_and_parse_stream(
-<a href=#141 id=141 data-nosnippet>141</a>        <span class="comment">// An Arc, cheap to clone.
-<a href=#142 id=142 data-nosnippet>142</a>        </span>pool.get_ref().clone(),
-<a href=#143 id=143 data-nosnippet>143</a>        <span class="kw-2">&amp;</span>app_conf,
-<a href=#144 id=144 data-nosnippet>144</a>        cache.get_ref().clone(),
-<a href=#145 id=145 data-nosnippet>145</a>        chatbot_configuration_id,
-<a href=#146 id=146 data-nosnippet>146</a>        conversation_id,
-<a href=#147 id=147 data-nosnippet>147</a>        <span class="kw-2">&amp;</span>message,
-<a href=#148 id=148 data-nosnippet>148</a>        page_context,
-<a href=#149 id=149 data-nosnippet>149</a>        chatbot_user,
-<a href=#150 id=150 data-nosnippet>150</a>    )
-<a href=#151 id=151 data-nosnippet>151</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#152 id=152 data-nosnippet>152</a>
-<a href=#153 id=153 data-nosnippet>153</a>    token.authorized_ok(
-<a href=#154 id=154 data-nosnippet>154</a>        HttpResponse::Ok()
-<a href=#155 id=155 data-nosnippet>155</a>            .content_type(<span class="string">"application/x-ndjson"</span>)
-<a href=#156 id=156 data-nosnippet>156</a>            .streaming(response_stream),
-<a href=#157 id=157 data-nosnippet>157</a>    )
-<a href=#158 id=158 data-nosnippet>158</a>}
-<a href=#159 id=159 data-nosnippet>159</a>
-<a href=#160 id=160 data-nosnippet>160</a><span class="doccomment">/// Checks that the caller may use this chatbot and that the conversation is theirs, and collects
-<a href=#161 id=161 data-nosnippet>161</a>/// the context a turn of it needs.
-<a href=#162 id=162 data-nosnippet>162</a>///
-<a href=#163 id=163 data-nosnippet>163</a>/// Every endpoint that continues a conversation has to go through here: without the ownership
-<a href=#164 id=164 data-nosnippet>164</a>/// comparison a caller could send messages into, or answer tool calls of, someone else's
-<a href=#165 id=165 data-nosnippet>165</a>/// conversation by guessing its id.
-<a href=#166 id=166 data-nosnippet>166</a></span><span class="kw">async fn </span>authorize_access_to_conversation(
-<a href=#167 id=167 data-nosnippet>167</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#168 id=168 data-nosnippet>168</a>    chatbot_configuration_id: Uuid,
-<a href=#169 id=169 data-nosnippet>169</a>    conversation_id: Uuid,
-<a href=#170 id=170 data-nosnippet>170</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
-<a href=#171 id=171 data-nosnippet>171</a>    req: HttpRequest,
-<a href=#172 id=172 data-nosnippet>172</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(AuthorizationToken, ChatbotTurnContext), ControllerError&gt; {
-<a href=#173 id=173 data-nosnippet>173</a>    <span class="kw">let </span>chatbot_configuration =
-<a href=#174 id=174 data-nosnippet>174</a>        chatbot_configurations::get_by_id(conn, chatbot_configuration_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#175 id=175 data-nosnippet>175</a>
-<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">let </span>token =
-<a href=#177 id=177 data-nosnippet>177</a>        authorize_access_to_chatbot(conn, user.map(|u| u.id), <span class="kw-2">&amp;</span>chatbot_configuration).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#178 id=178 data-nosnippet>178</a>
-<a href=#179 id=179 data-nosnippet>179</a>    <span class="kw">let </span>conversation = chatbot_conversations::get_by_id(conn, conversation_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#180 id=180 data-nosnippet>180</a>
-<a href=#181 id=181 data-nosnippet>181</a>    <span class="kw">let </span>anonymous_token = handle_anonymous_token(<span class="kw-2">&amp;</span>req, user);
-<a href=#182 id=182 data-nosnippet>182</a>
-<a href=#183 id=183 data-nosnippet>183</a>    <span class="kw">if </span>conversation.user_id != user.map(|u| u.id)
-<a href=#184 id=184 data-nosnippet>184</a>        || conversation.chatbot_configuration_id != chatbot_configuration_id
-<a href=#185 id=185 data-nosnippet>185</a>        || conversation.course_id != chatbot_configuration.course_id
-<a href=#186 id=186 data-nosnippet>186</a>        || conversation.anonymous_token != anonymous_token
-<a href=#187 id=187 data-nosnippet>187</a>    {
-<a href=#188 id=188 data-nosnippet>188</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">controller_err!</span>(
-<a href=#189 id=189 data-nosnippet>189</a>            Forbidden,
-<a href=#190 id=190 data-nosnippet>190</a>            <span class="string">"Conversation does not belong to the authenticated user and chatbot configuration"
-<a href=#191 id=191 data-nosnippet>191</a>                </span>.to_string()
-<a href=#192 id=192 data-nosnippet>192</a>        ));
-<a href=#193 id=193 data-nosnippet>193</a>    }
-<a href=#194 id=194 data-nosnippet>194</a>
-<a href=#195 id=195 data-nosnippet>195</a>    <span class="kw">let </span>course_name = <span class="kw">if let </span><span class="prelude-val">Some</span>(course_id) = chatbot_configuration.course_id {
-<a href=#196 id=196 data-nosnippet>196</a>        <span class="prelude-val">Some</span>(courses::get_course(conn, course_id).<span class="kw">await</span><span class="question-mark">?</span>.name)
-<a href=#197 id=197 data-nosnippet>197</a>    } <span class="kw">else </span>{
-<a href=#198 id=198 data-nosnippet>198</a>        <span class="prelude-val">None
-<a href=#199 id=199 data-nosnippet>199</a>    </span>};
-<a href=#200 id=200 data-nosnippet>200</a>
-<a href=#201 id=201 data-nosnippet>201</a>    <span class="kw">let </span>chatbot_user = ChatbotTurnContext::new(
-<a href=#202 id=202 data-nosnippet>202</a>        user.map(|u| u.id),
-<a href=#203 id=203 data-nosnippet>203</a>        chatbot_configuration.course_id,
-<a href=#204 id=204 data-nosnippet>204</a>        course_name,
-<a href=#205 id=205 data-nosnippet>205</a>        conversation_id,
-<a href=#206 id=206 data-nosnippet>206</a>        <span class="kw-2">&amp;</span>chatbot_configuration,
-<a href=#207 id=207 data-nosnippet>207</a>    );
+<a href=#84 id=84 data-nosnippet>84</a><span class="attr">#[derive(Debug, Deserialize, Serialize, ToSchema)]
+<a href=#85 id=85 data-nosnippet>85</a></span><span class="kw">pub struct </span>SendChatbotMessage {
+<a href=#86 id=86 data-nosnippet>86</a>    <span class="doccomment">/// What the learner wrote.
+<a href=#87 id=87 data-nosnippet>87</a>    </span><span class="kw">pub </span>message: String,
+<a href=#88 id=88 data-nosnippet>88</a>    <span class="doccomment">/// The course material page the learner has open, when they are on one.
+<a href=#89 id=89 data-nosnippet>89</a>    </span><span class="kw">pub </span>page_context: <span class="prelude-ty">Option</span>&lt;ChatbotPageContext&gt;,
+<a href=#90 id=90 data-nosnippet>90</a>}
+<a href=#91 id=91 data-nosnippet>91</a>
+<a href=#92 id=92 data-nosnippet>92</a><span class="doccomment">/**
+<a href=#93 id=93 data-nosnippet>93</a>POST `/api/v0/course-material/chatbot/:chatbot_configuration_id/conversations/:conversation_id/send-message`
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a>Sends a new chat message to the chatbot.
+<a href=#96 id=96 data-nosnippet>96</a>*/
+<a href=#97 id=97 data-nosnippet>97</a></span><span class="attr">#[utoipa::path(
+<a href=#98 id=98 data-nosnippet>98</a>    post,
+<a href=#99 id=99 data-nosnippet>99</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/send-message"</span>,
+<a href=#100 id=100 data-nosnippet>100</a>    operation_id = <span class="string">"sendChatbotMessage"</span>,
+<a href=#101 id=101 data-nosnippet>101</a>    tag = <span class="string">"course-material-chatbot"</span>,
+<a href=#102 id=102 data-nosnippet>102</a>    params(
+<a href=#103 id=103 data-nosnippet>103</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>),
+<a href=#104 id=104 data-nosnippet>104</a>        (<span class="string">"conversation_id" </span>= Uuid, Path, description = <span class="string">"Conversation id"</span>)
+<a href=#105 id=105 data-nosnippet>105</a>    ),
+<a href=#106 id=106 data-nosnippet>106</a>    request_body = SendChatbotMessage,
+<a href=#107 id=107 data-nosnippet>107</a>    responses(
+<a href=#108 id=108 data-nosnippet>108</a>        (
+<a href=#109 id=109 data-nosnippet>109</a>            status = <span class="number">200</span>,
+<a href=#110 id=110 data-nosnippet>110</a>            description = <span class="string">"Chatbot response stream"</span>,
+<a href=#111 id=111 data-nosnippet>111</a>            body = ChatbotChatStreamEvent,
+<a href=#112 id=112 data-nosnippet>112</a>            content_type = <span class="string">"application/x-ndjson"
+<a href=#113 id=113 data-nosnippet>113</a>        </span>)
+<a href=#114 id=114 data-nosnippet>114</a>    )
+<a href=#115 id=115 data-nosnippet>115</a>)]
+<a href=#116 id=116 data-nosnippet>116</a></span><span class="comment">// Neither the payload nor the request is recorded: the payload carries the learner's message, and
+<a href=#117 id=117 data-nosnippet>117</a>// `HttpRequest`'s Debug is a multi-line dump of every header.
+<a href=#118 id=118 data-nosnippet>118</a></span><span class="attr">#[instrument(
+<a href=#119 id=119 data-nosnippet>119</a>    skip(pool, cache, app_conf, payload, req),
+<a href=#120 id=120 data-nosnippet>120</a>    fields(has_page_context = payload.page_context.is_some())
+<a href=#121 id=121 data-nosnippet>121</a>)]
+<a href=#122 id=122 data-nosnippet>122</a></span><span class="kw">async fn </span>send_message(
+<a href=#123 id=123 data-nosnippet>123</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#124 id=124 data-nosnippet>124</a>    cache: web::Data&lt;Cache&gt;,
+<a href=#125 id=125 data-nosnippet>125</a>    params: web::Path&lt;(Uuid, Uuid)&gt;,
+<a href=#126 id=126 data-nosnippet>126</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
+<a href=#127 id=127 data-nosnippet>127</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#128 id=128 data-nosnippet>128</a>    payload: web::Json&lt;SendChatbotMessage&gt;,
+<a href=#129 id=129 data-nosnippet>129</a>    req: HttpRequest,
+<a href=#130 id=130 data-nosnippet>130</a>) -&gt; ControllerResult&lt;HttpResponse&gt; {
+<a href=#131 id=131 data-nosnippet>131</a>    <span class="kw">let </span>SendChatbotMessage {
+<a href=#132 id=132 data-nosnippet>132</a>        message,
+<a href=#133 id=133 data-nosnippet>133</a>        page_context,
+<a href=#134 id=134 data-nosnippet>134</a>    } = payload.into_inner();
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">let </span>chatbot_configuration_id = params.<span class="number">0</span>;
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="kw">let </span>conversation_id = params.<span class="number">1</span>;
+<a href=#137 id=137 data-nosnippet>137</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#138 id=138 data-nosnippet>138</a>
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">let </span>(token, chatbot_user) = authorize_access_to_conversation(
+<a href=#140 id=140 data-nosnippet>140</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#141 id=141 data-nosnippet>141</a>        chatbot_configuration_id,
+<a href=#142 id=142 data-nosnippet>142</a>        conversation_id,
+<a href=#143 id=143 data-nosnippet>143</a>        user,
+<a href=#144 id=144 data-nosnippet>144</a>        req,
+<a href=#145 id=145 data-nosnippet>145</a>    )
+<a href=#146 id=146 data-nosnippet>146</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="kw">let </span>response_stream = send_chat_request_and_parse_stream(
+<a href=#149 id=149 data-nosnippet>149</a>        <span class="comment">// An Arc, cheap to clone.
+<a href=#150 id=150 data-nosnippet>150</a>        </span>pool.get_ref().clone(),
+<a href=#151 id=151 data-nosnippet>151</a>        <span class="kw-2">&amp;</span>app_conf,
+<a href=#152 id=152 data-nosnippet>152</a>        cache.get_ref().clone(),
+<a href=#153 id=153 data-nosnippet>153</a>        chatbot_configuration_id,
+<a href=#154 id=154 data-nosnippet>154</a>        conversation_id,
+<a href=#155 id=155 data-nosnippet>155</a>        <span class="kw-2">&amp;</span>message,
+<a href=#156 id=156 data-nosnippet>156</a>        page_context,
+<a href=#157 id=157 data-nosnippet>157</a>        chatbot_user,
+<a href=#158 id=158 data-nosnippet>158</a>    )
+<a href=#159 id=159 data-nosnippet>159</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#160 id=160 data-nosnippet>160</a>
+<a href=#161 id=161 data-nosnippet>161</a>    token.authorized_ok(
+<a href=#162 id=162 data-nosnippet>162</a>        HttpResponse::Ok()
+<a href=#163 id=163 data-nosnippet>163</a>            .content_type(<span class="string">"application/x-ndjson"</span>)
+<a href=#164 id=164 data-nosnippet>164</a>            .streaming(response_stream),
+<a href=#165 id=165 data-nosnippet>165</a>    )
+<a href=#166 id=166 data-nosnippet>166</a>}
+<a href=#167 id=167 data-nosnippet>167</a>
+<a href=#168 id=168 data-nosnippet>168</a><span class="doccomment">/// Checks that the caller may use this chatbot and that the conversation is theirs, and collects
+<a href=#169 id=169 data-nosnippet>169</a>/// the context a turn of it needs.
+<a href=#170 id=170 data-nosnippet>170</a>///
+<a href=#171 id=171 data-nosnippet>171</a>/// Every endpoint that continues a conversation has to go through here: without the ownership
+<a href=#172 id=172 data-nosnippet>172</a>/// comparison a caller could send messages into, or answer tool calls of, someone else's
+<a href=#173 id=173 data-nosnippet>173</a>/// conversation by guessing its id.
+<a href=#174 id=174 data-nosnippet>174</a></span><span class="kw">async fn </span>authorize_access_to_conversation(
+<a href=#175 id=175 data-nosnippet>175</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#176 id=176 data-nosnippet>176</a>    chatbot_configuration_id: Uuid,
+<a href=#177 id=177 data-nosnippet>177</a>    conversation_id: Uuid,
+<a href=#178 id=178 data-nosnippet>178</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
+<a href=#179 id=179 data-nosnippet>179</a>    req: HttpRequest,
+<a href=#180 id=180 data-nosnippet>180</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(AuthorizationToken, ChatbotTurnContext), ControllerError&gt; {
+<a href=#181 id=181 data-nosnippet>181</a>    <span class="kw">let </span>chatbot_configuration =
+<a href=#182 id=182 data-nosnippet>182</a>        chatbot_configurations::get_by_id(conn, chatbot_configuration_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#183 id=183 data-nosnippet>183</a>
+<a href=#184 id=184 data-nosnippet>184</a>    <span class="kw">let </span>token =
+<a href=#185 id=185 data-nosnippet>185</a>        authorize_access_to_chatbot(conn, user.map(|u| u.id), <span class="kw-2">&amp;</span>chatbot_configuration).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#186 id=186 data-nosnippet>186</a>
+<a href=#187 id=187 data-nosnippet>187</a>    <span class="kw">let </span>conversation = chatbot_conversations::get_by_id(conn, conversation_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#188 id=188 data-nosnippet>188</a>
+<a href=#189 id=189 data-nosnippet>189</a>    <span class="kw">let </span>anonymous_token = handle_anonymous_token(<span class="kw-2">&amp;</span>req, user);
+<a href=#190 id=190 data-nosnippet>190</a>
+<a href=#191 id=191 data-nosnippet>191</a>    <span class="kw">if </span>conversation.user_id != user.map(|u| u.id)
+<a href=#192 id=192 data-nosnippet>192</a>        || conversation.chatbot_configuration_id != chatbot_configuration_id
+<a href=#193 id=193 data-nosnippet>193</a>        || conversation.course_id != chatbot_configuration.course_id
+<a href=#194 id=194 data-nosnippet>194</a>        || conversation.anonymous_token != anonymous_token
+<a href=#195 id=195 data-nosnippet>195</a>    {
+<a href=#196 id=196 data-nosnippet>196</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">controller_err!</span>(
+<a href=#197 id=197 data-nosnippet>197</a>            Forbidden,
+<a href=#198 id=198 data-nosnippet>198</a>            <span class="string">"Conversation does not belong to the authenticated user and chatbot configuration"
+<a href=#199 id=199 data-nosnippet>199</a>                </span>.to_string()
+<a href=#200 id=200 data-nosnippet>200</a>        ));
+<a href=#201 id=201 data-nosnippet>201</a>    }
+<a href=#202 id=202 data-nosnippet>202</a>
+<a href=#203 id=203 data-nosnippet>203</a>    <span class="kw">let </span>course_name = <span class="kw">if let </span><span class="prelude-val">Some</span>(course_id) = chatbot_configuration.course_id {
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="prelude-val">Some</span>(courses::get_course(conn, course_id).<span class="kw">await</span><span class="question-mark">?</span>.name)
+<a href=#205 id=205 data-nosnippet>205</a>    } <span class="kw">else </span>{
+<a href=#206 id=206 data-nosnippet>206</a>        <span class="prelude-val">None
+<a href=#207 id=207 data-nosnippet>207</a>    </span>};
 <a href=#208 id=208 data-nosnippet>208</a>
-<a href=#209 id=209 data-nosnippet>209</a>    <span class="prelude-val">Ok</span>((token, chatbot_user))
-<a href=#210 id=210 data-nosnippet>210</a>}
-<a href=#211 id=211 data-nosnippet>211</a>
-<a href=#212 id=212 data-nosnippet>212</a><span class="attr">#[derive(Debug, Deserialize, Serialize, ToSchema)]
-<a href=#213 id=213 data-nosnippet>213</a></span><span class="kw">pub struct </span>ChatbotToolResponse {
-<a href=#214 id=214 data-nosnippet>214</a>    <span class="doccomment">/// The call being answered, as its `tool_call_id` arrived in the `ToolCall` stream event.
-<a href=#215 id=215 data-nosnippet>215</a>    </span><span class="kw">pub </span>tool_call_id: String,
-<a href=#216 id=216 data-nosnippet>216</a>    <span class="doccomment">/// The tool the caller believes `tool_call_id` belongs to, checked against the call's
-<a href=#217 id=217 data-nosnippet>217</a>    /// recorded name so a client answering the wrong bubble fails clearly instead of being
-<a href=#218 id=218 data-nosnippet>218</a>    /// silently accepted as whatever tool the call actually was.
-<a href=#219 id=219 data-nosnippet>219</a>    </span><span class="kw">pub </span>tool_name: ClientToolName,
-<a href=#220 id=220 data-nosnippet>220</a>    <span class="kw">pub </span>answer: ClientToolAnswer,
-<a href=#221 id=221 data-nosnippet>221</a>}
-<a href=#222 id=222 data-nosnippet>222</a>
-<a href=#223 id=223 data-nosnippet>223</a><span class="doccomment">/**
-<a href=#224 id=224 data-nosnippet>224</a>POST `/api/v0/course-material/chatbot/:chatbot_configuration_id/conversations/:conversation_id/tool-response`
-<a href=#225 id=225 data-nosnippet>225</a>
-<a href=#226 id=226 data-nosnippet>226</a>Answers a tool call the chatbot suspended its turn on, which resumes the turn once nothing else
-<a href=#227 id=227 data-nosnippet>227</a>is outstanding. Responds with the same stream `send-message` does, carrying either the resumed
-<a href=#228 id=228 data-nosnippet>228</a>turn or a lone `Suspended` event when the turn is still waiting for another answer.
-<a href=#229 id=229 data-nosnippet>229</a>*/
-<a href=#230 id=230 data-nosnippet>230</a></span><span class="attr">#[utoipa::path(
-<a href=#231 id=231 data-nosnippet>231</a>    post,
-<a href=#232 id=232 data-nosnippet>232</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/tool-response"</span>,
-<a href=#233 id=233 data-nosnippet>233</a>    operation_id = <span class="string">"sendChatbotToolResponse"</span>,
-<a href=#234 id=234 data-nosnippet>234</a>    tag = <span class="string">"course-material-chatbot"</span>,
-<a href=#235 id=235 data-nosnippet>235</a>    params(
-<a href=#236 id=236 data-nosnippet>236</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>),
-<a href=#237 id=237 data-nosnippet>237</a>        (<span class="string">"conversation_id" </span>= Uuid, Path, description = <span class="string">"Conversation id"</span>)
-<a href=#238 id=238 data-nosnippet>238</a>    ),
-<a href=#239 id=239 data-nosnippet>239</a>    request_body = ChatbotToolResponse,
-<a href=#240 id=240 data-nosnippet>240</a>    responses(
-<a href=#241 id=241 data-nosnippet>241</a>        (
-<a href=#242 id=242 data-nosnippet>242</a>            status = <span class="number">200</span>,
-<a href=#243 id=243 data-nosnippet>243</a>            description = <span class="string">"Chatbot response stream"</span>,
-<a href=#244 id=244 data-nosnippet>244</a>            body = ChatbotChatStreamEvent,
-<a href=#245 id=245 data-nosnippet>245</a>            content_type = <span class="string">"application/x-ndjson"
-<a href=#246 id=246 data-nosnippet>246</a>        </span>)
-<a href=#247 id=247 data-nosnippet>247</a>    )
-<a href=#248 id=248 data-nosnippet>248</a>)]
-<a href=#249 id=249 data-nosnippet>249</a></span><span class="comment">// Neither the payload nor the request is recorded: the answer can carry what the learner wrote,
-<a href=#250 id=250 data-nosnippet>250</a>// and `HttpRequest`'s Debug prints every header, including the anonymous chatbot bearer token that
-<a href=#251 id=251 data-nosnippet>251</a>// `handle_anonymous_token` reads.
-<a href=#252 id=252 data-nosnippet>252</a></span><span class="attr">#[instrument(skip(pool, cache, app_conf, payload, req))]
-<a href=#253 id=253 data-nosnippet>253</a></span><span class="kw">async fn </span>tool_response(
-<a href=#254 id=254 data-nosnippet>254</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#255 id=255 data-nosnippet>255</a>    cache: web::Data&lt;Cache&gt;,
-<a href=#256 id=256 data-nosnippet>256</a>    params: web::Path&lt;(Uuid, Uuid)&gt;,
-<a href=#257 id=257 data-nosnippet>257</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
-<a href=#258 id=258 data-nosnippet>258</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#259 id=259 data-nosnippet>259</a>    payload: web::Json&lt;ChatbotToolResponse&gt;,
-<a href=#260 id=260 data-nosnippet>260</a>    req: HttpRequest,
-<a href=#261 id=261 data-nosnippet>261</a>) -&gt; ControllerResult&lt;HttpResponse&gt; {
-<a href=#262 id=262 data-nosnippet>262</a>    <span class="kw">let </span>ChatbotToolResponse {
-<a href=#263 id=263 data-nosnippet>263</a>        tool_call_id,
-<a href=#264 id=264 data-nosnippet>264</a>        tool_name,
-<a href=#265 id=265 data-nosnippet>265</a>        answer,
-<a href=#266 id=266 data-nosnippet>266</a>    } = payload.into_inner();
-<a href=#267 id=267 data-nosnippet>267</a>    <span class="kw">let </span>chatbot_configuration_id = params.<span class="number">0</span>;
-<a href=#268 id=268 data-nosnippet>268</a>    <span class="kw">let </span>conversation_id = params.<span class="number">1</span>;
-<a href=#269 id=269 data-nosnippet>269</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#270 id=270 data-nosnippet>270</a>
-<a href=#271 id=271 data-nosnippet>271</a>    <span class="kw">let </span>(token, chatbot_user) = authorize_access_to_conversation(
-<a href=#272 id=272 data-nosnippet>272</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#273 id=273 data-nosnippet>273</a>        chatbot_configuration_id,
-<a href=#274 id=274 data-nosnippet>274</a>        conversation_id,
-<a href=#275 id=275 data-nosnippet>275</a>        user,
-<a href=#276 id=276 data-nosnippet>276</a>        req,
-<a href=#277 id=277 data-nosnippet>277</a>    )
-<a href=#278 id=278 data-nosnippet>278</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#279 id=279 data-nosnippet>279</a>
-<a href=#280 id=280 data-nosnippet>280</a>    <span class="kw">let </span>recorded_call =
-<a href=#281 id=281 data-nosnippet>281</a>        chatbot_conversation_message_tool_calls::get_by_conversation_and_tool_call_id(
-<a href=#282 id=282 data-nosnippet>282</a>            <span class="kw-2">&amp;mut </span>conn,
-<a href=#283 id=283 data-nosnippet>283</a>            conversation_id,
-<a href=#284 id=284 data-nosnippet>284</a>            <span class="kw-2">&amp;</span>tool_call_id,
-<a href=#285 id=285 data-nosnippet>285</a>        )
-<a href=#286 id=286 data-nosnippet>286</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#287 id=287 data-nosnippet>287</a>    <span class="kw">if </span>recorded_call.is_none_or(|call| call.tool_name != tool_name.as_str()) {
-<a href=#288 id=288 data-nosnippet>288</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ControllerError::new(
-<a href=#289 id=289 data-nosnippet>289</a>            ControllerErrorType::BadRequest,
-<a href=#290 id=290 data-nosnippet>290</a>            <span class="string">"tool_name does not match the tool call being answered"</span>.to_string(),
-<a href=#291 id=291 data-nosnippet>291</a>            <span class="prelude-val">None</span>,
-<a href=#292 id=292 data-nosnippet>292</a>        ));
-<a href=#293 id=293 data-nosnippet>293</a>    }
-<a href=#294 id=294 data-nosnippet>294</a>
-<a href=#295 id=295 data-nosnippet>295</a>    <span class="kw">let </span>response_stream = answer_tool_call_and_resume_stream(
-<a href=#296 id=296 data-nosnippet>296</a>        <span class="comment">// An Arc, cheap to clone.
-<a href=#297 id=297 data-nosnippet>297</a>        </span>pool.get_ref().clone(),
-<a href=#298 id=298 data-nosnippet>298</a>        <span class="kw-2">&amp;</span>app_conf,
-<a href=#299 id=299 data-nosnippet>299</a>        cache.get_ref().clone(),
-<a href=#300 id=300 data-nosnippet>300</a>        chatbot_configuration_id,
-<a href=#301 id=301 data-nosnippet>301</a>        conversation_id,
-<a href=#302 id=302 data-nosnippet>302</a>        <span class="kw-2">&amp;</span>tool_call_id,
-<a href=#303 id=303 data-nosnippet>303</a>        <span class="kw-2">&amp;</span>answer,
-<a href=#304 id=304 data-nosnippet>304</a>        chatbot_user,
-<a href=#305 id=305 data-nosnippet>305</a>    )
-<a href=#306 id=306 data-nosnippet>306</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#307 id=307 data-nosnippet>307</a>
-<a href=#308 id=308 data-nosnippet>308</a>    token.authorized_ok(
-<a href=#309 id=309 data-nosnippet>309</a>        HttpResponse::Ok()
-<a href=#310 id=310 data-nosnippet>310</a>            .content_type(<span class="string">"application/x-ndjson"</span>)
-<a href=#311 id=311 data-nosnippet>311</a>            .streaming(response_stream),
-<a href=#312 id=312 data-nosnippet>312</a>    )
-<a href=#313 id=313 data-nosnippet>313</a>}
-<a href=#314 id=314 data-nosnippet>314</a>
-<a href=#315 id=315 data-nosnippet>315</a><span class="doccomment">/**
-<a href=#316 id=316 data-nosnippet>316</a>POST `/api/v0/course-material/course-modules/chatbot/:chatbot_configuration_id/conversations/new`
-<a href=#317 id=317 data-nosnippet>317</a>
-<a href=#318 id=318 data-nosnippet>318</a>Sends a new chat message to the chatbot.
-<a href=#319 id=319 data-nosnippet>319</a>*/
-<a href=#320 id=320 data-nosnippet>320</a></span><span class="attr">#[utoipa::path(
-<a href=#321 id=321 data-nosnippet>321</a>    post,
-<a href=#322 id=322 data-nosnippet>322</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/new"</span>,
-<a href=#323 id=323 data-nosnippet>323</a>    operation_id = <span class="string">"newChatbotConversation"</span>,
-<a href=#324 id=324 data-nosnippet>324</a>    tag = <span class="string">"course-material-chatbot"</span>,
-<a href=#325 id=325 data-nosnippet>325</a>    params(
-<a href=#326 id=326 data-nosnippet>326</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>)
-<a href=#327 id=327 data-nosnippet>327</a>    ),
-<a href=#328 id=328 data-nosnippet>328</a>    responses(
-<a href=#329 id=329 data-nosnippet>329</a>        (status = <span class="number">200</span>, description = <span class="string">"Created chatbot conversation"</span>, body = ChatbotConversation)
-<a href=#330 id=330 data-nosnippet>330</a>    )
-<a href=#331 id=331 data-nosnippet>331</a>)]
-<a href=#332 id=332 data-nosnippet>332</a>#[instrument(skip(pool))]
-<a href=#333 id=333 data-nosnippet>333</a></span><span class="kw">async fn </span>new_conversation(
-<a href=#334 id=334 data-nosnippet>334</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#335 id=335 data-nosnippet>335</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
-<a href=#336 id=336 data-nosnippet>336</a>    params: web::Path&lt;Uuid&gt;,
-<a href=#337 id=337 data-nosnippet>337</a>) -&gt; ControllerResult&lt;web::Json&lt;ChatbotConversation&gt;&gt; {
-<a href=#338 id=338 data-nosnippet>338</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#339 id=339 data-nosnippet>339</a>
-<a href=#340 id=340 data-nosnippet>340</a>    <span class="kw">let </span>configuration = models::chatbot_configurations::get_by_id(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>params).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#341 id=341 data-nosnippet>341</a>
-<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">let </span>token = authorize_access_to_chatbot(<span class="kw-2">&amp;mut </span>conn, user.map(|u| u.id), <span class="kw-2">&amp;</span>configuration).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#343 id=343 data-nosnippet>343</a>
-<a href=#344 id=344 data-nosnippet>344</a>    <span class="kw">let </span>anonymous_token = <span class="kw">if let </span><span class="prelude-val">Some</span>(_user) = user {
-<a href=#345 id=345 data-nosnippet>345</a>        <span class="prelude-val">None
-<a href=#346 id=346 data-nosnippet>346</a>    </span>} <span class="kw">else </span>{
-<a href=#347 id=347 data-nosnippet>347</a>        <span class="prelude-val">Some</span>(Alphanumeric.sample_string(<span class="kw-2">&amp;mut </span>rand::rng(), <span class="number">128</span>))
-<a href=#348 id=348 data-nosnippet>348</a>    };
+<a href=#209 id=209 data-nosnippet>209</a>    <span class="kw">let </span>chatbot_user = ChatbotTurnContext::new(
+<a href=#210 id=210 data-nosnippet>210</a>        user.map(|u| u.id),
+<a href=#211 id=211 data-nosnippet>211</a>        chatbot_configuration.course_id,
+<a href=#212 id=212 data-nosnippet>212</a>        course_name,
+<a href=#213 id=213 data-nosnippet>213</a>        conversation_id,
+<a href=#214 id=214 data-nosnippet>214</a>        <span class="kw-2">&amp;</span>chatbot_configuration,
+<a href=#215 id=215 data-nosnippet>215</a>    );
+<a href=#216 id=216 data-nosnippet>216</a>
+<a href=#217 id=217 data-nosnippet>217</a>    <span class="prelude-val">Ok</span>((token, chatbot_user))
+<a href=#218 id=218 data-nosnippet>218</a>}
+<a href=#219 id=219 data-nosnippet>219</a>
+<a href=#220 id=220 data-nosnippet>220</a><span class="attr">#[derive(Debug, Deserialize, Serialize, ToSchema)]
+<a href=#221 id=221 data-nosnippet>221</a></span><span class="kw">pub struct </span>ChatbotToolResponse {
+<a href=#222 id=222 data-nosnippet>222</a>    <span class="doccomment">/// The call being answered, as its `tool_call_id` arrived in the `ToolCall` stream event.
+<a href=#223 id=223 data-nosnippet>223</a>    </span><span class="kw">pub </span>tool_call_id: String,
+<a href=#224 id=224 data-nosnippet>224</a>    <span class="doccomment">/// The tool the caller believes `tool_call_id` belongs to, checked against the call's
+<a href=#225 id=225 data-nosnippet>225</a>    /// recorded name so a client answering the wrong bubble fails clearly instead of being
+<a href=#226 id=226 data-nosnippet>226</a>    /// silently accepted as whatever tool the call actually was.
+<a href=#227 id=227 data-nosnippet>227</a>    </span><span class="kw">pub </span>tool_name: ClientToolName,
+<a href=#228 id=228 data-nosnippet>228</a>    <span class="kw">pub </span>answer: ClientToolAnswer,
+<a href=#229 id=229 data-nosnippet>229</a>}
+<a href=#230 id=230 data-nosnippet>230</a>
+<a href=#231 id=231 data-nosnippet>231</a><span class="doccomment">/**
+<a href=#232 id=232 data-nosnippet>232</a>POST `/api/v0/course-material/chatbot/:chatbot_configuration_id/conversations/:conversation_id/tool-response`
+<a href=#233 id=233 data-nosnippet>233</a>
+<a href=#234 id=234 data-nosnippet>234</a>Answers a tool call the chatbot suspended its turn on, which resumes the turn once nothing else
+<a href=#235 id=235 data-nosnippet>235</a>is outstanding. Responds with the same stream `send-message` does, carrying either the resumed
+<a href=#236 id=236 data-nosnippet>236</a>turn or a lone `Suspended` event when the turn is still waiting for another answer.
+<a href=#237 id=237 data-nosnippet>237</a>*/
+<a href=#238 id=238 data-nosnippet>238</a></span><span class="attr">#[utoipa::path(
+<a href=#239 id=239 data-nosnippet>239</a>    post,
+<a href=#240 id=240 data-nosnippet>240</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/tool-response"</span>,
+<a href=#241 id=241 data-nosnippet>241</a>    operation_id = <span class="string">"sendChatbotToolResponse"</span>,
+<a href=#242 id=242 data-nosnippet>242</a>    tag = <span class="string">"course-material-chatbot"</span>,
+<a href=#243 id=243 data-nosnippet>243</a>    params(
+<a href=#244 id=244 data-nosnippet>244</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>),
+<a href=#245 id=245 data-nosnippet>245</a>        (<span class="string">"conversation_id" </span>= Uuid, Path, description = <span class="string">"Conversation id"</span>)
+<a href=#246 id=246 data-nosnippet>246</a>    ),
+<a href=#247 id=247 data-nosnippet>247</a>    request_body = ChatbotToolResponse,
+<a href=#248 id=248 data-nosnippet>248</a>    responses(
+<a href=#249 id=249 data-nosnippet>249</a>        (
+<a href=#250 id=250 data-nosnippet>250</a>            status = <span class="number">200</span>,
+<a href=#251 id=251 data-nosnippet>251</a>            description = <span class="string">"Chatbot response stream"</span>,
+<a href=#252 id=252 data-nosnippet>252</a>            body = ChatbotChatStreamEvent,
+<a href=#253 id=253 data-nosnippet>253</a>            content_type = <span class="string">"application/x-ndjson"
+<a href=#254 id=254 data-nosnippet>254</a>        </span>)
+<a href=#255 id=255 data-nosnippet>255</a>    )
+<a href=#256 id=256 data-nosnippet>256</a>)]
+<a href=#257 id=257 data-nosnippet>257</a></span><span class="comment">// Neither the payload nor the request is recorded: the answer can carry what the learner wrote,
+<a href=#258 id=258 data-nosnippet>258</a>// and `HttpRequest`'s Debug prints every header, including the anonymous chatbot bearer token that
+<a href=#259 id=259 data-nosnippet>259</a>// `handle_anonymous_token` reads.
+<a href=#260 id=260 data-nosnippet>260</a></span><span class="attr">#[instrument(skip(pool, cache, app_conf, payload, req))]
+<a href=#261 id=261 data-nosnippet>261</a></span><span class="kw">async fn </span>tool_response(
+<a href=#262 id=262 data-nosnippet>262</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#263 id=263 data-nosnippet>263</a>    cache: web::Data&lt;Cache&gt;,
+<a href=#264 id=264 data-nosnippet>264</a>    params: web::Path&lt;(Uuid, Uuid)&gt;,
+<a href=#265 id=265 data-nosnippet>265</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
+<a href=#266 id=266 data-nosnippet>266</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#267 id=267 data-nosnippet>267</a>    payload: web::Json&lt;ChatbotToolResponse&gt;,
+<a href=#268 id=268 data-nosnippet>268</a>    req: HttpRequest,
+<a href=#269 id=269 data-nosnippet>269</a>) -&gt; ControllerResult&lt;HttpResponse&gt; {
+<a href=#270 id=270 data-nosnippet>270</a>    <span class="kw">let </span>ChatbotToolResponse {
+<a href=#271 id=271 data-nosnippet>271</a>        tool_call_id,
+<a href=#272 id=272 data-nosnippet>272</a>        tool_name,
+<a href=#273 id=273 data-nosnippet>273</a>        answer,
+<a href=#274 id=274 data-nosnippet>274</a>    } = payload.into_inner();
+<a href=#275 id=275 data-nosnippet>275</a>    <span class="kw">let </span>chatbot_configuration_id = params.<span class="number">0</span>;
+<a href=#276 id=276 data-nosnippet>276</a>    <span class="kw">let </span>conversation_id = params.<span class="number">1</span>;
+<a href=#277 id=277 data-nosnippet>277</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#278 id=278 data-nosnippet>278</a>
+<a href=#279 id=279 data-nosnippet>279</a>    <span class="kw">let </span>(token, chatbot_user) = authorize_access_to_conversation(
+<a href=#280 id=280 data-nosnippet>280</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#281 id=281 data-nosnippet>281</a>        chatbot_configuration_id,
+<a href=#282 id=282 data-nosnippet>282</a>        conversation_id,
+<a href=#283 id=283 data-nosnippet>283</a>        user,
+<a href=#284 id=284 data-nosnippet>284</a>        req,
+<a href=#285 id=285 data-nosnippet>285</a>    )
+<a href=#286 id=286 data-nosnippet>286</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#287 id=287 data-nosnippet>287</a>
+<a href=#288 id=288 data-nosnippet>288</a>    <span class="kw">let </span>recorded_call =
+<a href=#289 id=289 data-nosnippet>289</a>        chatbot_conversation_message_tool_calls::get_by_conversation_and_tool_call_id(
+<a href=#290 id=290 data-nosnippet>290</a>            <span class="kw-2">&amp;mut </span>conn,
+<a href=#291 id=291 data-nosnippet>291</a>            conversation_id,
+<a href=#292 id=292 data-nosnippet>292</a>            <span class="kw-2">&amp;</span>tool_call_id,
+<a href=#293 id=293 data-nosnippet>293</a>        )
+<a href=#294 id=294 data-nosnippet>294</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#295 id=295 data-nosnippet>295</a>    <span class="kw">if </span>recorded_call.is_none_or(|call| call.tool_name != tool_name.as_str()) {
+<a href=#296 id=296 data-nosnippet>296</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ControllerError::new(
+<a href=#297 id=297 data-nosnippet>297</a>            ControllerErrorType::BadRequest,
+<a href=#298 id=298 data-nosnippet>298</a>            <span class="string">"tool_name does not match the tool call being answered"</span>.to_string(),
+<a href=#299 id=299 data-nosnippet>299</a>            <span class="prelude-val">None</span>,
+<a href=#300 id=300 data-nosnippet>300</a>        ));
+<a href=#301 id=301 data-nosnippet>301</a>    }
+<a href=#302 id=302 data-nosnippet>302</a>
+<a href=#303 id=303 data-nosnippet>303</a>    <span class="kw">let </span>response_stream = answer_tool_call_and_resume_stream(
+<a href=#304 id=304 data-nosnippet>304</a>        <span class="comment">// An Arc, cheap to clone.
+<a href=#305 id=305 data-nosnippet>305</a>        </span>pool.get_ref().clone(),
+<a href=#306 id=306 data-nosnippet>306</a>        <span class="kw-2">&amp;</span>app_conf,
+<a href=#307 id=307 data-nosnippet>307</a>        cache.get_ref().clone(),
+<a href=#308 id=308 data-nosnippet>308</a>        chatbot_configuration_id,
+<a href=#309 id=309 data-nosnippet>309</a>        conversation_id,
+<a href=#310 id=310 data-nosnippet>310</a>        <span class="kw-2">&amp;</span>tool_call_id,
+<a href=#311 id=311 data-nosnippet>311</a>        <span class="kw-2">&amp;</span>answer,
+<a href=#312 id=312 data-nosnippet>312</a>        chatbot_user,
+<a href=#313 id=313 data-nosnippet>313</a>    )
+<a href=#314 id=314 data-nosnippet>314</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#315 id=315 data-nosnippet>315</a>
+<a href=#316 id=316 data-nosnippet>316</a>    token.authorized_ok(
+<a href=#317 id=317 data-nosnippet>317</a>        HttpResponse::Ok()
+<a href=#318 id=318 data-nosnippet>318</a>            .content_type(<span class="string">"application/x-ndjson"</span>)
+<a href=#319 id=319 data-nosnippet>319</a>            .streaming(response_stream),
+<a href=#320 id=320 data-nosnippet>320</a>    )
+<a href=#321 id=321 data-nosnippet>321</a>}
+<a href=#322 id=322 data-nosnippet>322</a>
+<a href=#323 id=323 data-nosnippet>323</a><span class="doccomment">/**
+<a href=#324 id=324 data-nosnippet>324</a>POST `/api/v0/course-material/course-modules/chatbot/:chatbot_configuration_id/conversations/new`
+<a href=#325 id=325 data-nosnippet>325</a>
+<a href=#326 id=326 data-nosnippet>326</a>Sends a new chat message to the chatbot.
+<a href=#327 id=327 data-nosnippet>327</a>*/
+<a href=#328 id=328 data-nosnippet>328</a></span><span class="attr">#[utoipa::path(
+<a href=#329 id=329 data-nosnippet>329</a>    post,
+<a href=#330 id=330 data-nosnippet>330</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/new"</span>,
+<a href=#331 id=331 data-nosnippet>331</a>    operation_id = <span class="string">"newChatbotConversation"</span>,
+<a href=#332 id=332 data-nosnippet>332</a>    tag = <span class="string">"course-material-chatbot"</span>,
+<a href=#333 id=333 data-nosnippet>333</a>    params(
+<a href=#334 id=334 data-nosnippet>334</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>)
+<a href=#335 id=335 data-nosnippet>335</a>    ),
+<a href=#336 id=336 data-nosnippet>336</a>    responses(
+<a href=#337 id=337 data-nosnippet>337</a>        (status = <span class="number">200</span>, description = <span class="string">"Created chatbot conversation"</span>, body = ChatbotConversation)
+<a href=#338 id=338 data-nosnippet>338</a>    )
+<a href=#339 id=339 data-nosnippet>339</a>)]
+<a href=#340 id=340 data-nosnippet>340</a>#[instrument(skip(pool))]
+<a href=#341 id=341 data-nosnippet>341</a></span><span class="kw">async fn </span>new_conversation(
+<a href=#342 id=342 data-nosnippet>342</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#343 id=343 data-nosnippet>343</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
+<a href=#344 id=344 data-nosnippet>344</a>    params: web::Path&lt;Uuid&gt;,
+<a href=#345 id=345 data-nosnippet>345</a>) -&gt; ControllerResult&lt;web::Json&lt;ChatbotConversation&gt;&gt; {
+<a href=#346 id=346 data-nosnippet>346</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#347 id=347 data-nosnippet>347</a>
+<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">let </span>configuration = models::chatbot_configurations::get_by_id(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>params).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#349 id=349 data-nosnippet>349</a>
-<a href=#350 id=350 data-nosnippet>350</a>    <span class="kw">let </span>conversation = models::chatbot_conversations::create_for_user_and_configuration(
-<a href=#351 id=351 data-nosnippet>351</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#352 id=352 data-nosnippet>352</a>        PKeyPolicy::Generate,
-<a href=#353 id=353 data-nosnippet>353</a>        user.map(|u| u.id),
-<a href=#354 id=354 data-nosnippet>354</a>        anonymous_token.as_ref().map(|a| a.to_owned()),
-<a href=#355 id=355 data-nosnippet>355</a>        configuration.id,
-<a href=#356 id=356 data-nosnippet>356</a>    )
-<a href=#357 id=357 data-nosnippet>357</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#358 id=358 data-nosnippet>358</a>
-<a href=#359 id=359 data-nosnippet>359</a>    <span class="kw">let </span>_first_message =
-<a href=#360 id=360 data-nosnippet>360</a>        models::chatbot_conversation_messages::insert_for_conversation_user_and_configuration(
-<a href=#361 id=361 data-nosnippet>361</a>            <span class="kw-2">&amp;mut </span>conn,
-<a href=#362 id=362 data-nosnippet>362</a>            models::chatbot_conversation_messages::ChatbotConversationMessage::text(
-<a href=#363 id=363 data-nosnippet>363</a>                conversation.id,
-<a href=#364 id=364 data-nosnippet>364</a>                MessageRole::Assistant,
-<a href=#365 id=365 data-nosnippet>365</a>                configuration.initial_message.clone(),
-<a href=#366 id=366 data-nosnippet>366</a>                estimate_tokens(<span class="kw-2">&amp;</span>configuration.initial_message),
-<a href=#367 id=367 data-nosnippet>367</a>                <span class="prelude-val">Some</span>(<span class="string">"initial-message"</span>.to_string()),
-<a href=#368 id=368 data-nosnippet>368</a>            ),
-<a href=#369 id=369 data-nosnippet>369</a>            user.map(|u| u.id),
-<a href=#370 id=370 data-nosnippet>370</a>            anonymous_token,
-<a href=#371 id=371 data-nosnippet>371</a>            configuration.id,
-<a href=#372 id=372 data-nosnippet>372</a>        )
-<a href=#373 id=373 data-nosnippet>373</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#374 id=374 data-nosnippet>374</a>
-<a href=#375 id=375 data-nosnippet>375</a>    token.authorized_ok(web::Json(conversation))
-<a href=#376 id=376 data-nosnippet>376</a>}
-<a href=#377 id=377 data-nosnippet>377</a>
-<a href=#378 id=378 data-nosnippet>378</a><span class="doccomment">/**
-<a href=#379 id=379 data-nosnippet>379</a>POST `/api/v0/course-material/course-modules/chatbot/:chatbot_configuration_id/conversations/current`
-<a href=#380 id=380 data-nosnippet>380</a>
-<a href=#381 id=381 data-nosnippet>381</a>Returns the current conversation for the user.
-<a href=#382 id=382 data-nosnippet>382</a>*/
-<a href=#383 id=383 data-nosnippet>383</a></span><span class="attr">#[utoipa::path(
-<a href=#384 id=384 data-nosnippet>384</a>    get,
-<a href=#385 id=385 data-nosnippet>385</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/current"</span>,
-<a href=#386 id=386 data-nosnippet>386</a>    operation_id = <span class="string">"getChatbotCurrentConversationInfo"</span>,
-<a href=#387 id=387 data-nosnippet>387</a>    tag = <span class="string">"course-material-chatbot"</span>,
-<a href=#388 id=388 data-nosnippet>388</a>    params(
-<a href=#389 id=389 data-nosnippet>389</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>)
-<a href=#390 id=390 data-nosnippet>390</a>    ),
-<a href=#391 id=391 data-nosnippet>391</a>    responses(
-<a href=#392 id=392 data-nosnippet>392</a>        (
-<a href=#393 id=393 data-nosnippet>393</a>            status = <span class="number">200</span>,
-<a href=#394 id=394 data-nosnippet>394</a>            description = <span class="string">"Current chatbot conversation info"</span>,
-<a href=#395 id=395 data-nosnippet>395</a>            body = ChatbotConversationInfo
-<a href=#396 id=396 data-nosnippet>396</a>        )
-<a href=#397 id=397 data-nosnippet>397</a>    )
-<a href=#398 id=398 data-nosnippet>398</a>)]
-<a href=#399 id=399 data-nosnippet>399</a>#[instrument(skip(pool, app_conf, req))]
-<a href=#400 id=400 data-nosnippet>400</a></span><span class="kw">async fn </span>current_conversation_info(
-<a href=#401 id=401 data-nosnippet>401</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#402 id=402 data-nosnippet>402</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
-<a href=#403 id=403 data-nosnippet>403</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#404 id=404 data-nosnippet>404</a>    params: web::Path&lt;Uuid&gt;,
-<a href=#405 id=405 data-nosnippet>405</a>    req: HttpRequest,
-<a href=#406 id=406 data-nosnippet>406</a>) -&gt; ControllerResult&lt;web::Json&lt;ChatbotConversationInfo&gt;&gt; {
-<a href=#407 id=407 data-nosnippet>407</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#408 id=408 data-nosnippet>408</a>    <span class="kw">let </span>chatbot_configuration =
-<a href=#409 id=409 data-nosnippet>409</a>        models::chatbot_configurations::get_by_id(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>params).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#410 id=410 data-nosnippet>410</a>
-<a href=#411 id=411 data-nosnippet>411</a>    <span class="kw">let </span>token =
-<a href=#412 id=412 data-nosnippet>412</a>        authorize_access_to_chatbot(<span class="kw-2">&amp;mut </span>conn, user.map(|u| u.id), <span class="kw-2">&amp;</span>chatbot_configuration).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#413 id=413 data-nosnippet>413</a>
-<a href=#414 id=414 data-nosnippet>414</a>    <span class="kw">let </span>anonymous_token = handle_anonymous_token(<span class="kw-2">&amp;</span>req, user);
-<a href=#415 id=415 data-nosnippet>415</a>
-<a href=#416 id=416 data-nosnippet>416</a>    <span class="kw">let </span>res = chatbot_conversations::get_current_conversation_info(
-<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#418 id=418 data-nosnippet>418</a>        user.map(|u| u.id),
-<a href=#419 id=419 data-nosnippet>419</a>        anonymous_token.as_ref().map(|a| a.to_owned()),
-<a href=#420 id=420 data-nosnippet>420</a>        chatbot_configuration.id,
-<a href=#421 id=421 data-nosnippet>421</a>    )
-<a href=#422 id=422 data-nosnippet>422</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#423 id=423 data-nosnippet>423</a>
-<a href=#424 id=424 data-nosnippet>424</a>    <span class="comment">// A None means no suggestion belongs here at all, which includes a turn suspended on a question
-<a href=#425 id=425 data-nosnippet>425</a>    // to the learner, so the generation below is skipped for those without a check of its own.
-<a href=#426 id=426 data-nosnippet>426</a>    </span><span class="kw">if </span>chatbot_configuration.suggest_next_messages
-<a href=#427 id=427 data-nosnippet>427</a>        &amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(suggested_messages) = <span class="kw-2">&amp;</span>res.suggested_messages
-<a href=#428 id=428 data-nosnippet>428</a>        &amp;&amp; suggested_messages.is_empty()
-<a href=#429 id=429 data-nosnippet>429</a>        &amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(current_conversation_messages) = <span class="kw-2">&amp;</span>res.current_conversation_messages
-<a href=#430 id=430 data-nosnippet>430</a>        &amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(last_message) = current_conversation_messages.last()
-<a href=#431 id=431 data-nosnippet>431</a>        &amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(course_name) = <span class="kw-2">&amp;</span>res.course_name
-<a href=#432 id=432 data-nosnippet>432</a>    {
-<a href=#433 id=433 data-nosnippet>433</a>        <span class="kw">let </span>initial_suggested_messages = <span class="kw">if </span>last_message.order_number == <span class="number">1 </span>{
-<a href=#434 id=434 data-nosnippet>434</a>            <span class="comment">// for the first message, get initial_suggested_messages
-<a href=#435 id=435 data-nosnippet>435</a>            </span><span class="kw">let </span>initial_suggested_messages = chatbot_configuration
-<a href=#436 id=436 data-nosnippet>436</a>                .initial_suggested_messages
-<a href=#437 id=437 data-nosnippet>437</a>                .unwrap_or(<span class="macro">vec!</span>[]);
-<a href=#438 id=438 data-nosnippet>438</a>            <span class="comment">// take 3 random elements
-<a href=#439 id=439 data-nosnippet>439</a>            </span><span class="kw">if </span>initial_suggested_messages.len() &gt; <span class="number">3 </span>{
-<a href=#440 id=440 data-nosnippet>440</a>                <span class="kw">let </span><span class="kw-2">mut </span>rng = rand::rng();
-<a href=#441 id=441 data-nosnippet>441</a>                initial_suggested_messages
-<a href=#442 id=442 data-nosnippet>442</a>                    .sample(<span class="kw-2">&amp;mut </span>rng, <span class="number">3</span>)
-<a href=#443 id=443 data-nosnippet>443</a>                    .cloned()
-<a href=#444 id=444 data-nosnippet>444</a>                    .collect()
-<a href=#445 id=445 data-nosnippet>445</a>            } <span class="kw">else </span>{
-<a href=#446 id=446 data-nosnippet>446</a>                initial_suggested_messages
-<a href=#447 id=447 data-nosnippet>447</a>            }
-<a href=#448 id=448 data-nosnippet>448</a>        } <span class="kw">else </span>{
-<a href=#449 id=449 data-nosnippet>449</a>            <span class="comment">// for other messages, generate suggested messages
-<a href=#450 id=450 data-nosnippet>450</a>            </span><span class="kw">let </span>course_description = <span class="kw">if let </span><span class="prelude-val">Some</span>(course_id) = chatbot_configuration.course_id {
-<a href=#451 id=451 data-nosnippet>451</a>                models::courses::get_course(<span class="kw-2">&amp;mut </span>conn, course_id)
-<a href=#452 id=452 data-nosnippet>452</a>                    .<span class="kw">await</span><span class="question-mark">?
-<a href=#453 id=453 data-nosnippet>453</a>                    </span>.description
-<a href=#454 id=454 data-nosnippet>454</a>            } <span class="kw">else </span>{
-<a href=#455 id=455 data-nosnippet>455</a>                <span class="prelude-val">None
-<a href=#456 id=456 data-nosnippet>456</a>            </span>};
-<a href=#457 id=457 data-nosnippet>457</a>            <span class="kw">let </span>message_suggest_llm =
-<a href=#458 id=458 data-nosnippet>458</a>                models::application_task_default_language_models::get_for_task(
-<a href=#459 id=459 data-nosnippet>459</a>                    <span class="kw-2">&amp;mut </span>conn,
-<a href=#460 id=460 data-nosnippet>460</a>                    ApplicationTask::MessageSuggestion,
-<a href=#461 id=461 data-nosnippet>461</a>                )
-<a href=#462 id=462 data-nosnippet>462</a>                .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#463 id=463 data-nosnippet>463</a>
-<a href=#464 id=464 data-nosnippet>464</a>            headless_lms_chatbot::message_suggestion::generate_suggested_messages(
-<a href=#465 id=465 data-nosnippet>465</a>                <span class="kw-2">&amp;</span>app_conf,
-<a href=#466 id=466 data-nosnippet>466</a>                message_suggest_llm,
-<a href=#467 id=467 data-nosnippet>467</a>                current_conversation_messages,
-<a href=#468 id=468 data-nosnippet>468</a>                chatbot_configuration.initial_suggested_messages,
-<a href=#469 id=469 data-nosnippet>469</a>                <span class="prelude-val">Some</span>(course_name.to_owned()),
-<a href=#470 id=470 data-nosnippet>470</a>                course_description,
-<a href=#471 id=471 data-nosnippet>471</a>            )
-<a href=#472 id=472 data-nosnippet>472</a>            .<span class="kw">await</span><span class="question-mark">?
-<a href=#473 id=473 data-nosnippet>473</a>        </span>};
-<a href=#474 id=474 data-nosnippet>474</a>
-<a href=#475 id=475 data-nosnippet>475</a>        <span class="kw">if </span>!initial_suggested_messages.is_empty() {
-<a href=#476 id=476 data-nosnippet>476</a>            headless_lms_models::chatbot_conversation_suggested_messages::insert_batch(
-<a href=#477 id=477 data-nosnippet>477</a>                <span class="kw-2">&amp;mut </span>conn,
-<a href=#478 id=478 data-nosnippet>478</a>                <span class="kw-2">&amp;</span>last_message.id,
-<a href=#479 id=479 data-nosnippet>479</a>                initial_suggested_messages,
-<a href=#480 id=480 data-nosnippet>480</a>            )
-<a href=#481 id=481 data-nosnippet>481</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#482 id=482 data-nosnippet>482</a>        }
-<a href=#483 id=483 data-nosnippet>483</a>
-<a href=#484 id=484 data-nosnippet>484</a>        <span class="kw">let </span>res = chatbot_conversations::get_current_conversation_info(
-<a href=#485 id=485 data-nosnippet>485</a>            <span class="kw-2">&amp;mut </span>conn,
-<a href=#486 id=486 data-nosnippet>486</a>            user.map(|u| u.id),
-<a href=#487 id=487 data-nosnippet>487</a>            anonymous_token,
-<a href=#488 id=488 data-nosnippet>488</a>            chatbot_configuration.id,
-<a href=#489 id=489 data-nosnippet>489</a>        )
-<a href=#490 id=490 data-nosnippet>490</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#491 id=491 data-nosnippet>491</a>        <span class="kw">return </span>token.authorized_ok(web::Json(res));
-<a href=#492 id=492 data-nosnippet>492</a>    }
-<a href=#493 id=493 data-nosnippet>493</a>
-<a href=#494 id=494 data-nosnippet>494</a>    token.authorized_ok(web::Json(res))
-<a href=#495 id=495 data-nosnippet>495</a>}
-<a href=#496 id=496 data-nosnippet>496</a>
-<a href=#497 id=497 data-nosnippet>497</a><span class="doccomment">/**
-<a href=#498 id=498 data-nosnippet>498</a>Add a route for each controller in this module.
-<a href=#499 id=499 data-nosnippet>499</a>
-<a href=#500 id=500 data-nosnippet>500</a>The name starts with an underline in order to appear before other functions in the module documentation.
-<a href=#501 id=501 data-nosnippet>501</a>
-<a href=#502 id=502 data-nosnippet>502</a>We add the routes by calling the route method instead of using the route annotations because this method preserves the function signatures for documentation.
-<a href=#503 id=503 data-nosnippet>503</a>*/
-<a href=#504 id=504 data-nosnippet>504</a></span><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#505 id=505 data-nosnippet>505</a>    cfg.route(
-<a href=#506 id=506 data-nosnippet>506</a>        <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/send-message"</span>,
-<a href=#507 id=507 data-nosnippet>507</a>        web::post().to(send_message),
-<a href=#508 id=508 data-nosnippet>508</a>    )
-<a href=#509 id=509 data-nosnippet>509</a>    .route(
-<a href=#510 id=510 data-nosnippet>510</a>        <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/tool-response"</span>,
-<a href=#511 id=511 data-nosnippet>511</a>        web::post().to(tool_response),
-<a href=#512 id=512 data-nosnippet>512</a>    )
-<a href=#513 id=513 data-nosnippet>513</a>    .route(
-<a href=#514 id=514 data-nosnippet>514</a>        <span class="string">"/{chatbot_configuration_id}/conversations/current"</span>,
-<a href=#515 id=515 data-nosnippet>515</a>        web::get().to(current_conversation_info),
-<a href=#516 id=516 data-nosnippet>516</a>    )
-<a href=#517 id=517 data-nosnippet>517</a>    .route(
-<a href=#518 id=518 data-nosnippet>518</a>        <span class="string">"/{chatbot_configuration_id}/conversations/new"</span>,
-<a href=#519 id=519 data-nosnippet>519</a>        web::post().to(new_conversation),
-<a href=#520 id=520 data-nosnippet>520</a>    )
-<a href=#521 id=521 data-nosnippet>521</a>    .route(
-<a href=#522 id=522 data-nosnippet>522</a>        <span class="string">"/default-for-course/{course_id}"</span>,
-<a href=#523 id=523 data-nosnippet>523</a>        web::get().to(get_default_chatbot_configuration_for_course),
-<a href=#524 id=524 data-nosnippet>524</a>    );
-<a href=#525 id=525 data-nosnippet>525</a>}
+<a href=#350 id=350 data-nosnippet>350</a>    <span class="kw">let </span>token = authorize_access_to_chatbot(<span class="kw-2">&amp;mut </span>conn, user.map(|u| u.id), <span class="kw-2">&amp;</span>configuration).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#351 id=351 data-nosnippet>351</a>
+<a href=#352 id=352 data-nosnippet>352</a>    <span class="kw">let </span>anonymous_token = <span class="kw">if let </span><span class="prelude-val">Some</span>(_user) = user {
+<a href=#353 id=353 data-nosnippet>353</a>        <span class="prelude-val">None
+<a href=#354 id=354 data-nosnippet>354</a>    </span>} <span class="kw">else </span>{
+<a href=#355 id=355 data-nosnippet>355</a>        <span class="prelude-val">Some</span>(Alphanumeric.sample_string(<span class="kw-2">&amp;mut </span>rand::rng(), <span class="number">128</span>))
+<a href=#356 id=356 data-nosnippet>356</a>    };
+<a href=#357 id=357 data-nosnippet>357</a>
+<a href=#358 id=358 data-nosnippet>358</a>    <span class="kw">let </span>conversation = models::chatbot_conversations::create_for_user_and_configuration(
+<a href=#359 id=359 data-nosnippet>359</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#360 id=360 data-nosnippet>360</a>        PKeyPolicy::Generate,
+<a href=#361 id=361 data-nosnippet>361</a>        user.map(|u| u.id),
+<a href=#362 id=362 data-nosnippet>362</a>        anonymous_token.as_ref().map(|a| a.to_owned()),
+<a href=#363 id=363 data-nosnippet>363</a>        configuration.id,
+<a href=#364 id=364 data-nosnippet>364</a>    )
+<a href=#365 id=365 data-nosnippet>365</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#366 id=366 data-nosnippet>366</a>
+<a href=#367 id=367 data-nosnippet>367</a>    <span class="kw">let </span>_first_message =
+<a href=#368 id=368 data-nosnippet>368</a>        models::chatbot_conversation_messages::insert_for_conversation_user_and_configuration(
+<a href=#369 id=369 data-nosnippet>369</a>            <span class="kw-2">&amp;mut </span>conn,
+<a href=#370 id=370 data-nosnippet>370</a>            models::chatbot_conversation_messages::ChatbotConversationMessage::text(
+<a href=#371 id=371 data-nosnippet>371</a>                conversation.id,
+<a href=#372 id=372 data-nosnippet>372</a>                MessageRole::Assistant,
+<a href=#373 id=373 data-nosnippet>373</a>                configuration.initial_message.clone(),
+<a href=#374 id=374 data-nosnippet>374</a>                estimate_tokens(<span class="kw-2">&amp;</span>configuration.initial_message),
+<a href=#375 id=375 data-nosnippet>375</a>                <span class="prelude-val">Some</span>(<span class="string">"initial-message"</span>.to_string()),
+<a href=#376 id=376 data-nosnippet>376</a>            ),
+<a href=#377 id=377 data-nosnippet>377</a>            user.map(|u| u.id),
+<a href=#378 id=378 data-nosnippet>378</a>            anonymous_token,
+<a href=#379 id=379 data-nosnippet>379</a>            configuration.id,
+<a href=#380 id=380 data-nosnippet>380</a>        )
+<a href=#381 id=381 data-nosnippet>381</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#382 id=382 data-nosnippet>382</a>
+<a href=#383 id=383 data-nosnippet>383</a>    token.authorized_ok(web::Json(conversation))
+<a href=#384 id=384 data-nosnippet>384</a>}
+<a href=#385 id=385 data-nosnippet>385</a>
+<a href=#386 id=386 data-nosnippet>386</a><span class="doccomment">/**
+<a href=#387 id=387 data-nosnippet>387</a>GET `/api/v0/course-material/chatbot/conversations/all`
+<a href=#388 id=388 data-nosnippet>388</a>
+<a href=#389 id=389 data-nosnippet>389</a>Returns all conversations that a user has.
+<a href=#390 id=390 data-nosnippet>390</a>*/
+<a href=#391 id=391 data-nosnippet>391</a></span><span class="attr">#[utoipa::path(
+<a href=#392 id=392 data-nosnippet>392</a>    get,
+<a href=#393 id=393 data-nosnippet>393</a>    path = <span class="string">"/conversations/all"</span>,
+<a href=#394 id=394 data-nosnippet>394</a>    operation_id = <span class="string">"AllUserConversations"</span>,
+<a href=#395 id=395 data-nosnippet>395</a>    tag = <span class="string">"course-material-chatbot"</span>,
+<a href=#396 id=396 data-nosnippet>396</a>    responses(
+<a href=#397 id=397 data-nosnippet>397</a>        (status = <span class="number">200</span>, description = <span class="string">"All chatbot conversations for user"</span>, body = Vec&lt;ChatbotConversation&gt;)
+<a href=#398 id=398 data-nosnippet>398</a>    )
+<a href=#399 id=399 data-nosnippet>399</a>)]
+<a href=#400 id=400 data-nosnippet>400</a>#[instrument(skip(pool))]
+<a href=#401 id=401 data-nosnippet>401</a></span><span class="kw">async fn </span>all_user_conversations(
+<a href=#402 id=402 data-nosnippet>402</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#403 id=403 data-nosnippet>403</a>    user: AuthUser,
+<a href=#404 id=404 data-nosnippet>404</a>) -&gt; ControllerResult&lt;web::Json&lt;Vec&lt;ChatbotConversation&gt;&gt;&gt; {
+<a href=#405 id=405 data-nosnippet>405</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#406 id=406 data-nosnippet>406</a>    <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::View, <span class="prelude-val">Some</span>(user.id), Res::GlobalPermissions).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#407 id=407 data-nosnippet>407</a>
+<a href=#408 id=408 data-nosnippet>408</a>    <span class="kw">let </span>res = chatbot_conversations::get_all_conversations_for_user(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#409 id=409 data-nosnippet>409</a>    token.authorized_ok(web::Json(res))
+<a href=#410 id=410 data-nosnippet>410</a>}
+<a href=#411 id=411 data-nosnippet>411</a>
+<a href=#412 id=412 data-nosnippet>412</a><span class="doccomment">/**
+<a href=#413 id=413 data-nosnippet>413</a>GET `/api/v0/course-material/chatbot/:chatbot_configuration_id/conversations`
+<a href=#414 id=414 data-nosnippet>414</a>
+<a href=#415 id=415 data-nosnippet>415</a>Returns a chatbot conversation for the user. If conversation id is not provided as a query parameter then latest conversation is returned.
+<a href=#416 id=416 data-nosnippet>416</a>*/
+<a href=#417 id=417 data-nosnippet>417</a></span><span class="attr">#[utoipa::path(
+<a href=#418 id=418 data-nosnippet>418</a>    get,
+<a href=#419 id=419 data-nosnippet>419</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations"</span>,
+<a href=#420 id=420 data-nosnippet>420</a>    operation_id = <span class="string">"getConversationInfo"</span>,
+<a href=#421 id=421 data-nosnippet>421</a>    tag = <span class="string">"course-material-chatbot"</span>,
+<a href=#422 id=422 data-nosnippet>422</a>    params(
+<a href=#423 id=423 data-nosnippet>423</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>),
+<a href=#424 id=424 data-nosnippet>424</a>        (<span class="string">"conversation_id" </span>= <span class="prelude-ty">Option</span>&lt;Uuid&gt;, Query, description = <span class="string">"Conversation id"</span>)
+<a href=#425 id=425 data-nosnippet>425</a>    ),
+<a href=#426 id=426 data-nosnippet>426</a>    responses(
+<a href=#427 id=427 data-nosnippet>427</a>        (
+<a href=#428 id=428 data-nosnippet>428</a>            status = <span class="number">200</span>,
+<a href=#429 id=429 data-nosnippet>429</a>            description = <span class="string">"Selected chatbot conversation info"</span>,
+<a href=#430 id=430 data-nosnippet>430</a>            body = ChatbotConversationInfo
+<a href=#431 id=431 data-nosnippet>431</a>        )
+<a href=#432 id=432 data-nosnippet>432</a>    )
+<a href=#433 id=433 data-nosnippet>433</a>)]
+<a href=#434 id=434 data-nosnippet>434</a>#[instrument(skip(pool, app_conf))]
+<a href=#435 id=435 data-nosnippet>435</a>
+<a href=#436 id=436 data-nosnippet>436</a></span><span class="kw">async fn </span>conversation_info(
+<a href=#437 id=437 data-nosnippet>437</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#438 id=438 data-nosnippet>438</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
+<a href=#439 id=439 data-nosnippet>439</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#440 id=440 data-nosnippet>440</a>    params: web::Path&lt;Uuid&gt;,
+<a href=#441 id=441 data-nosnippet>441</a>    query: web::Query&lt;ConversationQuery&gt;,
+<a href=#442 id=442 data-nosnippet>442</a>    req: HttpRequest,
+<a href=#443 id=443 data-nosnippet>443</a>) -&gt; ControllerResult&lt;web::Json&lt;ChatbotConversationInfo&gt;&gt; {
+<a href=#444 id=444 data-nosnippet>444</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#445 id=445 data-nosnippet>445</a>    <span class="kw">let </span>conversation_id = query.conversation_id;
+<a href=#446 id=446 data-nosnippet>446</a>    <span class="kw">let </span>chatbot_configuration =
+<a href=#447 id=447 data-nosnippet>447</a>        models::chatbot_configurations::get_by_id(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>params).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#448 id=448 data-nosnippet>448</a>
+<a href=#449 id=449 data-nosnippet>449</a>    <span class="kw">let </span>token =
+<a href=#450 id=450 data-nosnippet>450</a>        authorize_access_to_chatbot(<span class="kw-2">&amp;mut </span>conn, user.map(|u| u.id), <span class="kw-2">&amp;</span>chatbot_configuration).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#451 id=451 data-nosnippet>451</a>
+<a href=#452 id=452 data-nosnippet>452</a>    <span class="kw">let </span>anonymous_token = handle_anonymous_token(<span class="kw-2">&amp;</span>req, user);
+<a href=#453 id=453 data-nosnippet>453</a>
+<a href=#454 id=454 data-nosnippet>454</a>    <span class="kw">let </span>res = chatbot_conversations::get_conversation_info(
+<a href=#455 id=455 data-nosnippet>455</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#456 id=456 data-nosnippet>456</a>        user.map(|u| u.id),
+<a href=#457 id=457 data-nosnippet>457</a>        anonymous_token.as_ref().map(|a| a.to_owned()),
+<a href=#458 id=458 data-nosnippet>458</a>        chatbot_configuration.id,
+<a href=#459 id=459 data-nosnippet>459</a>        conversation_id,
+<a href=#460 id=460 data-nosnippet>460</a>    )
+<a href=#461 id=461 data-nosnippet>461</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#462 id=462 data-nosnippet>462</a>
+<a href=#463 id=463 data-nosnippet>463</a>    <span class="comment">// A None means no suggestion belongs here at all, which includes a turn suspended on a question
+<a href=#464 id=464 data-nosnippet>464</a>    // to the learner, so the generation below is skipped for those without a check of its own.
+<a href=#465 id=465 data-nosnippet>465</a>    </span><span class="kw">if </span>chatbot_configuration.suggest_next_messages
+<a href=#466 id=466 data-nosnippet>466</a>        <span class="comment">// suggested_messages is None if suggest_next_messages=false
+<a href=#467 id=467 data-nosnippet>467</a>        </span>&amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(suggested_messages) = <span class="kw-2">&amp;</span>res.suggested_messages
+<a href=#468 id=468 data-nosnippet>468</a>        &amp;&amp; suggested_messages.is_empty()
+<a href=#469 id=469 data-nosnippet>469</a>        &amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(current_conversation_messages) = <span class="kw-2">&amp;</span>res.current_conversation_messages
+<a href=#470 id=470 data-nosnippet>470</a>        &amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(last_message) = current_conversation_messages.last()
+<a href=#471 id=471 data-nosnippet>471</a>        &amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(course_name) = <span class="kw-2">&amp;</span>res.course_name
+<a href=#472 id=472 data-nosnippet>472</a>    {
+<a href=#473 id=473 data-nosnippet>473</a>        <span class="kw">let </span>initial_suggested_messages = <span class="kw">if </span>last_message.order_number == <span class="number">1 </span>{
+<a href=#474 id=474 data-nosnippet>474</a>            <span class="comment">// for the first message, get initial_suggested_messages
+<a href=#475 id=475 data-nosnippet>475</a>            </span><span class="kw">let </span>initial_suggested_messages = chatbot_configuration
+<a href=#476 id=476 data-nosnippet>476</a>                .initial_suggested_messages
+<a href=#477 id=477 data-nosnippet>477</a>                .unwrap_or(<span class="macro">vec!</span>[]);
+<a href=#478 id=478 data-nosnippet>478</a>            <span class="comment">// take 3 random elements
+<a href=#479 id=479 data-nosnippet>479</a>            </span><span class="kw">if </span>initial_suggested_messages.len() &gt; <span class="number">3 </span>{
+<a href=#480 id=480 data-nosnippet>480</a>                <span class="kw">let </span><span class="kw-2">mut </span>rng = rand::rng();
+<a href=#481 id=481 data-nosnippet>481</a>                initial_suggested_messages
+<a href=#482 id=482 data-nosnippet>482</a>                    .sample(<span class="kw-2">&amp;mut </span>rng, <span class="number">3</span>)
+<a href=#483 id=483 data-nosnippet>483</a>                    .cloned()
+<a href=#484 id=484 data-nosnippet>484</a>                    .collect()
+<a href=#485 id=485 data-nosnippet>485</a>            } <span class="kw">else </span>{
+<a href=#486 id=486 data-nosnippet>486</a>                initial_suggested_messages
+<a href=#487 id=487 data-nosnippet>487</a>            }
+<a href=#488 id=488 data-nosnippet>488</a>        } <span class="kw">else </span>{
+<a href=#489 id=489 data-nosnippet>489</a>            <span class="comment">// for other messages, generate suggested messages
+<a href=#490 id=490 data-nosnippet>490</a>            </span><span class="kw">let </span>course_description = <span class="kw">if let </span><span class="prelude-val">Some</span>(course_id) = chatbot_configuration.course_id {
+<a href=#491 id=491 data-nosnippet>491</a>                models::courses::get_course(<span class="kw-2">&amp;mut </span>conn, course_id)
+<a href=#492 id=492 data-nosnippet>492</a>                    .<span class="kw">await</span><span class="question-mark">?
+<a href=#493 id=493 data-nosnippet>493</a>                    </span>.description
+<a href=#494 id=494 data-nosnippet>494</a>            } <span class="kw">else </span>{
+<a href=#495 id=495 data-nosnippet>495</a>                <span class="prelude-val">None
+<a href=#496 id=496 data-nosnippet>496</a>            </span>};
+<a href=#497 id=497 data-nosnippet>497</a>            <span class="kw">let </span>message_suggest_llm =
+<a href=#498 id=498 data-nosnippet>498</a>                models::application_task_default_language_models::get_for_task(
+<a href=#499 id=499 data-nosnippet>499</a>                    <span class="kw-2">&amp;mut </span>conn,
+<a href=#500 id=500 data-nosnippet>500</a>                    ApplicationTask::MessageSuggestion,
+<a href=#501 id=501 data-nosnippet>501</a>                )
+<a href=#502 id=502 data-nosnippet>502</a>                .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#503 id=503 data-nosnippet>503</a>
+<a href=#504 id=504 data-nosnippet>504</a>            headless_lms_chatbot::message_suggestion::generate_suggested_messages(
+<a href=#505 id=505 data-nosnippet>505</a>                <span class="kw-2">&amp;</span>app_conf,
+<a href=#506 id=506 data-nosnippet>506</a>                message_suggest_llm,
+<a href=#507 id=507 data-nosnippet>507</a>                current_conversation_messages,
+<a href=#508 id=508 data-nosnippet>508</a>                chatbot_configuration.initial_suggested_messages,
+<a href=#509 id=509 data-nosnippet>509</a>                <span class="prelude-val">Some</span>(course_name.to_owned()),
+<a href=#510 id=510 data-nosnippet>510</a>                course_description,
+<a href=#511 id=511 data-nosnippet>511</a>            )
+<a href=#512 id=512 data-nosnippet>512</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#513 id=513 data-nosnippet>513</a>        </span>};
+<a href=#514 id=514 data-nosnippet>514</a>
+<a href=#515 id=515 data-nosnippet>515</a>        <span class="kw">if </span>!initial_suggested_messages.is_empty() {
+<a href=#516 id=516 data-nosnippet>516</a>            headless_lms_models::chatbot_conversation_suggested_messages::insert_batch(
+<a href=#517 id=517 data-nosnippet>517</a>                <span class="kw-2">&amp;mut </span>conn,
+<a href=#518 id=518 data-nosnippet>518</a>                <span class="kw-2">&amp;</span>last_message.id,
+<a href=#519 id=519 data-nosnippet>519</a>                initial_suggested_messages,
+<a href=#520 id=520 data-nosnippet>520</a>            )
+<a href=#521 id=521 data-nosnippet>521</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#522 id=522 data-nosnippet>522</a>        }
+<a href=#523 id=523 data-nosnippet>523</a>        <span class="kw">let </span>res = chatbot_conversations::get_conversation_info(
+<a href=#524 id=524 data-nosnippet>524</a>            <span class="kw-2">&amp;mut </span>conn,
+<a href=#525 id=525 data-nosnippet>525</a>            user.map(|u| u.id),
+<a href=#526 id=526 data-nosnippet>526</a>            anonymous_token,
+<a href=#527 id=527 data-nosnippet>527</a>            chatbot_configuration.id,
+<a href=#528 id=528 data-nosnippet>528</a>            conversation_id,
+<a href=#529 id=529 data-nosnippet>529</a>        )
+<a href=#530 id=530 data-nosnippet>530</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#531 id=531 data-nosnippet>531</a>        <span class="kw">return </span>token.authorized_ok(web::Json(res));
+<a href=#532 id=532 data-nosnippet>532</a>    }
+<a href=#533 id=533 data-nosnippet>533</a>
+<a href=#534 id=534 data-nosnippet>534</a>    token.authorized_ok(web::Json(res))
+<a href=#535 id=535 data-nosnippet>535</a>}
+<a href=#536 id=536 data-nosnippet>536</a>
+<a href=#537 id=537 data-nosnippet>537</a><span class="doccomment">/**
+<a href=#538 id=538 data-nosnippet>538</a>GET `/api/v0/course-material/chatbot/:chatbot_configuration_id/conversations/current/id`
+<a href=#539 id=539 data-nosnippet>539</a>
+<a href=#540 id=540 data-nosnippet>540</a>Returns current chatbot conversation id.
+<a href=#541 id=541 data-nosnippet>541</a>*/
+<a href=#542 id=542 data-nosnippet>542</a></span><span class="attr">#[utoipa::path(
+<a href=#543 id=543 data-nosnippet>543</a>    get,
+<a href=#544 id=544 data-nosnippet>544</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/current/id"</span>,
+<a href=#545 id=545 data-nosnippet>545</a>    operation_id = <span class="string">"getCurrentConversationId"</span>,
+<a href=#546 id=546 data-nosnippet>546</a>    tag = <span class="string">"course-material-chatbot"</span>,
+<a href=#547 id=547 data-nosnippet>547</a>    params(
+<a href=#548 id=548 data-nosnippet>548</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>)
+<a href=#549 id=549 data-nosnippet>549</a>    ),
+<a href=#550 id=550 data-nosnippet>550</a>    responses(
+<a href=#551 id=551 data-nosnippet>551</a>        (status = <span class="number">200</span>, description = <span class="string">"Current conversation ID"</span>, body = <span class="prelude-ty">Option</span>&lt;Uuid&gt;)
+<a href=#552 id=552 data-nosnippet>552</a>    )
+<a href=#553 id=553 data-nosnippet>553</a>)]
+<a href=#554 id=554 data-nosnippet>554</a>#[instrument(skip(pool))]
+<a href=#555 id=555 data-nosnippet>555</a></span><span class="kw">async fn </span>current_conversation_id(
+<a href=#556 id=556 data-nosnippet>556</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#557 id=557 data-nosnippet>557</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
+<a href=#558 id=558 data-nosnippet>558</a>    params: web::Path&lt;Uuid&gt;,
+<a href=#559 id=559 data-nosnippet>559</a>    req: HttpRequest,
+<a href=#560 id=560 data-nosnippet>560</a>) -&gt; ControllerResult&lt;web::Json&lt;<span class="prelude-ty">Option</span>&lt;Uuid&gt;&gt;&gt; {
+<a href=#561 id=561 data-nosnippet>561</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#562 id=562 data-nosnippet>562</a>    <span class="kw">let </span>chatbot_configuration =
+<a href=#563 id=563 data-nosnippet>563</a>        models::chatbot_configurations::get_by_id(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>params).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#564 id=564 data-nosnippet>564</a>
+<a href=#565 id=565 data-nosnippet>565</a>    <span class="kw">let </span>token =
+<a href=#566 id=566 data-nosnippet>566</a>        authorize_access_to_chatbot(<span class="kw-2">&amp;mut </span>conn, user.map(|u| u.id), <span class="kw-2">&amp;</span>chatbot_configuration).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#567 id=567 data-nosnippet>567</a>
+<a href=#568 id=568 data-nosnippet>568</a>    <span class="kw">let </span>anonymous_token = handle_anonymous_token(<span class="kw-2">&amp;</span>req, user);
+<a href=#569 id=569 data-nosnippet>569</a>
+<a href=#570 id=570 data-nosnippet>570</a>    <span class="kw">let </span>current_conversation = chatbot_conversations::get_latest_conversation_for_user(
+<a href=#571 id=571 data-nosnippet>571</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#572 id=572 data-nosnippet>572</a>        user.map(|u| u.id),
+<a href=#573 id=573 data-nosnippet>573</a>        anonymous_token,
+<a href=#574 id=574 data-nosnippet>574</a>        chatbot_configuration.id,
+<a href=#575 id=575 data-nosnippet>575</a>    )
+<a href=#576 id=576 data-nosnippet>576</a>    .<span class="kw">await
+<a href=#577 id=577 data-nosnippet>577</a>    </span>.optional()<span class="question-mark">?</span>;
+<a href=#578 id=578 data-nosnippet>578</a>
+<a href=#579 id=579 data-nosnippet>579</a>    <span class="kw">let </span>current_conversation_id = current_conversation.map(|c| c.id);
+<a href=#580 id=580 data-nosnippet>580</a>    token.authorized_ok(web::Json(current_conversation_id))
+<a href=#581 id=581 data-nosnippet>581</a>}
+<a href=#582 id=582 data-nosnippet>582</a>
+<a href=#583 id=583 data-nosnippet>583</a><span class="doccomment">/**
+<a href=#584 id=584 data-nosnippet>584</a>PUT `/api/v0/course-material/chatbot/:chatbot_configuration_id/conversations/:conversation_id/update-title`
+<a href=#585 id=585 data-nosnippet>585</a>
+<a href=#586 id=586 data-nosnippet>586</a>Updates the title of a chatbot conversation.
+<a href=#587 id=587 data-nosnippet>587</a>*/
+<a href=#588 id=588 data-nosnippet>588</a></span><span class="attr">#[utoipa::path(
+<a href=#589 id=589 data-nosnippet>589</a>    put,
+<a href=#590 id=590 data-nosnippet>590</a>    path = <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/update-title"</span>,
+<a href=#591 id=591 data-nosnippet>591</a>    operation_id = <span class="string">"updateTitle"</span>,
+<a href=#592 id=592 data-nosnippet>592</a>    tag = <span class="string">"course-material-chatbot"</span>,
+<a href=#593 id=593 data-nosnippet>593</a>    params(
+<a href=#594 id=594 data-nosnippet>594</a>        (<span class="string">"chatbot_configuration_id" </span>= Uuid, Path, description = <span class="string">"Chatbot configuration id"</span>),
+<a href=#595 id=595 data-nosnippet>595</a>        (<span class="string">"conversation_id" </span>= Uuid, Path, description = <span class="string">"Conversation id"</span>)
+<a href=#596 id=596 data-nosnippet>596</a>    ),
+<a href=#597 id=597 data-nosnippet>597</a>    request_body(content = String, content_type = <span class="string">"application/json"</span>),
+<a href=#598 id=598 data-nosnippet>598</a>    responses(
+<a href=#599 id=599 data-nosnippet>599</a>        (status = <span class="number">200</span>, description = <span class="string">"Conversation title updated"</span>)
+<a href=#600 id=600 data-nosnippet>600</a>    )
+<a href=#601 id=601 data-nosnippet>601</a>)]
+<a href=#602 id=602 data-nosnippet>602</a>#[instrument(skip(pool))]
+<a href=#603 id=603 data-nosnippet>603</a></span><span class="kw">async fn </span>update_title(
+<a href=#604 id=604 data-nosnippet>604</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#605 id=605 data-nosnippet>605</a>    user: <span class="prelude-ty">Option</span>&lt;AuthUser&gt;,
+<a href=#606 id=606 data-nosnippet>606</a>    payload: web::Json&lt;String&gt;,
+<a href=#607 id=607 data-nosnippet>607</a>    params: web::Path&lt;(Uuid, Uuid)&gt;,
+<a href=#608 id=608 data-nosnippet>608</a>    req: HttpRequest,
+<a href=#609 id=609 data-nosnippet>609</a>) -&gt; ControllerResult&lt;web::Json&lt;()&gt;&gt; {
+<a href=#610 id=610 data-nosnippet>610</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#611 id=611 data-nosnippet>611</a>
+<a href=#612 id=612 data-nosnippet>612</a>    <span class="kw">let </span>chatbot_configuration_id = params.<span class="number">0</span>;
+<a href=#613 id=613 data-nosnippet>613</a>    <span class="kw">let </span>conversation_id = params.<span class="number">1</span>;
+<a href=#614 id=614 data-nosnippet>614</a>
+<a href=#615 id=615 data-nosnippet>615</a>    <span class="kw">let </span>(token, _chatbot_user) = authorize_access_to_conversation(
+<a href=#616 id=616 data-nosnippet>616</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#617 id=617 data-nosnippet>617</a>        chatbot_configuration_id,
+<a href=#618 id=618 data-nosnippet>618</a>        conversation_id,
+<a href=#619 id=619 data-nosnippet>619</a>        user,
+<a href=#620 id=620 data-nosnippet>620</a>        req,
+<a href=#621 id=621 data-nosnippet>621</a>    )
+<a href=#622 id=622 data-nosnippet>622</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#623 id=623 data-nosnippet>623</a>
+<a href=#624 id=624 data-nosnippet>624</a>    chatbot_conversations::update_conversation_title(
+<a href=#625 id=625 data-nosnippet>625</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#626 id=626 data-nosnippet>626</a>        conversation_id,
+<a href=#627 id=627 data-nosnippet>627</a>        payload.into_inner(),
+<a href=#628 id=628 data-nosnippet>628</a>    )
+<a href=#629 id=629 data-nosnippet>629</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#630 id=630 data-nosnippet>630</a>
+<a href=#631 id=631 data-nosnippet>631</a>    token.authorized_ok(web::Json(()))
+<a href=#632 id=632 data-nosnippet>632</a>}
+<a href=#633 id=633 data-nosnippet>633</a>
+<a href=#634 id=634 data-nosnippet>634</a><span class="doccomment">/**
+<a href=#635 id=635 data-nosnippet>635</a>Add a route for each controller in this module.
+<a href=#636 id=636 data-nosnippet>636</a>
+<a href=#637 id=637 data-nosnippet>637</a>The name starts with an underline in order to appear before other functions in the module documentation.
+<a href=#638 id=638 data-nosnippet>638</a>
+<a href=#639 id=639 data-nosnippet>639</a>We add the routes by calling the route method instead of using the route annotations because this method preserves the function signatures for documentation.
+<a href=#640 id=640 data-nosnippet>640</a>*/
+<a href=#641 id=641 data-nosnippet>641</a></span><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#642 id=642 data-nosnippet>642</a>    cfg.route(
+<a href=#643 id=643 data-nosnippet>643</a>        <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/send-message"</span>,
+<a href=#644 id=644 data-nosnippet>644</a>        web::post().to(send_message),
+<a href=#645 id=645 data-nosnippet>645</a>    )
+<a href=#646 id=646 data-nosnippet>646</a>    .route(
+<a href=#647 id=647 data-nosnippet>647</a>        <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/tool-response"</span>,
+<a href=#648 id=648 data-nosnippet>648</a>        web::post().to(tool_response),
+<a href=#649 id=649 data-nosnippet>649</a>    )
+<a href=#650 id=650 data-nosnippet>650</a>    .route(
+<a href=#651 id=651 data-nosnippet>651</a>        <span class="string">"/{chatbot_configuration_id}/conversations/new"</span>,
+<a href=#652 id=652 data-nosnippet>652</a>        web::post().to(new_conversation),
+<a href=#653 id=653 data-nosnippet>653</a>    )
+<a href=#654 id=654 data-nosnippet>654</a>    .route(
+<a href=#655 id=655 data-nosnippet>655</a>        <span class="string">"/default-for-course/{course_id}"</span>,
+<a href=#656 id=656 data-nosnippet>656</a>        web::get().to(get_default_chatbot_configuration_for_course),
+<a href=#657 id=657 data-nosnippet>657</a>    )
+<a href=#658 id=658 data-nosnippet>658</a>    .route(
+<a href=#659 id=659 data-nosnippet>659</a>        <span class="string">"/{chatbot_configuration_id}/conversations"</span>,
+<a href=#660 id=660 data-nosnippet>660</a>        web::get().to(conversation_info),
+<a href=#661 id=661 data-nosnippet>661</a>    )
+<a href=#662 id=662 data-nosnippet>662</a>    .route(
+<a href=#663 id=663 data-nosnippet>663</a>        <span class="string">"/{chatbot_configuration_id}/conversations/current/id"</span>,
+<a href=#664 id=664 data-nosnippet>664</a>        web::get().to(current_conversation_id),
+<a href=#665 id=665 data-nosnippet>665</a>    )
+<a href=#666 id=666 data-nosnippet>666</a>    .route(<span class="string">"/conversations/all"</span>, web::get().to(all_user_conversations))
+<a href=#667 id=667 data-nosnippet>667</a>    .route(
+<a href=#668 id=668 data-nosnippet>668</a>        <span class="string">"/{chatbot_configuration_id}/conversations/{conversation_id}/update-title"</span>,
+<a href=#669 id=669 data-nosnippet>669</a>        web::put().to(update_title),
+<a href=#670 id=670 data-nosnippet>670</a>    );
+<a href=#671 id=671 data-nosnippet>671</a>}
 </code></pre></div></section></main></body></html>
