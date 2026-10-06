@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","mock_sisu_course_info","mock_sisu_id_query"],"struct":["MockSisuRequest"]};
+window.SIDEBAR_ITEMS = {"constant":["MOCK_ASSESSMENT_ITEM_ID","MOCK_COURSE_CODES","MOCK_ORGANISATION_ID","MOCK_REALISATION_TEACHER_ID","MOCK_TEACHER_ID"],"fn":["_add_routes","mock_course_unit","mock_sisu_course_info","mock_sisu_id_query","mock_sisu_organisation","mock_sisu_person","mock_sisu_realisations_by_assessment_item"],"struct":["MockSisuRequest"]};

@@ -69,9 +69,9 @@
 <a href=#69 id=69 data-nosnippet>69</a>}
 <a href=#70 id=70 data-nosnippet>70</a>
 <a href=#71 id=71 data-nosnippet>71</a><span class="kw">impl </span>ImportAttainmentRequestItem {
-<a href=#72 id=72 data-nosnippet>72</a>    <span class="doccomment">/// The date the attainment gets: the Helsinki date of the moment sent.
+<a href=#72 id=72 data-nosnippet>72</a>    <span class="doccomment">/// The date the attainment gets: the UTC date of the moment sent.
 <a href=#73 id=73 data-nosnippet>73</a>    </span><span class="kw">pub fn </span>attainment_date(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NaiveDate {
-<a href=#74 id=74 data-nosnippet>74</a>        headless_lms_utils::helsinki_time::helsinki_date(<span class="self">self</span>.attained_at)
+<a href=#74 id=74 data-nosnippet>74</a>        <span class="self">self</span>.attained_at.date_naive()
 <a href=#75 id=75 data-nosnippet>75</a>    }
 <a href=#76 id=76 data-nosnippet>76</a>}
 <a href=#77 id=77 data-nosnippet>77</a>

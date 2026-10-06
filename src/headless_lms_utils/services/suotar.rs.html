@@ -22,7 +22,7 @@
 <a href=#22 id=22 data-nosnippet>22</a><span class="kw">use </span>serde::{Deserialize, Deserializer};
 <a href=#23 id=23 data-nosnippet>23</a><span class="kw">use </span>utoipa::ToSchema;
 <a href=#24 id=24 data-nosnippet>24</a>
-<a href=#25 id=25 data-nosnippet>25</a><span class="kw">use </span>crate::{helsinki_time::helsinki_date, prelude::<span class="kw-2">*</span>, secret_string::serialize_exposed};
+<a href=#25 id=25 data-nosnippet>25</a><span class="kw">use </span>crate::{prelude::<span class="kw-2">*</span>, secret_string::serialize_exposed};
 <a href=#26 id=26 data-nosnippet>26</a>
 <a href=#27 id=27 data-nosnippet>27</a><span class="doccomment">/// Under the ingress's 60 s, so an admin waiting on a call gets our answer rather than a 504.
 <a href=#28 id=28 data-nosnippet>28</a></span><span class="kw">pub const </span>INTERACTIVE_REQUEST_TIMEOUT: Duration = Duration::from_secs(<span class="number">50</span>);
@@ -449,8 +449,8 @@
 <a href=#449 id=449 data-nosnippet>449</a>    </span><span class="kw">pub </span>people: Vec&lt;ListedPerson&gt;,
 <a href=#450 id=450 data-nosnippet>450</a>}
 <a href=#451 id=451 data-nosnippet>451</a>
-<a href=#452 id=452 data-nosnippet>452</a><span class="doccomment">/// Importer dates arrive as `YYYY-MM-DD` or as an instant (Sisu's UTC midnight), and an instant
-<a href=#453 id=453 data-nosnippet>453</a>/// means its Helsinki date, the zone Suotar compares days in. Anything else reads as absent.
+<a href=#452 id=452 data-nosnippet>452</a><span class="doccomment">/// Importer dates arrive as `YYYY-MM-DD` or as an instant (Sisu's UTC midnight), which means its
+<a href=#453 id=453 data-nosnippet>453</a>/// UTC date. Anything else reads as absent.
 <a href=#454 id=454 data-nosnippet>454</a></span><span class="kw">fn </span>lenient_date&lt;<span class="lifetime">'de</span>, D: Deserializer&lt;<span class="lifetime">'de</span>&gt;&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;NaiveDate&gt;, D::Error&gt; {
 <a href=#455 id=455 data-nosnippet>455</a>    <span class="kw">let </span>value = Option::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
 <a href=#456 id=456 data-nosnippet>456</a>    <span class="prelude-val">Ok</span>(value
@@ -462,7 +462,7 @@
 <a href=#462 id=462 data-nosnippet>462</a>                .or_else(|| {
 <a href=#463 id=463 data-nosnippet>463</a>                    DateTime::parse_from_rfc3339(text)
 <a href=#464 id=464 data-nosnippet>464</a>                        .ok()
-<a href=#465 id=465 data-nosnippet>465</a>                        .map(|instant| helsinki_date(instant.with_timezone(<span class="kw-2">&amp;</span>Utc)))
+<a href=#465 id=465 data-nosnippet>465</a>                        .map(|instant| instant.with_timezone(<span class="kw-2">&amp;</span>Utc).date_naive())
 <a href=#466 id=466 data-nosnippet>466</a>                })
 <a href=#467 id=467 data-nosnippet>467</a>        }))
 <a href=#468 id=468 data-nosnippet>468</a>}

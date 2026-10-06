@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["helsinki_date","in_eu_summer_time","last_sunday"]};

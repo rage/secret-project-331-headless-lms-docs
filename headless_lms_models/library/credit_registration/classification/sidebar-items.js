@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Retryability"],"fn":["is_enrolment_error","is_waiting_error","retryability"]};
+window.SIDEBAR_ITEMS = {"enum":["Retryability"],"fn":["is_enrolment_error","is_repeatable_rejection","is_waiting_error","retryability"]};
