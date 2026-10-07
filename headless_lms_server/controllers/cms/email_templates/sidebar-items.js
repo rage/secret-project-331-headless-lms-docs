@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","delete_email_template","get_email_template","update_email_template"],"struct":["CmsEmailTemplatesApiDoc"]};
+window.SIDEBAR_ITEMS = {"constant":["MAX_TEST_SENDS_PER_MINUTE"],"fn":["_add_routes","authorize_template_edit","delete_email_template","get_email_template","preview_email_template","send_test_email","update_email_template"],"struct":["CmsEmailTemplatesApiDoc","EmailTemplatePreview","EmailTemplatePreviewRequest"]};
