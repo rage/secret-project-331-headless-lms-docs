@@ -37,7 +37,7 @@
 <a href=#37 id=37 data-nosnippet>37</a>
 <a href=#38 id=38 data-nosnippet>38</a><span class="kw">const </span>MOOCFI_GRAPHQL_URL: <span class="kw-2">&amp;</span>str = <span class="string">"https://www.mooc.fi/api"</span>;
 <a href=#39 id=39 data-nosnippet>39</a>
-<a href=#40 id=40 data-nosnippet>40</a><span class="kw">fn </span>constant_time_eq_str(left: <span class="kw-2">&amp;</span>str, right: <span class="kw-2">&amp;</span>str) -&gt; bool {
+<a href=#40 id=40 data-nosnippet>40</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>constant_time_eq_str(left: <span class="kw-2">&amp;</span>str, right: <span class="kw-2">&amp;</span>str) -&gt; bool {
 <a href=#41 id=41 data-nosnippet>41</a>    left.as_bytes().ct_eq(right.as_bytes()).into()
 <a href=#42 id=42 data-nosnippet>42</a>}
 <a href=#43 id=43 data-nosnippet>43</a><span class="attr">#[derive(Debug, Serialize, Deserialize)]

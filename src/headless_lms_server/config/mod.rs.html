@@ -361,7 +361,7 @@
 <a href=#361 id=361 data-nosnippet>361</a>        .app_data(suotar_client)
 <a href=#362 id=362 data-nosnippet>362</a>        .service(
 <a href=#363 id=363 data-nosnippet>363</a>            web::scope(<span class="string">"/api/v0"</span>)
-<a href=#364 id=364 data-nosnippet>364</a>                .wrap(RateLimit::new(api_rate_limit_config))
+<a href=#364 id=364 data-nosnippet>364</a>                .wrap(RateLimit::new(api_rate_limit_config).bypassable())
 <a href=#365 id=365 data-nosnippet>365</a>                .wrap(RequestSpan)
 <a href=#366 id=366 data-nosnippet>366</a>                .configure(|c| <span class="kw">crate</span>::controllers::configure_controllers(c, app_conf)),
 <a href=#367 id=367 data-nosnippet>367</a>        );
