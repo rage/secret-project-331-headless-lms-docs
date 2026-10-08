@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["PersonLookupError","ResendOutcome"],"fn":["book_listing_for_unlinked_student","look_up_person","resend_linking_mail_for_target"],"struct":["ManualActionContext","RateCapOverride","RegistryPerson","ResendAttempt"]};
+window.SIDEBAR_ITEMS = {"enum":["PersonLookupError","ResendOutcome"],"fn":["look_up_person","resend_linking_mail_for_target"],"struct":["ManualActionContext","RateCapOverride","RegistryPerson","ResendAttempt"]};

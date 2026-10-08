@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["NO_REALISATION_CODE"],"fn":["fetch_course_roster","record_roster_failure"]};
+window.SIDEBAR_ITEMS = {"constant":["NO_REALISATION_CODE"],"fn":["fetch_course_roster","log_surfaced_enrolments","record_roster_failure"],"struct":["FetchedRosters"]};

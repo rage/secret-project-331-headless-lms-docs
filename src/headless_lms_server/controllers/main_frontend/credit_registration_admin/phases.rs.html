@@ -104,144 +104,148 @@
 <a href=#104 id=104 data-nosnippet>104</a>    <span class="doccomment">/// Every phase is stopped, which is what the kill switch does.
 <a href=#105 id=105 data-nosnippet>105</a>    </span><span class="kw">pub </span>paused_globally: bool,
 <a href=#106 id=106 data-nosnippet>106</a>    <span class="kw">pub </span>circuit_breakers: Vec&lt;CreditRegistrationCircuitBreakerState&gt;,
-<a href=#107 id=107 data-nosnippet>107</a>}
-<a href=#108 id=108 data-nosnippet>108</a>
-<a href=#109 id=109 data-nosnippet>109</a><span class="doccomment">/**
-<a href=#110 id=110 data-nosnippet>110</a>GET `/api/v0/main-frontend/credit-registration-admin/phases` - Every pipeline phase, its heartbeat
-<a href=#111 id=111 data-nosnippet>111</a>and the queue it is responsible for, and the workers' circuit breakers.
-<a href=#112 id=112 data-nosnippet>112</a>*/
-<a href=#113 id=113 data-nosnippet>113</a></span><span class="attr">#[instrument(skip(pool))]
-<a href=#114 id=114 data-nosnippet>114</a>#[utoipa::path(
-<a href=#115 id=115 data-nosnippet>115</a>    get,
-<a href=#116 id=116 data-nosnippet>116</a>    path = <span class="string">"/phases"</span>,
-<a href=#117 id=117 data-nosnippet>117</a>    operation_id = <span class="string">"listCreditRegistrationPhases"</span>,
-<a href=#118 id=118 data-nosnippet>118</a>    tag = <span class="string">"credit-registration-admin"</span>,
-<a href=#119 id=119 data-nosnippet>119</a>    responses(
-<a href=#120 id=120 data-nosnippet>120</a>        (status = <span class="number">200</span>, description = <span class="string">"One row per pipeline phase, and the workers' circuit breakers"</span>, body = CreditRegistrationPhaseList)
-<a href=#121 id=121 data-nosnippet>121</a>    )
-<a href=#122 id=122 data-nosnippet>122</a>)]
-<a href=#123 id=123 data-nosnippet>123</a></span><span class="kw">pub async fn </span>list_credit_registration_phases(
-<a href=#124 id=124 data-nosnippet>124</a>    user: AuthUser,
-<a href=#125 id=125 data-nosnippet>125</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#126 id=126 data-nosnippet>126</a>) -&gt; ControllerResult&lt;web::Json&lt;CreditRegistrationPhaseList&gt;&gt; {
-<a href=#127 id=127 data-nosnippet>127</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#128 id=128 data-nosnippet>128</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#129 id=129 data-nosnippet>129</a>
-<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">let </span>depths: HashMap&lt;CreditRegistrationState, i64&gt; =
-<a href=#131 id=131 data-nosnippet>131</a>        credit_registrations::count_by_state(<span class="kw-2">&amp;mut </span>conn)
-<a href=#132 id=132 data-nosnippet>132</a>            .<span class="kw">await</span><span class="question-mark">?
-<a href=#133 id=133 data-nosnippet>133</a>            </span>.into_iter()
-<a href=#134 id=134 data-nosnippet>134</a>            .collect();
-<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">let </span>due_enrolment_checks = credit_registrations::count_due_enrolment_checks(<span class="kw-2">&amp;mut </span>conn).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#136 id=136 data-nosnippet>136</a>    <span class="kw">let </span>now = Utc::now();
-<a href=#137 id=137 data-nosnippet>137</a>    <span class="kw">let </span><span class="kw-2">mut </span>phases: Vec&lt;CreditRegistrationPhaseRow&gt; =
-<a href=#138 id=138 data-nosnippet>138</a>        credit_registration_phase_state::get_all(<span class="kw-2">&amp;mut </span>conn)
-<a href=#139 id=139 data-nosnippet>139</a>            .<span class="kw">await</span><span class="question-mark">?
-<a href=#140 id=140 data-nosnippet>140</a>            </span>.into_iter()
-<a href=#141 id=141 data-nosnippet>141</a>            .map(|row| to_phase_row(row, now, <span class="kw-2">&amp;</span>depths, due_enrolment_checks))
-<a href=#142 id=142 data-nosnippet>142</a>            .collect();
-<a href=#143 id=143 data-nosnippet>143</a>    phases.sort_by_key(|row| {
-<a href=#144 id=144 data-nosnippet>144</a>        (
-<a href=#145 id=145 data-nosnippet>145</a>            row.process_name.clone(),
-<a href=#146 id=146 data-nosnippet>146</a>            CreditRegistrationPhase::from_phase_name(<span class="kw-2">&amp;</span>row.phase)
-<a href=#147 id=147 data-nosnippet>147</a>                .map_or(usize::MAX, CreditRegistrationPhase::pipeline_index),
-<a href=#148 id=148 data-nosnippet>148</a>        )
-<a href=#149 id=149 data-nosnippet>149</a>    });
-<a href=#150 id=150 data-nosnippet>150</a>    <span class="kw">let </span>circuit_breakers = suotar_circuit_breakers::get_all(<span class="kw-2">&amp;mut </span>conn)
-<a href=#151 id=151 data-nosnippet>151</a>        .<span class="kw">await</span><span class="question-mark">?
-<a href=#152 id=152 data-nosnippet>152</a>        </span>.into_iter()
-<a href=#153 id=153 data-nosnippet>153</a>        .map(|breaker| to_circuit_breaker_state(breaker, now))
-<a href=#154 id=154 data-nosnippet>154</a>        .collect();
-<a href=#155 id=155 data-nosnippet>155</a>
-<a href=#156 id=156 data-nosnippet>156</a>    token.authorized_ok(web::Json(CreditRegistrationPhaseList {
-<a href=#157 id=157 data-nosnippet>157</a>        paused_globally: !phases.is_empty() &amp;&amp; phases.iter().all(|row| row.paused_at.is_some()),
-<a href=#158 id=158 data-nosnippet>158</a>        phases,
-<a href=#159 id=159 data-nosnippet>159</a>        heartbeat_interval_multiplier: PHASE_HEARTBEAT_INTERVAL_MULTIPLIER,
-<a href=#160 id=160 data-nosnippet>160</a>        consecutive_failure_limit: PHASE_CONSECUTIVE_FAILURE_LIMIT,
-<a href=#161 id=161 data-nosnippet>161</a>        circuit_breakers,
-<a href=#162 id=162 data-nosnippet>162</a>    }))
-<a href=#163 id=163 data-nosnippet>163</a>}
-<a href=#164 id=164 data-nosnippet>164</a>
-<a href=#165 id=165 data-nosnippet>165</a><span class="kw">fn </span>to_phase_row(
-<a href=#166 id=166 data-nosnippet>166</a>    row: PhaseStateRow,
-<a href=#167 id=167 data-nosnippet>167</a>    now: DateTime&lt;Utc&gt;,
-<a href=#168 id=168 data-nosnippet>168</a>    depths: <span class="kw-2">&amp;</span>HashMap&lt;CreditRegistrationState, i64&gt;,
-<a href=#169 id=169 data-nosnippet>169</a>    due_enrolment_checks: i64,
-<a href=#170 id=170 data-nosnippet>170</a>) -&gt; CreditRegistrationPhaseRow {
-<a href=#171 id=171 data-nosnippet>171</a>    <span class="kw">let </span>known = CreditRegistrationPhase::from_phase_name(<span class="kw-2">&amp;</span>row.phase);
-<a href=#172 id=172 data-nosnippet>172</a>    <span class="kw">let </span>owned_states: Vec&lt;CreditRegistrationState&gt; = known
-<a href=#173 id=173 data-nosnippet>173</a>        .map(|phase| phase.owned_states().to_vec())
-<a href=#174 id=174 data-nosnippet>174</a>        .unwrap_or_default();
-<a href=#175 id=175 data-nosnippet>175</a>    <span class="kw">let </span>seconds_since_heartbeat = row.last_heartbeat_at.map(|at| (now - at).num_seconds());
-<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">let </span>heartbeat_late = is_heartbeat_late(
-<a href=#177 id=177 data-nosnippet>177</a>        row.last_heartbeat_at,
-<a href=#178 id=178 data-nosnippet>178</a>        row.expected_interval_secs,
-<a href=#179 id=179 data-nosnippet>179</a>        row.paused_at,
-<a href=#180 id=180 data-nosnippet>180</a>        now,
-<a href=#181 id=181 data-nosnippet>181</a>    );
-<a href=#182 id=182 data-nosnippet>182</a>    <span class="kw">let </span>depth_of = |state| depths.get(<span class="kw-2">&amp;</span>state).copied().unwrap_or(<span class="number">0</span>);
-<a href=#183 id=183 data-nosnippet>183</a>    <span class="kw">let </span>failing = is_phase_failing(<span class="kw-2">&amp;</span>row, now, depth_of, due_enrolment_checks);
-<a href=#184 id=184 data-nosnippet>184</a>    CreditRegistrationPhaseRow {
-<a href=#185 id=185 data-nosnippet>185</a>        is_known_phase: known.is_some(),
-<a href=#186 id=186 data-nosnippet>186</a>        queue_depth: known
-<a href=#187 id=187 data-nosnippet>187</a>            .filter(|<span class="kw">_</span>| !owned_states.is_empty())
-<a href=#188 id=188 data-nosnippet>188</a>            .map(|phase| phase.queue_depth(depth_of, due_enrolment_checks)),
-<a href=#189 id=189 data-nosnippet>189</a>        owned_states,
-<a href=#190 id=190 data-nosnippet>190</a>        seconds_since_heartbeat,
-<a href=#191 id=191 data-nosnippet>191</a>        heartbeat_late,
-<a href=#192 id=192 data-nosnippet>192</a>        failing,
-<a href=#193 id=193 data-nosnippet>193</a>        last_run_duration_secs: row
-<a href=#194 id=194 data-nosnippet>194</a>            .last_run_started_at
-<a href=#195 id=195 data-nosnippet>195</a>            .zip(row.last_run_finished_at)
-<a href=#196 id=196 data-nosnippet>196</a>            .map(|(started, finished)| (finished - started).num_seconds()),
-<a href=#197 id=197 data-nosnippet>197</a>        phase: row.phase,
-<a href=#198 id=198 data-nosnippet>198</a>        process_name: row.process_name,
-<a href=#199 id=199 data-nosnippet>199</a>        expected_interval_secs: row.expected_interval_secs,
-<a href=#200 id=200 data-nosnippet>200</a>        last_heartbeat_at: row.last_heartbeat_at,
-<a href=#201 id=201 data-nosnippet>201</a>        last_run_started_at: row.last_run_started_at,
-<a href=#202 id=202 data-nosnippet>202</a>        last_run_finished_at: row.last_run_finished_at,
-<a href=#203 id=203 data-nosnippet>203</a>        last_success_at: row.last_success_at,
-<a href=#204 id=204 data-nosnippet>204</a>        next_run_at: row.next_run_at,
-<a href=#205 id=205 data-nosnippet>205</a>        items_processed_last_run: row.items_processed_last_run,
-<a href=#206 id=206 data-nosnippet>206</a>        items_failed_last_run: row.items_failed_last_run,
-<a href=#207 id=207 data-nosnippet>207</a>        consecutive_failures: row.consecutive_failures,
-<a href=#208 id=208 data-nosnippet>208</a>        last_error: row.last_error,
-<a href=#209 id=209 data-nosnippet>209</a>        paused_at: row.paused_at,
-<a href=#210 id=210 data-nosnippet>210</a>        paused_by_user_id: row.paused_by_user_id,
-<a href=#211 id=211 data-nosnippet>211</a>        pause_reason: row.pause_reason,
-<a href=#212 id=212 data-nosnippet>212</a>    }
-<a href=#213 id=213 data-nosnippet>213</a>}
-<a href=#214 id=214 data-nosnippet>214</a>
-<a href=#215 id=215 data-nosnippet>215</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#216 id=216 data-nosnippet>216</a>    cfg.route(<span class="string">"/phases"</span>, web::get().to(list_credit_registration_phases));
+<a href=#107 id=107 data-nosnippet>107</a>    <span class="doccomment">/// The git commit the answering server was built from, or `unknown` for a build without one.
+<a href=#108 id=108 data-nosnippet>108</a>    /// Workers may run another build while a rollout is under way.
+<a href=#109 id=109 data-nosnippet>109</a>    </span><span class="kw">pub </span>server_build_commit: String,
+<a href=#110 id=110 data-nosnippet>110</a>}
+<a href=#111 id=111 data-nosnippet>111</a>
+<a href=#112 id=112 data-nosnippet>112</a><span class="doccomment">/**
+<a href=#113 id=113 data-nosnippet>113</a>GET `/api/v0/main-frontend/credit-registration-admin/phases` - Every pipeline phase, its heartbeat
+<a href=#114 id=114 data-nosnippet>114</a>and the queue it is responsible for, and the workers' circuit breakers.
+<a href=#115 id=115 data-nosnippet>115</a>*/
+<a href=#116 id=116 data-nosnippet>116</a></span><span class="attr">#[instrument(skip(pool))]
+<a href=#117 id=117 data-nosnippet>117</a>#[utoipa::path(
+<a href=#118 id=118 data-nosnippet>118</a>    get,
+<a href=#119 id=119 data-nosnippet>119</a>    path = <span class="string">"/phases"</span>,
+<a href=#120 id=120 data-nosnippet>120</a>    operation_id = <span class="string">"listCreditRegistrationPhases"</span>,
+<a href=#121 id=121 data-nosnippet>121</a>    tag = <span class="string">"credit-registration-admin"</span>,
+<a href=#122 id=122 data-nosnippet>122</a>    responses(
+<a href=#123 id=123 data-nosnippet>123</a>        (status = <span class="number">200</span>, description = <span class="string">"One row per pipeline phase, and the workers' circuit breakers"</span>, body = CreditRegistrationPhaseList)
+<a href=#124 id=124 data-nosnippet>124</a>    )
+<a href=#125 id=125 data-nosnippet>125</a>)]
+<a href=#126 id=126 data-nosnippet>126</a></span><span class="kw">pub async fn </span>list_credit_registration_phases(
+<a href=#127 id=127 data-nosnippet>127</a>    user: AuthUser,
+<a href=#128 id=128 data-nosnippet>128</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#129 id=129 data-nosnippet>129</a>) -&gt; ControllerResult&lt;web::Json&lt;CreditRegistrationPhaseList&gt;&gt; {
+<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#131 id=131 data-nosnippet>131</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#132 id=132 data-nosnippet>132</a>
+<a href=#133 id=133 data-nosnippet>133</a>    <span class="kw">let </span>depths: HashMap&lt;CreditRegistrationState, i64&gt; =
+<a href=#134 id=134 data-nosnippet>134</a>        credit_registrations::count_by_state(<span class="kw-2">&amp;mut </span>conn)
+<a href=#135 id=135 data-nosnippet>135</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#136 id=136 data-nosnippet>136</a>            </span>.into_iter()
+<a href=#137 id=137 data-nosnippet>137</a>            .collect();
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">let </span>due_enrolment_checks = credit_registrations::count_due_enrolment_checks(<span class="kw-2">&amp;mut </span>conn).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">let </span>now = Utc::now();
+<a href=#140 id=140 data-nosnippet>140</a>    <span class="kw">let </span><span class="kw-2">mut </span>phases: Vec&lt;CreditRegistrationPhaseRow&gt; =
+<a href=#141 id=141 data-nosnippet>141</a>        credit_registration_phase_state::get_all(<span class="kw-2">&amp;mut </span>conn)
+<a href=#142 id=142 data-nosnippet>142</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#143 id=143 data-nosnippet>143</a>            </span>.into_iter()
+<a href=#144 id=144 data-nosnippet>144</a>            .map(|row| to_phase_row(row, now, <span class="kw-2">&amp;</span>depths, due_enrolment_checks))
+<a href=#145 id=145 data-nosnippet>145</a>            .collect();
+<a href=#146 id=146 data-nosnippet>146</a>    phases.sort_by_key(|row| {
+<a href=#147 id=147 data-nosnippet>147</a>        (
+<a href=#148 id=148 data-nosnippet>148</a>            row.process_name.clone(),
+<a href=#149 id=149 data-nosnippet>149</a>            CreditRegistrationPhase::from_phase_name(<span class="kw-2">&amp;</span>row.phase)
+<a href=#150 id=150 data-nosnippet>150</a>                .map_or(usize::MAX, CreditRegistrationPhase::pipeline_index),
+<a href=#151 id=151 data-nosnippet>151</a>        )
+<a href=#152 id=152 data-nosnippet>152</a>    });
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">let </span>circuit_breakers = suotar_circuit_breakers::get_all(<span class="kw-2">&amp;mut </span>conn)
+<a href=#154 id=154 data-nosnippet>154</a>        .<span class="kw">await</span><span class="question-mark">?
+<a href=#155 id=155 data-nosnippet>155</a>        </span>.into_iter()
+<a href=#156 id=156 data-nosnippet>156</a>        .map(|breaker| to_circuit_breaker_state(breaker, now))
+<a href=#157 id=157 data-nosnippet>157</a>        .collect();
+<a href=#158 id=158 data-nosnippet>158</a>
+<a href=#159 id=159 data-nosnippet>159</a>    token.authorized_ok(web::Json(CreditRegistrationPhaseList {
+<a href=#160 id=160 data-nosnippet>160</a>        paused_globally: !phases.is_empty() &amp;&amp; phases.iter().all(|row| row.paused_at.is_some()),
+<a href=#161 id=161 data-nosnippet>161</a>        phases,
+<a href=#162 id=162 data-nosnippet>162</a>        heartbeat_interval_multiplier: PHASE_HEARTBEAT_INTERVAL_MULTIPLIER,
+<a href=#163 id=163 data-nosnippet>163</a>        consecutive_failure_limit: PHASE_CONSECUTIVE_FAILURE_LIMIT,
+<a href=#164 id=164 data-nosnippet>164</a>        circuit_breakers,
+<a href=#165 id=165 data-nosnippet>165</a>        server_build_commit: <span class="kw">crate</span>::config::server_runtime_config().build_commit.clone(),
+<a href=#166 id=166 data-nosnippet>166</a>    }))
+<a href=#167 id=167 data-nosnippet>167</a>}
+<a href=#168 id=168 data-nosnippet>168</a>
+<a href=#169 id=169 data-nosnippet>169</a><span class="kw">fn </span>to_phase_row(
+<a href=#170 id=170 data-nosnippet>170</a>    row: PhaseStateRow,
+<a href=#171 id=171 data-nosnippet>171</a>    now: DateTime&lt;Utc&gt;,
+<a href=#172 id=172 data-nosnippet>172</a>    depths: <span class="kw-2">&amp;</span>HashMap&lt;CreditRegistrationState, i64&gt;,
+<a href=#173 id=173 data-nosnippet>173</a>    due_enrolment_checks: i64,
+<a href=#174 id=174 data-nosnippet>174</a>) -&gt; CreditRegistrationPhaseRow {
+<a href=#175 id=175 data-nosnippet>175</a>    <span class="kw">let </span>known = CreditRegistrationPhase::from_phase_name(<span class="kw-2">&amp;</span>row.phase);
+<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">let </span>owned_states: Vec&lt;CreditRegistrationState&gt; = known
+<a href=#177 id=177 data-nosnippet>177</a>        .map(|phase| phase.owned_states().to_vec())
+<a href=#178 id=178 data-nosnippet>178</a>        .unwrap_or_default();
+<a href=#179 id=179 data-nosnippet>179</a>    <span class="kw">let </span>seconds_since_heartbeat = row.last_heartbeat_at.map(|at| (now - at).num_seconds());
+<a href=#180 id=180 data-nosnippet>180</a>    <span class="kw">let </span>heartbeat_late = is_heartbeat_late(
+<a href=#181 id=181 data-nosnippet>181</a>        row.last_heartbeat_at,
+<a href=#182 id=182 data-nosnippet>182</a>        row.expected_interval_secs,
+<a href=#183 id=183 data-nosnippet>183</a>        row.paused_at,
+<a href=#184 id=184 data-nosnippet>184</a>        now,
+<a href=#185 id=185 data-nosnippet>185</a>    );
+<a href=#186 id=186 data-nosnippet>186</a>    <span class="kw">let </span>depth_of = |state| depths.get(<span class="kw-2">&amp;</span>state).copied().unwrap_or(<span class="number">0</span>);
+<a href=#187 id=187 data-nosnippet>187</a>    <span class="kw">let </span>failing = is_phase_failing(<span class="kw-2">&amp;</span>row, now, depth_of, due_enrolment_checks);
+<a href=#188 id=188 data-nosnippet>188</a>    CreditRegistrationPhaseRow {
+<a href=#189 id=189 data-nosnippet>189</a>        is_known_phase: known.is_some(),
+<a href=#190 id=190 data-nosnippet>190</a>        queue_depth: known
+<a href=#191 id=191 data-nosnippet>191</a>            .filter(|<span class="kw">_</span>| !owned_states.is_empty())
+<a href=#192 id=192 data-nosnippet>192</a>            .map(|phase| phase.queue_depth(depth_of, due_enrolment_checks)),
+<a href=#193 id=193 data-nosnippet>193</a>        owned_states,
+<a href=#194 id=194 data-nosnippet>194</a>        seconds_since_heartbeat,
+<a href=#195 id=195 data-nosnippet>195</a>        heartbeat_late,
+<a href=#196 id=196 data-nosnippet>196</a>        failing,
+<a href=#197 id=197 data-nosnippet>197</a>        last_run_duration_secs: row
+<a href=#198 id=198 data-nosnippet>198</a>            .last_run_started_at
+<a href=#199 id=199 data-nosnippet>199</a>            .zip(row.last_run_finished_at)
+<a href=#200 id=200 data-nosnippet>200</a>            .map(|(started, finished)| (finished - started).num_seconds()),
+<a href=#201 id=201 data-nosnippet>201</a>        phase: row.phase,
+<a href=#202 id=202 data-nosnippet>202</a>        process_name: row.process_name,
+<a href=#203 id=203 data-nosnippet>203</a>        expected_interval_secs: row.expected_interval_secs,
+<a href=#204 id=204 data-nosnippet>204</a>        last_heartbeat_at: row.last_heartbeat_at,
+<a href=#205 id=205 data-nosnippet>205</a>        last_run_started_at: row.last_run_started_at,
+<a href=#206 id=206 data-nosnippet>206</a>        last_run_finished_at: row.last_run_finished_at,
+<a href=#207 id=207 data-nosnippet>207</a>        last_success_at: row.last_success_at,
+<a href=#208 id=208 data-nosnippet>208</a>        next_run_at: row.next_run_at,
+<a href=#209 id=209 data-nosnippet>209</a>        items_processed_last_run: row.items_processed_last_run,
+<a href=#210 id=210 data-nosnippet>210</a>        items_failed_last_run: row.items_failed_last_run,
+<a href=#211 id=211 data-nosnippet>211</a>        consecutive_failures: row.consecutive_failures,
+<a href=#212 id=212 data-nosnippet>212</a>        last_error: row.last_error,
+<a href=#213 id=213 data-nosnippet>213</a>        paused_at: row.paused_at,
+<a href=#214 id=214 data-nosnippet>214</a>        paused_by_user_id: row.paused_by_user_id,
+<a href=#215 id=215 data-nosnippet>215</a>        pause_reason: row.pause_reason,
+<a href=#216 id=216 data-nosnippet>216</a>    }
 <a href=#217 id=217 data-nosnippet>217</a>}
 <a href=#218 id=218 data-nosnippet>218</a>
-<a href=#219 id=219 data-nosnippet>219</a><span class="kw">fn </span>to_circuit_breaker_state(
-<a href=#220 id=220 data-nosnippet>220</a>    breaker: SuotarCircuitBreaker,
-<a href=#221 id=221 data-nosnippet>221</a>    now: DateTime&lt;Utc&gt;,
-<a href=#222 id=222 data-nosnippet>222</a>) -&gt; CreditRegistrationCircuitBreakerState {
-<a href=#223 id=223 data-nosnippet>223</a>    <span class="kw">let </span>open_for_secs = breaker
-<a href=#224 id=224 data-nosnippet>224</a>        .open_until
-<a href=#225 id=225 data-nosnippet>225</a>        .map(|until| (until - now).num_seconds())
-<a href=#226 id=226 data-nosnippet>226</a>        .filter(|<span class="kw-2">&amp;</span>secs| secs &gt; <span class="number">0</span>);
-<a href=#227 id=227 data-nosnippet>227</a>    <span class="kw">let </span>consecutive_failures = u32::try_from(breaker.consecutive_failures).unwrap_or_default();
-<a href=#228 id=228 data-nosnippet>228</a>    <span class="kw">let </span>status = <span class="kw">if </span>breaker.open_until.is_some_and(|until| now &lt; until) {
-<a href=#229 id=229 data-nosnippet>229</a>        CircuitBreakerStatus::Open
-<a href=#230 id=230 data-nosnippet>230</a>    } <span class="kw">else if </span>is_waiting_to_probe(consecutive_failures, breaker.open_until, now) {
-<a href=#231 id=231 data-nosnippet>231</a>        CircuitBreakerStatus::WaitingToProbe
-<a href=#232 id=232 data-nosnippet>232</a>    } <span class="kw">else </span>{
-<a href=#233 id=233 data-nosnippet>233</a>        CircuitBreakerStatus::Closed
-<a href=#234 id=234 data-nosnippet>234</a>    };
-<a href=#235 id=235 data-nosnippet>235</a>    <span class="kw">let </span>endpoints = endpoints_paused_by(<span class="kw-2">&amp;</span>breaker.process_name, breaker.target);
-<a href=#236 id=236 data-nosnippet>236</a>    CreditRegistrationCircuitBreakerState {
-<a href=#237 id=237 data-nosnippet>237</a>        process_name: breaker.process_name,
-<a href=#238 id=238 data-nosnippet>238</a>        target: breaker.target,
-<a href=#239 id=239 data-nosnippet>239</a>        endpoints,
-<a href=#240 id=240 data-nosnippet>240</a>        status,
-<a href=#241 id=241 data-nosnippet>241</a>        consecutive_failures: i64::from(breaker.consecutive_failures),
-<a href=#242 id=242 data-nosnippet>242</a>        open_for_secs,
-<a href=#243 id=243 data-nosnippet>243</a>        trip_count: i64::from(breaker.trip_count),
-<a href=#244 id=244 data-nosnippet>244</a>        updated_at: breaker.updated_at,
-<a href=#245 id=245 data-nosnippet>245</a>    }
-<a href=#246 id=246 data-nosnippet>246</a>}
+<a href=#219 id=219 data-nosnippet>219</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#220 id=220 data-nosnippet>220</a>    cfg.route(<span class="string">"/phases"</span>, web::get().to(list_credit_registration_phases));
+<a href=#221 id=221 data-nosnippet>221</a>}
+<a href=#222 id=222 data-nosnippet>222</a>
+<a href=#223 id=223 data-nosnippet>223</a><span class="kw">fn </span>to_circuit_breaker_state(
+<a href=#224 id=224 data-nosnippet>224</a>    breaker: SuotarCircuitBreaker,
+<a href=#225 id=225 data-nosnippet>225</a>    now: DateTime&lt;Utc&gt;,
+<a href=#226 id=226 data-nosnippet>226</a>) -&gt; CreditRegistrationCircuitBreakerState {
+<a href=#227 id=227 data-nosnippet>227</a>    <span class="kw">let </span>open_for_secs = breaker
+<a href=#228 id=228 data-nosnippet>228</a>        .open_until
+<a href=#229 id=229 data-nosnippet>229</a>        .map(|until| (until - now).num_seconds())
+<a href=#230 id=230 data-nosnippet>230</a>        .filter(|<span class="kw-2">&amp;</span>secs| secs &gt; <span class="number">0</span>);
+<a href=#231 id=231 data-nosnippet>231</a>    <span class="kw">let </span>consecutive_failures = u32::try_from(breaker.consecutive_failures).unwrap_or_default();
+<a href=#232 id=232 data-nosnippet>232</a>    <span class="kw">let </span>status = <span class="kw">if </span>breaker.open_until.is_some_and(|until| now &lt; until) {
+<a href=#233 id=233 data-nosnippet>233</a>        CircuitBreakerStatus::Open
+<a href=#234 id=234 data-nosnippet>234</a>    } <span class="kw">else if </span>is_waiting_to_probe(consecutive_failures, breaker.open_until, now) {
+<a href=#235 id=235 data-nosnippet>235</a>        CircuitBreakerStatus::WaitingToProbe
+<a href=#236 id=236 data-nosnippet>236</a>    } <span class="kw">else </span>{
+<a href=#237 id=237 data-nosnippet>237</a>        CircuitBreakerStatus::Closed
+<a href=#238 id=238 data-nosnippet>238</a>    };
+<a href=#239 id=239 data-nosnippet>239</a>    <span class="kw">let </span>endpoints = endpoints_paused_by(<span class="kw-2">&amp;</span>breaker.process_name, breaker.target);
+<a href=#240 id=240 data-nosnippet>240</a>    CreditRegistrationCircuitBreakerState {
+<a href=#241 id=241 data-nosnippet>241</a>        process_name: breaker.process_name,
+<a href=#242 id=242 data-nosnippet>242</a>        target: breaker.target,
+<a href=#243 id=243 data-nosnippet>243</a>        endpoints,
+<a href=#244 id=244 data-nosnippet>244</a>        status,
+<a href=#245 id=245 data-nosnippet>245</a>        consecutive_failures: i64::from(breaker.consecutive_failures),
+<a href=#246 id=246 data-nosnippet>246</a>        open_for_secs,
+<a href=#247 id=247 data-nosnippet>247</a>        trip_count: i64::from(breaker.trip_count),
+<a href=#248 id=248 data-nosnippet>248</a>        updated_at: breaker.updated_at,
+<a href=#249 id=249 data-nosnippet>249</a>    }
+<a href=#250 id=250 data-nosnippet>250</a>}
 </code></pre></div></section></main></body></html>

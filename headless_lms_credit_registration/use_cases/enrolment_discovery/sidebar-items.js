@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["book_listing_for_unlinked_student","load_due_roster_codes","load_listing_modules","plan_roster_requests","run"],"mod":["listing","reconcile"],"struct":["CodeListing"]};
+window.SIDEBAR_ITEMS = {"fn":["load_due_roster_codes","load_listing_modules","plan_roster_requests","run"],"mod":["listing","reconcile"],"struct":["CodeListing"]};

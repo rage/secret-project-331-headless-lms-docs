@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_active_discovery_reports","get_active_modules_for_course","mark_listing_failed","mark_listing_succeeded_without_linking","record_listing_outcome"],"struct":["ModuleDiscoveryReport","ModuleListingOutcome","ModuleToList"]};
+window.SIDEBAR_ITEMS = {"fn":["get_active_discovery_reports","get_active_modules_for_course","mark_listing_failed","mark_listing_succeeded"],"struct":["ModuleDiscoveryReport","ModuleToList"]};
