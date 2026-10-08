@@ -446,7 +446,7 @@
 <a href=#446 id=446 data-nosnippet>446</a>) -&gt; ControllerResult&lt;web::Json&lt;CreditRegistrationSettings&gt;&gt; {
 <a href=#447 id=447 data-nosnippet>447</a>    <span class="kw">let </span>token = skip_authorize();
 <a href=#448 id=448 data-nosnippet>448</a>    token.authorized_ok(web::Json(CreditRegistrationSettings {
-<a href=#449 id=449 data-nosnippet>449</a>        account_linking_enabled: app_conf.suotar_configuration.account_linking_enabled,
+<a href=#449 id=449 data-nosnippet>449</a>        account_linking_enabled: app_conf.suotar_configuration.is_account_linking_enabled(),
 <a href=#450 id=450 data-nosnippet>450</a>    }))
 <a href=#451 id=451 data-nosnippet>451</a>}
 <a href=#452 id=452 data-nosnippet>452</a>
@@ -1374,7 +1374,7 @@
 <a href=#1374 id=1374 data-nosnippet>1374</a>    course_module_id: Uuid,
 <a href=#1375 id=1375 data-nosnippet>1375</a>    is_visit: bool,
 <a href=#1376 id=1376 data-nosnippet>1376</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ControllerError&gt; {
-<a href=#1377 id=1377 data-nosnippet>1377</a>    <span class="kw">if </span>!app_conf.suotar_configuration.account_linking_enabled {
+<a href=#1377 id=1377 data-nosnippet>1377</a>    <span class="kw">if </span>!app_conf.suotar_configuration.is_account_linking_enabled() {
 <a href=#1378 id=1378 data-nosnippet>1378</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#1379 id=1379 data-nosnippet>1379</a>    }
 <a href=#1380 id=1380 data-nosnippet>1380</a>    book_listing_for_unlinked_student(conn, user_id, course_module_id, is_visit).<span class="kw">await</span><span class="question-mark">?</span>;

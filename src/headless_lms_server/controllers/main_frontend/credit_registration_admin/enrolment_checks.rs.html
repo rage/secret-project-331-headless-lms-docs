@@ -97,7 +97,7 @@
 <a href=#97 id=97 data-nosnippet>97</a>    <span class="kw">let </span>population =
 <a href=#98 id=98 data-nosnippet>98</a>        credit_registration_enrolment_check_outcomes::get_population(<span class="kw-2">&amp;mut </span>conn).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">let </span>daily_costs = suotar_api_calls::get_daily_costs_since(<span class="kw-2">&amp;mut </span>conn, since).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#100 id=100 data-nosnippet>100</a>    <span class="kw">let </span>is_account_linking_enabled = app_conf.suotar_configuration.account_linking_enabled;
+<a href=#100 id=100 data-nosnippet>100</a>    <span class="kw">let </span>is_account_linking_enabled = app_conf.suotar_configuration.is_account_linking_enabled();
 <a href=#101 id=101 data-nosnippet>101</a>    <span class="kw">let </span>today = now.date_naive();
 <a href=#102 id=102 data-nosnippet>102</a>    <span class="kw">let </span>roster_codes = credit_registration_roster_schedules::get_schedules(
 <a href=#103 id=103 data-nosnippet>103</a>        <span class="kw-2">&amp;mut </span>conn,
