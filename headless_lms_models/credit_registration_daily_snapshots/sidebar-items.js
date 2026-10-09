@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["count_states_for_day","get_between","write_snapshot_for_date"],"struct":["CreditRegistrationDailySnapshot","DailyStateCounts"]};
+window.SIDEBAR_ITEMS = {"fn":["count_states_for_day","get_attention_counts_between","get_between","get_step_counts_between","write_attention_snapshot_for_date","write_snapshot_for_date","write_step_snapshot_for_date"],"struct":["CreditRegistrationDailySnapshot","DailyStateCounts","DailyStepCount"]};

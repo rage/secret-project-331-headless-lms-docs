@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PHASE_HEARTBEAT_INTERVAL_MULTIPLIER"],"fn":["attention_rules","is_heartbeat_late"]};

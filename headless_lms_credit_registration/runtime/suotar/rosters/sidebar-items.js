@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["ENDPOINT"],"fn":["list","search"]};
+window.SIDEBAR_ITEMS = {"constant":["ENDPOINT"],"fn":["fetch_one","list","search"]};

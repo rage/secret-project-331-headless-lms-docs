@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["count_modules_failing_config_check","get_config_facts_for_enabled_modules","record_config_check"],"struct":["SuotarConfigCheck","SuotarModuleConfigFacts"]};
+window.SIDEBAR_ITEMS = {"fn":["count_modules_failing_config_check","get_config_facts_for_enabled_modules","get_module_ids_failing_config_check","record_config_check"],"struct":["SuotarConfigCheck","SuotarModuleConfigFacts"]};

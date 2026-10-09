@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["look_up_person","resend_linking_mail_for_target"],"struct":["ManualActionContext"]};
+window.SIDEBAR_ITEMS = {"fn":["list_unlinked_enrolled_before","look_up_person","resend_linking_mail_for_target"],"struct":["ManualActionContext"]};

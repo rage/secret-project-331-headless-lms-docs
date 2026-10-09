@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AdminCreditRegistrationSort"],"fn":["admin_facing_page","get_admin_facing","get_live_by_states"],"struct":["AdminCreditRegistration","AdminCreditRegistrationFilters"]};
+window.SIDEBAR_ITEMS = {"enum":["AdminCreditRegistrationSort"],"fn":["admin_facing_page","count_by_step_and_engagement","get_admin_facing","get_live_by_states","get_registration_journey","sum_step_counts_over_modules"],"struct":["AdminCreditRegistration","AdminCreditRegistrationFilters","AdminRegistrationJourney","StepCount"]};
