@@ -65,16 +65,28 @@
 <a href=#65 id=65 data-nosnippet>65</a>        .<span class="kw">await
 <a href=#66 id=66 data-nosnippet>66</a></span>}
 <a href=#67 id=67 data-nosnippet>67</a>
-<a href=#68 id=68 data-nosnippet>68</a><span class="doccomment">/// Lists one course code's roster now and keeps the people linking mails skip: enrolled before
-<a href=#69 id=69 data-nosnippet>69</a>/// `since` or at no known time, and linked to no account, each once. Stores nothing.
+<a href=#68 id=68 data-nosnippet>68</a><span class="doccomment">/// Lists the rosters of every course code on the course now and keeps the people linked to no
+<a href=#69 id=69 data-nosnippet>69</a>/// account, whenever they enrolled, each once. Stores nothing.
 <a href=#70 id=70 data-nosnippet>70</a>///
-<a href=#71 id=71 data-nosnippet>71</a>/// `Ok(None)` means the registry gave no usable answer.
-<a href=#72 id=72 data-nosnippet>72</a></span><span class="kw">pub async fn </span>list_unlinked_enrolled_before(
+<a href=#71 id=71 data-nosnippet>71</a>/// `Ok(None)` means the registry gave no usable answer for some code.
+<a href=#72 id=72 data-nosnippet>72</a></span><span class="kw">pub async fn </span>list_unlinked_on_course_rosters(
 <a href=#73 id=73 data-nosnippet>73</a>    ctx: <span class="kw-2">&amp;</span>ManualActionContext&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#74 id=74 data-nosnippet>74</a>    course_code: <span class="kw-2">&amp;</span>str,
-<a href=#75 id=75 data-nosnippet>75</a>    since: DateTime&lt;Utc&gt;,
-<a href=#76 id=76 data-nosnippet>76</a>) -&gt; CreditRegistrationResult&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;RosterPerson&gt;&gt;&gt; {
-<a href=#77 id=77 data-nosnippet>77</a>    <span class="kw">let </span>registry = InteractiveSuotar::new(ctx.suotar_client, ctx.caller.to_string());
-<a href=#78 id=78 data-nosnippet>78</a>    account_linking::unlinked_enrolled_before(ctx.pool, <span class="kw-2">&amp;</span>registry, course_code, since).<span class="kw">await
-<a href=#79 id=79 data-nosnippet>79</a></span>}
+<a href=#74 id=74 data-nosnippet>74</a>    course_id: Uuid,
+<a href=#75 id=75 data-nosnippet>75</a>) -&gt; CreditRegistrationResult&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;RosterPerson&gt;&gt;&gt; {
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="kw">let </span>registry = InteractiveSuotar::new(ctx.suotar_client, ctx.caller.to_string());
+<a href=#77 id=77 data-nosnippet>77</a>    account_linking::unlinked_on_course_rosters(ctx.pool, <span class="kw-2">&amp;</span>registry, course_id).<span class="kw">await
+<a href=#78 id=78 data-nosnippet>78</a></span>}
+<a href=#79 id=79 data-nosnippet>79</a>
+<a href=#80 id=80 data-nosnippet>80</a><span class="doccomment">/// Lists one course code's roster now and keeps the people linking mails skip: enrolled before
+<a href=#81 id=81 data-nosnippet>81</a>/// `since` or at no known time, and linked to no account, each once. Stores nothing.
+<a href=#82 id=82 data-nosnippet>82</a>///
+<a href=#83 id=83 data-nosnippet>83</a>/// `Ok(None)` means the registry gave no usable answer.
+<a href=#84 id=84 data-nosnippet>84</a></span><span class="kw">pub async fn </span>list_unlinked_enrolled_before(
+<a href=#85 id=85 data-nosnippet>85</a>    ctx: <span class="kw-2">&amp;</span>ManualActionContext&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#86 id=86 data-nosnippet>86</a>    course_code: <span class="kw-2">&amp;</span>str,
+<a href=#87 id=87 data-nosnippet>87</a>    since: DateTime&lt;Utc&gt;,
+<a href=#88 id=88 data-nosnippet>88</a>) -&gt; CreditRegistrationResult&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;RosterPerson&gt;&gt;&gt; {
+<a href=#89 id=89 data-nosnippet>89</a>    <span class="kw">let </span>registry = InteractiveSuotar::new(ctx.suotar_client, ctx.caller.to_string());
+<a href=#90 id=90 data-nosnippet>90</a>    account_linking::unlinked_enrolled_before(ctx.pool, <span class="kw-2">&amp;</span>registry, course_code, since).<span class="kw">await
+<a href=#91 id=91 data-nosnippet>91</a></span>}
 </code></pre></div></section></main></body></html>
