@@ -1061,36 +1061,33 @@
 <a href=#1061 id=1061 data-nosnippet>1061</a>            <span class="number">1
 <a href=#1062 id=1062 data-nosnippet>1062</a>        </span>);
 <a href=#1063 id=1063 data-nosnippet>1063</a>
-<a href=#1064 id=1064 data-nosnippet>1064</a>        <span class="comment">// Not a `query!`: `cargo sqlx prepare -- --lib` does not cache test-only queries.
-<a href=#1065 id=1065 data-nosnippet>1065</a>        </span>sqlx::query(<span class="string">"UPDATE organizations SET deleted_at = now() WHERE id = $1"</span>)
-<a href=#1066 id=1066 data-nosnippet>1066</a>            .bind(org_id)
-<a href=#1067 id=1067 data-nosnippet>1067</a>            .execute(<span class="kw-2">&amp;mut **</span>tx.as_mut())
-<a href=#1068 id=1068 data-nosnippet>1068</a>            .<span class="kw">await
-<a href=#1069 id=1069 data-nosnippet>1069</a>            </span>.unwrap();
-<a href=#1070 id=1070 data-nosnippet>1070</a>
-<a href=#1071 id=1071 data-nosnippet>1071</a>        <span class="macro">assert!</span>(
-<a href=#1072 id=1072 data-nosnippet>1072</a>            get_enrolled_course_instances_for_user_with_exercise_types(tx.as_mut(), user_id, <span class="kw-2">&amp;</span>tmc)
-<a href=#1073 id=1073 data-nosnippet>1073</a>                .<span class="kw">await
-<a href=#1074 id=1074 data-nosnippet>1074</a>                </span>.unwrap()
-<a href=#1075 id=1075 data-nosnippet>1075</a>                .is_empty(),
-<a href=#1076 id=1076 data-nosnippet>1076</a>            <span class="string">"a deleted organization's courses must not be listed"
-<a href=#1077 id=1077 data-nosnippet>1077</a>        </span>);
-<a href=#1078 id=1078 data-nosnippet>1078</a>        <span class="macro">assert!</span>(
-<a href=#1079 id=1079 data-nosnippet>1079</a>            get_enrolled_course_instances_for_user(tx.as_mut(), user_id)
-<a href=#1080 id=1080 data-nosnippet>1080</a>                .<span class="kw">await
-<a href=#1081 id=1081 data-nosnippet>1081</a>                </span>.unwrap()
-<a href=#1082 id=1082 data-nosnippet>1082</a>                .is_empty()
-<a href=#1083 id=1083 data-nosnippet>1083</a>        );
-<a href=#1084 id=1084 data-nosnippet>1084</a>        tx.rollback().<span class="kw">await</span>;
-<a href=#1085 id=1085 data-nosnippet>1085</a>    }
-<a href=#1086 id=1086 data-nosnippet>1086</a>
-<a href=#1087 id=1087 data-nosnippet>1087</a>    <span class="attr">#[tokio::test]
-<a href=#1088 id=1088 data-nosnippet>1088</a>    </span><span class="kw">async fn </span>gets_course_average_duration_with_empty_database() {
-<a href=#1089 id=1089 data-nosnippet>1089</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course);
-<a href=#1090 id=1090 data-nosnippet>1090</a>        <span class="kw">let </span>duration = get_course_average_duration(tx.as_mut(), course)
-<a href=#1091 id=1091 data-nosnippet>1091</a>            .<span class="kw">await
-<a href=#1092 id=1092 data-nosnippet>1092</a>            </span>.unwrap();
-<a href=#1093 id=1093 data-nosnippet>1093</a>        <span class="macro">assert!</span>(duration.is_none())
-<a href=#1094 id=1094 data-nosnippet>1094</a>    }
-<a href=#1095 id=1095 data-nosnippet>1095</a>}
+<a href=#1064 id=1064 data-nosnippet>1064</a>        <span class="kw">crate</span>::organizations::soft_delete(tx.as_mut(), org_id)
+<a href=#1065 id=1065 data-nosnippet>1065</a>            .<span class="kw">await
+<a href=#1066 id=1066 data-nosnippet>1066</a>            </span>.unwrap();
+<a href=#1067 id=1067 data-nosnippet>1067</a>
+<a href=#1068 id=1068 data-nosnippet>1068</a>        <span class="macro">assert!</span>(
+<a href=#1069 id=1069 data-nosnippet>1069</a>            get_enrolled_course_instances_for_user_with_exercise_types(tx.as_mut(), user_id, <span class="kw-2">&amp;</span>tmc)
+<a href=#1070 id=1070 data-nosnippet>1070</a>                .<span class="kw">await
+<a href=#1071 id=1071 data-nosnippet>1071</a>                </span>.unwrap()
+<a href=#1072 id=1072 data-nosnippet>1072</a>                .is_empty(),
+<a href=#1073 id=1073 data-nosnippet>1073</a>            <span class="string">"a deleted organization's courses must not be listed"
+<a href=#1074 id=1074 data-nosnippet>1074</a>        </span>);
+<a href=#1075 id=1075 data-nosnippet>1075</a>        <span class="macro">assert!</span>(
+<a href=#1076 id=1076 data-nosnippet>1076</a>            get_enrolled_course_instances_for_user(tx.as_mut(), user_id)
+<a href=#1077 id=1077 data-nosnippet>1077</a>                .<span class="kw">await
+<a href=#1078 id=1078 data-nosnippet>1078</a>                </span>.unwrap()
+<a href=#1079 id=1079 data-nosnippet>1079</a>                .is_empty()
+<a href=#1080 id=1080 data-nosnippet>1080</a>        );
+<a href=#1081 id=1081 data-nosnippet>1081</a>        tx.rollback().<span class="kw">await</span>;
+<a href=#1082 id=1082 data-nosnippet>1082</a>    }
+<a href=#1083 id=1083 data-nosnippet>1083</a>
+<a href=#1084 id=1084 data-nosnippet>1084</a>    <span class="attr">#[tokio::test]
+<a href=#1085 id=1085 data-nosnippet>1085</a>    </span><span class="kw">async fn </span>gets_course_average_duration_with_empty_database() {
+<a href=#1086 id=1086 data-nosnippet>1086</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course);
+<a href=#1087 id=1087 data-nosnippet>1087</a>        <span class="kw">let </span>duration = get_course_average_duration(tx.as_mut(), course)
+<a href=#1088 id=1088 data-nosnippet>1088</a>            .<span class="kw">await
+<a href=#1089 id=1089 data-nosnippet>1089</a>            </span>.unwrap();
+<a href=#1090 id=1090 data-nosnippet>1090</a>        <span class="macro">assert!</span>(duration.is_none())
+<a href=#1091 id=1091 data-nosnippet>1091</a>    }
+<a href=#1092 id=1092 data-nosnippet>1092</a>}
 </code></pre></div></section></main></body></html>

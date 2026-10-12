@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["SpecKind"],"fn":["comma_separated","get_by_exercise_task_ids","get_for_exercise_task","replace_for_exercise_task"]};
+window.SIDEBAR_ITEMS = {"enum":["SpecKind"],"fn":["comma_separated","count_for_exercise_task_including_deleted","get_by_exercise_task_ids","get_for_exercise_task","replace_for_exercise_task"]};
