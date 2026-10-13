@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_external_courses_by_embeddings"],"struct":["ExternalCourse","ExternalCourseOutput"]};
+window.SIDEBAR_ITEMS = {"fn":["create_external_course","delete_by_id","get_all_external_courses","get_external_course_by_id","get_external_courses_by_embeddings","update_by_id"],"struct":["ExternalCourse","ExternalCourseOutput","NewExternalCourse"]};

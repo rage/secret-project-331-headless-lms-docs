@@ -285,73 +285,72 @@
 <a href=#285 id=285 data-nosnippet>285</a>        }
 <a href=#286 id=286 data-nosnippet>286</a>
 <a href=#287 id=287 data-nosnippet>287</a>        <span class="kw">if </span>candidates.iter().any(|c| c.course.closed_at.is_some()) {
-<a href=#288 id=288 data-nosnippet>288</a>            <span class="kw">let </span>now = chrono::Utc::now();
-<a href=#289 id=289 data-nosnippet>289</a>            <span class="kw">let </span><span class="kw-2">mut </span>closed_at_note = String::from(
-<a href=#290 id=290 data-nosnippet>290</a>                <span class="string">"closed_at is a scheduled closing timestamp: absent means the course was \
-<a href=#291 id=291 data-nosnippet>291</a>                 never scheduled to close, a future value means it's still open, and only a \
-<a href=#292 id=292 data-nosnippet>292</a>                 past value means it's actually closed."</span>,
-<a href=#293 id=293 data-nosnippet>293</a>            );
-<a href=#294 id=294 data-nosnippet>294</a>            <span class="kw">if </span>candidates.iter().any(|c| {
-<a href=#295 id=295 data-nosnippet>295</a>                c.course.closed_at.is_some_and(|t| t &lt;= now)
-<a href=#296 id=296 data-nosnippet>296</a>                    &amp;&amp; c.course.closed_course_successor_id.is_none()
-<a href=#297 id=297 data-nosnippet>297</a>            }) {
-<a href=#298 id=298 data-nosnippet>298</a>                closed_at_note.push_str(
-<a href=#299 id=299 data-nosnippet>299</a>                    <span class="string">" A closed course with no closed_course_successor_id has nowhere \
-<a href=#300 id=300 data-nosnippet>300</a>                     configured to send the student."</span>,
-<a href=#301 id=301 data-nosnippet>301</a>                );
-<a href=#302 id=302 data-nosnippet>302</a>            }
-<a href=#303 id=303 data-nosnippet>303</a>            <span class="kw">if </span>candidates
-<a href=#304 id=304 data-nosnippet>304</a>                .iter()
-<a href=#305 id=305 data-nosnippet>305</a>                .any(|c| c.course.closed_course_successor_id.is_some())
-<a href=#306 id=306 data-nosnippet>306</a>            {
-<a href=#307 id=307 data-nosnippet>307</a>                closed_at_note.push_str(
-<a href=#308 id=308 data-nosnippet>308</a>                    <span class="string">" closed_course_successor_id is a course id, not a name — call \
-<a href=#309 id=309 data-nosnippet>309</a>                     find_course again to identify it."</span>,
-<a href=#310 id=310 data-nosnippet>310</a>                );
-<a href=#311 id=311 data-nosnippet>311</a>            }
-<a href=#312 id=312 data-nosnippet>312</a>            notes.push(closed_at_note);
-<a href=#313 id=313 data-nosnippet>313</a>        }
-<a href=#314 id=314 data-nosnippet>314</a>
-<a href=#315 id=315 data-nosnippet>315</a>        <span class="kw">if </span>candidates
-<a href=#316 id=316 data-nosnippet>316</a>            .iter()
-<a href=#317 id=317 data-nosnippet>317</a>            .flat_map(|c| <span class="kw-2">&amp;</span>c.instances)
-<a href=#318 id=318 data-nosnippet>318</a>            .any(|i| i.starts_at.is_none() || i.ends_at.is_none())
-<a href=#319 id=319 data-nosnippet>319</a>        {
-<a href=#320 id=320 data-nosnippet>320</a>            notes.push(
-<a href=#321 id=321 data-nosnippet>321</a>                <span class="string">"Some instances are missing starts_at or ends_at. The platform itself is \
-<a href=#322 id=322 data-nosnippet>322</a>                 inconsistent about whether such an instance counts as started, so report the \
-<a href=#323 id=323 data-nosnippet>323</a>                 absence rather than asserting whether the instance is running."
-<a href=#324 id=324 data-nosnippet>324</a>                    </span>.to_string(),
-<a href=#325 id=325 data-nosnippet>325</a>            );
-<a href=#326 id=326 data-nosnippet>326</a>        }
-<a href=#327 id=327 data-nosnippet>327</a>
-<a href=#328 id=328 data-nosnippet>328</a>        <span class="kw">let </span><span class="kw-2">mut </span>name_to_candidates: std::collections::HashMap&lt;<span class="kw-2">&amp;</span>str, Vec&lt;<span class="kw-2">&amp;</span>CourseCandidate&gt;&gt; =
-<a href=#329 id=329 data-nosnippet>329</a>            std::collections::HashMap::new();
-<a href=#330 id=330 data-nosnippet>330</a>        <span class="kw">for </span>candidate <span class="kw">in </span>candidates {
-<a href=#331 id=331 data-nosnippet>331</a>            name_to_candidates
-<a href=#332 id=332 data-nosnippet>332</a>                .entry(candidate.course.name.as_str())
-<a href=#333 id=333 data-nosnippet>333</a>                .or_default()
-<a href=#334 id=334 data-nosnippet>334</a>                .push(candidate);
-<a href=#335 id=335 data-nosnippet>335</a>        }
-<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(ambiguous) = name_to_candidates.values().find(|group| {
-<a href=#337 id=337 data-nosnippet>337</a>            group
-<a href=#338 id=338 data-nosnippet>338</a>                .iter()
-<a href=#339 id=339 data-nosnippet>339</a>                .map(|c| c.course.language_code.as_str())
-<a href=#340 id=340 data-nosnippet>340</a>                .collect::&lt;std::collections::HashSet&lt;<span class="kw">_</span>&gt;&gt;()
-<a href=#341 id=341 data-nosnippet>341</a>                .len()
-<a href=#342 id=342 data-nosnippet>342</a>                &gt;= <span class="number">2
-<a href=#343 id=343 data-nosnippet>343</a>        </span>}) {
-<a href=#344 id=344 data-nosnippet>344</a>            <span class="comment">// Any candidate id in the group works: the language-versions page lists the whole sibling set.
-<a href=#345 id=345 data-nosnippet>345</a>            </span><span class="kw">let </span>representative_id = ambiguous[<span class="number">0</span>].course.id;
-<a href=#346 id=346 data-nosnippet>346</a>            notes.push(<span class="macro">format!</span>(
-<a href=#347 id=347 data-nosnippet>347</a>                <span class="string">"Some results share a name but differ in language_code — these are separate \
-<a href=#348 id=348 data-nosnippet>348</a>                 course rows, and a student's progress lives in exactly one of them. \
-<a href=#349 id=349 data-nosnippet>349</a>                 {base_url}/manage/courses/{representative_id}/language-versions lists the \
-<a href=#350 id=350 data-nosnippet>350</a>                 whole sibling set side by side."
-<a href=#351 id=351 data-nosnippet>351</a>            </span>));
-<a href=#352 id=352 data-nosnippet>352</a>        }
-<a href=#353 id=353 data-nosnippet>353</a>
-<a href=#354 id=354 data-nosnippet>354</a>        <span class="prelude-val">Some</span>(notes.join(<span class="string">" "</span>))
-<a href=#355 id=355 data-nosnippet>355</a>    }
-<a href=#356 id=356 data-nosnippet>356</a>}
+<a href=#288 id=288 data-nosnippet>288</a>            <span class="kw">let </span><span class="kw-2">mut </span>closed_at_note = String::from(
+<a href=#289 id=289 data-nosnippet>289</a>                <span class="string">"closed_at is a scheduled closing timestamp: absent means the course was \
+<a href=#290 id=290 data-nosnippet>290</a>                 never scheduled to close, a future value means it's still open, and only a \
+<a href=#291 id=291 data-nosnippet>291</a>                 past value means it's actually closed."</span>,
+<a href=#292 id=292 data-nosnippet>292</a>            );
+<a href=#293 id=293 data-nosnippet>293</a>            <span class="kw">if </span>candidates
+<a href=#294 id=294 data-nosnippet>294</a>                .iter()
+<a href=#295 id=295 data-nosnippet>295</a>                .any(|c| c.course.is_closed() &amp;&amp; c.course.closed_course_successor_id.is_none())
+<a href=#296 id=296 data-nosnippet>296</a>            {
+<a href=#297 id=297 data-nosnippet>297</a>                closed_at_note.push_str(
+<a href=#298 id=298 data-nosnippet>298</a>                    <span class="string">" A closed course with no closed_course_successor_id has nowhere \
+<a href=#299 id=299 data-nosnippet>299</a>                     configured to send the student."</span>,
+<a href=#300 id=300 data-nosnippet>300</a>                );
+<a href=#301 id=301 data-nosnippet>301</a>            }
+<a href=#302 id=302 data-nosnippet>302</a>            <span class="kw">if </span>candidates
+<a href=#303 id=303 data-nosnippet>303</a>                .iter()
+<a href=#304 id=304 data-nosnippet>304</a>                .any(|c| c.course.closed_course_successor_id.is_some())
+<a href=#305 id=305 data-nosnippet>305</a>            {
+<a href=#306 id=306 data-nosnippet>306</a>                closed_at_note.push_str(
+<a href=#307 id=307 data-nosnippet>307</a>                    <span class="string">" closed_course_successor_id is a course id, not a name — call \
+<a href=#308 id=308 data-nosnippet>308</a>                     find_course again to identify it."</span>,
+<a href=#309 id=309 data-nosnippet>309</a>                );
+<a href=#310 id=310 data-nosnippet>310</a>            }
+<a href=#311 id=311 data-nosnippet>311</a>            notes.push(closed_at_note);
+<a href=#312 id=312 data-nosnippet>312</a>        }
+<a href=#313 id=313 data-nosnippet>313</a>
+<a href=#314 id=314 data-nosnippet>314</a>        <span class="kw">if </span>candidates
+<a href=#315 id=315 data-nosnippet>315</a>            .iter()
+<a href=#316 id=316 data-nosnippet>316</a>            .flat_map(|c| <span class="kw-2">&amp;</span>c.instances)
+<a href=#317 id=317 data-nosnippet>317</a>            .any(|i| i.starts_at.is_none() || i.ends_at.is_none())
+<a href=#318 id=318 data-nosnippet>318</a>        {
+<a href=#319 id=319 data-nosnippet>319</a>            notes.push(
+<a href=#320 id=320 data-nosnippet>320</a>                <span class="string">"Some instances are missing starts_at or ends_at. The platform itself is \
+<a href=#321 id=321 data-nosnippet>321</a>                 inconsistent about whether such an instance counts as started, so report the \
+<a href=#322 id=322 data-nosnippet>322</a>                 absence rather than asserting whether the instance is running."
+<a href=#323 id=323 data-nosnippet>323</a>                    </span>.to_string(),
+<a href=#324 id=324 data-nosnippet>324</a>            );
+<a href=#325 id=325 data-nosnippet>325</a>        }
+<a href=#326 id=326 data-nosnippet>326</a>
+<a href=#327 id=327 data-nosnippet>327</a>        <span class="kw">let </span><span class="kw-2">mut </span>name_to_candidates: std::collections::HashMap&lt;<span class="kw-2">&amp;</span>str, Vec&lt;<span class="kw-2">&amp;</span>CourseCandidate&gt;&gt; =
+<a href=#328 id=328 data-nosnippet>328</a>            std::collections::HashMap::new();
+<a href=#329 id=329 data-nosnippet>329</a>        <span class="kw">for </span>candidate <span class="kw">in </span>candidates {
+<a href=#330 id=330 data-nosnippet>330</a>            name_to_candidates
+<a href=#331 id=331 data-nosnippet>331</a>                .entry(candidate.course.name.as_str())
+<a href=#332 id=332 data-nosnippet>332</a>                .or_default()
+<a href=#333 id=333 data-nosnippet>333</a>                .push(candidate);
+<a href=#334 id=334 data-nosnippet>334</a>        }
+<a href=#335 id=335 data-nosnippet>335</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(ambiguous) = name_to_candidates.values().find(|group| {
+<a href=#336 id=336 data-nosnippet>336</a>            group
+<a href=#337 id=337 data-nosnippet>337</a>                .iter()
+<a href=#338 id=338 data-nosnippet>338</a>                .map(|c| c.course.language_code.as_str())
+<a href=#339 id=339 data-nosnippet>339</a>                .collect::&lt;std::collections::HashSet&lt;<span class="kw">_</span>&gt;&gt;()
+<a href=#340 id=340 data-nosnippet>340</a>                .len()
+<a href=#341 id=341 data-nosnippet>341</a>                &gt;= <span class="number">2
+<a href=#342 id=342 data-nosnippet>342</a>        </span>}) {
+<a href=#343 id=343 data-nosnippet>343</a>            <span class="comment">// Any candidate id in the group works: the language-versions page lists the whole sibling set.
+<a href=#344 id=344 data-nosnippet>344</a>            </span><span class="kw">let </span>representative_id = ambiguous[<span class="number">0</span>].course.id;
+<a href=#345 id=345 data-nosnippet>345</a>            notes.push(<span class="macro">format!</span>(
+<a href=#346 id=346 data-nosnippet>346</a>                <span class="string">"Some results share a name but differ in language_code — these are separate \
+<a href=#347 id=347 data-nosnippet>347</a>                 course rows, and a student's progress lives in exactly one of them. \
+<a href=#348 id=348 data-nosnippet>348</a>                 {base_url}/manage/courses/{representative_id}/language-versions lists the \
+<a href=#349 id=349 data-nosnippet>349</a>                 whole sibling set side by side."
+<a href=#350 id=350 data-nosnippet>350</a>            </span>));
+<a href=#351 id=351 data-nosnippet>351</a>        }
+<a href=#352 id=352 data-nosnippet>352</a>
+<a href=#353 id=353 data-nosnippet>353</a>        <span class="prelude-val">Some</span>(notes.join(<span class="string">" "</span>))
+<a href=#354 id=354 data-nosnippet>354</a>    }
+<a href=#355 id=355 data-nosnippet>355</a>}
 </code></pre></div></section></main></body></html>

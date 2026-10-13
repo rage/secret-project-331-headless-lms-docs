@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","delete_external_course","get_external_courses","insert_external_course","update_external_course"],"struct":["MainFrontendExternalCoursesApiDoc"]};
