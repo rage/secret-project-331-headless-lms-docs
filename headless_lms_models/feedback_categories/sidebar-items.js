@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_all","get_all_by_read_status","get_by_name","insert_or_get_by_name","normalize"],"struct":["FeedbackCategory","NewFeedbackCategory"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_CATEGORY_NAME_LEN","RESPONSE_FORMAT_NAME","SYSTEM_PROMPT"],"fn":["categorize_feedback","format_category_list","format_feedback","response_format"],"struct":["FeedbackCategorisationResponse"]};

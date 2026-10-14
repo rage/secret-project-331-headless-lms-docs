@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="System prompt instructions for generating suggested next messages"><title>SYSTEM_PROMPT in headless_lms_chatbot::feedback_categorization - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="headless_lms_chatbot" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc constant"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">SYSTEM_PROMPT</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../headless_lms_chatbot/index.html">headless_<wbr>lms_<wbr>chatbot</a><span class="version">0.1.0</span></h2></div><div class="sidebar-elems"><div id="rustdoc-modnav"><h2><a href="index.html">In headless_<wbr>lms_<wbr>chatbot::<wbr>feedback_<wbr>categorization</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">headless_lms_chatbot</a>::<wbr><a href="index.html">feedback_categorization</a></div><h1>Constant <span class="constant">SYSTEM_<wbr>PROMPT</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/headless_lms_chatbot/feedback_categorization.rs.html#83-108">Source</a> </span></div><pre class="rust item-decl"><code>const SYSTEM_PROMPT: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.96.1/std/primitive.str.html">str</a> = r#&quot;You are an expert text categorisation system. You are given written feedback submitted by a student who is completing a course, and a set of possible categories. Analyse the feedback and label it with one of the categories. If none of the categories fit, create a new category.
+
+Allowed response types:
+- Assign feedback into an existing category
+- Create a new category and assign the feedback to it
+
+When assigning to an existing category, return the category&#39;s name exactly as it is. The existing category names are given below. When creating a new category, return the proposed new category name. In both cases, only the category name should be returned: whether it is listed below or not indicates is it an existing category or a new one.
+
+Constraints:
+- analyse the meaning and context of the feedback
+- don&#39;t focus on specific details too much
+- understand the intention behind the feedback and what problem it is really aiming to convey
+- compare the feedback to the existing categories: could it fit into one of them?
+- be conservative when adding new cateogries. If the feedback could be assigned to an existing one, do so instead of creating a new category for it.
+
+New category constraints:
+- the name should be as short and concise as possible
+- the name should be only adequately descriptive: based on it, one should be able to understand what kind of feedback the category contains
+- the name must not be overly specific: it should give a reasonable clue about the category&#39;s content, but not describe it with detail
+- the name should describe the general type of feedback in that category and not be based on any specific details in the feedback. For example, instead of &quot;Confusion about the topic in chapter 4&quot; try &quot;Material comprehension difficulties&quot;
+- the name should fit in with the existing categories, i.e. follow the same naming logic
+- the name should use normal, correct language
+
+Currently existing categories:
+
+&quot;#;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>System prompt instructions for generating suggested next messages</p>
+</div></details></section></div></main></body></html>
