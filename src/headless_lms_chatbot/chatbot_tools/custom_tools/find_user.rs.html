@@ -398,14 +398,8 @@
 <a href=#398 id=398 data-nosnippet>398</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
 <a href=#399 id=399 data-nosnippet>399</a>    query: <span class="kw-2">&amp;</span>str,
 <a href=#400 id=400 data-nosnippet>400</a>) -&gt; ChatbotResult&lt;Vec&lt;UserDetail&gt;&gt; {
-<a href=#401 id=401 data-nosnippet>401</a>    <span class="kw">let </span>results = user_details::search_for_user_details_fuzzy(conn, query).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#402 id=402 data-nosnippet>402</a>    <span class="kw">if </span>results.timed_out {
-<a href=#403 id=403 data-nosnippet>403</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">chatbot_err!</span>(
-<a href=#404 id=404 data-nosnippet>404</a>            ToolUseError,
-<a href=#405 id=405 data-nosnippet>405</a>            <span class="string">"The search took too long. Ask the admin for a more specific name or the full email address."
-<a href=#406 id=406 data-nosnippet>406</a>                </span>.to_string()
-<a href=#407 id=407 data-nosnippet>407</a>        ));
-<a href=#408 id=408 data-nosnippet>408</a>    }
-<a href=#409 id=409 data-nosnippet>409</a>    <span class="prelude-val">Ok</span>(results.users)
-<a href=#410 id=410 data-nosnippet>410</a>}
+<a href=#401 id=401 data-nosnippet>401</a>    <span class="prelude-val">Ok</span>(user_details::search_for_user_details_fuzzy(conn, query)
+<a href=#402 id=402 data-nosnippet>402</a>        .<span class="kw">await</span><span class="question-mark">?
+<a href=#403 id=403 data-nosnippet>403</a>        </span>.users)
+<a href=#404 id=404 data-nosnippet>404</a>}
 </code></pre></div></section></main></body></html>
