@@ -73,37 +73,36 @@
 <a href=#73 id=73 data-nosnippet>73</a>        .module(
 <a href=#74 id=74 data-nosnippet>74</a>            ModuleBuilder::new()
 <a href=#75 id=75 data-nosnippet>75</a>                .order(<span class="number">0</span>)
-<a href=#76 id=76 data-nosnippet>76</a>                .register_to_open_university(<span class="bool-val">false</span>)
-<a href=#77 id=77 data-nosnippet>77</a>                .automatic_completion(<span class="prelude-val">Some</span>(<span class="number">1</span>), <span class="prelude-val">Some</span>(<span class="number">1</span>), <span class="bool-val">false</span>)
-<a href=#78 id=78 data-nosnippet>78</a>                .chapter(
-<a href=#79 id=79 data-nosnippet>79</a>                    ChapterBuilder::new(<span class="number">1</span>, <span class="string">"Introduction"</span>)
-<a href=#80 id=80 data-nosnippet>80</a>                        .opens(Utc::now())
-<a href=#81 id=81 data-nosnippet>81</a>                        .fixed_ids(cx.v5(<span class="string">b"chapter:1"</span>), cx.v5(<span class="string">b"chapter:1:instance"</span>))
-<a href=#82 id=82 data-nosnippet>82</a>                        .page(
-<a href=#83 id=83 data-nosnippet>83</a>                            PageBuilder::new(<span class="string">"/chapter-1/page-1"</span>, <span class="string">"Page One"</span>).block(paragraph(
-<a href=#84 id=84 data-nosnippet>84</a>                                <span class="string">"This course uses many TLAs. Why? Because why use one word when three letters will do? It's like a secret code, but everyone knows it. You'll encounter CS, HDD, KB, and many more. When shopping for a new computer, you might hear someone say that an SSD makes everything faster, but don't worry if you're not sure what that means yet. By the end of this course, you'll be fluent in the language of three-letter abbreviations."</span>,
-<a href=#85 id=85 data-nosnippet>85</a>                                cx.v5(<span class="string">b"page:1:1:block:intro"</span>),
-<a href=#86 id=86 data-nosnippet>86</a>                            )),
-<a href=#87 id=87 data-nosnippet>87</a>                        ),
-<a href=#88 id=88 data-nosnippet>88</a>                ),
-<a href=#89 id=89 data-nosnippet>89</a>        )
-<a href=#90 id=90 data-nosnippet>90</a>        .glossary_entry(
-<a href=#91 id=91 data-nosnippet>91</a>            <span class="string">"TLA"</span>,
-<a href=#92 id=92 data-nosnippet>92</a>            <span class="string">"Three Letter Acronym - because developers love abbreviations more than they love coffee."</span>,
-<a href=#93 id=93 data-nosnippet>93</a>        )
-<a href=#94 id=94 data-nosnippet>94</a>        .glossary_entry(
-<a href=#95 id=95 data-nosnippet>95</a>            <span class="string">"CS"</span>,
-<a href=#96 id=96 data-nosnippet>96</a>            <span class="string">"Computer science. Computer science is an essential part of being successful in your life. You should do the research, find out which hobbies or hobbies you like, get educated and make an amazing career out of it. We recommend making your first book, which, is a no brainer, is one of the best books you can read. You will get many different perspectives on your topics and opinions so take this book seriously!"</span>,
-<a href=#97 id=97 data-nosnippet>97</a>        )
-<a href=#98 id=98 data-nosnippet>98</a>        .glossary_entry(
-<a href=#99 id=99 data-nosnippet>99</a>            <span class="string">"HDD"</span>,
-<a href=#100 id=100 data-nosnippet>100</a>            <span class="string">"Hard disk drive. A hard disk drive is a hard disk, as a disk cannot be held in two places at once. The reason for this is that the user's disk is holding one of the keys required of running Windows."</span>,
-<a href=#101 id=101 data-nosnippet>101</a>        )
-<a href=#102 id=102 data-nosnippet>102</a>        .glossary_entry(<span class="string">"KB"</span>, <span class="string">"Keyboard."</span>);
-<a href=#103 id=103 data-nosnippet>103</a>
-<a href=#104 id=104 data-nosnippet>104</a>    <span class="kw">let </span>(course, _default_instance, _last_module) =
-<a href=#105 id=105 data-nosnippet>105</a>        course.seed(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>app_config, <span class="kw-2">&amp;</span>cx).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#106 id=106 data-nosnippet>106</a>
-<a href=#107 id=107 data-nosnippet>107</a>    <span class="prelude-val">Ok</span>(course.id)
-<a href=#108 id=108 data-nosnippet>108</a>}
+<a href=#76 id=76 data-nosnippet>76</a>                .automatic_completion(<span class="prelude-val">Some</span>(<span class="number">1</span>), <span class="prelude-val">Some</span>(<span class="number">1</span>), <span class="bool-val">false</span>)
+<a href=#77 id=77 data-nosnippet>77</a>                .chapter(
+<a href=#78 id=78 data-nosnippet>78</a>                    ChapterBuilder::new(<span class="number">1</span>, <span class="string">"Introduction"</span>)
+<a href=#79 id=79 data-nosnippet>79</a>                        .opens(Utc::now())
+<a href=#80 id=80 data-nosnippet>80</a>                        .fixed_ids(cx.v5(<span class="string">b"chapter:1"</span>), cx.v5(<span class="string">b"chapter:1:instance"</span>))
+<a href=#81 id=81 data-nosnippet>81</a>                        .page(
+<a href=#82 id=82 data-nosnippet>82</a>                            PageBuilder::new(<span class="string">"/chapter-1/page-1"</span>, <span class="string">"Page One"</span>).block(paragraph(
+<a href=#83 id=83 data-nosnippet>83</a>                                <span class="string">"This course uses many TLAs. Why? Because why use one word when three letters will do? It's like a secret code, but everyone knows it. You'll encounter CS, HDD, KB, and many more. When shopping for a new computer, you might hear someone say that an SSD makes everything faster, but don't worry if you're not sure what that means yet. By the end of this course, you'll be fluent in the language of three-letter abbreviations."</span>,
+<a href=#84 id=84 data-nosnippet>84</a>                                cx.v5(<span class="string">b"page:1:1:block:intro"</span>),
+<a href=#85 id=85 data-nosnippet>85</a>                            )),
+<a href=#86 id=86 data-nosnippet>86</a>                        ),
+<a href=#87 id=87 data-nosnippet>87</a>                ),
+<a href=#88 id=88 data-nosnippet>88</a>        )
+<a href=#89 id=89 data-nosnippet>89</a>        .glossary_entry(
+<a href=#90 id=90 data-nosnippet>90</a>            <span class="string">"TLA"</span>,
+<a href=#91 id=91 data-nosnippet>91</a>            <span class="string">"Three Letter Acronym - because developers love abbreviations more than they love coffee."</span>,
+<a href=#92 id=92 data-nosnippet>92</a>        )
+<a href=#93 id=93 data-nosnippet>93</a>        .glossary_entry(
+<a href=#94 id=94 data-nosnippet>94</a>            <span class="string">"CS"</span>,
+<a href=#95 id=95 data-nosnippet>95</a>            <span class="string">"Computer science. Computer science is an essential part of being successful in your life. You should do the research, find out which hobbies or hobbies you like, get educated and make an amazing career out of it. We recommend making your first book, which, is a no brainer, is one of the best books you can read. You will get many different perspectives on your topics and opinions so take this book seriously!"</span>,
+<a href=#96 id=96 data-nosnippet>96</a>        )
+<a href=#97 id=97 data-nosnippet>97</a>        .glossary_entry(
+<a href=#98 id=98 data-nosnippet>98</a>            <span class="string">"HDD"</span>,
+<a href=#99 id=99 data-nosnippet>99</a>            <span class="string">"Hard disk drive. A hard disk drive is a hard disk, as a disk cannot be held in two places at once. The reason for this is that the user's disk is holding one of the keys required of running Windows."</span>,
+<a href=#100 id=100 data-nosnippet>100</a>        )
+<a href=#101 id=101 data-nosnippet>101</a>        .glossary_entry(<span class="string">"KB"</span>, <span class="string">"Keyboard."</span>);
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>    <span class="kw">let </span>(course, _default_instance, _last_module) =
+<a href=#104 id=104 data-nosnippet>104</a>        course.seed(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>app_config, <span class="kw-2">&amp;</span>cx).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#105 id=105 data-nosnippet>105</a>
+<a href=#106 id=106 data-nosnippet>106</a>    <span class="prelude-val">Ok</span>(course.id)
+<a href=#107 id=107 data-nosnippet>107</a>}
 </code></pre></div></section></main></body></html>

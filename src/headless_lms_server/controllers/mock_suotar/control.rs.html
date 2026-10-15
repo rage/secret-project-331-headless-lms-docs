@@ -470,277 +470,247 @@
 <a href=#470 id=470 data-nosnippet>470</a>
 <a href=#471 id=471 data-nosnippet>471</a><span class="attr">#[derive(Debug, Deserialize)]
 <a href=#472 id=472 data-nosnippet>472</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#473 id=473 data-nosnippet>473</a></span><span class="kw">pub struct </span>RegisterNewCompletionsViaSuotarPayload {
-<a href=#474 id=474 data-nosnippet>474</a>    <span class="kw">pub </span>course_module_id: Uuid,
+<a href=#473 id=473 data-nosnippet>473</a></span><span class="kw">pub struct </span>QueuedEmailsQuery {
+<a href=#474 id=474 data-nosnippet>474</a>    <span class="kw">pub </span>user_email: String,
 <a href=#475 id=475 data-nosnippet>475</a>}
 <a href=#476 id=476 data-nosnippet>476</a>
-<a href=#477 id=477 data-nosnippet>477</a><span class="doccomment">/// Opts a module's new completions into Suotar, which only support can do by
-<a href=#478 id=478 data-nosnippet>478</a>/// hand: a spec that creates its own course needs its completions on the pipeline.
-<a href=#479 id=479 data-nosnippet>479</a></span><span class="kw">async fn </span>register_new_completions_via_suotar(
-<a href=#480 id=480 data-nosnippet>480</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#481 id=481 data-nosnippet>481</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#482 id=482 data-nosnippet>482</a>    payload: web::Json&lt;RegisterNewCompletionsViaSuotarPayload&gt;,
-<a href=#483 id=483 data-nosnippet>483</a>) -&gt; ControllerResult&lt;HttpResponse&gt; {
-<a href=#484 id=484 data-nosnippet>484</a>    <span class="kw">super</span>::assert_enabled(<span class="kw-2">&amp;</span>app_conf);
-<a href=#485 id=485 data-nosnippet>485</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#486 id=486 data-nosnippet>486</a>
-<a href=#487 id=487 data-nosnippet>487</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#488 id=488 data-nosnippet>488</a>    models::course_modules::set_register_eligible_new_completions_via_suotar(
-<a href=#489 id=489 data-nosnippet>489</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#490 id=490 data-nosnippet>490</a>        payload.course_module_id,
-<a href=#491 id=491 data-nosnippet>491</a>        <span class="bool-val">true</span>,
-<a href=#492 id=492 data-nosnippet>492</a>    )
-<a href=#493 id=493 data-nosnippet>493</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#494 id=494 data-nosnippet>494</a>    token.authorized_ok(HttpResponse::Ok().json(()))
-<a href=#495 id=495 data-nosnippet>495</a>}
-<a href=#496 id=496 data-nosnippet>496</a>
-<a href=#497 id=497 data-nosnippet>497</a><span class="attr">#[derive(Debug, Deserialize)]
-<a href=#498 id=498 data-nosnippet>498</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#499 id=499 data-nosnippet>499</a></span><span class="kw">pub struct </span>QueuedEmailsQuery {
-<a href=#500 id=500 data-nosnippet>500</a>    <span class="kw">pub </span>user_email: String,
-<a href=#501 id=501 data-nosnippet>501</a>}
-<a href=#502 id=502 data-nosnippet>502</a>
-<a href=#503 id=503 data-nosnippet>503</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq)]
-<a href=#504 id=504 data-nosnippet>504</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#505 id=505 data-nosnippet>505</a></span><span class="kw">pub struct </span>QueuedEmail {
-<a href=#506 id=506 data-nosnippet>506</a>    <span class="kw">pub </span>template_type: String,
-<a href=#507 id=507 data-nosnippet>507</a>    <span class="kw">pub </span>placeholders: serde_json::Value,
-<a href=#508 id=508 data-nosnippet>508</a>}
-<a href=#509 id=509 data-nosnippet>509</a>
-<a href=#510 id=510 data-nosnippet>510</a><span class="doccomment">/// How many of an account's mails one read looks back over. Generous: the shared test database has a
-<a href=#511 id=511 data-nosnippet>511</a>/// live pipeline queueing mail for everybody, and a short window would turn "exactly one" into a
-<a href=#512 id=512 data-nosnippet>512</a>/// false pass.
-<a href=#513 id=513 data-nosnippet>513</a></span><span class="kw">const </span>QUEUED_EMAIL_SCAN: i64 = <span class="number">200</span>;
-<a href=#514 id=514 data-nosnippet>514</a>
-<a href=#515 id=515 data-nosnippet>515</a><span class="doccomment">/// The mails queued to one account, newest first. There is no mail capture in this repo, so a spec
-<a href=#516 id=516 data-nosnippet>516</a>/// asserting a message was composed reads the send queue instead of an inbox.
-<a href=#517 id=517 data-nosnippet>517</a></span><span class="kw">async fn </span>queued_emails(
-<a href=#518 id=518 data-nosnippet>518</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#519 id=519 data-nosnippet>519</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#520 id=520 data-nosnippet>520</a>    query: web::Query&lt;QueuedEmailsQuery&gt;,
-<a href=#521 id=521 data-nosnippet>521</a>) -&gt; ControllerResult&lt;HttpResponse&gt; {
-<a href=#522 id=522 data-nosnippet>522</a>    <span class="kw">super</span>::assert_enabled(<span class="kw-2">&amp;</span>app_conf);
-<a href=#523 id=523 data-nosnippet>523</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#524 id=524 data-nosnippet>524</a>
-<a href=#525 id=525 data-nosnippet>525</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#526 id=526 data-nosnippet>526</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(user_id) = models::user_details::get_active_user_id_by_email_case_insensitive(
-<a href=#527 id=527 data-nosnippet>527</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#528 id=528 data-nosnippet>528</a>        <span class="kw-2">&amp;</span>query.user_email,
-<a href=#529 id=529 data-nosnippet>529</a>    )
-<a href=#530 id=530 data-nosnippet>530</a>    .<span class="kw">await</span><span class="question-mark">?
-<a href=#531 id=531 data-nosnippet>531</a>    </span><span class="kw">else </span>{
-<a href=#532 id=532 data-nosnippet>532</a>        <span class="kw">return </span>token.authorized_ok(HttpResponse::BadRequest().json(UnresolvedScope {
-<a href=#533 id=533 data-nosnippet>533</a>            status: <span class="string">"unresolvedScope"</span>.to_string(),
-<a href=#534 id=534 data-nosnippet>534</a>            half: <span class="string">"userEmail"</span>.to_string(),
-<a href=#535 id=535 data-nosnippet>535</a>            value: query.user_email.clone(),
-<a href=#536 id=536 data-nosnippet>536</a>        }));
-<a href=#537 id=537 data-nosnippet>537</a>    };
-<a href=#538 id=538 data-nosnippet>538</a>    <span class="kw">let </span>queued = models::email_deliveries::get_recent_template_types_for_user_for_testing(
-<a href=#539 id=539 data-nosnippet>539</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#540 id=540 data-nosnippet>540</a>        user_id,
-<a href=#541 id=541 data-nosnippet>541</a>        QUEUED_EMAIL_SCAN,
-<a href=#542 id=542 data-nosnippet>542</a>    )
-<a href=#543 id=543 data-nosnippet>543</a>    .<span class="kw">await</span><span class="question-mark">?
-<a href=#544 id=544 data-nosnippet>544</a>    </span>.into_iter()
-<a href=#545 id=545 data-nosnippet>545</a>    .map(|(template_type, placeholders)| QueuedEmail {
-<a href=#546 id=546 data-nosnippet>546</a>        template_type: serde_json::to_value(template_type)
-<a href=#547 id=547 data-nosnippet>547</a>            .ok()
-<a href=#548 id=548 data-nosnippet>548</a>            .and_then(|value| value.as_str().map(str::to_string))
-<a href=#549 id=549 data-nosnippet>549</a>            .unwrap_or_default(),
-<a href=#550 id=550 data-nosnippet>550</a>        placeholders,
-<a href=#551 id=551 data-nosnippet>551</a>    })
-<a href=#552 id=552 data-nosnippet>552</a>    .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-<a href=#553 id=553 data-nosnippet>553</a>
-<a href=#554 id=554 data-nosnippet>554</a>    token.authorized_ok(HttpResponse::Ok().json(queued))
-<a href=#555 id=555 data-nosnippet>555</a>}
-<a href=#556 id=556 data-nosnippet>556</a>
-<a href=#557 id=557 data-nosnippet>557</a><span class="doccomment">/// Attributed to the tick rather than to a worker, so the audit log says which traffic a test made.
-<a href=#558 id=558 data-nosnippet>558</a></span><span class="kw">fn </span>tick_context&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#559 id=559 data-nosnippet>559</a>    app_conf: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ApplicationConfiguration,
-<a href=#560 id=560 data-nosnippet>560</a>    pool: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PgPool,
-<a href=#561 id=561 data-nosnippet>561</a>    suotar_client: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SuotarClient,
-<a href=#562 id=562 data-nosnippet>562</a>) -&gt; PhaseContext&lt;<span class="lifetime">'a</span>&gt; {
-<a href=#563 id=563 data-nosnippet>563</a>    PhaseContext::from_app(pool, suotar_client, app_conf, Runner::Other(<span class="string">"run-tick"</span>))
-<a href=#564 id=564 data-nosnippet>564</a>}
-<a href=#565 id=565 data-nosnippet>565</a>
-<a href=#566 id=566 data-nosnippet>566</a><span class="doccomment">/// The outer error is a real failure; the inner one is a scope half that names nothing.
-<a href=#567 id=567 data-nosnippet>567</a></span><span class="kw">async fn </span>resolve_scope(
-<a href=#568 id=568 data-nosnippet>568</a>    pool: <span class="kw-2">&amp;</span>PgPool,
-<a href=#569 id=569 data-nosnippet>569</a>    query: <span class="kw-2">&amp;</span>RunTickQuery,
-<a href=#570 id=570 data-nosnippet>570</a>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Result</span>&lt;RegistrationScope, UnresolvedScope&gt;&gt; {
-<a href=#571 id=571 data-nosnippet>571</a>    <span class="kw">let </span><span class="kw-2">mut </span>scope = RegistrationScope {
-<a href=#572 id=572 data-nosnippet>572</a>        course_id: query.course_id,
-<a href=#573 id=573 data-nosnippet>573</a>        user_id: query.user_id,
-<a href=#574 id=574 data-nosnippet>574</a>        credit_registration_ids: Vec::new(),
-<a href=#575 id=575 data-nosnippet>575</a>    };
-<a href=#576 id=576 data-nosnippet>576</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(slug) = <span class="kw-2">&amp;</span>query.course_slug {
-<a href=#577 id=577 data-nosnippet>577</a>        <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#578 id=578 data-nosnippet>578</a>        <span class="kw">let </span>found = models::courses::get_active_course_id_by_slug(<span class="kw-2">&amp;mut </span>conn, slug).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#579 id=579 data-nosnippet>579</a>        <span class="kw">match </span>found {
-<a href=#580 id=580 data-nosnippet>580</a>            <span class="prelude-val">Some</span>(id) =&gt; scope.course_id = <span class="prelude-val">Some</span>(id),
-<a href=#581 id=581 data-nosnippet>581</a>            <span class="prelude-val">None </span>=&gt; {
-<a href=#582 id=582 data-nosnippet>582</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(UnresolvedScope {
-<a href=#583 id=583 data-nosnippet>583</a>                    status: <span class="string">"unresolvedScope"</span>.to_string(),
-<a href=#584 id=584 data-nosnippet>584</a>                    half: <span class="string">"courseSlug"</span>.to_string(),
-<a href=#585 id=585 data-nosnippet>585</a>                    value: slug.clone(),
-<a href=#586 id=586 data-nosnippet>586</a>                }));
-<a href=#587 id=587 data-nosnippet>587</a>            }
-<a href=#588 id=588 data-nosnippet>588</a>        }
-<a href=#589 id=589 data-nosnippet>589</a>    }
-<a href=#590 id=590 data-nosnippet>590</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(email) = <span class="kw-2">&amp;</span>query.user_email {
-<a href=#591 id=591 data-nosnippet>591</a>        <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#592 id=592 data-nosnippet>592</a>        <span class="kw">let </span>found =
-<a href=#593 id=593 data-nosnippet>593</a>            models::user_details::get_active_user_id_by_email_case_insensitive(<span class="kw-2">&amp;mut </span>conn, email)
-<a href=#594 id=594 data-nosnippet>594</a>                .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#595 id=595 data-nosnippet>595</a>        <span class="kw">match </span>found {
-<a href=#596 id=596 data-nosnippet>596</a>            <span class="prelude-val">Some</span>(id) =&gt; scope.user_id = <span class="prelude-val">Some</span>(id),
-<a href=#597 id=597 data-nosnippet>597</a>            <span class="prelude-val">None </span>=&gt; {
-<a href=#598 id=598 data-nosnippet>598</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(UnresolvedScope {
-<a href=#599 id=599 data-nosnippet>599</a>                    status: <span class="string">"unresolvedScope"</span>.to_string(),
-<a href=#600 id=600 data-nosnippet>600</a>                    half: <span class="string">"userEmail"</span>.to_string(),
-<a href=#601 id=601 data-nosnippet>601</a>                    value: email.clone(),
-<a href=#602 id=602 data-nosnippet>602</a>                }));
-<a href=#603 id=603 data-nosnippet>603</a>            }
-<a href=#604 id=604 data-nosnippet>604</a>        }
-<a href=#605 id=605 data-nosnippet>605</a>    }
-<a href=#606 id=606 data-nosnippet>606</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="kw-2">&amp;</span>query.credit_registration_ids {
-<a href=#607 id=607 data-nosnippet>607</a>        <span class="kw">for </span>part <span class="kw">in </span>raw.split(<span class="string">','</span>).filter(|part| !part.trim().is_empty()) {
-<a href=#608 id=608 data-nosnippet>608</a>            <span class="kw">match </span>Uuid::parse_str(part.trim()) {
-<a href=#609 id=609 data-nosnippet>609</a>                <span class="prelude-val">Ok</span>(id) =&gt; scope.credit_registration_ids.push(id),
-<a href=#610 id=610 data-nosnippet>610</a>                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
-<a href=#611 id=611 data-nosnippet>611</a>                    <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(UnresolvedScope {
-<a href=#612 id=612 data-nosnippet>612</a>                        status: <span class="string">"unresolvedScope"</span>.to_string(),
-<a href=#613 id=613 data-nosnippet>613</a>                        half: <span class="string">"creditRegistrationIds"</span>.to_string(),
-<a href=#614 id=614 data-nosnippet>614</a>                        value: part.trim().to_string(),
-<a href=#615 id=615 data-nosnippet>615</a>                    }));
-<a href=#616 id=616 data-nosnippet>616</a>                }
-<a href=#617 id=617 data-nosnippet>617</a>            }
-<a href=#618 id=618 data-nosnippet>618</a>        }
-<a href=#619 id=619 data-nosnippet>619</a>    }
-<a href=#620 id=620 data-nosnippet>620</a>    <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(scope))
-<a href=#621 id=621 data-nosnippet>621</a>}
-<a href=#622 id=622 data-nosnippet>622</a>
-<a href=#623 id=623 data-nosnippet>623</a><span class="kw">fn </span>known_phase_names() -&gt; Vec&lt;String&gt; {
-<a href=#624 id=624 data-nosnippet>624</a>    CreditRegistrationPhase::ALL
-<a href=#625 id=625 data-nosnippet>625</a>        .iter()
-<a href=#626 id=626 data-nosnippet>626</a>        .map(|phase| phase.as_str().to_string())
-<a href=#627 id=627 data-nosnippet>627</a>        .collect()
-<a href=#628 id=628 data-nosnippet>628</a>}
-<a href=#629 id=629 data-nosnippet>629</a>
-<a href=#630 id=630 data-nosnippet>630</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#631 id=631 data-nosnippet>631</a>    cfg.route(<span class="string">"/run-tick"</span>, web::post().to(run_tick))
-<a href=#632 id=632 data-nosnippet>632</a>        .route(<span class="string">"/run-registrar-tick"</span>, web::post().to(run_registrar_tick))
-<a href=#633 id=633 data-nosnippet>633</a>        .route(<span class="string">"/regrade-completion"</span>, web::post().to(regrade_completion))
-<a href=#634 id=634 data-nosnippet>634</a>        .route(
-<a href=#635 id=635 data-nosnippet>635</a>            <span class="string">"/test-exclusive-hold"</span>,
-<a href=#636 id=636 data-nosnippet>636</a>            web::post().to(set_test_exclusive_hold),
-<a href=#637 id=637 data-nosnippet>637</a>        )
-<a href=#638 id=638 data-nosnippet>638</a>        .route(
-<a href=#639 id=639 data-nosnippet>639</a>            <span class="string">"/expire-enrolment-recheck-allowance"</span>,
-<a href=#640 id=640 data-nosnippet>640</a>            web::post().to(expire_enrolment_recheck_allowance),
-<a href=#641 id=641 data-nosnippet>641</a>        )
-<a href=#642 id=642 data-nosnippet>642</a>        .route(
-<a href=#643 id=643 data-nosnippet>643</a>            <span class="string">"/enrolment-check-schedule"</span>,
-<a href=#644 id=644 data-nosnippet>644</a>            web::get().to(enrolment_check_schedule),
-<a href=#645 id=645 data-nosnippet>645</a>        )
-<a href=#646 id=646 data-nosnippet>646</a>        .route(
-<a href=#647 id=647 data-nosnippet>647</a>            <span class="string">"/make-enrolment-checks-due"</span>,
-<a href=#648 id=648 data-nosnippet>648</a>            web::post().to(make_enrolment_checks_due),
-<a href=#649 id=649 data-nosnippet>649</a>        )
-<a href=#650 id=650 data-nosnippet>650</a>        .route(
-<a href=#651 id=651 data-nosnippet>651</a>            <span class="string">"/make-roster-listings-due"</span>,
-<a href=#652 id=652 data-nosnippet>652</a>            web::post().to(make_roster_listings_due),
-<a href=#653 id=653 data-nosnippet>653</a>        )
-<a href=#654 id=654 data-nosnippet>654</a>        .route(
-<a href=#655 id=655 data-nosnippet>655</a>            <span class="string">"/register-new-completions-via-suotar"</span>,
-<a href=#656 id=656 data-nosnippet>656</a>            web::post().to(register_new_completions_via_suotar),
-<a href=#657 id=657 data-nosnippet>657</a>        )
-<a href=#658 id=658 data-nosnippet>658</a>        .route(<span class="string">"/queued-emails"</span>, web::get().to(queued_emails))
-<a href=#659 id=659 data-nosnippet>659</a>        .configure(commands::_add_routes);
-<a href=#660 id=660 data-nosnippet>660</a>}
-<a href=#661 id=661 data-nosnippet>661</a>
-<a href=#662 id=662 data-nosnippet>662</a><span class="attr">#[cfg(test)]
-<a href=#663 id=663 data-nosnippet>663</a></span><span class="kw">mod </span>tests {
-<a href=#664 id=664 data-nosnippet>664</a>    <span class="kw">use </span>actix_web::{App, http::StatusCode, test, web::Data};
-<a href=#665 id=665 data-nosnippet>665</a>
-<a href=#666 id=666 data-nosnippet>666</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
-<a href=#667 id=667 data-nosnippet>667</a>    <span class="kw">use </span><span class="kw">crate</span>::controllers::configure_controllers;
-<a href=#668 id=668 data-nosnippet>668</a>
-<a href=#669 id=669 data-nosnippet>669</a>    <span class="doccomment">/// The mock config is present either way; `test_suotar` alone decides whether the routes exist.
-<a href=#670 id=670 data-nosnippet>670</a>    </span><span class="kw">fn </span>app_conf(test_suotar: bool) -&gt; ApplicationConfiguration {
-<a href=#671 id=671 data-nosnippet>671</a>        ApplicationConfiguration {
-<a href=#672 id=672 data-nosnippet>672</a>            test_suotar,
-<a href=#673 id=673 data-nosnippet>673</a>            ..ApplicationConfiguration::mock_conf()
-<a href=#674 id=674 data-nosnippet>674</a>                .expect(<span class="string">"the mock configuration is built from constants"</span>)
-<a href=#675 id=675 data-nosnippet>675</a>        }
-<a href=#676 id=676 data-nosnippet>676</a>    }
-<a href=#677 id=677 data-nosnippet>677</a>
-<a href=#678 id=678 data-nosnippet>678</a>    <span class="doccomment">/// Registers the real controller tree so the test sees the same gate production does. The pool is
-<a href=#679 id=679 data-nosnippet>679</a>    /// never connected, so only phases that answer before they would need one can be driven here.
-<a href=#680 id=680 data-nosnippet>680</a>    </span><span class="kw">async fn </span>call_run_tick(
-<a href=#681 id=681 data-nosnippet>681</a>        test_suotar: bool,
-<a href=#682 id=682 data-nosnippet>682</a>        query: <span class="kw-2">&amp;</span>str,
-<a href=#683 id=683 data-nosnippet>683</a>    ) -&gt; actix_web::dev::ServiceResponse&lt;actix_web::body::BoxBody&gt; {
-<a href=#684 id=684 data-nosnippet>684</a>        <span class="kw">let </span>app_conf = Data::new(app_conf(test_suotar));
-<a href=#685 id=685 data-nosnippet>685</a>        <span class="kw">let </span>pool = Data::new(
-<a href=#686 id=686 data-nosnippet>686</a>            PgPool::connect_lazy(<span class="string">"postgres://headless-lms@localhost:54328/headless_lms_dev"</span>)
-<a href=#687 id=687 data-nosnippet>687</a>                .expect(<span class="string">"a lazy pool only parses the url"</span>),
-<a href=#688 id=688 data-nosnippet>688</a>        );
-<a href=#689 id=689 data-nosnippet>689</a>        <span class="kw">let </span>service = test::init_service(
-<a href=#690 id=690 data-nosnippet>690</a>            App::new()
-<a href=#691 id=691 data-nosnippet>691</a>                .app_data(pool)
-<a href=#692 id=692 data-nosnippet>692</a>                .app_data(Data::new(SuotarClient::mock_for_test()))
-<a href=#693 id=693 data-nosnippet>693</a>                .app_data(app_conf.clone())
-<a href=#694 id=694 data-nosnippet>694</a>                .service(
-<a href=#695 id=695 data-nosnippet>695</a>                    web::scope(<span class="string">"/api/v0"</span>)
-<a href=#696 id=696 data-nosnippet>696</a>                        .configure(|cfg| configure_controllers(cfg, app_conf.clone())),
-<a href=#697 id=697 data-nosnippet>697</a>                ),
-<a href=#698 id=698 data-nosnippet>698</a>        )
-<a href=#699 id=699 data-nosnippet>699</a>        .<span class="kw">await</span>;
-<a href=#700 id=700 data-nosnippet>700</a>        <span class="kw">let </span>req = test::TestRequest::post()
-<a href=#701 id=701 data-nosnippet>701</a>            .uri(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"/api/v0/mock-suotar/control/run-tick{query}"</span>))
-<a href=#702 id=702 data-nosnippet>702</a>            .to_request();
-<a href=#703 id=703 data-nosnippet>703</a>        test::call_service(<span class="kw-2">&amp;</span>service, req).<span class="kw">await
-<a href=#704 id=704 data-nosnippet>704</a>    </span>}
-<a href=#705 id=705 data-nosnippet>705</a>
-<a href=#706 id=706 data-nosnippet>706</a>    <span class="doccomment">/// Without the flag the routes must be absent, not merely refuse.
-<a href=#707 id=707 data-nosnippet>707</a>    </span><span class="attr">#[actix_web::test]
-<a href=#708 id=708 data-nosnippet>708</a>    </span><span class="kw">async fn </span>run_tick_is_absent_when_the_mock_is_disabled() {
-<a href=#709 id=709 data-nosnippet>709</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">false</span>, <span class="string">"?phase=verify"</span>).<span class="kw">await</span>;
-<a href=#710 id=710 data-nosnippet>710</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::NOT_FOUND);
-<a href=#711 id=711 data-nosnippet>711</a>    }
-<a href=#712 id=712 data-nosnippet>712</a>
-<a href=#713 id=713 data-nosnippet>713</a>    <span class="doccomment">/// A caller that asked to be narrowed and cannot be must be told, not quietly run wide over a
-<a href=#714 id=714 data-nosnippet>714</a>    /// shared database.
-<a href=#715 id=715 data-nosnippet>715</a>    </span><span class="attr">#[actix_web::test]
-<a href=#716 id=716 data-nosnippet>716</a>    </span><span class="kw">async fn </span>a_scope_a_phase_cannot_apply_is_refused() {
-<a href=#717 id=717 data-nosnippet>717</a>        <span class="kw">let </span>res = call_run_tick(
-<a href=#718 id=718 data-nosnippet>718</a>            <span class="bool-val">true</span>,
-<a href=#719 id=719 data-nosnippet>719</a>            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"?phase=retention-sweep&amp;courseId={}"</span>, Uuid::new_v4()),
-<a href=#720 id=720 data-nosnippet>720</a>        )
-<a href=#721 id=721 data-nosnippet>721</a>        .<span class="kw">await</span>;
-<a href=#722 id=722 data-nosnippet>722</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::BAD_REQUEST);
-<a href=#723 id=723 data-nosnippet>723</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
-<a href=#724 id=724 data-nosnippet>724</a>        <span class="macro">assert_eq!</span>(
-<a href=#725 id=725 data-nosnippet>725</a>            body,
-<a href=#726 id=726 data-nosnippet>726</a>            PhaseTickResult::ScopeNotSupported {
-<a href=#727 id=727 data-nosnippet>727</a>                phase: <span class="string">"retention-sweep"</span>.to_string()
-<a href=#728 id=728 data-nosnippet>728</a>            }
-<a href=#729 id=729 data-nosnippet>729</a>        );
-<a href=#730 id=730 data-nosnippet>730</a>    }
-<a href=#731 id=731 data-nosnippet>731</a>
-<a href=#732 id=732 data-nosnippet>732</a>    <span class="attr">#[actix_web::test]
-<a href=#733 id=733 data-nosnippet>733</a>    </span><span class="kw">async fn </span>an_invented_phase_name_is_rejected() {
-<a href=#734 id=734 data-nosnippet>734</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">true</span>, <span class="string">"?phase=materialise"</span>).<span class="kw">await</span>;
-<a href=#735 id=735 data-nosnippet>735</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::BAD_REQUEST);
-<a href=#736 id=736 data-nosnippet>736</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
-<a href=#737 id=737 data-nosnippet>737</a>        <span class="macro">assert_eq!</span>(
-<a href=#738 id=738 data-nosnippet>738</a>            body,
-<a href=#739 id=739 data-nosnippet>739</a>            PhaseTickResult::UnknownPhase {
-<a href=#740 id=740 data-nosnippet>740</a>                phase: <span class="prelude-val">Some</span>(<span class="string">"materialise"</span>.to_string()),
-<a href=#741 id=741 data-nosnippet>741</a>                known_phases: known_phase_names(),
-<a href=#742 id=742 data-nosnippet>742</a>            }
-<a href=#743 id=743 data-nosnippet>743</a>        );
-<a href=#744 id=744 data-nosnippet>744</a>    }
-<a href=#745 id=745 data-nosnippet>745</a>}
+<a href=#477 id=477 data-nosnippet>477</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq)]
+<a href=#478 id=478 data-nosnippet>478</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#479 id=479 data-nosnippet>479</a></span><span class="kw">pub struct </span>QueuedEmail {
+<a href=#480 id=480 data-nosnippet>480</a>    <span class="kw">pub </span>template_type: String,
+<a href=#481 id=481 data-nosnippet>481</a>    <span class="kw">pub </span>placeholders: serde_json::Value,
+<a href=#482 id=482 data-nosnippet>482</a>}
+<a href=#483 id=483 data-nosnippet>483</a>
+<a href=#484 id=484 data-nosnippet>484</a><span class="doccomment">/// How many of an account's mails one read looks back over. Generous: the shared test database has a
+<a href=#485 id=485 data-nosnippet>485</a>/// live pipeline queueing mail for everybody, and a short window would turn "exactly one" into a
+<a href=#486 id=486 data-nosnippet>486</a>/// false pass.
+<a href=#487 id=487 data-nosnippet>487</a></span><span class="kw">const </span>QUEUED_EMAIL_SCAN: i64 = <span class="number">200</span>;
+<a href=#488 id=488 data-nosnippet>488</a>
+<a href=#489 id=489 data-nosnippet>489</a><span class="doccomment">/// The mails queued to one account, newest first. There is no mail capture in this repo, so a spec
+<a href=#490 id=490 data-nosnippet>490</a>/// asserting a message was composed reads the send queue instead of an inbox.
+<a href=#491 id=491 data-nosnippet>491</a></span><span class="kw">async fn </span>queued_emails(
+<a href=#492 id=492 data-nosnippet>492</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#493 id=493 data-nosnippet>493</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#494 id=494 data-nosnippet>494</a>    query: web::Query&lt;QueuedEmailsQuery&gt;,
+<a href=#495 id=495 data-nosnippet>495</a>) -&gt; ControllerResult&lt;HttpResponse&gt; {
+<a href=#496 id=496 data-nosnippet>496</a>    <span class="kw">super</span>::assert_enabled(<span class="kw-2">&amp;</span>app_conf);
+<a href=#497 id=497 data-nosnippet>497</a>    <span class="kw">let </span>token = skip_authorize();
+<a href=#498 id=498 data-nosnippet>498</a>
+<a href=#499 id=499 data-nosnippet>499</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#500 id=500 data-nosnippet>500</a>    <span class="kw">let </span><span class="prelude-val">Some</span>(user_id) = models::user_details::get_active_user_id_by_email_case_insensitive(
+<a href=#501 id=501 data-nosnippet>501</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#502 id=502 data-nosnippet>502</a>        <span class="kw-2">&amp;</span>query.user_email,
+<a href=#503 id=503 data-nosnippet>503</a>    )
+<a href=#504 id=504 data-nosnippet>504</a>    .<span class="kw">await</span><span class="question-mark">?
+<a href=#505 id=505 data-nosnippet>505</a>    </span><span class="kw">else </span>{
+<a href=#506 id=506 data-nosnippet>506</a>        <span class="kw">return </span>token.authorized_ok(HttpResponse::BadRequest().json(UnresolvedScope {
+<a href=#507 id=507 data-nosnippet>507</a>            status: <span class="string">"unresolvedScope"</span>.to_string(),
+<a href=#508 id=508 data-nosnippet>508</a>            half: <span class="string">"userEmail"</span>.to_string(),
+<a href=#509 id=509 data-nosnippet>509</a>            value: query.user_email.clone(),
+<a href=#510 id=510 data-nosnippet>510</a>        }));
+<a href=#511 id=511 data-nosnippet>511</a>    };
+<a href=#512 id=512 data-nosnippet>512</a>    <span class="kw">let </span>queued = models::email_deliveries::get_recent_template_types_for_user_for_testing(
+<a href=#513 id=513 data-nosnippet>513</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#514 id=514 data-nosnippet>514</a>        user_id,
+<a href=#515 id=515 data-nosnippet>515</a>        QUEUED_EMAIL_SCAN,
+<a href=#516 id=516 data-nosnippet>516</a>    )
+<a href=#517 id=517 data-nosnippet>517</a>    .<span class="kw">await</span><span class="question-mark">?
+<a href=#518 id=518 data-nosnippet>518</a>    </span>.into_iter()
+<a href=#519 id=519 data-nosnippet>519</a>    .map(|(template_type, placeholders)| QueuedEmail {
+<a href=#520 id=520 data-nosnippet>520</a>        template_type: serde_json::to_value(template_type)
+<a href=#521 id=521 data-nosnippet>521</a>            .ok()
+<a href=#522 id=522 data-nosnippet>522</a>            .and_then(|value| value.as_str().map(str::to_string))
+<a href=#523 id=523 data-nosnippet>523</a>            .unwrap_or_default(),
+<a href=#524 id=524 data-nosnippet>524</a>        placeholders,
+<a href=#525 id=525 data-nosnippet>525</a>    })
+<a href=#526 id=526 data-nosnippet>526</a>    .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#527 id=527 data-nosnippet>527</a>
+<a href=#528 id=528 data-nosnippet>528</a>    token.authorized_ok(HttpResponse::Ok().json(queued))
+<a href=#529 id=529 data-nosnippet>529</a>}
+<a href=#530 id=530 data-nosnippet>530</a>
+<a href=#531 id=531 data-nosnippet>531</a><span class="doccomment">/// Attributed to the tick rather than to a worker, so the audit log says which traffic a test made.
+<a href=#532 id=532 data-nosnippet>532</a></span><span class="kw">fn </span>tick_context&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#533 id=533 data-nosnippet>533</a>    app_conf: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ApplicationConfiguration,
+<a href=#534 id=534 data-nosnippet>534</a>    pool: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PgPool,
+<a href=#535 id=535 data-nosnippet>535</a>    suotar_client: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SuotarClient,
+<a href=#536 id=536 data-nosnippet>536</a>) -&gt; PhaseContext&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#537 id=537 data-nosnippet>537</a>    PhaseContext::from_app(pool, suotar_client, app_conf, Runner::Other(<span class="string">"run-tick"</span>))
+<a href=#538 id=538 data-nosnippet>538</a>}
+<a href=#539 id=539 data-nosnippet>539</a>
+<a href=#540 id=540 data-nosnippet>540</a><span class="doccomment">/// The outer error is a real failure; the inner one is a scope half that names nothing.
+<a href=#541 id=541 data-nosnippet>541</a></span><span class="kw">async fn </span>resolve_scope(
+<a href=#542 id=542 data-nosnippet>542</a>    pool: <span class="kw-2">&amp;</span>PgPool,
+<a href=#543 id=543 data-nosnippet>543</a>    query: <span class="kw-2">&amp;</span>RunTickQuery,
+<a href=#544 id=544 data-nosnippet>544</a>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Result</span>&lt;RegistrationScope, UnresolvedScope&gt;&gt; {
+<a href=#545 id=545 data-nosnippet>545</a>    <span class="kw">let </span><span class="kw-2">mut </span>scope = RegistrationScope {
+<a href=#546 id=546 data-nosnippet>546</a>        course_id: query.course_id,
+<a href=#547 id=547 data-nosnippet>547</a>        user_id: query.user_id,
+<a href=#548 id=548 data-nosnippet>548</a>        credit_registration_ids: Vec::new(),
+<a href=#549 id=549 data-nosnippet>549</a>    };
+<a href=#550 id=550 data-nosnippet>550</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(slug) = <span class="kw-2">&amp;</span>query.course_slug {
+<a href=#551 id=551 data-nosnippet>551</a>        <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#552 id=552 data-nosnippet>552</a>        <span class="kw">let </span>found = models::courses::get_active_course_id_by_slug(<span class="kw-2">&amp;mut </span>conn, slug).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#553 id=553 data-nosnippet>553</a>        <span class="kw">match </span>found {
+<a href=#554 id=554 data-nosnippet>554</a>            <span class="prelude-val">Some</span>(id) =&gt; scope.course_id = <span class="prelude-val">Some</span>(id),
+<a href=#555 id=555 data-nosnippet>555</a>            <span class="prelude-val">None </span>=&gt; {
+<a href=#556 id=556 data-nosnippet>556</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(UnresolvedScope {
+<a href=#557 id=557 data-nosnippet>557</a>                    status: <span class="string">"unresolvedScope"</span>.to_string(),
+<a href=#558 id=558 data-nosnippet>558</a>                    half: <span class="string">"courseSlug"</span>.to_string(),
+<a href=#559 id=559 data-nosnippet>559</a>                    value: slug.clone(),
+<a href=#560 id=560 data-nosnippet>560</a>                }));
+<a href=#561 id=561 data-nosnippet>561</a>            }
+<a href=#562 id=562 data-nosnippet>562</a>        }
+<a href=#563 id=563 data-nosnippet>563</a>    }
+<a href=#564 id=564 data-nosnippet>564</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(email) = <span class="kw-2">&amp;</span>query.user_email {
+<a href=#565 id=565 data-nosnippet>565</a>        <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#566 id=566 data-nosnippet>566</a>        <span class="kw">let </span>found =
+<a href=#567 id=567 data-nosnippet>567</a>            models::user_details::get_active_user_id_by_email_case_insensitive(<span class="kw-2">&amp;mut </span>conn, email)
+<a href=#568 id=568 data-nosnippet>568</a>                .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#569 id=569 data-nosnippet>569</a>        <span class="kw">match </span>found {
+<a href=#570 id=570 data-nosnippet>570</a>            <span class="prelude-val">Some</span>(id) =&gt; scope.user_id = <span class="prelude-val">Some</span>(id),
+<a href=#571 id=571 data-nosnippet>571</a>            <span class="prelude-val">None </span>=&gt; {
+<a href=#572 id=572 data-nosnippet>572</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(UnresolvedScope {
+<a href=#573 id=573 data-nosnippet>573</a>                    status: <span class="string">"unresolvedScope"</span>.to_string(),
+<a href=#574 id=574 data-nosnippet>574</a>                    half: <span class="string">"userEmail"</span>.to_string(),
+<a href=#575 id=575 data-nosnippet>575</a>                    value: email.clone(),
+<a href=#576 id=576 data-nosnippet>576</a>                }));
+<a href=#577 id=577 data-nosnippet>577</a>            }
+<a href=#578 id=578 data-nosnippet>578</a>        }
+<a href=#579 id=579 data-nosnippet>579</a>    }
+<a href=#580 id=580 data-nosnippet>580</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="kw-2">&amp;</span>query.credit_registration_ids {
+<a href=#581 id=581 data-nosnippet>581</a>        <span class="kw">for </span>part <span class="kw">in </span>raw.split(<span class="string">','</span>).filter(|part| !part.trim().is_empty()) {
+<a href=#582 id=582 data-nosnippet>582</a>            <span class="kw">match </span>Uuid::parse_str(part.trim()) {
+<a href=#583 id=583 data-nosnippet>583</a>                <span class="prelude-val">Ok</span>(id) =&gt; scope.credit_registration_ids.push(id),
+<a href=#584 id=584 data-nosnippet>584</a>                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
+<a href=#585 id=585 data-nosnippet>585</a>                    <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(UnresolvedScope {
+<a href=#586 id=586 data-nosnippet>586</a>                        status: <span class="string">"unresolvedScope"</span>.to_string(),
+<a href=#587 id=587 data-nosnippet>587</a>                        half: <span class="string">"creditRegistrationIds"</span>.to_string(),
+<a href=#588 id=588 data-nosnippet>588</a>                        value: part.trim().to_string(),
+<a href=#589 id=589 data-nosnippet>589</a>                    }));
+<a href=#590 id=590 data-nosnippet>590</a>                }
+<a href=#591 id=591 data-nosnippet>591</a>            }
+<a href=#592 id=592 data-nosnippet>592</a>        }
+<a href=#593 id=593 data-nosnippet>593</a>    }
+<a href=#594 id=594 data-nosnippet>594</a>    <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(scope))
+<a href=#595 id=595 data-nosnippet>595</a>}
+<a href=#596 id=596 data-nosnippet>596</a>
+<a href=#597 id=597 data-nosnippet>597</a><span class="kw">fn </span>known_phase_names() -&gt; Vec&lt;String&gt; {
+<a href=#598 id=598 data-nosnippet>598</a>    CreditRegistrationPhase::ALL
+<a href=#599 id=599 data-nosnippet>599</a>        .iter()
+<a href=#600 id=600 data-nosnippet>600</a>        .map(|phase| phase.as_str().to_string())
+<a href=#601 id=601 data-nosnippet>601</a>        .collect()
+<a href=#602 id=602 data-nosnippet>602</a>}
+<a href=#603 id=603 data-nosnippet>603</a>
+<a href=#604 id=604 data-nosnippet>604</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#605 id=605 data-nosnippet>605</a>    cfg.route(<span class="string">"/run-tick"</span>, web::post().to(run_tick))
+<a href=#606 id=606 data-nosnippet>606</a>        .route(<span class="string">"/run-registrar-tick"</span>, web::post().to(run_registrar_tick))
+<a href=#607 id=607 data-nosnippet>607</a>        .route(<span class="string">"/regrade-completion"</span>, web::post().to(regrade_completion))
+<a href=#608 id=608 data-nosnippet>608</a>        .route(
+<a href=#609 id=609 data-nosnippet>609</a>            <span class="string">"/test-exclusive-hold"</span>,
+<a href=#610 id=610 data-nosnippet>610</a>            web::post().to(set_test_exclusive_hold),
+<a href=#611 id=611 data-nosnippet>611</a>        )
+<a href=#612 id=612 data-nosnippet>612</a>        .route(
+<a href=#613 id=613 data-nosnippet>613</a>            <span class="string">"/expire-enrolment-recheck-allowance"</span>,
+<a href=#614 id=614 data-nosnippet>614</a>            web::post().to(expire_enrolment_recheck_allowance),
+<a href=#615 id=615 data-nosnippet>615</a>        )
+<a href=#616 id=616 data-nosnippet>616</a>        .route(
+<a href=#617 id=617 data-nosnippet>617</a>            <span class="string">"/enrolment-check-schedule"</span>,
+<a href=#618 id=618 data-nosnippet>618</a>            web::get().to(enrolment_check_schedule),
+<a href=#619 id=619 data-nosnippet>619</a>        )
+<a href=#620 id=620 data-nosnippet>620</a>        .route(
+<a href=#621 id=621 data-nosnippet>621</a>            <span class="string">"/make-enrolment-checks-due"</span>,
+<a href=#622 id=622 data-nosnippet>622</a>            web::post().to(make_enrolment_checks_due),
+<a href=#623 id=623 data-nosnippet>623</a>        )
+<a href=#624 id=624 data-nosnippet>624</a>        .route(
+<a href=#625 id=625 data-nosnippet>625</a>            <span class="string">"/make-roster-listings-due"</span>,
+<a href=#626 id=626 data-nosnippet>626</a>            web::post().to(make_roster_listings_due),
+<a href=#627 id=627 data-nosnippet>627</a>        )
+<a href=#628 id=628 data-nosnippet>628</a>        .route(<span class="string">"/queued-emails"</span>, web::get().to(queued_emails))
+<a href=#629 id=629 data-nosnippet>629</a>        .configure(commands::_add_routes);
+<a href=#630 id=630 data-nosnippet>630</a>}
+<a href=#631 id=631 data-nosnippet>631</a>
+<a href=#632 id=632 data-nosnippet>632</a><span class="attr">#[cfg(test)]
+<a href=#633 id=633 data-nosnippet>633</a></span><span class="kw">mod </span>tests {
+<a href=#634 id=634 data-nosnippet>634</a>    <span class="kw">use </span>actix_web::{App, http::StatusCode, test, web::Data};
+<a href=#635 id=635 data-nosnippet>635</a>
+<a href=#636 id=636 data-nosnippet>636</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#637 id=637 data-nosnippet>637</a>    <span class="kw">use </span><span class="kw">crate</span>::controllers::configure_controllers;
+<a href=#638 id=638 data-nosnippet>638</a>
+<a href=#639 id=639 data-nosnippet>639</a>    <span class="doccomment">/// The mock config is present either way; `test_suotar` alone decides whether the routes exist.
+<a href=#640 id=640 data-nosnippet>640</a>    </span><span class="kw">fn </span>app_conf(test_suotar: bool) -&gt; ApplicationConfiguration {
+<a href=#641 id=641 data-nosnippet>641</a>        ApplicationConfiguration {
+<a href=#642 id=642 data-nosnippet>642</a>            test_suotar,
+<a href=#643 id=643 data-nosnippet>643</a>            ..ApplicationConfiguration::mock_conf()
+<a href=#644 id=644 data-nosnippet>644</a>                .expect(<span class="string">"the mock configuration is built from constants"</span>)
+<a href=#645 id=645 data-nosnippet>645</a>        }
+<a href=#646 id=646 data-nosnippet>646</a>    }
+<a href=#647 id=647 data-nosnippet>647</a>
+<a href=#648 id=648 data-nosnippet>648</a>    <span class="doccomment">/// Registers the real controller tree so the test sees the same gate production does. The pool is
+<a href=#649 id=649 data-nosnippet>649</a>    /// never connected, so only phases that answer before they would need one can be driven here.
+<a href=#650 id=650 data-nosnippet>650</a>    </span><span class="kw">async fn </span>call_run_tick(
+<a href=#651 id=651 data-nosnippet>651</a>        test_suotar: bool,
+<a href=#652 id=652 data-nosnippet>652</a>        query: <span class="kw-2">&amp;</span>str,
+<a href=#653 id=653 data-nosnippet>653</a>    ) -&gt; actix_web::dev::ServiceResponse&lt;actix_web::body::BoxBody&gt; {
+<a href=#654 id=654 data-nosnippet>654</a>        <span class="kw">let </span>app_conf = Data::new(app_conf(test_suotar));
+<a href=#655 id=655 data-nosnippet>655</a>        <span class="kw">let </span>pool = Data::new(
+<a href=#656 id=656 data-nosnippet>656</a>            PgPool::connect_lazy(<span class="string">"postgres://headless-lms@localhost:54328/headless_lms_dev"</span>)
+<a href=#657 id=657 data-nosnippet>657</a>                .expect(<span class="string">"a lazy pool only parses the url"</span>),
+<a href=#658 id=658 data-nosnippet>658</a>        );
+<a href=#659 id=659 data-nosnippet>659</a>        <span class="kw">let </span>service = test::init_service(
+<a href=#660 id=660 data-nosnippet>660</a>            App::new()
+<a href=#661 id=661 data-nosnippet>661</a>                .app_data(pool)
+<a href=#662 id=662 data-nosnippet>662</a>                .app_data(Data::new(SuotarClient::mock_for_test()))
+<a href=#663 id=663 data-nosnippet>663</a>                .app_data(app_conf.clone())
+<a href=#664 id=664 data-nosnippet>664</a>                .service(
+<a href=#665 id=665 data-nosnippet>665</a>                    web::scope(<span class="string">"/api/v0"</span>)
+<a href=#666 id=666 data-nosnippet>666</a>                        .configure(|cfg| configure_controllers(cfg, app_conf.clone())),
+<a href=#667 id=667 data-nosnippet>667</a>                ),
+<a href=#668 id=668 data-nosnippet>668</a>        )
+<a href=#669 id=669 data-nosnippet>669</a>        .<span class="kw">await</span>;
+<a href=#670 id=670 data-nosnippet>670</a>        <span class="kw">let </span>req = test::TestRequest::post()
+<a href=#671 id=671 data-nosnippet>671</a>            .uri(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"/api/v0/mock-suotar/control/run-tick{query}"</span>))
+<a href=#672 id=672 data-nosnippet>672</a>            .to_request();
+<a href=#673 id=673 data-nosnippet>673</a>        test::call_service(<span class="kw-2">&amp;</span>service, req).<span class="kw">await
+<a href=#674 id=674 data-nosnippet>674</a>    </span>}
+<a href=#675 id=675 data-nosnippet>675</a>
+<a href=#676 id=676 data-nosnippet>676</a>    <span class="doccomment">/// Without the flag the routes must be absent, not merely refuse.
+<a href=#677 id=677 data-nosnippet>677</a>    </span><span class="attr">#[actix_web::test]
+<a href=#678 id=678 data-nosnippet>678</a>    </span><span class="kw">async fn </span>run_tick_is_absent_when_the_mock_is_disabled() {
+<a href=#679 id=679 data-nosnippet>679</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">false</span>, <span class="string">"?phase=verify"</span>).<span class="kw">await</span>;
+<a href=#680 id=680 data-nosnippet>680</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::NOT_FOUND);
+<a href=#681 id=681 data-nosnippet>681</a>    }
+<a href=#682 id=682 data-nosnippet>682</a>
+<a href=#683 id=683 data-nosnippet>683</a>    <span class="doccomment">/// A caller that asked to be narrowed and cannot be must be told, not quietly run wide over a
+<a href=#684 id=684 data-nosnippet>684</a>    /// shared database.
+<a href=#685 id=685 data-nosnippet>685</a>    </span><span class="attr">#[actix_web::test]
+<a href=#686 id=686 data-nosnippet>686</a>    </span><span class="kw">async fn </span>a_scope_a_phase_cannot_apply_is_refused() {
+<a href=#687 id=687 data-nosnippet>687</a>        <span class="kw">let </span>res = call_run_tick(
+<a href=#688 id=688 data-nosnippet>688</a>            <span class="bool-val">true</span>,
+<a href=#689 id=689 data-nosnippet>689</a>            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"?phase=retention-sweep&amp;courseId={}"</span>, Uuid::new_v4()),
+<a href=#690 id=690 data-nosnippet>690</a>        )
+<a href=#691 id=691 data-nosnippet>691</a>        .<span class="kw">await</span>;
+<a href=#692 id=692 data-nosnippet>692</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::BAD_REQUEST);
+<a href=#693 id=693 data-nosnippet>693</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
+<a href=#694 id=694 data-nosnippet>694</a>        <span class="macro">assert_eq!</span>(
+<a href=#695 id=695 data-nosnippet>695</a>            body,
+<a href=#696 id=696 data-nosnippet>696</a>            PhaseTickResult::ScopeNotSupported {
+<a href=#697 id=697 data-nosnippet>697</a>                phase: <span class="string">"retention-sweep"</span>.to_string()
+<a href=#698 id=698 data-nosnippet>698</a>            }
+<a href=#699 id=699 data-nosnippet>699</a>        );
+<a href=#700 id=700 data-nosnippet>700</a>    }
+<a href=#701 id=701 data-nosnippet>701</a>
+<a href=#702 id=702 data-nosnippet>702</a>    <span class="attr">#[actix_web::test]
+<a href=#703 id=703 data-nosnippet>703</a>    </span><span class="kw">async fn </span>an_invented_phase_name_is_rejected() {
+<a href=#704 id=704 data-nosnippet>704</a>        <span class="kw">let </span>res = call_run_tick(<span class="bool-val">true</span>, <span class="string">"?phase=materialise"</span>).<span class="kw">await</span>;
+<a href=#705 id=705 data-nosnippet>705</a>        <span class="macro">assert_eq!</span>(res.status(), StatusCode::BAD_REQUEST);
+<a href=#706 id=706 data-nosnippet>706</a>        <span class="kw">let </span>body: PhaseTickResult = test::read_body_json(res).<span class="kw">await</span>;
+<a href=#707 id=707 data-nosnippet>707</a>        <span class="macro">assert_eq!</span>(
+<a href=#708 id=708 data-nosnippet>708</a>            body,
+<a href=#709 id=709 data-nosnippet>709</a>            PhaseTickResult::UnknownPhase {
+<a href=#710 id=710 data-nosnippet>710</a>                phase: <span class="prelude-val">Some</span>(<span class="string">"materialise"</span>.to_string()),
+<a href=#711 id=711 data-nosnippet>711</a>                known_phases: known_phase_names(),
+<a href=#712 id=712 data-nosnippet>712</a>            }
+<a href=#713 id=713 data-nosnippet>713</a>        );
+<a href=#714 id=714 data-nosnippet>714</a>    }
+<a href=#715 id=715 data-nosnippet>715</a>}
 </code></pre></div></section></main></body></html>

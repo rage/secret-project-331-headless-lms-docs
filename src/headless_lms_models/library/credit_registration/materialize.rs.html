@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `models/src/library/credit_registration/materialize.rs`."><title>materialize.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="headless_lms_models" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">headless_lms_models/library/credit_registration/</div>materialize.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Creating ledger rows for completions that are allowed to be registered. It catches up as well as
 <a href=#2 id=2 data-nosnippet>2</a>//! keeps up: any completion carrying the push-path flag and still missing a row gets one, stopping
-<a href=#3 id=3 data-nosnippet>3</a>//! at `pending`, because historical completions belong to students nobody ever asked. Turning a
-<a href=#4 id=4 data-nosnippet>4</a>//! module on reaches none made before it: `register_credits_via_suotar` is set at creation or by hand.
+<a href=#3 id=3 data-nosnippet>3</a>//! at `pending`, because historical completions belong to students nobody ever asked. Completions
+<a href=#4 id=4 data-nosnippet>4</a>//! from before the push path never carry the flag, so they are never caught up.
 <a href=#5 id=5 data-nosnippet>5</a>
 <a href=#6 id=6 data-nosnippet>6</a></span><span class="kw">use </span><span class="kw">crate</span>::credit_registrations::{
 <a href=#7 id=7 data-nosnippet>7</a>    BatchMove, CreditRegistrationState, NewCreditRegistration, RegistrationScope, Transition,
@@ -192,7 +192,7 @@
 <a href=#192 id=192 data-nosnippet>192</a>  cmc.updated_at AS completion_updated_at
 <a href=#193 id=193 data-nosnippet>193</a>FROM credit_registrations cr
 <a href=#194 id=194 data-nosnippet>194</a>  JOIN course_module_completions cmc ON cmc.id = cr.course_module_completion_id
-<a href=#195 id=195 data-nosnippet>195</a>  -- Membership is the whole eligibility check: the view is the module opt-in and the completion
+<a href=#195 id=195 data-nosnippet>195</a>  -- Membership is the whole eligibility check: the view is the course code and the completion
 <a href=#196 id=196 data-nosnippet>196</a>  -- being live, passed and ECTS-eligible, and fully_eligible the prerequisites and the review.
 <a href=#197 id=197 data-nosnippet>197</a>  JOIN credit_registration_eligible_completions e ON e.course_module_completion_id = cr.course_module_completion_id
 <a href=#198 id=198 data-nosnippet>198</a>  AND e.fully_eligible
@@ -301,180 +301,180 @@
 <a href=#301 id=301 data-nosnippet>301</a>    <span class="kw">use </span><span class="kw">crate</span>::credit_registrations::CreditRegistrationState;
 <a href=#302 id=302 data-nosnippet>302</a>    <span class="kw">use </span><span class="kw">crate</span>::test_helper::<span class="kw-2">*</span>;
 <a href=#303 id=303 data-nosnippet>303</a>
-<a href=#304 id=304 data-nosnippet>304</a>    <span class="kw">async fn </span>enable_suotar(
+<a href=#304 id=304 data-nosnippet>304</a>    <span class="kw">async fn </span>give_course_code(
 <a href=#305 id=305 data-nosnippet>305</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
 <a href=#306 id=306 data-nosnippet>306</a>        course_module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::course_modules::CourseModule,
 <a href=#307 id=307 data-nosnippet>307</a>    ) {
-<a href=#308 id=308 data-nosnippet>308</a>        <span class="kw">crate</span>::course_modules::update(
+<a href=#308 id=308 data-nosnippet>308</a>        <span class="kw">crate</span>::course_modules::update_uh_course_code(
 <a href=#309 id=309 data-nosnippet>309</a>            conn,
 <a href=#310 id=310 data-nosnippet>310</a>            course_module.id,
-<a href=#311 id=311 data-nosnippet>311</a>            <span class="kw-2">&amp;</span><span class="kw">crate</span>::course_modules::NewCourseModule::new(
-<a href=#312 id=312 data-nosnippet>312</a>                course_module.course_id,
-<a href=#313 id=313 data-nosnippet>313</a>                course_module.name.clone(),
-<a href=#314 id=314 data-nosnippet>314</a>                course_module.order_number,
-<a href=#315 id=315 data-nosnippet>315</a>            )
-<a href=#316 id=316 data-nosnippet>316</a>            .set_enable_credit_registration_via_suotar(<span class="bool-val">true</span>),
-<a href=#317 id=317 data-nosnippet>317</a>        )
-<a href=#318 id=318 data-nosnippet>318</a>        .<span class="kw">await
-<a href=#319 id=319 data-nosnippet>319</a>        </span>.unwrap();
-<a href=#320 id=320 data-nosnippet>320</a>        <span class="kw">crate</span>::course_modules::set_register_eligible_new_completions_via_suotar(
-<a href=#321 id=321 data-nosnippet>321</a>            conn,
-<a href=#322 id=322 data-nosnippet>322</a>            course_module.id,
-<a href=#323 id=323 data-nosnippet>323</a>            <span class="bool-val">true</span>,
-<a href=#324 id=324 data-nosnippet>324</a>        )
-<a href=#325 id=325 data-nosnippet>325</a>        .<span class="kw">await
-<a href=#326 id=326 data-nosnippet>326</a>        </span>.unwrap();
-<a href=#327 id=327 data-nosnippet>327</a>    }
-<a href=#328 id=328 data-nosnippet>328</a>
-<a href=#329 id=329 data-nosnippet>329</a>    <span class="kw">async fn </span>add_completion(
-<a href=#330 id=330 data-nosnippet>330</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#331 id=331 data-nosnippet>331</a>        course: Uuid,
-<a href=#332 id=332 data-nosnippet>332</a>        course_module: Uuid,
-<a href=#333 id=333 data-nosnippet>333</a>        course_instance: Uuid,
-<a href=#334 id=334 data-nosnippet>334</a>        user: Uuid,
-<a href=#335 id=335 data-nosnippet>335</a>        passed: bool,
-<a href=#336 id=336 data-nosnippet>336</a>        eligible_for_ects: bool,
-<a href=#337 id=337 data-nosnippet>337</a>    ) -&gt; Uuid {
-<a href=#338 id=338 data-nosnippet>338</a>        <span class="kw">crate</span>::course_instance_enrollments::insert(conn, user, course, course_instance)
-<a href=#339 id=339 data-nosnippet>339</a>            .<span class="kw">await
-<a href=#340 id=340 data-nosnippet>340</a>            </span>.unwrap();
-<a href=#341 id=341 data-nosnippet>341</a>        <span class="comment">// Eligibility for the push path at creation.
-<a href=#342 id=342 data-nosnippet>342</a>        </span><span class="kw">if </span><span class="kw">crate</span>::verified_student_numbers::get_by_user_id(conn, user)
-<a href=#343 id=343 data-nosnippet>343</a>            .<span class="kw">await
-<a href=#344 id=344 data-nosnippet>344</a>            </span>.unwrap()
-<a href=#345 id=345 data-nosnippet>345</a>            .is_none()
-<a href=#346 id=346 data-nosnippet>346</a>        {
-<a href=#347 id=347 data-nosnippet>347</a>            <span class="kw">let </span>student_number = <span class="macro">format!</span>(<span class="string">"{:09}"</span>, user.as_u128() % <span class="number">1_000_000_000</span>);
-<a href=#348 id=348 data-nosnippet>348</a>            <span class="kw">crate</span>::verified_student_numbers::insert(
-<a href=#349 id=349 data-nosnippet>349</a>                conn,
-<a href=#350 id=350 data-nosnippet>350</a>                PKeyPolicy::Generate,
-<a href=#351 id=351 data-nosnippet>351</a>                <span class="kw-2">&amp;</span><span class="kw">crate</span>::verified_student_numbers::NewVerifiedStudentNumber {
-<a href=#352 id=352 data-nosnippet>352</a>                    user_id: user,
-<a href=#353 id=353 data-nosnippet>353</a>                    sisu_person_id: DbSecret::new(<span class="macro">format!</span>(<span class="string">"hy-hlo-{student_number}"</span>)),
-<a href=#354 id=354 data-nosnippet>354</a>                    student_number: DbSecret::new(student_number),
-<a href=#355 id=355 data-nosnippet>355</a>                    first_names: <span class="prelude-val">None</span>,
-<a href=#356 id=356 data-nosnippet>356</a>                    last_name: <span class="prelude-val">None</span>,
-<a href=#357 id=357 data-nosnippet>357</a>                    verified_via:
-<a href=#358 id=358 data-nosnippet>358</a>                        <span class="kw">crate</span>::verified_student_numbers::StudentNumberVerificationMethod::EmailedLink,
-<a href=#359 id=359 data-nosnippet>359</a>                    verified_via_email: <span class="prelude-val">Some</span>(DbSecret::new(<span class="string">"student@example.com"</span>)),
-<a href=#360 id=360 data-nosnippet>360</a>                    linked_by_user_id: <span class="prelude-val">None</span>,
-<a href=#361 id=361 data-nosnippet>361</a>                    link_reason: <span class="prelude-val">None</span>,
-<a href=#362 id=362 data-nosnippet>362</a>                    verified_from_course_id: <span class="prelude-val">None</span>,
-<a href=#363 id=363 data-nosnippet>363</a>                },
-<a href=#364 id=364 data-nosnippet>364</a>            )
-<a href=#365 id=365 data-nosnippet>365</a>            .<span class="kw">await
-<a href=#366 id=366 data-nosnippet>366</a>            </span>.unwrap();
-<a href=#367 id=367 data-nosnippet>367</a>        }
-<a href=#368 id=368 data-nosnippet>368</a>        <span class="kw">crate</span>::course_module_completions::insert(
-<a href=#369 id=369 data-nosnippet>369</a>            conn,
-<a href=#370 id=370 data-nosnippet>370</a>            PKeyPolicy::Generate,
-<a href=#371 id=371 data-nosnippet>371</a>            <span class="kw-2">&amp;</span>NewCourseModuleCompletion {
-<a href=#372 id=372 data-nosnippet>372</a>                course_id: course,
-<a href=#373 id=373 data-nosnippet>373</a>                course_module_id: course_module,
-<a href=#374 id=374 data-nosnippet>374</a>                user_id: user,
-<a href=#375 id=375 data-nosnippet>375</a>                completion_date: Utc::now(),
-<a href=#376 id=376 data-nosnippet>376</a>                completion_registration_attempt_date: <span class="prelude-val">None</span>,
-<a href=#377 id=377 data-nosnippet>377</a>                completion_language: <span class="string">"en"</span>.to_string(),
-<a href=#378 id=378 data-nosnippet>378</a>                eligible_for_ects,
-<a href=#379 id=379 data-nosnippet>379</a>                email: <span class="string">"student@example.com"</span>.to_string(),
-<a href=#380 id=380 data-nosnippet>380</a>                grade: <span class="prelude-val">Some</span>(<span class="number">4</span>),
-<a href=#381 id=381 data-nosnippet>381</a>                passed,
-<a href=#382 id=382 data-nosnippet>382</a>            },
-<a href=#383 id=383 data-nosnippet>383</a>            CourseModuleCompletionGranter::Automatic,
-<a href=#384 id=384 data-nosnippet>384</a>        )
-<a href=#385 id=385 data-nosnippet>385</a>        .<span class="kw">await
-<a href=#386 id=386 data-nosnippet>386</a>        </span>.unwrap()
-<a href=#387 id=387 data-nosnippet>387</a>        .id
-<a href=#388 id=388 data-nosnippet>388</a>    }
-<a href=#389 id=389 data-nosnippet>389</a>
-<a href=#390 id=390 data-nosnippet>390</a>    <span class="attr">#[tokio::test]
-<a href=#391 id=391 data-nosnippet>391</a>    </span><span class="kw">async fn </span>a_completion_on_an_enabled_module_gets_a_row_addressed_by_its_own_id() {
-<a href=#392 id=392 data-nosnippet>392</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
-<a href=#393 id=393 data-nosnippet>393</a>        enable_suotar(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
-<a href=#394 id=394 data-nosnippet>394</a>        add_completion(
-<a href=#395 id=395 data-nosnippet>395</a>            tx.as_mut(),
-<a href=#396 id=396 data-nosnippet>396</a>            course,
-<a href=#397 id=397 data-nosnippet>397</a>            course_module.id,
-<a href=#398 id=398 data-nosnippet>398</a>            instance.id,
-<a href=#399 id=399 data-nosnippet>399</a>            user,
-<a href=#400 id=400 data-nosnippet>400</a>            <span class="bool-val">true</span>,
-<a href=#401 id=401 data-nosnippet>401</a>            <span class="bool-val">true</span>,
-<a href=#402 id=402 data-nosnippet>402</a>        )
-<a href=#403 id=403 data-nosnippet>403</a>        .<span class="kw">await</span>;
-<a href=#404 id=404 data-nosnippet>404</a>
-<a href=#405 id=405 data-nosnippet>405</a>        <span class="kw">let </span>created = ensure_registration_rows_for_eligible_completions(
-<a href=#406 id=406 data-nosnippet>406</a>            tx.as_mut(),
-<a href=#407 id=407 data-nosnippet>407</a>            <span class="kw-2">&amp;</span>RegistrationScope::default(),
-<a href=#408 id=408 data-nosnippet>408</a>            MATERIALIZE_LIMIT,
-<a href=#409 id=409 data-nosnippet>409</a>        )
-<a href=#410 id=410 data-nosnippet>410</a>        .<span class="kw">await
-<a href=#411 id=411 data-nosnippet>411</a>        </span>.unwrap();
-<a href=#412 id=412 data-nosnippet>412</a>        <span class="macro">assert_eq!</span>(created, <span class="number">1</span>);
-<a href=#413 id=413 data-nosnippet>413</a>
-<a href=#414 id=414 data-nosnippet>414</a>        <span class="kw">let </span>rows = <span class="kw">crate</span>::credit_registrations::get_by_course_id(tx.as_mut(), course)
-<a href=#415 id=415 data-nosnippet>415</a>            .<span class="kw">await
-<a href=#416 id=416 data-nosnippet>416</a>            </span>.unwrap();
-<a href=#417 id=417 data-nosnippet>417</a>        <span class="macro">assert_eq!</span>(rows.len(), <span class="number">1</span>);
-<a href=#418 id=418 data-nosnippet>418</a>        <span class="macro">assert_eq!</span>(rows[<span class="number">0</span>].state, CreditRegistrationState::Pending);
-<a href=#419 id=419 data-nosnippet>419</a>
-<a href=#420 id=420 data-nosnippet>420</a>        <span class="kw">let </span>events =
-<a href=#421 id=421 data-nosnippet>421</a>            <span class="kw">crate</span>::credit_registration_events::get_by_registration_id(tx.as_mut(), rows[<span class="number">0</span>].id)
-<a href=#422 id=422 data-nosnippet>422</a>                .<span class="kw">await
-<a href=#423 id=423 data-nosnippet>423</a>                </span>.unwrap();
-<a href=#424 id=424 data-nosnippet>424</a>        <span class="macro">assert_eq!</span>(events.len(), <span class="number">1</span>);
-<a href=#425 id=425 data-nosnippet>425</a>    }
-<a href=#426 id=426 data-nosnippet>426</a>
-<a href=#427 id=427 data-nosnippet>427</a>    <span class="attr">#[tokio::test]
-<a href=#428 id=428 data-nosnippet>428</a>    </span><span class="kw">async fn </span>running_twice_creates_nothing_the_second_time() {
-<a href=#429 id=429 data-nosnippet>429</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
-<a href=#430 id=430 data-nosnippet>430</a>        enable_suotar(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
-<a href=#431 id=431 data-nosnippet>431</a>        add_completion(
-<a href=#432 id=432 data-nosnippet>432</a>            tx.as_mut(),
-<a href=#433 id=433 data-nosnippet>433</a>            course,
-<a href=#434 id=434 data-nosnippet>434</a>            course_module.id,
-<a href=#435 id=435 data-nosnippet>435</a>            instance.id,
-<a href=#436 id=436 data-nosnippet>436</a>            user,
-<a href=#437 id=437 data-nosnippet>437</a>            <span class="bool-val">true</span>,
-<a href=#438 id=438 data-nosnippet>438</a>            <span class="bool-val">true</span>,
-<a href=#439 id=439 data-nosnippet>439</a>        )
-<a href=#440 id=440 data-nosnippet>440</a>        .<span class="kw">await</span>;
-<a href=#441 id=441 data-nosnippet>441</a>
-<a href=#442 id=442 data-nosnippet>442</a>        <span class="kw">let </span>scope = RegistrationScope::default();
-<a href=#443 id=443 data-nosnippet>443</a>        <span class="macro">assert_eq!</span>(
-<a href=#444 id=444 data-nosnippet>444</a>            ensure_registration_rows_for_eligible_completions(
-<a href=#445 id=445 data-nosnippet>445</a>                tx.as_mut(),
-<a href=#446 id=446 data-nosnippet>446</a>                <span class="kw-2">&amp;</span>scope,
-<a href=#447 id=447 data-nosnippet>447</a>                MATERIALIZE_LIMIT
-<a href=#448 id=448 data-nosnippet>448</a>            )
-<a href=#449 id=449 data-nosnippet>449</a>            .<span class="kw">await
-<a href=#450 id=450 data-nosnippet>450</a>            </span>.unwrap(),
-<a href=#451 id=451 data-nosnippet>451</a>            <span class="number">1
-<a href=#452 id=452 data-nosnippet>452</a>        </span>);
-<a href=#453 id=453 data-nosnippet>453</a>        <span class="macro">assert_eq!</span>(
-<a href=#454 id=454 data-nosnippet>454</a>            ensure_registration_rows_for_eligible_completions(
-<a href=#455 id=455 data-nosnippet>455</a>                tx.as_mut(),
-<a href=#456 id=456 data-nosnippet>456</a>                <span class="kw-2">&amp;</span>scope,
-<a href=#457 id=457 data-nosnippet>457</a>                MATERIALIZE_LIMIT
-<a href=#458 id=458 data-nosnippet>458</a>            )
-<a href=#459 id=459 data-nosnippet>459</a>            .<span class="kw">await
-<a href=#460 id=460 data-nosnippet>460</a>            </span>.unwrap(),
-<a href=#461 id=461 data-nosnippet>461</a>            <span class="number">0
-<a href=#462 id=462 data-nosnippet>462</a>        </span>);
-<a href=#463 id=463 data-nosnippet>463</a>    }
-<a href=#464 id=464 data-nosnippet>464</a>
-<a href=#465 id=465 data-nosnippet>465</a>    <span class="attr">#[tokio::test]
-<a href=#466 id=466 data-nosnippet>466</a>    </span><span class="kw">async fn </span>a_module_that_was_never_opted_in_materialises_nothing() {
-<a href=#467 id=467 data-nosnippet>467</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
-<a href=#468 id=468 data-nosnippet>468</a>        add_completion(
-<a href=#469 id=469 data-nosnippet>469</a>            tx.as_mut(),
-<a href=#470 id=470 data-nosnippet>470</a>            course,
-<a href=#471 id=471 data-nosnippet>471</a>            course_module.id,
-<a href=#472 id=472 data-nosnippet>472</a>            instance.id,
-<a href=#473 id=473 data-nosnippet>473</a>            user,
-<a href=#474 id=474 data-nosnippet>474</a>            <span class="bool-val">true</span>,
-<a href=#475 id=475 data-nosnippet>475</a>            <span class="bool-val">true</span>,
-<a href=#476 id=476 data-nosnippet>476</a>        )
-<a href=#477 id=477 data-nosnippet>477</a>        .<span class="kw">await</span>;
+<a href=#311 id=311 data-nosnippet>311</a>            <span class="prelude-val">Some</span>(<span class="string">"TKT10001"</span>.to_string()),
+<a href=#312 id=312 data-nosnippet>312</a>        )
+<a href=#313 id=313 data-nosnippet>313</a>        .<span class="kw">await
+<a href=#314 id=314 data-nosnippet>314</a>        </span>.unwrap();
+<a href=#315 id=315 data-nosnippet>315</a>    }
+<a href=#316 id=316 data-nosnippet>316</a>
+<a href=#317 id=317 data-nosnippet>317</a>    <span class="kw">async fn </span>add_completion(
+<a href=#318 id=318 data-nosnippet>318</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#319 id=319 data-nosnippet>319</a>        course: Uuid,
+<a href=#320 id=320 data-nosnippet>320</a>        course_module: Uuid,
+<a href=#321 id=321 data-nosnippet>321</a>        course_instance: Uuid,
+<a href=#322 id=322 data-nosnippet>322</a>        user: Uuid,
+<a href=#323 id=323 data-nosnippet>323</a>        passed: bool,
+<a href=#324 id=324 data-nosnippet>324</a>        eligible_for_ects: bool,
+<a href=#325 id=325 data-nosnippet>325</a>    ) -&gt; Uuid {
+<a href=#326 id=326 data-nosnippet>326</a>        <span class="kw">crate</span>::course_instance_enrollments::insert(conn, user, course, course_instance)
+<a href=#327 id=327 data-nosnippet>327</a>            .<span class="kw">await
+<a href=#328 id=328 data-nosnippet>328</a>            </span>.unwrap();
+<a href=#329 id=329 data-nosnippet>329</a>        <span class="kw">crate</span>::course_module_completions::insert(
+<a href=#330 id=330 data-nosnippet>330</a>            conn,
+<a href=#331 id=331 data-nosnippet>331</a>            PKeyPolicy::Generate,
+<a href=#332 id=332 data-nosnippet>332</a>            <span class="kw-2">&amp;</span>NewCourseModuleCompletion {
+<a href=#333 id=333 data-nosnippet>333</a>                course_id: course,
+<a href=#334 id=334 data-nosnippet>334</a>                course_module_id: course_module,
+<a href=#335 id=335 data-nosnippet>335</a>                user_id: user,
+<a href=#336 id=336 data-nosnippet>336</a>                completion_date: Utc::now(),
+<a href=#337 id=337 data-nosnippet>337</a>                completion_registration_attempt_date: <span class="prelude-val">None</span>,
+<a href=#338 id=338 data-nosnippet>338</a>                completion_language: <span class="string">"en"</span>.to_string(),
+<a href=#339 id=339 data-nosnippet>339</a>                eligible_for_ects,
+<a href=#340 id=340 data-nosnippet>340</a>                email: <span class="string">"student@example.com"</span>.to_string(),
+<a href=#341 id=341 data-nosnippet>341</a>                grade: <span class="prelude-val">Some</span>(<span class="number">4</span>),
+<a href=#342 id=342 data-nosnippet>342</a>                passed,
+<a href=#343 id=343 data-nosnippet>343</a>            },
+<a href=#344 id=344 data-nosnippet>344</a>            CourseModuleCompletionGranter::Automatic,
+<a href=#345 id=345 data-nosnippet>345</a>        )
+<a href=#346 id=346 data-nosnippet>346</a>        .<span class="kw">await
+<a href=#347 id=347 data-nosnippet>347</a>        </span>.unwrap()
+<a href=#348 id=348 data-nosnippet>348</a>        .id
+<a href=#349 id=349 data-nosnippet>349</a>    }
+<a href=#350 id=350 data-nosnippet>350</a>
+<a href=#351 id=351 data-nosnippet>351</a>    <span class="attr">#[tokio::test]
+<a href=#352 id=352 data-nosnippet>352</a>    </span><span class="kw">async fn </span>a_completion_on_a_module_with_a_course_code_gets_a_row_addressed_by_its_own_id() {
+<a href=#353 id=353 data-nosnippet>353</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
+<a href=#354 id=354 data-nosnippet>354</a>        give_course_code(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
+<a href=#355 id=355 data-nosnippet>355</a>        add_completion(
+<a href=#356 id=356 data-nosnippet>356</a>            tx.as_mut(),
+<a href=#357 id=357 data-nosnippet>357</a>            course,
+<a href=#358 id=358 data-nosnippet>358</a>            course_module.id,
+<a href=#359 id=359 data-nosnippet>359</a>            instance.id,
+<a href=#360 id=360 data-nosnippet>360</a>            user,
+<a href=#361 id=361 data-nosnippet>361</a>            <span class="bool-val">true</span>,
+<a href=#362 id=362 data-nosnippet>362</a>            <span class="bool-val">true</span>,
+<a href=#363 id=363 data-nosnippet>363</a>        )
+<a href=#364 id=364 data-nosnippet>364</a>        .<span class="kw">await</span>;
+<a href=#365 id=365 data-nosnippet>365</a>
+<a href=#366 id=366 data-nosnippet>366</a>        <span class="kw">let </span>created = ensure_registration_rows_for_eligible_completions(
+<a href=#367 id=367 data-nosnippet>367</a>            tx.as_mut(),
+<a href=#368 id=368 data-nosnippet>368</a>            <span class="kw-2">&amp;</span>RegistrationScope::default(),
+<a href=#369 id=369 data-nosnippet>369</a>            MATERIALIZE_LIMIT,
+<a href=#370 id=370 data-nosnippet>370</a>        )
+<a href=#371 id=371 data-nosnippet>371</a>        .<span class="kw">await
+<a href=#372 id=372 data-nosnippet>372</a>        </span>.unwrap();
+<a href=#373 id=373 data-nosnippet>373</a>        <span class="macro">assert_eq!</span>(created, <span class="number">1</span>);
+<a href=#374 id=374 data-nosnippet>374</a>
+<a href=#375 id=375 data-nosnippet>375</a>        <span class="kw">let </span>rows = <span class="kw">crate</span>::credit_registrations::get_by_course_id(tx.as_mut(), course)
+<a href=#376 id=376 data-nosnippet>376</a>            .<span class="kw">await
+<a href=#377 id=377 data-nosnippet>377</a>            </span>.unwrap();
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="macro">assert_eq!</span>(rows.len(), <span class="number">1</span>);
+<a href=#379 id=379 data-nosnippet>379</a>        <span class="macro">assert_eq!</span>(rows[<span class="number">0</span>].state, CreditRegistrationState::Pending);
+<a href=#380 id=380 data-nosnippet>380</a>
+<a href=#381 id=381 data-nosnippet>381</a>        <span class="kw">let </span>events =
+<a href=#382 id=382 data-nosnippet>382</a>            <span class="kw">crate</span>::credit_registration_events::get_by_registration_id(tx.as_mut(), rows[<span class="number">0</span>].id)
+<a href=#383 id=383 data-nosnippet>383</a>                .<span class="kw">await
+<a href=#384 id=384 data-nosnippet>384</a>                </span>.unwrap();
+<a href=#385 id=385 data-nosnippet>385</a>        <span class="macro">assert_eq!</span>(events.len(), <span class="number">1</span>);
+<a href=#386 id=386 data-nosnippet>386</a>    }
+<a href=#387 id=387 data-nosnippet>387</a>
+<a href=#388 id=388 data-nosnippet>388</a>    <span class="attr">#[tokio::test]
+<a href=#389 id=389 data-nosnippet>389</a>    </span><span class="kw">async fn </span>running_twice_creates_nothing_the_second_time() {
+<a href=#390 id=390 data-nosnippet>390</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
+<a href=#391 id=391 data-nosnippet>391</a>        give_course_code(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
+<a href=#392 id=392 data-nosnippet>392</a>        add_completion(
+<a href=#393 id=393 data-nosnippet>393</a>            tx.as_mut(),
+<a href=#394 id=394 data-nosnippet>394</a>            course,
+<a href=#395 id=395 data-nosnippet>395</a>            course_module.id,
+<a href=#396 id=396 data-nosnippet>396</a>            instance.id,
+<a href=#397 id=397 data-nosnippet>397</a>            user,
+<a href=#398 id=398 data-nosnippet>398</a>            <span class="bool-val">true</span>,
+<a href=#399 id=399 data-nosnippet>399</a>            <span class="bool-val">true</span>,
+<a href=#400 id=400 data-nosnippet>400</a>        )
+<a href=#401 id=401 data-nosnippet>401</a>        .<span class="kw">await</span>;
+<a href=#402 id=402 data-nosnippet>402</a>
+<a href=#403 id=403 data-nosnippet>403</a>        <span class="kw">let </span>scope = RegistrationScope::default();
+<a href=#404 id=404 data-nosnippet>404</a>        <span class="macro">assert_eq!</span>(
+<a href=#405 id=405 data-nosnippet>405</a>            ensure_registration_rows_for_eligible_completions(
+<a href=#406 id=406 data-nosnippet>406</a>                tx.as_mut(),
+<a href=#407 id=407 data-nosnippet>407</a>                <span class="kw-2">&amp;</span>scope,
+<a href=#408 id=408 data-nosnippet>408</a>                MATERIALIZE_LIMIT
+<a href=#409 id=409 data-nosnippet>409</a>            )
+<a href=#410 id=410 data-nosnippet>410</a>            .<span class="kw">await
+<a href=#411 id=411 data-nosnippet>411</a>            </span>.unwrap(),
+<a href=#412 id=412 data-nosnippet>412</a>            <span class="number">1
+<a href=#413 id=413 data-nosnippet>413</a>        </span>);
+<a href=#414 id=414 data-nosnippet>414</a>        <span class="macro">assert_eq!</span>(
+<a href=#415 id=415 data-nosnippet>415</a>            ensure_registration_rows_for_eligible_completions(
+<a href=#416 id=416 data-nosnippet>416</a>                tx.as_mut(),
+<a href=#417 id=417 data-nosnippet>417</a>                <span class="kw-2">&amp;</span>scope,
+<a href=#418 id=418 data-nosnippet>418</a>                MATERIALIZE_LIMIT
+<a href=#419 id=419 data-nosnippet>419</a>            )
+<a href=#420 id=420 data-nosnippet>420</a>            .<span class="kw">await
+<a href=#421 id=421 data-nosnippet>421</a>            </span>.unwrap(),
+<a href=#422 id=422 data-nosnippet>422</a>            <span class="number">0
+<a href=#423 id=423 data-nosnippet>423</a>        </span>);
+<a href=#424 id=424 data-nosnippet>424</a>    }
+<a href=#425 id=425 data-nosnippet>425</a>
+<a href=#426 id=426 data-nosnippet>426</a>    <span class="attr">#[tokio::test]
+<a href=#427 id=427 data-nosnippet>427</a>    </span><span class="kw">async fn </span>a_module_without_a_course_code_materialises_nothing() {
+<a href=#428 id=428 data-nosnippet>428</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
+<a href=#429 id=429 data-nosnippet>429</a>        add_completion(
+<a href=#430 id=430 data-nosnippet>430</a>            tx.as_mut(),
+<a href=#431 id=431 data-nosnippet>431</a>            course,
+<a href=#432 id=432 data-nosnippet>432</a>            course_module.id,
+<a href=#433 id=433 data-nosnippet>433</a>            instance.id,
+<a href=#434 id=434 data-nosnippet>434</a>            user,
+<a href=#435 id=435 data-nosnippet>435</a>            <span class="bool-val">true</span>,
+<a href=#436 id=436 data-nosnippet>436</a>            <span class="bool-val">true</span>,
+<a href=#437 id=437 data-nosnippet>437</a>        )
+<a href=#438 id=438 data-nosnippet>438</a>        .<span class="kw">await</span>;
+<a href=#439 id=439 data-nosnippet>439</a>        <span class="macro">assert_eq!</span>(
+<a href=#440 id=440 data-nosnippet>440</a>            ensure_registration_rows_for_eligible_completions(
+<a href=#441 id=441 data-nosnippet>441</a>                tx.as_mut(),
+<a href=#442 id=442 data-nosnippet>442</a>                <span class="kw-2">&amp;</span>RegistrationScope::default(),
+<a href=#443 id=443 data-nosnippet>443</a>                MATERIALIZE_LIMIT
+<a href=#444 id=444 data-nosnippet>444</a>            )
+<a href=#445 id=445 data-nosnippet>445</a>            .<span class="kw">await
+<a href=#446 id=446 data-nosnippet>446</a>            </span>.unwrap(),
+<a href=#447 id=447 data-nosnippet>447</a>            <span class="number">0
+<a href=#448 id=448 data-nosnippet>448</a>        </span>);
+<a href=#449 id=449 data-nosnippet>449</a>    }
+<a href=#450 id=450 data-nosnippet>450</a>
+<a href=#451 id=451 data-nosnippet>451</a>    <span class="attr">#[tokio::test]
+<a href=#452 id=452 data-nosnippet>452</a>    </span><span class="kw">async fn </span>a_failed_or_ects_ineligible_completion_never_gets_a_row() {
+<a href=#453 id=453 data-nosnippet>453</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
+<a href=#454 id=454 data-nosnippet>454</a>        give_course_code(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
+<a href=#455 id=455 data-nosnippet>455</a>        add_completion(
+<a href=#456 id=456 data-nosnippet>456</a>            tx.as_mut(),
+<a href=#457 id=457 data-nosnippet>457</a>            course,
+<a href=#458 id=458 data-nosnippet>458</a>            course_module.id,
+<a href=#459 id=459 data-nosnippet>459</a>            instance.id,
+<a href=#460 id=460 data-nosnippet>460</a>            user,
+<a href=#461 id=461 data-nosnippet>461</a>            <span class="bool-val">false</span>,
+<a href=#462 id=462 data-nosnippet>462</a>            <span class="bool-val">true</span>,
+<a href=#463 id=463 data-nosnippet>463</a>        )
+<a href=#464 id=464 data-nosnippet>464</a>        .<span class="kw">await</span>;
+<a href=#465 id=465 data-nosnippet>465</a>
+<a href=#466 id=466 data-nosnippet>466</a>        <span class="macro">insert_data!</span>(tx: tx; user: other_user);
+<a href=#467 id=467 data-nosnippet>467</a>        add_completion(
+<a href=#468 id=468 data-nosnippet>468</a>            tx.as_mut(),
+<a href=#469 id=469 data-nosnippet>469</a>            course,
+<a href=#470 id=470 data-nosnippet>470</a>            course_module.id,
+<a href=#471 id=471 data-nosnippet>471</a>            instance.id,
+<a href=#472 id=472 data-nosnippet>472</a>            other_user,
+<a href=#473 id=473 data-nosnippet>473</a>            <span class="bool-val">true</span>,
+<a href=#474 id=474 data-nosnippet>474</a>            <span class="bool-val">false</span>,
+<a href=#475 id=475 data-nosnippet>475</a>        )
+<a href=#476 id=476 data-nosnippet>476</a>        .<span class="kw">await</span>;
+<a href=#477 id=477 data-nosnippet>477</a>
 <a href=#478 id=478 data-nosnippet>478</a>        <span class="macro">assert_eq!</span>(
 <a href=#479 id=479 data-nosnippet>479</a>            ensure_registration_rows_for_eligible_completions(
 <a href=#480 id=480 data-nosnippet>480</a>                tx.as_mut(),
@@ -488,170 +488,131 @@
 <a href=#488 id=488 data-nosnippet>488</a>    }
 <a href=#489 id=489 data-nosnippet>489</a>
 <a href=#490 id=490 data-nosnippet>490</a>    <span class="attr">#[tokio::test]
-<a href=#491 id=491 data-nosnippet>491</a>    </span><span class="kw">async fn </span>a_failed_or_ects_ineligible_completion_never_gets_a_row() {
+<a href=#491 id=491 data-nosnippet>491</a>    </span><span class="kw">async fn </span>a_completion_the_pull_path_already_registered_is_skipped() {
 <a href=#492 id=492 data-nosnippet>492</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
-<a href=#493 id=493 data-nosnippet>493</a>        enable_suotar(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
-<a href=#494 id=494 data-nosnippet>494</a>        add_completion(
+<a href=#493 id=493 data-nosnippet>493</a>        give_course_code(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
+<a href=#494 id=494 data-nosnippet>494</a>        <span class="kw">let </span>completion = add_completion(
 <a href=#495 id=495 data-nosnippet>495</a>            tx.as_mut(),
 <a href=#496 id=496 data-nosnippet>496</a>            course,
 <a href=#497 id=497 data-nosnippet>497</a>            course_module.id,
 <a href=#498 id=498 data-nosnippet>498</a>            instance.id,
 <a href=#499 id=499 data-nosnippet>499</a>            user,
-<a href=#500 id=500 data-nosnippet>500</a>            <span class="bool-val">false</span>,
+<a href=#500 id=500 data-nosnippet>500</a>            <span class="bool-val">true</span>,
 <a href=#501 id=501 data-nosnippet>501</a>            <span class="bool-val">true</span>,
 <a href=#502 id=502 data-nosnippet>502</a>        )
 <a href=#503 id=503 data-nosnippet>503</a>        .<span class="kw">await</span>;
-<a href=#504 id=504 data-nosnippet>504</a>
-<a href=#505 id=505 data-nosnippet>505</a>        <span class="macro">insert_data!</span>(tx: tx; user: other_user);
-<a href=#506 id=506 data-nosnippet>506</a>        add_completion(
-<a href=#507 id=507 data-nosnippet>507</a>            tx.as_mut(),
-<a href=#508 id=508 data-nosnippet>508</a>            course,
-<a href=#509 id=509 data-nosnippet>509</a>            course_module.id,
-<a href=#510 id=510 data-nosnippet>510</a>            instance.id,
-<a href=#511 id=511 data-nosnippet>511</a>            other_user,
-<a href=#512 id=512 data-nosnippet>512</a>            <span class="bool-val">true</span>,
-<a href=#513 id=513 data-nosnippet>513</a>            <span class="bool-val">false</span>,
-<a href=#514 id=514 data-nosnippet>514</a>        )
-<a href=#515 id=515 data-nosnippet>515</a>        .<span class="kw">await</span>;
-<a href=#516 id=516 data-nosnippet>516</a>
-<a href=#517 id=517 data-nosnippet>517</a>        <span class="macro">assert_eq!</span>(
-<a href=#518 id=518 data-nosnippet>518</a>            ensure_registration_rows_for_eligible_completions(
-<a href=#519 id=519 data-nosnippet>519</a>                tx.as_mut(),
-<a href=#520 id=520 data-nosnippet>520</a>                <span class="kw-2">&amp;</span>RegistrationScope::default(),
-<a href=#521 id=521 data-nosnippet>521</a>                MATERIALIZE_LIMIT
-<a href=#522 id=522 data-nosnippet>522</a>            )
-<a href=#523 id=523 data-nosnippet>523</a>            .<span class="kw">await
-<a href=#524 id=524 data-nosnippet>524</a>            </span>.unwrap(),
-<a href=#525 id=525 data-nosnippet>525</a>            <span class="number">0
-<a href=#526 id=526 data-nosnippet>526</a>        </span>);
-<a href=#527 id=527 data-nosnippet>527</a>    }
-<a href=#528 id=528 data-nosnippet>528</a>
-<a href=#529 id=529 data-nosnippet>529</a>    <span class="attr">#[tokio::test]
-<a href=#530 id=530 data-nosnippet>530</a>    </span><span class="kw">async fn </span>a_completion_the_pull_path_already_registered_is_skipped() {
-<a href=#531 id=531 data-nosnippet>531</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
-<a href=#532 id=532 data-nosnippet>532</a>        enable_suotar(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
-<a href=#533 id=533 data-nosnippet>533</a>        <span class="kw">let </span>completion = add_completion(
-<a href=#534 id=534 data-nosnippet>534</a>            tx.as_mut(),
-<a href=#535 id=535 data-nosnippet>535</a>            course,
-<a href=#536 id=536 data-nosnippet>536</a>            course_module.id,
-<a href=#537 id=537 data-nosnippet>537</a>            instance.id,
-<a href=#538 id=538 data-nosnippet>538</a>            user,
-<a href=#539 id=539 data-nosnippet>539</a>            <span class="bool-val">true</span>,
-<a href=#540 id=540 data-nosnippet>540</a>            <span class="bool-val">true</span>,
-<a href=#541 id=541 data-nosnippet>541</a>        )
-<a href=#542 id=542 data-nosnippet>542</a>        .<span class="kw">await</span>;
-<a href=#543 id=543 data-nosnippet>543</a>        <span class="kw">let </span>registrar = <span class="kw">crate</span>::study_registry_registrars::insert(
+<a href=#504 id=504 data-nosnippet>504</a>        <span class="kw">let </span>registrar = <span class="kw">crate</span>::study_registry_registrars::insert(
+<a href=#505 id=505 data-nosnippet>505</a>            tx.as_mut(),
+<a href=#506 id=506 data-nosnippet>506</a>            PKeyPolicy::Generate,
+<a href=#507 id=507 data-nosnippet>507</a>            <span class="string">"Test registrar"</span>,
+<a href=#508 id=508 data-nosnippet>508</a>            <span class="string">"test-registrar-secret-key"</span>,
+<a href=#509 id=509 data-nosnippet>509</a>        )
+<a href=#510 id=510 data-nosnippet>510</a>        .<span class="kw">await
+<a href=#511 id=511 data-nosnippet>511</a>        </span>.unwrap();
+<a href=#512 id=512 data-nosnippet>512</a>        <span class="kw">crate</span>::course_module_completion_registered_to_study_registries::insert(
+<a href=#513 id=513 data-nosnippet>513</a>            tx.as_mut(),
+<a href=#514 id=514 data-nosnippet>514</a>            PKeyPolicy::Generate,
+<a href=#515 id=515 data-nosnippet>515</a>            <span class="kw-2">&amp;</span>NewCourseModuleCompletionRegisteredToStudyRegistry {
+<a href=#516 id=516 data-nosnippet>516</a>                course_id: course,
+<a href=#517 id=517 data-nosnippet>517</a>                course_module_completion_id: completion,
+<a href=#518 id=518 data-nosnippet>518</a>                course_module_id: course_module.id,
+<a href=#519 id=519 data-nosnippet>519</a>                study_registry_registrar_id: registrar,
+<a href=#520 id=520 data-nosnippet>520</a>                user_id: user,
+<a href=#521 id=521 data-nosnippet>521</a>                real_student_number: <span class="string">"012345678"</span>.to_string(),
+<a href=#522 id=522 data-nosnippet>522</a>            },
+<a href=#523 id=523 data-nosnippet>523</a>        )
+<a href=#524 id=524 data-nosnippet>524</a>        .<span class="kw">await
+<a href=#525 id=525 data-nosnippet>525</a>        </span>.unwrap();
+<a href=#526 id=526 data-nosnippet>526</a>
+<a href=#527 id=527 data-nosnippet>527</a>        <span class="macro">assert_eq!</span>(
+<a href=#528 id=528 data-nosnippet>528</a>            ensure_registration_rows_for_eligible_completions(
+<a href=#529 id=529 data-nosnippet>529</a>                tx.as_mut(),
+<a href=#530 id=530 data-nosnippet>530</a>                <span class="kw-2">&amp;</span>RegistrationScope::default(),
+<a href=#531 id=531 data-nosnippet>531</a>                MATERIALIZE_LIMIT
+<a href=#532 id=532 data-nosnippet>532</a>            )
+<a href=#533 id=533 data-nosnippet>533</a>            .<span class="kw">await
+<a href=#534 id=534 data-nosnippet>534</a>            </span>.unwrap(),
+<a href=#535 id=535 data-nosnippet>535</a>            <span class="number">0
+<a href=#536 id=536 data-nosnippet>536</a>        </span>);
+<a href=#537 id=537 data-nosnippet>537</a>    }
+<a href=#538 id=538 data-nosnippet>538</a>
+<a href=#539 id=539 data-nosnippet>539</a>    <span class="attr">#[tokio::test]
+<a href=#540 id=540 data-nosnippet>540</a>    </span><span class="kw">async fn </span>a_scoped_run_leaves_another_courses_completions_alone() {
+<a href=#541 id=541 data-nosnippet>541</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
+<a href=#542 id=542 data-nosnippet>542</a>        give_course_code(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
+<a href=#543 id=543 data-nosnippet>543</a>        add_completion(
 <a href=#544 id=544 data-nosnippet>544</a>            tx.as_mut(),
-<a href=#545 id=545 data-nosnippet>545</a>            PKeyPolicy::Generate,
-<a href=#546 id=546 data-nosnippet>546</a>            <span class="string">"Test registrar"</span>,
-<a href=#547 id=547 data-nosnippet>547</a>            <span class="string">"test-registrar-secret-key"</span>,
-<a href=#548 id=548 data-nosnippet>548</a>        )
-<a href=#549 id=549 data-nosnippet>549</a>        .<span class="kw">await
-<a href=#550 id=550 data-nosnippet>550</a>        </span>.unwrap();
-<a href=#551 id=551 data-nosnippet>551</a>        <span class="kw">crate</span>::course_module_completion_registered_to_study_registries::insert(
-<a href=#552 id=552 data-nosnippet>552</a>            tx.as_mut(),
-<a href=#553 id=553 data-nosnippet>553</a>            PKeyPolicy::Generate,
-<a href=#554 id=554 data-nosnippet>554</a>            <span class="kw-2">&amp;</span>NewCourseModuleCompletionRegisteredToStudyRegistry {
-<a href=#555 id=555 data-nosnippet>555</a>                course_id: course,
-<a href=#556 id=556 data-nosnippet>556</a>                course_module_completion_id: completion,
-<a href=#557 id=557 data-nosnippet>557</a>                course_module_id: course_module.id,
-<a href=#558 id=558 data-nosnippet>558</a>                study_registry_registrar_id: registrar,
-<a href=#559 id=559 data-nosnippet>559</a>                user_id: user,
-<a href=#560 id=560 data-nosnippet>560</a>                real_student_number: <span class="string">"012345678"</span>.to_string(),
-<a href=#561 id=561 data-nosnippet>561</a>            },
-<a href=#562 id=562 data-nosnippet>562</a>        )
-<a href=#563 id=563 data-nosnippet>563</a>        .<span class="kw">await
-<a href=#564 id=564 data-nosnippet>564</a>        </span>.unwrap();
-<a href=#565 id=565 data-nosnippet>565</a>
-<a href=#566 id=566 data-nosnippet>566</a>        <span class="macro">assert_eq!</span>(
-<a href=#567 id=567 data-nosnippet>567</a>            ensure_registration_rows_for_eligible_completions(
-<a href=#568 id=568 data-nosnippet>568</a>                tx.as_mut(),
-<a href=#569 id=569 data-nosnippet>569</a>                <span class="kw-2">&amp;</span>RegistrationScope::default(),
-<a href=#570 id=570 data-nosnippet>570</a>                MATERIALIZE_LIMIT
-<a href=#571 id=571 data-nosnippet>571</a>            )
-<a href=#572 id=572 data-nosnippet>572</a>            .<span class="kw">await
-<a href=#573 id=573 data-nosnippet>573</a>            </span>.unwrap(),
-<a href=#574 id=574 data-nosnippet>574</a>            <span class="number">0
-<a href=#575 id=575 data-nosnippet>575</a>        </span>);
-<a href=#576 id=576 data-nosnippet>576</a>    }
-<a href=#577 id=577 data-nosnippet>577</a>
-<a href=#578 id=578 data-nosnippet>578</a>    <span class="attr">#[tokio::test]
-<a href=#579 id=579 data-nosnippet>579</a>    </span><span class="kw">async fn </span>a_scoped_run_leaves_another_courses_completions_alone() {
-<a href=#580 id=580 data-nosnippet>580</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
-<a href=#581 id=581 data-nosnippet>581</a>        enable_suotar(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
-<a href=#582 id=582 data-nosnippet>582</a>        add_completion(
-<a href=#583 id=583 data-nosnippet>583</a>            tx.as_mut(),
-<a href=#584 id=584 data-nosnippet>584</a>            course,
-<a href=#585 id=585 data-nosnippet>585</a>            course_module.id,
-<a href=#586 id=586 data-nosnippet>586</a>            instance.id,
-<a href=#587 id=587 data-nosnippet>587</a>            user,
+<a href=#545 id=545 data-nosnippet>545</a>            course,
+<a href=#546 id=546 data-nosnippet>546</a>            course_module.id,
+<a href=#547 id=547 data-nosnippet>547</a>            instance.id,
+<a href=#548 id=548 data-nosnippet>548</a>            user,
+<a href=#549 id=549 data-nosnippet>549</a>            <span class="bool-val">true</span>,
+<a href=#550 id=550 data-nosnippet>550</a>            <span class="bool-val">true</span>,
+<a href=#551 id=551 data-nosnippet>551</a>        )
+<a href=#552 id=552 data-nosnippet>552</a>        .<span class="kw">await</span>;
+<a href=#553 id=553 data-nosnippet>553</a>
+<a href=#554 id=554 data-nosnippet>554</a>        <span class="kw">let </span>elsewhere = Uuid::new_v4();
+<a href=#555 id=555 data-nosnippet>555</a>        <span class="macro">assert_eq!</span>(
+<a href=#556 id=556 data-nosnippet>556</a>            ensure_registration_rows_for_eligible_completions(
+<a href=#557 id=557 data-nosnippet>557</a>                tx.as_mut(),
+<a href=#558 id=558 data-nosnippet>558</a>                <span class="kw-2">&amp;</span>RegistrationScope::for_course(elsewhere),
+<a href=#559 id=559 data-nosnippet>559</a>                MATERIALIZE_LIMIT
+<a href=#560 id=560 data-nosnippet>560</a>            )
+<a href=#561 id=561 data-nosnippet>561</a>            .<span class="kw">await
+<a href=#562 id=562 data-nosnippet>562</a>            </span>.unwrap(),
+<a href=#563 id=563 data-nosnippet>563</a>            <span class="number">0
+<a href=#564 id=564 data-nosnippet>564</a>        </span>);
+<a href=#565 id=565 data-nosnippet>565</a>        <span class="macro">assert_eq!</span>(
+<a href=#566 id=566 data-nosnippet>566</a>            ensure_registration_rows_for_eligible_completions(
+<a href=#567 id=567 data-nosnippet>567</a>                tx.as_mut(),
+<a href=#568 id=568 data-nosnippet>568</a>                <span class="kw-2">&amp;</span>RegistrationScope::for_course(course),
+<a href=#569 id=569 data-nosnippet>569</a>                MATERIALIZE_LIMIT
+<a href=#570 id=570 data-nosnippet>570</a>            )
+<a href=#571 id=571 data-nosnippet>571</a>            .<span class="kw">await
+<a href=#572 id=572 data-nosnippet>572</a>            </span>.unwrap(),
+<a href=#573 id=573 data-nosnippet>573</a>            <span class="number">1
+<a href=#574 id=574 data-nosnippet>574</a>        </span>);
+<a href=#575 id=575 data-nosnippet>575</a>    }
+<a href=#576 id=576 data-nosnippet>576</a>
+<a href=#577 id=577 data-nosnippet>577</a>    <span class="attr">#[tokio::test]
+<a href=#578 id=578 data-nosnippet>578</a>    </span><span class="kw">async fn </span>the_limit_bounds_one_iteration() {
+<a href=#579 id=579 data-nosnippet>579</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
+<a href=#580 id=580 data-nosnippet>580</a>        give_course_code(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
+<a href=#581 id=581 data-nosnippet>581</a>        add_completion(
+<a href=#582 id=582 data-nosnippet>582</a>            tx.as_mut(),
+<a href=#583 id=583 data-nosnippet>583</a>            course,
+<a href=#584 id=584 data-nosnippet>584</a>            course_module.id,
+<a href=#585 id=585 data-nosnippet>585</a>            instance.id,
+<a href=#586 id=586 data-nosnippet>586</a>            user,
+<a href=#587 id=587 data-nosnippet>587</a>            <span class="bool-val">true</span>,
 <a href=#588 id=588 data-nosnippet>588</a>            <span class="bool-val">true</span>,
-<a href=#589 id=589 data-nosnippet>589</a>            <span class="bool-val">true</span>,
-<a href=#590 id=590 data-nosnippet>590</a>        )
-<a href=#591 id=591 data-nosnippet>591</a>        .<span class="kw">await</span>;
-<a href=#592 id=592 data-nosnippet>592</a>
-<a href=#593 id=593 data-nosnippet>593</a>        <span class="kw">let </span>elsewhere = Uuid::new_v4();
-<a href=#594 id=594 data-nosnippet>594</a>        <span class="macro">assert_eq!</span>(
-<a href=#595 id=595 data-nosnippet>595</a>            ensure_registration_rows_for_eligible_completions(
-<a href=#596 id=596 data-nosnippet>596</a>                tx.as_mut(),
-<a href=#597 id=597 data-nosnippet>597</a>                <span class="kw-2">&amp;</span>RegistrationScope::for_course(elsewhere),
-<a href=#598 id=598 data-nosnippet>598</a>                MATERIALIZE_LIMIT
-<a href=#599 id=599 data-nosnippet>599</a>            )
-<a href=#600 id=600 data-nosnippet>600</a>            .<span class="kw">await
-<a href=#601 id=601 data-nosnippet>601</a>            </span>.unwrap(),
-<a href=#602 id=602 data-nosnippet>602</a>            <span class="number">0
-<a href=#603 id=603 data-nosnippet>603</a>        </span>);
+<a href=#589 id=589 data-nosnippet>589</a>        )
+<a href=#590 id=590 data-nosnippet>590</a>        .<span class="kw">await</span>;
+<a href=#591 id=591 data-nosnippet>591</a>        <span class="macro">insert_data!</span>(tx: tx; user: second_user);
+<a href=#592 id=592 data-nosnippet>592</a>        add_completion(
+<a href=#593 id=593 data-nosnippet>593</a>            tx.as_mut(),
+<a href=#594 id=594 data-nosnippet>594</a>            course,
+<a href=#595 id=595 data-nosnippet>595</a>            course_module.id,
+<a href=#596 id=596 data-nosnippet>596</a>            instance.id,
+<a href=#597 id=597 data-nosnippet>597</a>            second_user,
+<a href=#598 id=598 data-nosnippet>598</a>            <span class="bool-val">true</span>,
+<a href=#599 id=599 data-nosnippet>599</a>            <span class="bool-val">true</span>,
+<a href=#600 id=600 data-nosnippet>600</a>        )
+<a href=#601 id=601 data-nosnippet>601</a>        .<span class="kw">await</span>;
+<a href=#602 id=602 data-nosnippet>602</a>
+<a href=#603 id=603 data-nosnippet>603</a>        <span class="kw">let </span>scope = RegistrationScope::default();
 <a href=#604 id=604 data-nosnippet>604</a>        <span class="macro">assert_eq!</span>(
-<a href=#605 id=605 data-nosnippet>605</a>            ensure_registration_rows_for_eligible_completions(
-<a href=#606 id=606 data-nosnippet>606</a>                tx.as_mut(),
-<a href=#607 id=607 data-nosnippet>607</a>                <span class="kw-2">&amp;</span>RegistrationScope::for_course(course),
-<a href=#608 id=608 data-nosnippet>608</a>                MATERIALIZE_LIMIT
-<a href=#609 id=609 data-nosnippet>609</a>            )
-<a href=#610 id=610 data-nosnippet>610</a>            .<span class="kw">await
-<a href=#611 id=611 data-nosnippet>611</a>            </span>.unwrap(),
-<a href=#612 id=612 data-nosnippet>612</a>            <span class="number">1
-<a href=#613 id=613 data-nosnippet>613</a>        </span>);
-<a href=#614 id=614 data-nosnippet>614</a>    }
-<a href=#615 id=615 data-nosnippet>615</a>
-<a href=#616 id=616 data-nosnippet>616</a>    <span class="attr">#[tokio::test]
-<a href=#617 id=617 data-nosnippet>617</a>    </span><span class="kw">async fn </span>the_limit_bounds_one_iteration() {
-<a href=#618 id=618 data-nosnippet>618</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, :instance, :course_module);
-<a href=#619 id=619 data-nosnippet>619</a>        enable_suotar(tx.as_mut(), <span class="kw-2">&amp;</span>course_module).<span class="kw">await</span>;
-<a href=#620 id=620 data-nosnippet>620</a>        add_completion(
-<a href=#621 id=621 data-nosnippet>621</a>            tx.as_mut(),
-<a href=#622 id=622 data-nosnippet>622</a>            course,
-<a href=#623 id=623 data-nosnippet>623</a>            course_module.id,
-<a href=#624 id=624 data-nosnippet>624</a>            instance.id,
-<a href=#625 id=625 data-nosnippet>625</a>            user,
-<a href=#626 id=626 data-nosnippet>626</a>            <span class="bool-val">true</span>,
-<a href=#627 id=627 data-nosnippet>627</a>            <span class="bool-val">true</span>,
-<a href=#628 id=628 data-nosnippet>628</a>        )
-<a href=#629 id=629 data-nosnippet>629</a>        .<span class="kw">await</span>;
-<a href=#630 id=630 data-nosnippet>630</a>        <span class="macro">insert_data!</span>(tx: tx; user: second_user);
-<a href=#631 id=631 data-nosnippet>631</a>        add_completion(
-<a href=#632 id=632 data-nosnippet>632</a>            tx.as_mut(),
-<a href=#633 id=633 data-nosnippet>633</a>            course,
-<a href=#634 id=634 data-nosnippet>634</a>            course_module.id,
-<a href=#635 id=635 data-nosnippet>635</a>            instance.id,
-<a href=#636 id=636 data-nosnippet>636</a>            second_user,
-<a href=#637 id=637 data-nosnippet>637</a>            <span class="bool-val">true</span>,
-<a href=#638 id=638 data-nosnippet>638</a>            <span class="bool-val">true</span>,
-<a href=#639 id=639 data-nosnippet>639</a>        )
-<a href=#640 id=640 data-nosnippet>640</a>        .<span class="kw">await</span>;
-<a href=#641 id=641 data-nosnippet>641</a>
-<a href=#642 id=642 data-nosnippet>642</a>        <span class="kw">let </span>scope = RegistrationScope::default();
-<a href=#643 id=643 data-nosnippet>643</a>        <span class="macro">assert_eq!</span>(
-<a href=#644 id=644 data-nosnippet>644</a>            ensure_registration_rows_for_eligible_completions(tx.as_mut(), <span class="kw-2">&amp;</span>scope, <span class="number">1</span>)
-<a href=#645 id=645 data-nosnippet>645</a>                .<span class="kw">await
-<a href=#646 id=646 data-nosnippet>646</a>                </span>.unwrap(),
-<a href=#647 id=647 data-nosnippet>647</a>            <span class="number">1
-<a href=#648 id=648 data-nosnippet>648</a>        </span>);
-<a href=#649 id=649 data-nosnippet>649</a>        <span class="macro">assert_eq!</span>(
-<a href=#650 id=650 data-nosnippet>650</a>            ensure_registration_rows_for_eligible_completions(tx.as_mut(), <span class="kw-2">&amp;</span>scope, <span class="number">1</span>)
-<a href=#651 id=651 data-nosnippet>651</a>                .<span class="kw">await
-<a href=#652 id=652 data-nosnippet>652</a>                </span>.unwrap(),
-<a href=#653 id=653 data-nosnippet>653</a>            <span class="number">1
-<a href=#654 id=654 data-nosnippet>654</a>        </span>);
-<a href=#655 id=655 data-nosnippet>655</a>    }
-<a href=#656 id=656 data-nosnippet>656</a>}
+<a href=#605 id=605 data-nosnippet>605</a>            ensure_registration_rows_for_eligible_completions(tx.as_mut(), <span class="kw-2">&amp;</span>scope, <span class="number">1</span>)
+<a href=#606 id=606 data-nosnippet>606</a>                .<span class="kw">await
+<a href=#607 id=607 data-nosnippet>607</a>                </span>.unwrap(),
+<a href=#608 id=608 data-nosnippet>608</a>            <span class="number">1
+<a href=#609 id=609 data-nosnippet>609</a>        </span>);
+<a href=#610 id=610 data-nosnippet>610</a>        <span class="macro">assert_eq!</span>(
+<a href=#611 id=611 data-nosnippet>611</a>            ensure_registration_rows_for_eligible_completions(tx.as_mut(), <span class="kw-2">&amp;</span>scope, <span class="number">1</span>)
+<a href=#612 id=612 data-nosnippet>612</a>                .<span class="kw">await
+<a href=#613 id=613 data-nosnippet>613</a>                </span>.unwrap(),
+<a href=#614 id=614 data-nosnippet>614</a>            <span class="number">1
+<a href=#615 id=615 data-nosnippet>615</a>        </span>);
+<a href=#616 id=616 data-nosnippet>616</a>    }
+<a href=#617 id=617 data-nosnippet>617</a>}
 </code></pre></div></section></main></body></html>
