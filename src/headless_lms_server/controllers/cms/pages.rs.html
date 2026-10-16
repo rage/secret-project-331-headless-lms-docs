@@ -138,120 +138,127 @@
 <a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::Edit, <span class="prelude-val">Some</span>(user.id), Res::Page(<span class="kw-2">*</span>page_id)).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#139 id=139 data-nosnippet>139</a>
 <a href=#140 id=140 data-nosnippet>140</a>    <span class="kw">let </span>cms_page_update = payload.<span class="number">0</span>;
-<a href=#141 id=141 data-nosnippet>141</a>    <span class="kw">let </span>course_or_exam_id = models::pages::get_course_and_exam_id(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>page_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#142 id=142 data-nosnippet>142</a>    <span class="kw">let </span>is_exam_page = <span class="macro">matches!</span>(course_or_exam_id, CourseOrExamId::Exam(<span class="kw">_</span>));
-<a href=#143 id=143 data-nosnippet>143</a>    <span class="kw">let </span>(expected_course_id, expected_exam_id) = <span class="kw">match </span>course_or_exam_id {
-<a href=#144 id=144 data-nosnippet>144</a>        CourseOrExamId::Course(course_id) =&gt; (<span class="prelude-val">Some</span>(course_id), <span class="prelude-val">None</span>),
-<a href=#145 id=145 data-nosnippet>145</a>        CourseOrExamId::Exam(exam_id) =&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(exam_id)),
-<a href=#146 id=146 data-nosnippet>146</a>    };
-<a href=#147 id=147 data-nosnippet>147</a>    <span class="kw">let </span>saved = models::pages::update_by_id_in_parent_context(
-<a href=#148 id=148 data-nosnippet>148</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#149 id=149 data-nosnippet>149</a>        PageUpdateArgs {
-<a href=#150 id=150 data-nosnippet>150</a>            page_id: <span class="kw-2">*</span>page_id,
-<a href=#151 id=151 data-nosnippet>151</a>            author: user.id,
-<a href=#152 id=152 data-nosnippet>152</a>            cms_page_update,
-<a href=#153 id=153 data-nosnippet>153</a>            retain_ids: <span class="bool-val">false</span>,
-<a href=#154 id=154 data-nosnippet>154</a>            history_change_reason: HistoryChangeReason::PageSaved,
-<a href=#155 id=155 data-nosnippet>155</a>            is_exam_page,
-<a href=#156 id=156 data-nosnippet>156</a>        },
-<a href=#157 id=157 data-nosnippet>157</a>        expected_course_id,
-<a href=#158 id=158 data-nosnippet>158</a>        expected_exam_id,
-<a href=#159 id=159 data-nosnippet>159</a>        models_requests::make_spec_fetcher(
-<a href=#160 id=160 data-nosnippet>160</a>            app_conf.base_url.clone(),
-<a href=#161 id=161 data-nosnippet>161</a>            request_id.<span class="number">0</span>,
-<a href=#162 id=162 data-nosnippet>162</a>            jwt_key.into_inner(),
-<a href=#163 id=163 data-nosnippet>163</a>        ),
-<a href=#164 id=164 data-nosnippet>164</a>        models_requests::fetch_service_info,
-<a href=#165 id=165 data-nosnippet>165</a>    )
-<a href=#166 id=166 data-nosnippet>166</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#167 id=167 data-nosnippet>167</a>    token.authorized_ok(web::Json(saved))
-<a href=#168 id=168 data-nosnippet>168</a>}
-<a href=#169 id=169 data-nosnippet>169</a>
-<a href=#170 id=170 data-nosnippet>170</a><span class="doccomment">/**
-<a href=#171 id=171 data-nosnippet>171</a>POST `/api/v0/cms/pages/:page_id/exercises-with-submissions` - Given a set of exercise ids, returns
-<a href=#172 id=172 data-nosnippet>172</a>the subset that has at least one existing submission. Used by the editor to warn the teacher before
-<a href=#173 id=173 data-nosnippet>173</a>saving a page edit that would remove one of these exercises, since that soft-deletes it and orphans
-<a href=#174 id=174 data-nosnippet>174</a>its submissions.
-<a href=#175 id=175 data-nosnippet>175</a>*/
-<a href=#176 id=176 data-nosnippet>176</a></span><span class="attr">#[instrument(skip(pool))]
-<a href=#177 id=177 data-nosnippet>177</a>#[utoipa::path(
-<a href=#178 id=178 data-nosnippet>178</a>    post,
-<a href=#179 id=179 data-nosnippet>179</a>    path = <span class="string">"/{page_id}/exercises-with-submissions"</span>,
-<a href=#180 id=180 data-nosnippet>180</a>    operation_id = <span class="string">"getExercisesWithSubmissions"</span>,
-<a href=#181 id=181 data-nosnippet>181</a>    tag = <span class="string">"cms_pages"</span>,
-<a href=#182 id=182 data-nosnippet>182</a>    params(
-<a href=#183 id=183 data-nosnippet>183</a>        (<span class="string">"page_id" </span>= Uuid, Path, description = <span class="string">"Page id"</span>)
-<a href=#184 id=184 data-nosnippet>184</a>    ),
-<a href=#185 id=185 data-nosnippet>185</a>    request_body = Vec&lt;Uuid&gt;,
-<a href=#186 id=186 data-nosnippet>186</a>    responses(
-<a href=#187 id=187 data-nosnippet>187</a>        (status = <span class="number">200</span>, description = <span class="string">"Exercise ids, among the given ones, that have submissions"</span>, body = Vec&lt;Uuid&gt;)
-<a href=#188 id=188 data-nosnippet>188</a>    )
-<a href=#189 id=189 data-nosnippet>189</a>)]
-<a href=#190 id=190 data-nosnippet>190</a></span><span class="kw">async fn </span>get_exercises_with_submissions(
-<a href=#191 id=191 data-nosnippet>191</a>    exercise_ids: web::Json&lt;Vec&lt;Uuid&gt;&gt;,
-<a href=#192 id=192 data-nosnippet>192</a>    page_id: web::Path&lt;Uuid&gt;,
-<a href=#193 id=193 data-nosnippet>193</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#194 id=194 data-nosnippet>194</a>    user: AuthUser,
-<a href=#195 id=195 data-nosnippet>195</a>) -&gt; ControllerResult&lt;web::Json&lt;Vec&lt;Uuid&gt;&gt;&gt; {
-<a href=#196 id=196 data-nosnippet>196</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#197 id=197 data-nosnippet>197</a>    <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::Edit, <span class="prelude-val">Some</span>(user.id), Res::Page(<span class="kw-2">*</span>page_id)).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#198 id=198 data-nosnippet>198</a>
-<a href=#199 id=199 data-nosnippet>199</a>    <span class="kw">let </span>exercise_ids_with_submissions =
-<a href=#200 id=200 data-nosnippet>200</a>        models::exercise_slide_submissions::get_exercise_ids_with_any_submissions(
-<a href=#201 id=201 data-nosnippet>201</a>            <span class="kw-2">&amp;mut </span>conn,
-<a href=#202 id=202 data-nosnippet>202</a>            <span class="kw-2">*</span>page_id,
-<a href=#203 id=203 data-nosnippet>203</a>            <span class="kw-2">&amp;</span>exercise_ids.<span class="number">0</span>,
-<a href=#204 id=204 data-nosnippet>204</a>        )
-<a href=#205 id=205 data-nosnippet>205</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#206 id=206 data-nosnippet>206</a>
-<a href=#207 id=207 data-nosnippet>207</a>    token.authorized_ok(web::Json(exercise_ids_with_submissions))
-<a href=#208 id=208 data-nosnippet>208</a>}
-<a href=#209 id=209 data-nosnippet>209</a>
-<a href=#210 id=210 data-nosnippet>210</a><span class="doccomment">/**
-<a href=#211 id=211 data-nosnippet>211</a>GET /api/v0/cms/pages/:page_id/page-navigation - tells what's the next page, previous page, and the chapter front page given a page id.
-<a href=#212 id=212 data-nosnippet>212</a>*/
-<a href=#213 id=213 data-nosnippet>213</a></span><span class="attr">#[instrument(skip(pool))]
-<a href=#214 id=214 data-nosnippet>214</a>#[utoipa::path(
-<a href=#215 id=215 data-nosnippet>215</a>    get,
-<a href=#216 id=216 data-nosnippet>216</a>    path = <span class="string">"/{page_id}/page-navigation"</span>,
-<a href=#217 id=217 data-nosnippet>217</a>    operation_id = <span class="string">"getCmsPageNavigation"</span>,
-<a href=#218 id=218 data-nosnippet>218</a>    tag = <span class="string">"cms_pages"</span>,
-<a href=#219 id=219 data-nosnippet>219</a>    params(
-<a href=#220 id=220 data-nosnippet>220</a>        (<span class="string">"page_id" </span>= Uuid, Path, description = <span class="string">"Page id"</span>)
-<a href=#221 id=221 data-nosnippet>221</a>    ),
-<a href=#222 id=222 data-nosnippet>222</a>    responses(
-<a href=#223 id=223 data-nosnippet>223</a>        (status = <span class="number">200</span>, description = <span class="string">"Page navigation"</span>, body = PageNavigationInformation)
-<a href=#224 id=224 data-nosnippet>224</a>    )
-<a href=#225 id=225 data-nosnippet>225</a>)]
-<a href=#226 id=226 data-nosnippet>226</a></span><span class="kw">async fn </span>get_page_navigation(
-<a href=#227 id=227 data-nosnippet>227</a>    page_id: web::Path&lt;Uuid&gt;,
-<a href=#228 id=228 data-nosnippet>228</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#229 id=229 data-nosnippet>229</a>) -&gt; ControllerResult&lt;web::Json&lt;PageNavigationInformation&gt;&gt; {
-<a href=#230 id=230 data-nosnippet>230</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#231 id=231 data-nosnippet>231</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#232 id=232 data-nosnippet>232</a>    <span class="kw">let </span>res =
-<a href=#233 id=233 data-nosnippet>233</a>        models::pages::get_page_navigation_data(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>page_id, PageVisibility::Any).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#234 id=234 data-nosnippet>234</a>
-<a href=#235 id=235 data-nosnippet>235</a>    token.authorized_ok(web::Json(res))
-<a href=#236 id=236 data-nosnippet>236</a>}
-<a href=#237 id=237 data-nosnippet>237</a><span class="doccomment">/**
-<a href=#238 id=238 data-nosnippet>238</a>Add a route for each controller in this module.
-<a href=#239 id=239 data-nosnippet>239</a>
-<a href=#240 id=240 data-nosnippet>240</a>The name starts with an underline in order to appear before other functions in the module documentation.
+<a href=#141 id=141 data-nosnippet>141</a>    domain::authorization::ensure_user_can_add_exercise_tasks(
+<a href=#142 id=142 data-nosnippet>142</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#143 id=143 data-nosnippet>143</a>        user.id,
+<a href=#144 id=144 data-nosnippet>144</a>        <span class="prelude-val">Some</span>(<span class="kw-2">*</span>page_id),
+<a href=#145 id=145 data-nosnippet>145</a>        <span class="kw-2">&amp;</span>cms_page_update.exercise_tasks,
+<a href=#146 id=146 data-nosnippet>146</a>    )
+<a href=#147 id=147 data-nosnippet>147</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="kw">let </span>course_or_exam_id = models::pages::get_course_and_exam_id(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>page_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">let </span>is_exam_page = <span class="macro">matches!</span>(course_or_exam_id, CourseOrExamId::Exam(<span class="kw">_</span>));
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="kw">let </span>(expected_course_id, expected_exam_id) = <span class="kw">match </span>course_or_exam_id {
+<a href=#151 id=151 data-nosnippet>151</a>        CourseOrExamId::Course(course_id) =&gt; (<span class="prelude-val">Some</span>(course_id), <span class="prelude-val">None</span>),
+<a href=#152 id=152 data-nosnippet>152</a>        CourseOrExamId::Exam(exam_id) =&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(exam_id)),
+<a href=#153 id=153 data-nosnippet>153</a>    };
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">let </span>saved = models::pages::update_by_id_in_parent_context(
+<a href=#155 id=155 data-nosnippet>155</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#156 id=156 data-nosnippet>156</a>        PageUpdateArgs {
+<a href=#157 id=157 data-nosnippet>157</a>            page_id: <span class="kw-2">*</span>page_id,
+<a href=#158 id=158 data-nosnippet>158</a>            author: user.id,
+<a href=#159 id=159 data-nosnippet>159</a>            cms_page_update,
+<a href=#160 id=160 data-nosnippet>160</a>            retain_ids: <span class="bool-val">false</span>,
+<a href=#161 id=161 data-nosnippet>161</a>            history_change_reason: HistoryChangeReason::PageSaved,
+<a href=#162 id=162 data-nosnippet>162</a>            is_exam_page,
+<a href=#163 id=163 data-nosnippet>163</a>        },
+<a href=#164 id=164 data-nosnippet>164</a>        expected_course_id,
+<a href=#165 id=165 data-nosnippet>165</a>        expected_exam_id,
+<a href=#166 id=166 data-nosnippet>166</a>        models_requests::make_spec_fetcher(
+<a href=#167 id=167 data-nosnippet>167</a>            app_conf.base_url.clone(),
+<a href=#168 id=168 data-nosnippet>168</a>            request_id.<span class="number">0</span>,
+<a href=#169 id=169 data-nosnippet>169</a>            jwt_key.into_inner(),
+<a href=#170 id=170 data-nosnippet>170</a>        ),
+<a href=#171 id=171 data-nosnippet>171</a>        models_requests::fetch_service_info,
+<a href=#172 id=172 data-nosnippet>172</a>    )
+<a href=#173 id=173 data-nosnippet>173</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#174 id=174 data-nosnippet>174</a>    token.authorized_ok(web::Json(saved))
+<a href=#175 id=175 data-nosnippet>175</a>}
+<a href=#176 id=176 data-nosnippet>176</a>
+<a href=#177 id=177 data-nosnippet>177</a><span class="doccomment">/**
+<a href=#178 id=178 data-nosnippet>178</a>POST `/api/v0/cms/pages/:page_id/exercises-with-submissions` - Given a set of exercise ids, returns
+<a href=#179 id=179 data-nosnippet>179</a>the subset that has at least one existing submission. Used by the editor to warn the teacher before
+<a href=#180 id=180 data-nosnippet>180</a>saving a page edit that would remove one of these exercises, since that soft-deletes it and orphans
+<a href=#181 id=181 data-nosnippet>181</a>its submissions.
+<a href=#182 id=182 data-nosnippet>182</a>*/
+<a href=#183 id=183 data-nosnippet>183</a></span><span class="attr">#[instrument(skip(pool))]
+<a href=#184 id=184 data-nosnippet>184</a>#[utoipa::path(
+<a href=#185 id=185 data-nosnippet>185</a>    post,
+<a href=#186 id=186 data-nosnippet>186</a>    path = <span class="string">"/{page_id}/exercises-with-submissions"</span>,
+<a href=#187 id=187 data-nosnippet>187</a>    operation_id = <span class="string">"getExercisesWithSubmissions"</span>,
+<a href=#188 id=188 data-nosnippet>188</a>    tag = <span class="string">"cms_pages"</span>,
+<a href=#189 id=189 data-nosnippet>189</a>    params(
+<a href=#190 id=190 data-nosnippet>190</a>        (<span class="string">"page_id" </span>= Uuid, Path, description = <span class="string">"Page id"</span>)
+<a href=#191 id=191 data-nosnippet>191</a>    ),
+<a href=#192 id=192 data-nosnippet>192</a>    request_body = Vec&lt;Uuid&gt;,
+<a href=#193 id=193 data-nosnippet>193</a>    responses(
+<a href=#194 id=194 data-nosnippet>194</a>        (status = <span class="number">200</span>, description = <span class="string">"Exercise ids, among the given ones, that have submissions"</span>, body = Vec&lt;Uuid&gt;)
+<a href=#195 id=195 data-nosnippet>195</a>    )
+<a href=#196 id=196 data-nosnippet>196</a>)]
+<a href=#197 id=197 data-nosnippet>197</a></span><span class="kw">async fn </span>get_exercises_with_submissions(
+<a href=#198 id=198 data-nosnippet>198</a>    exercise_ids: web::Json&lt;Vec&lt;Uuid&gt;&gt;,
+<a href=#199 id=199 data-nosnippet>199</a>    page_id: web::Path&lt;Uuid&gt;,
+<a href=#200 id=200 data-nosnippet>200</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#201 id=201 data-nosnippet>201</a>    user: AuthUser,
+<a href=#202 id=202 data-nosnippet>202</a>) -&gt; ControllerResult&lt;web::Json&lt;Vec&lt;Uuid&gt;&gt;&gt; {
+<a href=#203 id=203 data-nosnippet>203</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#204 id=204 data-nosnippet>204</a>    <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::Edit, <span class="prelude-val">Some</span>(user.id), Res::Page(<span class="kw-2">*</span>page_id)).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#205 id=205 data-nosnippet>205</a>
+<a href=#206 id=206 data-nosnippet>206</a>    <span class="kw">let </span>exercise_ids_with_submissions =
+<a href=#207 id=207 data-nosnippet>207</a>        models::exercise_slide_submissions::get_exercise_ids_with_any_submissions(
+<a href=#208 id=208 data-nosnippet>208</a>            <span class="kw-2">&amp;mut </span>conn,
+<a href=#209 id=209 data-nosnippet>209</a>            <span class="kw-2">*</span>page_id,
+<a href=#210 id=210 data-nosnippet>210</a>            <span class="kw-2">&amp;</span>exercise_ids.<span class="number">0</span>,
+<a href=#211 id=211 data-nosnippet>211</a>        )
+<a href=#212 id=212 data-nosnippet>212</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#213 id=213 data-nosnippet>213</a>
+<a href=#214 id=214 data-nosnippet>214</a>    token.authorized_ok(web::Json(exercise_ids_with_submissions))
+<a href=#215 id=215 data-nosnippet>215</a>}
+<a href=#216 id=216 data-nosnippet>216</a>
+<a href=#217 id=217 data-nosnippet>217</a><span class="doccomment">/**
+<a href=#218 id=218 data-nosnippet>218</a>GET /api/v0/cms/pages/:page_id/page-navigation - tells what's the next page, previous page, and the chapter front page given a page id.
+<a href=#219 id=219 data-nosnippet>219</a>*/
+<a href=#220 id=220 data-nosnippet>220</a></span><span class="attr">#[instrument(skip(pool))]
+<a href=#221 id=221 data-nosnippet>221</a>#[utoipa::path(
+<a href=#222 id=222 data-nosnippet>222</a>    get,
+<a href=#223 id=223 data-nosnippet>223</a>    path = <span class="string">"/{page_id}/page-navigation"</span>,
+<a href=#224 id=224 data-nosnippet>224</a>    operation_id = <span class="string">"getCmsPageNavigation"</span>,
+<a href=#225 id=225 data-nosnippet>225</a>    tag = <span class="string">"cms_pages"</span>,
+<a href=#226 id=226 data-nosnippet>226</a>    params(
+<a href=#227 id=227 data-nosnippet>227</a>        (<span class="string">"page_id" </span>= Uuid, Path, description = <span class="string">"Page id"</span>)
+<a href=#228 id=228 data-nosnippet>228</a>    ),
+<a href=#229 id=229 data-nosnippet>229</a>    responses(
+<a href=#230 id=230 data-nosnippet>230</a>        (status = <span class="number">200</span>, description = <span class="string">"Page navigation"</span>, body = PageNavigationInformation)
+<a href=#231 id=231 data-nosnippet>231</a>    )
+<a href=#232 id=232 data-nosnippet>232</a>)]
+<a href=#233 id=233 data-nosnippet>233</a></span><span class="kw">async fn </span>get_page_navigation(
+<a href=#234 id=234 data-nosnippet>234</a>    page_id: web::Path&lt;Uuid&gt;,
+<a href=#235 id=235 data-nosnippet>235</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#236 id=236 data-nosnippet>236</a>) -&gt; ControllerResult&lt;web::Json&lt;PageNavigationInformation&gt;&gt; {
+<a href=#237 id=237 data-nosnippet>237</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#238 id=238 data-nosnippet>238</a>    <span class="kw">let </span>token = skip_authorize();
+<a href=#239 id=239 data-nosnippet>239</a>    <span class="kw">let </span>res =
+<a href=#240 id=240 data-nosnippet>240</a>        models::pages::get_page_navigation_data(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>page_id, PageVisibility::Any).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#241 id=241 data-nosnippet>241</a>
-<a href=#242 id=242 data-nosnippet>242</a>We add the routes by calling the route method instead of using the route annotations because this method preserves the function signatures for documentation.
-<a href=#243 id=243 data-nosnippet>243</a>*/
-<a href=#244 id=244 data-nosnippet>244</a></span><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#245 id=245 data-nosnippet>245</a>    cfg.route(<span class="string">"/{page_id}"</span>, web::get().to(get_page))
-<a href=#246 id=246 data-nosnippet>246</a>        .route(<span class="string">"/{page_id}/info"</span>, web::get().to(get_page_info))
-<a href=#247 id=247 data-nosnippet>247</a>        .route(
-<a href=#248 id=248 data-nosnippet>248</a>            <span class="string">"/{page_id}/page-navigation"</span>,
-<a href=#249 id=249 data-nosnippet>249</a>            web::get().to(get_page_navigation),
-<a href=#250 id=250 data-nosnippet>250</a>        )
-<a href=#251 id=251 data-nosnippet>251</a>        .route(<span class="string">"/{page_id}"</span>, web::put().to(update_page))
-<a href=#252 id=252 data-nosnippet>252</a>        .route(
-<a href=#253 id=253 data-nosnippet>253</a>            <span class="string">"/{page_id}/exercises-with-submissions"</span>,
-<a href=#254 id=254 data-nosnippet>254</a>            web::post().to(get_exercises_with_submissions),
-<a href=#255 id=255 data-nosnippet>255</a>        );
-<a href=#256 id=256 data-nosnippet>256</a>}
+<a href=#242 id=242 data-nosnippet>242</a>    token.authorized_ok(web::Json(res))
+<a href=#243 id=243 data-nosnippet>243</a>}
+<a href=#244 id=244 data-nosnippet>244</a><span class="doccomment">/**
+<a href=#245 id=245 data-nosnippet>245</a>Add a route for each controller in this module.
+<a href=#246 id=246 data-nosnippet>246</a>
+<a href=#247 id=247 data-nosnippet>247</a>The name starts with an underline in order to appear before other functions in the module documentation.
+<a href=#248 id=248 data-nosnippet>248</a>
+<a href=#249 id=249 data-nosnippet>249</a>We add the routes by calling the route method instead of using the route annotations because this method preserves the function signatures for documentation.
+<a href=#250 id=250 data-nosnippet>250</a>*/
+<a href=#251 id=251 data-nosnippet>251</a></span><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#252 id=252 data-nosnippet>252</a>    cfg.route(<span class="string">"/{page_id}"</span>, web::get().to(get_page))
+<a href=#253 id=253 data-nosnippet>253</a>        .route(<span class="string">"/{page_id}/info"</span>, web::get().to(get_page_info))
+<a href=#254 id=254 data-nosnippet>254</a>        .route(
+<a href=#255 id=255 data-nosnippet>255</a>            <span class="string">"/{page_id}/page-navigation"</span>,
+<a href=#256 id=256 data-nosnippet>256</a>            web::get().to(get_page_navigation),
+<a href=#257 id=257 data-nosnippet>257</a>        )
+<a href=#258 id=258 data-nosnippet>258</a>        .route(<span class="string">"/{page_id}"</span>, web::put().to(update_page))
+<a href=#259 id=259 data-nosnippet>259</a>        .route(
+<a href=#260 id=260 data-nosnippet>260</a>            <span class="string">"/{page_id}/exercises-with-submissions"</span>,
+<a href=#261 id=261 data-nosnippet>261</a>            web::post().to(get_exercises_with_submissions),
+<a href=#262 id=262 data-nosnippet>262</a>        );
+<a href=#263 id=263 data-nosnippet>263</a>}
 </code></pre></div></section></main></body></html>
