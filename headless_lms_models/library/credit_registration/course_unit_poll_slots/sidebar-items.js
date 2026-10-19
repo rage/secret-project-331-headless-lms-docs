@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CATCH_UP_SLOT","MORNING_SLOT","SLOT_SPREAD"],"fn":["next_course_unit_polls","next_slots"]};
