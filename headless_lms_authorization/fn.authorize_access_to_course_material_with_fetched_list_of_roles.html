@@ -2,7 +2,7 @@
     conn: &amp;mut PgConnection,
     user_id: <a class="enum" href="https://doc.rust-lang.org/1.96.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="https://docs.rs/uuid/1.26.0/uuid/struct.Uuid.html" title="struct uuid::Uuid">Uuid</a>&gt;,
     course_id: <a class="struct" href="https://docs.rs/uuid/1.26.0/uuid/struct.Uuid.html" title="struct uuid::Uuid">Uuid</a>,
-    user_roles: &amp;[Role],
+    user_roles: &amp;[<a class="struct" href="../headless_lms_models/roles/struct.Role.html" title="struct headless_lms_models::roles::Role">Role</a>],
 ) -&gt; <a class="type" href="error/type.AuthorizationResult.html" title="type headless_lms_authorization::error::AuthorizationResult">AuthorizationResult</a>&lt;<a class="struct" href="struct.AuthorizationToken.html" title="struct headless_lms_authorization::AuthorizationToken">AuthorizationToken</a>&gt;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Same as <a href="fn.authorize_access_to_course_material.html" title="fn headless_lms_authorization::authorize_access_to_course_material">authorize_access_to_course_material</a>, but takes already-fetched roles instead of
 querying for them.</p>
 </div></details></section></div></main></body></html>

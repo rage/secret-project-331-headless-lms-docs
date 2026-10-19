@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Resemblance"],"fn":["align","best_match","folded","levenshtein","normalized","resemblance","words"],"struct":["Match","NameReplacement"]};
