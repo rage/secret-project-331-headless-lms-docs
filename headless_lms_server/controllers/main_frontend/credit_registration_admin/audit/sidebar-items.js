@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","list_credit_registration_admin_actions","to_action_row"],"struct":["CreditRegistrationAdminActionRow","ListAdminActionsQuery"]};
+window.SIDEBAR_ITEMS = {"constant":["EARLIER_REASON_LIMIT"],"fn":["_add_routes","get_credit_registration_earlier_reasons","list_credit_registration_admin_actions","to_action_row"],"struct":["CreditRegistrationAdminActionRow","EarlierReasonsQuery","ListAdminActionsQuery"]};

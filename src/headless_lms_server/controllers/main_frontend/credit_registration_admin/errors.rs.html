@@ -2,624 +2,715 @@
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span>headless_lms_base::config::ApplicationConfiguration;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>headless_lms_models::credit_registration_admin_actions::{
-<a href=#5 id=5 data-nosnippet>5</a>    CreditRegistrationAdminAction, CreditRegistrationAdminActionTarget, GLOBAL_ADMIN_ROLE,
-<a href=#6 id=6 data-nosnippet>6</a>    NewCreditRegistrationAdminAction,
+<a href=#5 id=5 data-nosnippet>5</a>    <span class="self">self</span>, CreditRegistrationAdminAction, CreditRegistrationAdminActionTarget,
+<a href=#6 id=6 data-nosnippet>6</a>    CreditRegistrationNote, GLOBAL_ADMIN_ROLE, NewCreditRegistrationAdminAction,
 <a href=#7 id=7 data-nosnippet>7</a>};
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>headless_lms_models::credit_registration_enrolment_routes::CreditRegistrationEnrolmentRoute;
-<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>headless_lms_models::credit_registration_events::{
-<a href=#10 id=10 data-nosnippet>10</a>    <span class="self">self</span>, CreditRegistrationEventKind, ErrorCodeWindowCounts, NewCreditRegistrationEvent,
-<a href=#11 id=11 data-nosnippet>11</a>};
-<a href=#12 id=12 data-nosnippet>12</a><span class="kw">use </span>headless_lms_models::credit_registrations::{
-<a href=#13 id=13 data-nosnippet>13</a>    <span class="self">self</span>, AttentionDismissal, AttentionReason, AttentionRegistration, AttentionStanding,
-<a href=#14 id=14 data-nosnippet>14</a>    BlockingProblem, BlockingProblems, CreditRegistrationErrorCode, CreditRegistrationState,
-<a href=#15 id=15 data-nosnippet>15</a>    HandActionAvailability, ResubmissionStrictness, StuckThresholds,
-<a href=#16 id=16 data-nosnippet>16</a>};
-<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use </span>headless_lms_models::library::credit_registration::classification::{
-<a href=#18 id=18 data-nosnippet>18</a>    Retryability, retryability,
-<a href=#19 id=19 data-nosnippet>19</a>};
-<a href=#20 id=20 data-nosnippet>20</a><span class="kw">use </span>headless_lms_models::library::credit_registration::timeline::{
-<a href=#21 id=21 data-nosnippet>21</a>    Engagement, TimelinePhase, TimelineStep, WaitsOn,
-<a href=#22 id=22 data-nosnippet>22</a>};
-<a href=#23 id=23 data-nosnippet>23</a><span class="kw">use </span>headless_lms_models::suotar_api_calls::SuotarEndpoint;
-<a href=#24 id=24 data-nosnippet>24</a><span class="kw">use </span>std::collections::{BTreeMap, BTreeSet};
-<a href=#25 id=25 data-nosnippet>25</a><span class="kw">use </span>utoipa::ToSchema;
-<a href=#26 id=26 data-nosnippet>26</a>
-<a href=#27 id=27 data-nosnippet>27</a><span class="kw">use </span><span class="kw">crate</span>::domain::credit_registration::health::stuck_thresholds;
-<a href=#28 id=28 data-nosnippet>28</a><span class="kw">use </span><span class="kw">crate</span>::prelude::<span class="kw-2">*</span>;
-<a href=#29 id=29 data-nosnippet>29</a><span class="kw">use </span>headless_lms_utils::secret_string::expose_option;
-<a href=#30 id=30 data-nosnippet>30</a>
-<a href=#31 id=31 data-nosnippet>31</a><span class="kw">use </span>super::{
-<a href=#32 id=32 data-nosnippet>32</a>    AdminManualLinkingEmailSend, attention_rules, authorize_credit_registration_admin,
-<a href=#33 id=33 data-nosnippet>33</a>    manual_linking_email_sends_by_registration, required_reason,
-<a href=#34 id=34 data-nosnippet>34</a>};
-<a href=#35 id=35 data-nosnippet>35</a>
-<a href=#36 id=36 data-nosnippet>36</a><span class="doccomment">/// Rows listed per section of the Needs attention tab when the caller names no limit.
-<a href=#37 id=37 data-nosnippet>37</a></span><span class="kw">const </span>ATTENTION_SECTION_SIZE: u32 = <span class="number">50</span>;
-<a href=#38 id=38 data-nosnippet>38</a><span class="kw">const </span>RECENT_DISMISSAL_DAYS: i64 = <span class="number">14</span>;
-<a href=#39 id=39 data-nosnippet>39</a><span class="kw">const </span>RECENT_DISMISSAL_LIMIT: i64 = <span class="number">200</span>;
-<a href=#40 id=40 data-nosnippet>40</a><span class="kw">const </span>DEFAULT_ERROR_WINDOW_SECS: i64 = <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60</span>;
-<a href=#41 id=41 data-nosnippet>41</a><span class="kw">const </span>MAX_ERROR_WINDOW_SECS: i64 = <span class="number">90 </span>* <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60</span>;
-<a href=#42 id=42 data-nosnippet>42</a>
-<a href=#43 id=43 data-nosnippet>43</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#44 id=44 data-nosnippet>44</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionItem {
-<a href=#45 id=45 data-nosnippet>45</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
-<a href=#46 id=46 data-nosnippet>46</a>    <span class="kw">pub </span>user_id: Uuid,
-<a href=#47 id=47 data-nosnippet>47</a>    <span class="kw">pub </span>first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#48 id=48 data-nosnippet>48</a>    <span class="kw">pub </span>last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#49 id=49 data-nosnippet>49</a>    <span class="doccomment">/// In full: this is the list support works from.
-<a href=#50 id=50 data-nosnippet>50</a>    </span><span class="kw">pub </span>email: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#51 id=51 data-nosnippet>51</a>    <span class="kw">pub </span>course_id: Uuid,
-<a href=#52 id=52 data-nosnippet>52</a>    <span class="kw">pub </span>course_name: String,
-<a href=#53 id=53 data-nosnippet>53</a>    <span class="kw">pub </span>course_module_id: Uuid,
-<a href=#54 id=54 data-nosnippet>54</a>    <span class="kw">pub </span>course_module_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#55 id=55 data-nosnippet>55</a>    <span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">pub </span>state: CreditRegistrationState,
-<a href=#57 id=57 data-nosnippet>57</a>    <span class="doccomment">/// When the row entered its state; same-state checks do not move it.
-<a href=#58 id=58 data-nosnippet>58</a>    </span><span class="kw">pub </span>state_changed_at: DateTime&lt;Utc&gt;,
-<a href=#59 id=59 data-nosnippet>59</a>    <span class="kw">pub </span>phase_started_at: DateTime&lt;Utc&gt;,
-<a href=#60 id=60 data-nosnippet>60</a>    <span class="kw">pub </span>timeline_step: TimelineStep,
-<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">pub </span>phase: TimelinePhase,
-<a href=#62 id=62 data-nosnippet>62</a>    <span class="kw">pub </span>waits_on: WaitsOn,
-<a href=#63 id=63 data-nosnippet>63</a>    <span class="doccomment">/// Only on the steps that wait on the student.
-<a href=#64 id=64 data-nosnippet>64</a>    </span><span class="kw">pub </span>engagement: <span class="prelude-ty">Option</span>&lt;Engagement&gt;,
-<a href=#65 id=65 data-nosnippet>65</a>    <span class="kw">pub </span>error_code: <span class="prelude-ty">Option</span>&lt;CreditRegistrationErrorCode&gt;,
-<a href=#66 id=66 data-nosnippet>66</a>    <span class="kw">pub </span>attempt_count: i32,
-<a href=#67 id=67 data-nosnippet>67</a>    <span class="kw">pub </span>next_attempt_at: DateTime&lt;Utc&gt;,
-<a href=#68 id=68 data-nosnippet>68</a>    <span class="kw">pub </span>student_number: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#69 id=69 data-nosnippet>69</a>    <span class="doccomment">/// Every reason that picked this row.
-<a href=#70 id=70 data-nosnippet>70</a>    </span><span class="kw">pub </span>reasons: Vec&lt;AttentionReason&gt;,
-<a href=#71 id=71 data-nosnippet>71</a>    <span class="kw">pub </span>standing: AttentionStanding,
-<a href=#72 id=72 data-nosnippet>72</a>    <span class="doccomment">/// Set exactly when `standing` is `explained_by_problem`.
-<a href=#73 id=73 data-nosnippet>73</a>    </span><span class="kw">pub </span>blocking_problem: <span class="prelude-ty">Option</span>&lt;BlockingProblem&gt;,
-<a href=#74 id=74 data-nosnippet>74</a>    <span class="doccomment">/// The student's latest "I have enrolled" press.
-<a href=#75 id=75 data-nosnippet>75</a>    </span><span class="kw">pub </span>pressed_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#76 id=76 data-nosnippet>76</a>    <span class="kw">pub </span>enrolment_route: <span class="prelude-ty">Option</span>&lt;CreditRegistrationEnrolmentRoute&gt;,
-<a href=#77 id=77 data-nosnippet>77</a>    <span class="doccomment">/// When the code's latest enrolment list fetch that could send a linking email started.
-<a href=#78 id=78 data-nosnippet>78</a>    </span><span class="kw">pub </span>last_mailing_fetch_started_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#79 id=79 data-nosnippet>79</a>    <span class="kw">pub </span>is_enrolment_list_empty: bool,
-<a href=#80 id=80 data-nosnippet>80</a>    <span class="doccomment">/// The pipeline's own flag; a fact about the row, separate from any dismissal.
-<a href=#81 id=81 data-nosnippet>81</a>    </span><span class="kw">pub </span>needs_admin_attention: bool,
-<a href=#82 id=82 data-nosnippet>82</a>    <span class="doccomment">/// What the bulk hand transition would allow on this row.
-<a href=#83 id=83 data-nosnippet>83</a>    </span><span class="kw">pub </span>hand_actions: HandActionAvailability,
-<a href=#84 id=84 data-nosnippet>84</a>    <span class="doccomment">/// Linking emails sent by hand as a guess for this row's student, newest first.
-<a href=#85 id=85 data-nosnippet>85</a>    </span><span class="kw">pub </span>manual_linking_email_sends: Vec&lt;AdminManualLinkingEmailSend&gt;,
-<a href=#86 id=86 data-nosnippet>86</a>}
-<a href=#87 id=87 data-nosnippet>87</a>
-<a href=#88 id=88 data-nosnippet>88</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#89 id=89 data-nosnippet>89</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionReasonCount {
-<a href=#90 id=90 data-nosnippet>90</a>    <span class="kw">pub </span>reason: AttentionReason,
-<a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">pub </span>count: i64,
-<a href=#92 id=92 data-nosnippet>92</a>}
-<a href=#93 id=93 data-nosnippet>93</a>
-<a href=#94 id=94 data-nosnippet>94</a><span class="doccomment">/// One blocking problem and the rows it accounts for.
-<a href=#95 id=95 data-nosnippet>95</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#96 id=96 data-nosnippet>96</a></span><span class="kw">pub struct </span>CreditRegistrationBlockingProblemRows {
-<a href=#97 id=97 data-nosnippet>97</a>    <span class="kw">pub </span>problem: BlockingProblem,
-<a href=#98 id=98 data-nosnippet>98</a>    <span class="doccomment">/// Every row the problem accounts for, however many `items` lists.
-<a href=#99 id=99 data-nosnippet>99</a>    </span><span class="kw">pub </span>total_count: i64,
-<a href=#100 id=100 data-nosnippet>100</a>    <span class="doccomment">/// The oldest of them, at most `limit`.
-<a href=#101 id=101 data-nosnippet>101</a>    </span><span class="kw">pub </span>items: Vec&lt;CreditRegistrationAttentionItem&gt;,
-<a href=#102 id=102 data-nosnippet>102</a>}
-<a href=#103 id=103 data-nosnippet>103</a>
-<a href=#104 id=104 data-nosnippet>104</a><span class="doccomment">/// The rows of one timeline phase that need attention.
-<a href=#105 id=105 data-nosnippet>105</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#106 id=106 data-nosnippet>106</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionPhaseRows {
-<a href=#107 id=107 data-nosnippet>107</a>    <span class="kw">pub </span>phase: TimelinePhase,
-<a href=#108 id=108 data-nosnippet>108</a>    <span class="doccomment">/// Every row of the phase matching `reason`, however many `items` lists.
-<a href=#109 id=109 data-nosnippet>109</a>    </span><span class="kw">pub </span>total_count: i64,
-<a href=#110 id=110 data-nosnippet>110</a>    <span class="doccomment">/// The first of them in the requested order, at most `limit`.
-<a href=#111 id=111 data-nosnippet>111</a>    </span><span class="kw">pub </span>items: Vec&lt;CreditRegistrationAttentionItem&gt;,
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>headless_lms_models::credit_registration_events::{<span class="self">self</span>, ErrorCodeWindowCounts};
+<a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>headless_lms_models::credit_registrations::{
+<a href=#11 id=11 data-nosnippet>11</a>    <span class="self">self</span>, AttentionDismissal, AttentionReason, AttentionRegistration, AttentionStanding,
+<a href=#12 id=12 data-nosnippet>12</a>    BlockingProblem, BlockingProblems, CreditRegistrationErrorCode, CreditRegistrationState,
+<a href=#13 id=13 data-nosnippet>13</a>    HandActionAvailability, ResubmissionStrictness, StuckThresholds,
+<a href=#14 id=14 data-nosnippet>14</a>};
+<a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span>headless_lms_models::library::credit_registration::classification::{
+<a href=#16 id=16 data-nosnippet>16</a>    Retryability, retryability,
+<a href=#17 id=17 data-nosnippet>17</a>};
+<a href=#18 id=18 data-nosnippet>18</a><span class="kw">use </span>headless_lms_models::library::credit_registration::timeline::{
+<a href=#19 id=19 data-nosnippet>19</a>    Engagement, TimelinePhase, TimelineStep, WaitsOn,
+<a href=#20 id=20 data-nosnippet>20</a>};
+<a href=#21 id=21 data-nosnippet>21</a><span class="kw">use </span>headless_lms_models::suotar_api_calls::SuotarEndpoint;
+<a href=#22 id=22 data-nosnippet>22</a><span class="kw">use </span>std::collections::{BTreeMap, BTreeSet, HashMap};
+<a href=#23 id=23 data-nosnippet>23</a><span class="kw">use </span>utoipa::ToSchema;
+<a href=#24 id=24 data-nosnippet>24</a>
+<a href=#25 id=25 data-nosnippet>25</a><span class="kw">use </span><span class="kw">crate</span>::domain::credit_registration::health::stuck_thresholds;
+<a href=#26 id=26 data-nosnippet>26</a><span class="kw">use </span><span class="kw">crate</span>::prelude::<span class="kw-2">*</span>;
+<a href=#27 id=27 data-nosnippet>27</a><span class="kw">use </span>headless_lms_utils::secret_string::expose_option;
+<a href=#28 id=28 data-nosnippet>28</a>
+<a href=#29 id=29 data-nosnippet>29</a><span class="kw">use </span>super::{
+<a href=#30 id=30 data-nosnippet>30</a>    AdminManualLinkingEmailSend, attention_rules, authorize_credit_registration_admin,
+<a href=#31 id=31 data-nosnippet>31</a>    insert_admin_action_event, manual_linking_email_sends_by_registration, required_reason,
+<a href=#32 id=32 data-nosnippet>32</a>};
+<a href=#33 id=33 data-nosnippet>33</a>
+<a href=#34 id=34 data-nosnippet>34</a><span class="kw">const </span>RECENT_DISMISSAL_DAYS: i64 = <span class="number">14</span>;
+<a href=#35 id=35 data-nosnippet>35</a><span class="kw">const </span>RECENT_DISMISSAL_LIMIT: i64 = <span class="number">200</span>;
+<a href=#36 id=36 data-nosnippet>36</a><span class="kw">const </span>DEFAULT_ERROR_WINDOW_SECS: i64 = <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60</span>;
+<a href=#37 id=37 data-nosnippet>37</a><span class="kw">const </span>MAX_ERROR_WINDOW_SECS: i64 = <span class="number">90 </span>* <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60</span>;
+<a href=#38 id=38 data-nosnippet>38</a>
+<a href=#39 id=39 data-nosnippet>39</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#40 id=40 data-nosnippet>40</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionItem {
+<a href=#41 id=41 data-nosnippet>41</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
+<a href=#42 id=42 data-nosnippet>42</a>    <span class="kw">pub </span>user_id: Uuid,
+<a href=#43 id=43 data-nosnippet>43</a>    <span class="kw">pub </span>first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#44 id=44 data-nosnippet>44</a>    <span class="kw">pub </span>last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#45 id=45 data-nosnippet>45</a>    <span class="doccomment">/// In full: this is the list support works from.
+<a href=#46 id=46 data-nosnippet>46</a>    </span><span class="kw">pub </span>email: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#47 id=47 data-nosnippet>47</a>    <span class="kw">pub </span>course_id: Uuid,
+<a href=#48 id=48 data-nosnippet>48</a>    <span class="kw">pub </span>course_name: String,
+<a href=#49 id=49 data-nosnippet>49</a>    <span class="kw">pub </span>course_module_id: Uuid,
+<a href=#50 id=50 data-nosnippet>50</a>    <span class="kw">pub </span>course_module_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#51 id=51 data-nosnippet>51</a>    <span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#52 id=52 data-nosnippet>52</a>    <span class="kw">pub </span>state: CreditRegistrationState,
+<a href=#53 id=53 data-nosnippet>53</a>    <span class="doccomment">/// When the row entered its state; same-state checks do not move it.
+<a href=#54 id=54 data-nosnippet>54</a>    </span><span class="kw">pub </span>state_changed_at: DateTime&lt;Utc&gt;,
+<a href=#55 id=55 data-nosnippet>55</a>    <span class="kw">pub </span>phase_started_at: DateTime&lt;Utc&gt;,
+<a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">pub </span>timeline_step: TimelineStep,
+<a href=#57 id=57 data-nosnippet>57</a>    <span class="kw">pub </span>phase: TimelinePhase,
+<a href=#58 id=58 data-nosnippet>58</a>    <span class="kw">pub </span>waits_on: WaitsOn,
+<a href=#59 id=59 data-nosnippet>59</a>    <span class="doccomment">/// Only on the steps that wait on the student.
+<a href=#60 id=60 data-nosnippet>60</a>    </span><span class="kw">pub </span>engagement: <span class="prelude-ty">Option</span>&lt;Engagement&gt;,
+<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">pub </span>error_code: <span class="prelude-ty">Option</span>&lt;CreditRegistrationErrorCode&gt;,
+<a href=#62 id=62 data-nosnippet>62</a>    <span class="kw">pub </span>attempt_count: i32,
+<a href=#63 id=63 data-nosnippet>63</a>    <span class="kw">pub </span>next_attempt_at: DateTime&lt;Utc&gt;,
+<a href=#64 id=64 data-nosnippet>64</a>    <span class="kw">pub </span>student_number: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#65 id=65 data-nosnippet>65</a>    <span class="doccomment">/// Every reason that picked this row.
+<a href=#66 id=66 data-nosnippet>66</a>    </span><span class="kw">pub </span>reasons: Vec&lt;AttentionReason&gt;,
+<a href=#67 id=67 data-nosnippet>67</a>    <span class="kw">pub </span>standing: AttentionStanding,
+<a href=#68 id=68 data-nosnippet>68</a>    <span class="doccomment">/// Set exactly when `standing` is `explained_by_problem`.
+<a href=#69 id=69 data-nosnippet>69</a>    </span><span class="kw">pub </span>blocking_problem: <span class="prelude-ty">Option</span>&lt;BlockingProblem&gt;,
+<a href=#70 id=70 data-nosnippet>70</a>    <span class="doccomment">/// The student's latest "I have enrolled" press.
+<a href=#71 id=71 data-nosnippet>71</a>    </span><span class="kw">pub </span>pressed_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">pub </span>enrolment_route: <span class="prelude-ty">Option</span>&lt;CreditRegistrationEnrolmentRoute&gt;,
+<a href=#73 id=73 data-nosnippet>73</a>    <span class="doccomment">/// When the code's latest enrolment list fetch that could send a linking email started.
+<a href=#74 id=74 data-nosnippet>74</a>    </span><span class="kw">pub </span>last_mailing_fetch_started_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">pub </span>is_enrolment_list_empty: bool,
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="doccomment">/// The pipeline's own flag; a fact about the row, separate from any dismissal.
+<a href=#77 id=77 data-nosnippet>77</a>    </span><span class="kw">pub </span>needs_admin_attention: bool,
+<a href=#78 id=78 data-nosnippet>78</a>    <span class="doccomment">/// What the bulk hand transition would allow on this row.
+<a href=#79 id=79 data-nosnippet>79</a>    </span><span class="kw">pub </span>hand_actions: HandActionAvailability,
+<a href=#80 id=80 data-nosnippet>80</a>    <span class="doccomment">/// Linking emails sent by hand as a guess for this row's student, newest first.
+<a href=#81 id=81 data-nosnippet>81</a>    </span><span class="kw">pub </span>manual_linking_email_sends: Vec&lt;AdminManualLinkingEmailSend&gt;,
+<a href=#82 id=82 data-nosnippet>82</a>    <span class="doccomment">/// Newest first.
+<a href=#83 id=83 data-nosnippet>83</a>    </span><span class="kw">pub </span>notes: Vec&lt;CreditRegistrationNote&gt;,
+<a href=#84 id=84 data-nosnippet>84</a>}
+<a href=#85 id=85 data-nosnippet>85</a>
+<a href=#86 id=86 data-nosnippet>86</a><span class="kw">impl </span>CreditRegistrationAttentionItem {
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="doccomment">/// Someone has done something about the row since it entered its phase, without taking it off
+<a href=#88 id=88 data-nosnippet>88</a>    /// the queue. An older reaction was to a problem the row may no longer have.
+<a href=#89 id=89 data-nosnippet>89</a>    </span><span class="kw">fn </span>is_reacted_to(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+<a href=#90 id=90 data-nosnippet>90</a>        <span class="self">self</span>.notes
+<a href=#91 id=91 data-nosnippet>91</a>            .iter()
+<a href=#92 id=92 data-nosnippet>92</a>            .any(|note| note.created_at &gt;= <span class="self">self</span>.phase_started_at)
+<a href=#93 id=93 data-nosnippet>93</a>            || <span class="self">self
+<a href=#94 id=94 data-nosnippet>94</a>                </span>.manual_linking_email_sends
+<a href=#95 id=95 data-nosnippet>95</a>                .iter()
+<a href=#96 id=96 data-nosnippet>96</a>                .any(|send| send.sent_at &gt;= <span class="self">self</span>.phase_started_at)
+<a href=#97 id=97 data-nosnippet>97</a>    }
+<a href=#98 id=98 data-nosnippet>98</a>}
+<a href=#99 id=99 data-nosnippet>99</a>
+<a href=#100 id=100 data-nosnippet>100</a><span class="doccomment">/// How many listed rows someone has reacted to, over the problem groups, the phases and running
+<a href=#101 id=101 data-nosnippet>101</a>/// late alike.
+<a href=#102 id=102 data-nosnippet>102</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#103 id=103 data-nosnippet>103</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionReactionCounts {
+<a href=#104 id=104 data-nosnippet>104</a>    <span class="kw">pub </span>reacted_count: i64,
+<a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">pub </span>not_reacted_count: i64,
+<a href=#106 id=106 data-nosnippet>106</a>}
+<a href=#107 id=107 data-nosnippet>107</a>
+<a href=#108 id=108 data-nosnippet>108</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#109 id=109 data-nosnippet>109</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionReasonCount {
+<a href=#110 id=110 data-nosnippet>110</a>    <span class="kw">pub </span>reason: AttentionReason,
+<a href=#111 id=111 data-nosnippet>111</a>    <span class="kw">pub </span>count: i64,
 <a href=#112 id=112 data-nosnippet>112</a>}
 <a href=#113 id=113 data-nosnippet>113</a>
-<a href=#114 id=114 data-nosnippet>114</a><span class="doccomment">/// A dismissal made recently, for the "Dismissed recently" section.
+<a href=#114 id=114 data-nosnippet>114</a><span class="doccomment">/// One blocking problem and the rows it accounts for.
 <a href=#115 id=115 data-nosnippet>115</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#116 id=116 data-nosnippet>116</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionDismissal {
-<a href=#117 id=117 data-nosnippet>117</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
-<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">pub </span>user_id: Uuid,
-<a href=#119 id=119 data-nosnippet>119</a>    <span class="kw">pub </span>first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">pub </span>last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#121 id=121 data-nosnippet>121</a>    <span class="kw">pub </span>email: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">pub </span>course_id: Uuid,
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">pub </span>course_name: String,
-<a href=#124 id=124 data-nosnippet>124</a>    <span class="kw">pub </span>dismissed_reasons: Vec&lt;AttentionReason&gt;,
-<a href=#125 id=125 data-nosnippet>125</a>    <span class="kw">pub </span>dismissed_at: DateTime&lt;Utc&gt;,
-<a href=#126 id=126 data-nosnippet>126</a>    <span class="kw">pub </span>dismissed_by_user_id: Uuid,
-<a href=#127 id=127 data-nosnippet>127</a>    <span class="kw">pub </span>dismissed_by_first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#128 id=128 data-nosnippet>128</a>    <span class="kw">pub </span>dismissed_by_last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#129 id=129 data-nosnippet>129</a>    <span class="kw">pub </span>reason: String,
-<a href=#130 id=130 data-nosnippet>130</a>}
-<a href=#131 id=131 data-nosnippet>131</a>
-<a href=#132 id=132 data-nosnippet>132</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#133 id=133 data-nosnippet>133</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionItems {
-<a href=#134 id=134 data-nosnippet>134</a>    <span class="doccomment">/// The Needs attention count, whatever this request filtered to: the tab badge, the same number
-<a href=#135 id=135 data-nosnippet>135</a>    /// `/overview` reports.
-<a href=#136 id=136 data-nosnippet>136</a>    </span><span class="kw">pub </span>total_count: i64,
-<a href=#137 id=137 data-nosnippet>137</a>    <span class="doccomment">/// Over the whole Needs attention section, so the counts stay usable as facets.
-<a href=#138 id=138 data-nosnippet>138</a>    </span><span class="kw">pub </span>counts_by_reason: Vec&lt;CreditRegistrationAttentionReasonCount&gt;,
-<a href=#139 id=139 data-nosnippet>139</a>    <span class="doccomment">/// The rows needing attention that match `reason`, one entry per timeline phase that has any,
-<a href=#140 id=140 data-nosnippet>140</a>    /// in timeline order.
-<a href=#141 id=141 data-nosnippet>141</a>    </span><span class="kw">pub </span>phases: Vec&lt;CreditRegistrationAttentionPhaseRows&gt;,
-<a href=#142 id=142 data-nosnippet>142</a>    <span class="doccomment">/// Over a timing threshold with no person-level cause, oldest first, at most `limit`. Not in
-<a href=#143 id=143 data-nosnippet>143</a>    /// the count.
-<a href=#144 id=144 data-nosnippet>144</a>    </span><span class="kw">pub </span>running_late: Vec&lt;CreditRegistrationAttentionItem&gt;,
-<a href=#145 id=145 data-nosnippet>145</a>    <span class="doccomment">/// Every running late row, however many `running_late` lists.
-<a href=#146 id=146 data-nosnippet>146</a>    </span><span class="kw">pub </span>running_late_count: i64,
-<a href=#147 id=147 data-nosnippet>147</a>    <span class="doccomment">/// Rows a blocking problem accounts for, under that problem. Not in the count.
-<a href=#148 id=148 data-nosnippet>148</a>    </span><span class="kw">pub </span>explained_by_problem: Vec&lt;CreditRegistrationBlockingProblemRows&gt;,
-<a href=#149 id=149 data-nosnippet>149</a>    <span class="doccomment">/// Dismissals of the last 14 days, newest first, whether or not the row has come back since.
-<a href=#150 id=150 data-nosnippet>150</a>    </span><span class="kw">pub </span>dismissed_recently: Vec&lt;CreditRegistrationAttentionDismissal&gt;,
-<a href=#151 id=151 data-nosnippet>151</a>}
-<a href=#152 id=152 data-nosnippet>152</a>
-<a href=#153 id=153 data-nosnippet>153</a><span class="attr">#[derive(Debug, Deserialize, ToSchema)]
-<a href=#154 id=154 data-nosnippet>154</a></span><span class="kw">pub struct </span>AdminDismissAttentionPayload {
-<a href=#155 id=155 data-nosnippet>155</a>    <span class="kw">pub </span>reason: String,
-<a href=#156 id=156 data-nosnippet>156</a>}
-<a href=#157 id=157 data-nosnippet>157</a>
-<a href=#158 id=158 data-nosnippet>158</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#159 id=159 data-nosnippet>159</a></span><span class="kw">pub struct </span>AdminDismissAttentionResult {
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="doccomment">/// The reasons the dismissal covers; a different one firing brings the row back.
-<a href=#161 id=161 data-nosnippet>161</a>    </span><span class="kw">pub </span>dismissed_reasons: Vec&lt;AttentionReason&gt;,
-<a href=#162 id=162 data-nosnippet>162</a>}
-<a href=#163 id=163 data-nosnippet>163</a>
-<a href=#164 id=164 data-nosnippet>164</a><span class="doccomment">/// One error code over the chosen window and the one before it.
-<a href=#165 id=165 data-nosnippet>165</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#166 id=166 data-nosnippet>166</a></span><span class="kw">pub struct </span>CreditRegistrationErrorCodeWindow {
-<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">pub </span>error_code: CreditRegistrationErrorCode,
-<a href=#168 id=168 data-nosnippet>168</a>    <span class="doccomment">/// What may be done about the code, which is the difference between a wait and a fix.
-<a href=#169 id=169 data-nosnippet>169</a>    </span><span class="kw">pub </span>retryability: Retryability,
-<a href=#170 id=170 data-nosnippet>170</a>    <span class="doccomment">/// Live rows carrying the code now: what the Registrations list filtered by `error_code`
-<a href=#171 id=171 data-nosnippet>171</a>    /// shows. The other counts are failure events in the window.
-<a href=#172 id=172 data-nosnippet>172</a>    </span><span class="kw">pub </span>live_count: i64,
-<a href=#173 id=173 data-nosnippet>173</a>    <span class="kw">pub </span>current_count: i64,
-<a href=#174 id=174 data-nosnippet>174</a>    <span class="kw">pub </span>previous_count: i64,
-<a href=#175 id=175 data-nosnippet>175</a>    <span class="kw">pub </span>user_count: i64,
-<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">pub </span>course_count: i64,
-<a href=#177 id=177 data-nosnippet>177</a>    <span class="kw">pub </span>first_seen_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#178 id=178 data-nosnippet>178</a>    <span class="kw">pub </span>last_seen_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#179 id=179 data-nosnippet>179</a>    <span class="kw">pub </span>endpoints: Vec&lt;SuotarEndpoint&gt;,
-<a href=#180 id=180 data-nosnippet>180</a>}
-<a href=#181 id=181 data-nosnippet>181</a>
-<a href=#182 id=182 data-nosnippet>182</a><span class="doccomment">/// The verdicts an operator needs beside the errors to rule them out. `not_improved` is not a
-<a href=#183 id=183 data-nosnippet>183</a>/// failure and is never in the error table above.
-<a href=#184 id=184 data-nosnippet>184</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#185 id=185 data-nosnippet>185</a></span><span class="kw">pub struct </span>CreditRegistrationTerminalVerdicts {
-<a href=#186 id=186 data-nosnippet>186</a>    <span class="kw">pub </span>registered_count: i64,
-<a href=#187 id=187 data-nosnippet>187</a>    <span class="kw">pub </span>duplicate_and_not_improved_count: i64,
-<a href=#188 id=188 data-nosnippet>188</a>    <span class="kw">pub </span>failed_permanent_count: i64,
-<a href=#189 id=189 data-nosnippet>189</a>    <span class="kw">pub </span>cancelled_count: i64,
-<a href=#190 id=190 data-nosnippet>190</a>    <span class="doccomment">/// The denominator of the success rate.
-<a href=#191 id=191 data-nosnippet>191</a>    </span><span class="kw">pub </span>total_count: i64,
-<a href=#192 id=192 data-nosnippet>192</a>}
-<a href=#193 id=193 data-nosnippet>193</a>
-<a href=#194 id=194 data-nosnippet>194</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
-<a href=#195 id=195 data-nosnippet>195</a></span><span class="kw">pub struct </span>CreditRegistrationErrorsByCode {
-<a href=#196 id=196 data-nosnippet>196</a>    <span class="kw">pub </span>window_secs: i64,
-<a href=#197 id=197 data-nosnippet>197</a>    <span class="kw">pub </span>codes: Vec&lt;CreditRegistrationErrorCodeWindow&gt;,
-<a href=#198 id=198 data-nosnippet>198</a>    <span class="kw">pub </span>verdicts: CreditRegistrationTerminalVerdicts,
-<a href=#199 id=199 data-nosnippet>199</a>}
-<a href=#200 id=200 data-nosnippet>200</a>
-<a href=#201 id=201 data-nosnippet>201</a><span class="attr">#[derive(Debug, Deserialize)]
-<a href=#202 id=202 data-nosnippet>202</a></span><span class="kw">pub struct </span>ErrorWindowQuery {
-<a href=#203 id=203 data-nosnippet>203</a>    window_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#204 id=204 data-nosnippet>204</a>}
-<a href=#205 id=205 data-nosnippet>205</a>
-<a href=#206 id=206 data-nosnippet>206</a><span class="doccomment">/**
-<a href=#207 id=207 data-nosnippet>207</a>GET `/api/v0/main-frontend/credit-registration-admin/thresholds` - Every number the alert rules and
-<a href=#208 id=208 data-nosnippet>208</a>the stuck detectors use.
-<a href=#209 id=209 data-nosnippet>209</a>
-<a href=#210 id=210 data-nosnippet>210</a>The same values `/overview` embeds in its health block. Separate so a tab explaining "stuck after
-<a href=#211 id=211 data-nosnippet>211</a>2 hours" can say so without reading the whole overview aggregate.
-<a href=#212 id=212 data-nosnippet>212</a>*/
-<a href=#213 id=213 data-nosnippet>213</a></span><span class="attr">#[instrument(skip(pool))]
-<a href=#214 id=214 data-nosnippet>214</a>#[utoipa::path(
-<a href=#215 id=215 data-nosnippet>215</a>    get,
-<a href=#216 id=216 data-nosnippet>216</a>    path = <span class="string">"/thresholds"</span>,
-<a href=#217 id=217 data-nosnippet>217</a>    operation_id = <span class="string">"getCreditRegistrationThresholds"</span>,
-<a href=#218 id=218 data-nosnippet>218</a>    tag = <span class="string">"credit-registration-admin"</span>,
-<a href=#219 id=219 data-nosnippet>219</a>    responses(
-<a href=#220 id=220 data-nosnippet>220</a>        (status = <span class="number">200</span>, description = <span class="string">"The thresholds every rule and detector shares"</span>, body = StuckThresholds)
-<a href=#221 id=221 data-nosnippet>221</a>    )
-<a href=#222 id=222 data-nosnippet>222</a>)]
-<a href=#223 id=223 data-nosnippet>223</a></span><span class="kw">pub async fn </span>get_credit_registration_thresholds(
-<a href=#224 id=224 data-nosnippet>224</a>    user: AuthUser,
-<a href=#225 id=225 data-nosnippet>225</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#226 id=226 data-nosnippet>226</a>) -&gt; ControllerResult&lt;web::Json&lt;StuckThresholds&gt;&gt; {
-<a href=#227 id=227 data-nosnippet>227</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#228 id=228 data-nosnippet>228</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#229 id=229 data-nosnippet>229</a>    token.authorized_ok(web::Json(stuck_thresholds()))
-<a href=#230 id=230 data-nosnippet>230</a>}
-<a href=#231 id=231 data-nosnippet>231</a>
-<a href=#232 id=232 data-nosnippet>232</a><span class="attr">#[derive(Debug, Deserialize)]
-<a href=#233 id=233 data-nosnippet>233</a></span><span class="kw">pub struct </span>AttentionQuery {
-<a href=#234 id=234 data-nosnippet>234</a>    limit: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-<a href=#235 id=235 data-nosnippet>235</a>    reason: <span class="prelude-ty">Option</span>&lt;Vec&lt;AttentionReason&gt;&gt;,
-<a href=#236 id=236 data-nosnippet>236</a>    sort: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#237 id=237 data-nosnippet>237</a>}
-<a href=#238 id=238 data-nosnippet>238</a>
-<a href=#239 id=239 data-nosnippet>239</a><span class="doccomment">/**
-<a href=#240 id=240 data-nosnippet>240</a>GET `/api/v0/main-frontend/credit-registration-admin/attention` - The Needs attention tab: the rows
-<a href=#241 id=241 data-nosnippet>241</a>that need a person by timeline phase, and the rows running late, explained by a blocking problem or
-<a href=#242 id=242 data-nosnippet>242</a>recently dismissed.
-<a href=#243 id=243 data-nosnippet>243</a>
-<a href=#244 id=244 data-nosnippet>244</a>Superseded attempts are outside every detector: acting on a replaced attempt is never right.
-<a href=#245 id=245 data-nosnippet>245</a>`total_count` is the one Needs attention count; `/overview`'s `needs_attention_count` is the same
-<a href=#246 id=246 data-nosnippet>246</a>number.
-<a href=#247 id=247 data-nosnippet>247</a>*/
-<a href=#248 id=248 data-nosnippet>248</a></span><span class="attr">#[instrument(skip(pool, app_conf))]
-<a href=#249 id=249 data-nosnippet>249</a>#[utoipa::path(
-<a href=#250 id=250 data-nosnippet>250</a>    get,
-<a href=#251 id=251 data-nosnippet>251</a>    path = <span class="string">"/attention"</span>,
-<a href=#252 id=252 data-nosnippet>252</a>    operation_id = <span class="string">"getCreditRegistrationAttentionItems"</span>,
-<a href=#253 id=253 data-nosnippet>253</a>    tag = <span class="string">"credit-registration-admin"</span>,
-<a href=#254 id=254 data-nosnippet>254</a>    params(
-<a href=#255 id=255 data-nosnippet>255</a>        (<span class="string">"limit" </span>= <span class="prelude-ty">Option</span>&lt;u32&gt;, Query, description = <span class="string">"Rows listed per section; the counts cover every row"</span>),
-<a href=#256 id=256 data-nosnippet>256</a>        (<span class="string">"reason" </span>= <span class="prelude-ty">Option</span>&lt;Vec&lt;AttentionReason&gt;&gt;, Query, description = <span class="string">"Only rows carrying one of these reasons; repeat the parameter for several"</span>),
-<a href=#257 id=257 data-nosnippet>257</a>        (<span class="string">"sort" </span>= <span class="prelude-ty">Option</span>&lt;String&gt;, Query, description = <span class="string">"time_in_phase, next_attempt or course"</span>)
-<a href=#258 id=258 data-nosnippet>258</a>    ),
-<a href=#259 id=259 data-nosnippet>259</a>    responses(
-<a href=#260 id=260 data-nosnippet>260</a>        (status = <span class="number">200</span>, description = <span class="string">"The Needs attention sections"</span>, body = CreditRegistrationAttentionItems)
-<a href=#261 id=261 data-nosnippet>261</a>    )
-<a href=#262 id=262 data-nosnippet>262</a>)]
-<a href=#263 id=263 data-nosnippet>263</a></span><span class="kw">pub async fn </span>get_credit_registration_attention_items(
-<a href=#264 id=264 data-nosnippet>264</a>    user: AuthUser,
-<a href=#265 id=265 data-nosnippet>265</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#266 id=266 data-nosnippet>266</a>    query: MultiQuery&lt;AttentionQuery&gt;,
-<a href=#267 id=267 data-nosnippet>267</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#268 id=268 data-nosnippet>268</a>) -&gt; ControllerResult&lt;web::Json&lt;CreditRegistrationAttentionItems&gt;&gt; {
-<a href=#269 id=269 data-nosnippet>269</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#270 id=270 data-nosnippet>270</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#271 id=271 data-nosnippet>271</a>
-<a href=#272 id=272 data-nosnippet>272</a>    <span class="kw">let </span>section_size =
-<a href=#273 id=273 data-nosnippet>273</a>        usize::try_from(parse_pagination(<span class="prelude-val">None</span>, query.limit, ATTENTION_SECTION_SIZE)<span class="question-mark">?</span>.limit())
-<a href=#274 id=274 data-nosnippet>274</a>            .unwrap_or(usize::MAX);
-<a href=#275 id=275 data-nosnippet>275</a>    <span class="kw">let </span>reasons: <span class="kw-2">&amp;</span>[AttentionReason] = query.reason.as_deref().unwrap_or_default();
-<a href=#276 id=276 data-nosnippet>276</a>    <span class="kw">let </span>rules = attention_rules(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>app_conf).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#277 id=277 data-nosnippet>277</a>    <span class="kw">let </span>rows = credit_registrations::get_attention_items(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>rules, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#278 id=278 data-nosnippet>278</a>    <span class="kw">let </span>course_ids: Vec&lt;Uuid&gt; = rows
-<a href=#279 id=279 data-nosnippet>279</a>        .iter()
-<a href=#280 id=280 data-nosnippet>280</a>        .map(|row| row.course_id)
-<a href=#281 id=281 data-nosnippet>281</a>        .collect::&lt;BTreeSet&lt;<span class="kw">_</span>&gt;&gt;()
-<a href=#282 id=282 data-nosnippet>282</a>        .into_iter()
-<a href=#283 id=283 data-nosnippet>283</a>        .collect();
-<a href=#284 id=284 data-nosnippet>284</a>    <span class="kw">let </span><span class="kw-2">mut </span>sends = manual_linking_email_sends_by_registration(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>course_ids).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#285 id=285 data-nosnippet>285</a>    <span class="kw">let </span>dismissed_recently = credit_registrations::get_dismissals_since(
-<a href=#286 id=286 data-nosnippet>286</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#287 id=287 data-nosnippet>287</a>        Utc::now() - chrono::Duration::days(RECENT_DISMISSAL_DAYS),
-<a href=#288 id=288 data-nosnippet>288</a>        RECENT_DISMISSAL_LIMIT,
-<a href=#289 id=289 data-nosnippet>289</a>    )
-<a href=#290 id=290 data-nosnippet>290</a>    .<span class="kw">await</span><span class="question-mark">?
-<a href=#291 id=291 data-nosnippet>291</a>    </span>.into_iter()
-<a href=#292 id=292 data-nosnippet>292</a>    .map(to_dismissal)
-<a href=#293 id=293 data-nosnippet>293</a>    .collect();
-<a href=#294 id=294 data-nosnippet>294</a>
-<a href=#295 id=295 data-nosnippet>295</a>    <span class="kw">let </span><span class="kw-2">mut </span>needing: Vec&lt;CreditRegistrationAttentionItem&gt; = Vec::new();
-<a href=#296 id=296 data-nosnippet>296</a>    <span class="kw">let </span><span class="kw-2">mut </span>running_late = Vec::new();
-<a href=#297 id=297 data-nosnippet>297</a>    <span class="kw">let </span><span class="kw-2">mut </span>explained_by_problem: Vec&lt;CreditRegistrationBlockingProblemRows&gt; = Vec::new();
-<a href=#298 id=298 data-nosnippet>298</a>    <span class="kw">for </span>item <span class="kw">in </span>rows.into_iter().map(|row| {
-<a href=#299 id=299 data-nosnippet>299</a>        <span class="kw">let </span>row_sends = sends.remove(<span class="kw-2">&amp;</span>row.id).unwrap_or_default();
-<a href=#300 id=300 data-nosnippet>300</a>        to_attention_item(row, <span class="kw-2">&amp;</span>rules.blocking, row_sends)
-<a href=#301 id=301 data-nosnippet>301</a>    }) {
-<a href=#302 id=302 data-nosnippet>302</a>        <span class="kw">match </span>item.standing {
-<a href=#303 id=303 data-nosnippet>303</a>            AttentionStanding::NeedsAttention =&gt; needing.push(item),
-<a href=#304 id=304 data-nosnippet>304</a>            AttentionStanding::RunningLate =&gt; running_late.push(item),
-<a href=#305 id=305 data-nosnippet>305</a>            AttentionStanding::ExplainedByProblem =&gt; {
-<a href=#306 id=306 data-nosnippet>306</a>                <span class="kw">let </span><span class="prelude-val">Some</span>(problem) = item.blocking_problem.clone() <span class="kw">else </span>{
-<a href=#307 id=307 data-nosnippet>307</a>                    <span class="kw">continue</span>;
-<a href=#308 id=308 data-nosnippet>308</a>                };
-<a href=#309 id=309 data-nosnippet>309</a>                <span class="kw">match </span>explained_by_problem
-<a href=#310 id=310 data-nosnippet>310</a>                    .iter_mut()
-<a href=#311 id=311 data-nosnippet>311</a>                    .find(|group| group.problem == problem)
-<a href=#312 id=312 data-nosnippet>312</a>                {
-<a href=#313 id=313 data-nosnippet>313</a>                    <span class="prelude-val">Some</span>(group) =&gt; group.items.push(item),
-<a href=#314 id=314 data-nosnippet>314</a>                    <span class="prelude-val">None </span>=&gt; explained_by_problem.push(CreditRegistrationBlockingProblemRows {
-<a href=#315 id=315 data-nosnippet>315</a>                        problem,
-<a href=#316 id=316 data-nosnippet>316</a>                        total_count: <span class="number">0</span>,
-<a href=#317 id=317 data-nosnippet>317</a>                        items: <span class="macro">vec!</span>[item],
-<a href=#318 id=318 data-nosnippet>318</a>                    }),
-<a href=#319 id=319 data-nosnippet>319</a>                }
-<a href=#320 id=320 data-nosnippet>320</a>            }
-<a href=#321 id=321 data-nosnippet>321</a>            AttentionStanding::Dismissed =&gt; {}
-<a href=#322 id=322 data-nosnippet>322</a>        }
-<a href=#323 id=323 data-nosnippet>323</a>    }
-<a href=#324 id=324 data-nosnippet>324</a>    <span class="kw">for </span>group <span class="kw">in </span><span class="kw-2">&amp;mut </span>explained_by_problem {
-<a href=#325 id=325 data-nosnippet>325</a>        group.total_count = group.items.len() <span class="kw">as </span>i64;
-<a href=#326 id=326 data-nosnippet>326</a>        group.items.truncate(section_size);
-<a href=#327 id=327 data-nosnippet>327</a>    }
-<a href=#328 id=328 data-nosnippet>328</a>    <span class="kw">let </span>running_late_count = running_late.len() <span class="kw">as </span>i64;
-<a href=#329 id=329 data-nosnippet>329</a>    running_late.truncate(section_size);
-<a href=#330 id=330 data-nosnippet>330</a>
-<a href=#331 id=331 data-nosnippet>331</a>    <span class="kw">let </span><span class="kw-2">mut </span>reason_counts: BTreeMap&lt;AttentionReason, i64&gt; = BTreeMap::new();
-<a href=#332 id=332 data-nosnippet>332</a>    <span class="kw">for </span>reason <span class="kw">in </span>needing.iter().flat_map(|item| item.reasons.iter()) {
-<a href=#333 id=333 data-nosnippet>333</a>        <span class="kw-2">*</span>reason_counts.entry(<span class="kw-2">*</span>reason).or_insert(<span class="number">0</span>) += <span class="number">1</span>;
-<a href=#334 id=334 data-nosnippet>334</a>    }
-<a href=#335 id=335 data-nosnippet>335</a>    <span class="kw">let </span>counts_by_reason = reason_counts
-<a href=#336 id=336 data-nosnippet>336</a>        .into_iter()
-<a href=#337 id=337 data-nosnippet>337</a>        .map(|(reason, count)| CreditRegistrationAttentionReasonCount { reason, count })
-<a href=#338 id=338 data-nosnippet>338</a>        .collect();
-<a href=#339 id=339 data-nosnippet>339</a>    <span class="kw">let </span>total_count = needing.len() <span class="kw">as </span>i64;
-<a href=#340 id=340 data-nosnippet>340</a>
-<a href=#341 id=341 data-nosnippet>341</a>    <span class="kw">let </span><span class="kw-2">mut </span>by_phase: BTreeMap&lt;TimelinePhase, Vec&lt;CreditRegistrationAttentionItem&gt;&gt; =
-<a href=#342 id=342 data-nosnippet>342</a>        BTreeMap::new();
-<a href=#343 id=343 data-nosnippet>343</a>    <span class="kw">for </span>item <span class="kw">in </span>needing.into_iter().filter(|item| {
-<a href=#344 id=344 data-nosnippet>344</a>        reasons.is_empty() || item.reasons.iter().any(|reason| reasons.contains(reason))
-<a href=#345 id=345 data-nosnippet>345</a>    }) {
-<a href=#346 id=346 data-nosnippet>346</a>        by_phase.entry(item.phase).or_default().push(item);
-<a href=#347 id=347 data-nosnippet>347</a>    }
-<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">let </span>phases = by_phase
-<a href=#349 id=349 data-nosnippet>349</a>        .into_iter()
-<a href=#350 id=350 data-nosnippet>350</a>        .map(|(phase, <span class="kw-2">mut </span>items)| {
-<a href=#351 id=351 data-nosnippet>351</a>            <span class="kw">match </span>query.sort.as_deref() {
-<a href=#352 id=352 data-nosnippet>352</a>                <span class="prelude-val">Some</span>(<span class="string">"next_attempt"</span>) =&gt; items.sort_by_key(|item| item.next_attempt_at),
-<a href=#353 id=353 data-nosnippet>353</a>                <span class="prelude-val">Some</span>(<span class="string">"course"</span>) =&gt; items.sort_by(|a, b| a.course_name.cmp(<span class="kw-2">&amp;</span>b.course_name)),
-<a href=#354 id=354 data-nosnippet>354</a>                <span class="kw">_ </span>=&gt; items.sort_by_key(|item| item.phase_started_at),
-<a href=#355 id=355 data-nosnippet>355</a>            }
-<a href=#356 id=356 data-nosnippet>356</a>            <span class="kw">let </span>total_count = items.len() <span class="kw">as </span>i64;
-<a href=#357 id=357 data-nosnippet>357</a>            items.truncate(section_size);
-<a href=#358 id=358 data-nosnippet>358</a>            CreditRegistrationAttentionPhaseRows {
-<a href=#359 id=359 data-nosnippet>359</a>                phase,
-<a href=#360 id=360 data-nosnippet>360</a>                total_count,
-<a href=#361 id=361 data-nosnippet>361</a>                items,
-<a href=#362 id=362 data-nosnippet>362</a>            }
-<a href=#363 id=363 data-nosnippet>363</a>        })
-<a href=#364 id=364 data-nosnippet>364</a>        .collect();
-<a href=#365 id=365 data-nosnippet>365</a>
-<a href=#366 id=366 data-nosnippet>366</a>    token.authorized_ok(web::Json(CreditRegistrationAttentionItems {
-<a href=#367 id=367 data-nosnippet>367</a>        total_count,
-<a href=#368 id=368 data-nosnippet>368</a>        counts_by_reason,
-<a href=#369 id=369 data-nosnippet>369</a>        phases,
-<a href=#370 id=370 data-nosnippet>370</a>        running_late,
-<a href=#371 id=371 data-nosnippet>371</a>        running_late_count,
-<a href=#372 id=372 data-nosnippet>372</a>        explained_by_problem,
-<a href=#373 id=373 data-nosnippet>373</a>        dismissed_recently,
-<a href=#374 id=374 data-nosnippet>374</a>    }))
-<a href=#375 id=375 data-nosnippet>375</a>}
-<a href=#376 id=376 data-nosnippet>376</a>
-<a href=#377 id=377 data-nosnippet>377</a><span class="doccomment">/**
-<a href=#378 id=378 data-nosnippet>378</a>POST `/api/v0/main-frontend/credit-registration-admin/registrations/{credit_registration_id}/dismiss-attention`
-<a href=#379 id=379 data-nosnippet>379</a>- Takes a row off the Needs attention queue.
-<a href=#380 id=380 data-nosnippet>380</a>
-<a href=#381 id=381 data-nosnippet>381</a>The dismissal covers the reasons the row carries now; it comes back only when a different one
-<a href=#382 id=382 data-nosnippet>382</a>fires. Leaves the pipeline's own flag alone.
-<a href=#383 id=383 data-nosnippet>383</a>*/
-<a href=#384 id=384 data-nosnippet>384</a></span><span class="attr">#[instrument(skip(pool, payload, app_conf))]
-<a href=#385 id=385 data-nosnippet>385</a>#[utoipa::path(
-<a href=#386 id=386 data-nosnippet>386</a>    post,
-<a href=#387 id=387 data-nosnippet>387</a>    path = <span class="string">"/registrations/{credit_registration_id}/dismiss-attention"</span>,
-<a href=#388 id=388 data-nosnippet>388</a>    operation_id = <span class="string">"adminDismissCreditRegistrationAttention"</span>,
-<a href=#389 id=389 data-nosnippet>389</a>    tag = <span class="string">"credit-registration-admin"</span>,
-<a href=#390 id=390 data-nosnippet>390</a>    params((<span class="string">"credit_registration_id" </span>= Uuid, Path, description = <span class="string">"Credit registration id"</span>)),
-<a href=#391 id=391 data-nosnippet>391</a>    request_body = AdminDismissAttentionPayload,
-<a href=#392 id=392 data-nosnippet>392</a>    responses(
-<a href=#393 id=393 data-nosnippet>393</a>        (status = <span class="number">200</span>, description = <span class="string">"The reasons dismissed"</span>, body = AdminDismissAttentionResult),
-<a href=#394 id=394 data-nosnippet>394</a>        (status = <span class="number">400</span>, description = <span class="string">"No reason given, or nothing picks the row"</span>),
-<a href=#395 id=395 data-nosnippet>395</a>    )
-<a href=#396 id=396 data-nosnippet>396</a>)]
-<a href=#397 id=397 data-nosnippet>397</a></span><span class="kw">pub async fn </span>admin_dismiss_credit_registration_attention(
-<a href=#398 id=398 data-nosnippet>398</a>    user: AuthUser,
-<a href=#399 id=399 data-nosnippet>399</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#400 id=400 data-nosnippet>400</a>    credit_registration_id: web::Path&lt;Uuid&gt;,
-<a href=#401 id=401 data-nosnippet>401</a>    payload: web::Json&lt;AdminDismissAttentionPayload&gt;,
-<a href=#402 id=402 data-nosnippet>402</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#403 id=403 data-nosnippet>403</a>) -&gt; ControllerResult&lt;web::Json&lt;AdminDismissAttentionResult&gt;&gt; {
-<a href=#404 id=404 data-nosnippet>404</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#405 id=405 data-nosnippet>405</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#406 id=406 data-nosnippet>406</a>
-<a href=#407 id=407 data-nosnippet>407</a>    <span class="kw">let </span>reason = required_reason(<span class="kw-2">&amp;</span>payload.reason)<span class="question-mark">?</span>;
-<a href=#408 id=408 data-nosnippet>408</a>    <span class="kw">let </span>id = <span class="kw-2">*</span>credit_registration_id;
-<a href=#409 id=409 data-nosnippet>409</a>    <span class="kw">let </span>rules = attention_rules(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>app_conf).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#410 id=410 data-nosnippet>410</a>    <span class="kw">let </span>reasons = credit_registrations::get_attention_items(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>rules, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[id]))
-<a href=#411 id=411 data-nosnippet>411</a>        .<span class="kw">await</span><span class="question-mark">?
-<a href=#412 id=412 data-nosnippet>412</a>        </span>.into_iter()
-<a href=#413 id=413 data-nosnippet>413</a>        .next()
-<a href=#414 id=414 data-nosnippet>414</a>        .map(|row| row.reasons)
-<a href=#415 id=415 data-nosnippet>415</a>        .unwrap_or_default();
-<a href=#416 id=416 data-nosnippet>416</a>    <span class="kw">if </span>reasons.is_empty() {
-<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">controller_err!</span>(
-<a href=#418 id=418 data-nosnippet>418</a>            BadRequest,
-<a href=#419 id=419 data-nosnippet>419</a>            <span class="string">"Nothing puts this registration on the Needs attention queue."</span>.to_string()
-<a href=#420 id=420 data-nosnippet>420</a>        ));
-<a href=#421 id=421 data-nosnippet>421</a>    }
-<a href=#422 id=422 data-nosnippet>422</a>
-<a href=#423 id=423 data-nosnippet>423</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#424 id=424 data-nosnippet>424</a>    credit_registrations::dismiss_attention(<span class="kw-2">&amp;mut </span>tx, id, <span class="kw-2">&amp;</span>reasons, user.id, reason).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#425 id=425 data-nosnippet>425</a>    models::credit_registration_events::insert(
-<a href=#426 id=426 data-nosnippet>426</a>        <span class="kw-2">&amp;mut </span>tx,
-<a href=#427 id=427 data-nosnippet>427</a>        <span class="kw-2">&amp;</span>NewCreditRegistrationEvent {
-<a href=#428 id=428 data-nosnippet>428</a>            actor_user_id: <span class="prelude-val">Some</span>(user.id),
-<a href=#429 id=429 data-nosnippet>429</a>            message: <span class="prelude-val">Some</span>(reason.to_string()),
-<a href=#430 id=430 data-nosnippet>430</a>            ..NewCreditRegistrationEvent::new(id, CreditRegistrationEventKind::AdminAction)
-<a href=#431 id=431 data-nosnippet>431</a>        },
-<a href=#432 id=432 data-nosnippet>432</a>    )
-<a href=#433 id=433 data-nosnippet>433</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#434 id=434 data-nosnippet>434</a>    models::credit_registration_admin_actions::record(
-<a href=#435 id=435 data-nosnippet>435</a>        <span class="kw-2">&amp;mut </span>tx,
-<a href=#436 id=436 data-nosnippet>436</a>        <span class="kw-2">&amp;</span>NewCreditRegistrationAdminAction {
-<a href=#437 id=437 data-nosnippet>437</a>            target_id: <span class="prelude-val">Some</span>(id),
-<a href=#438 id=438 data-nosnippet>438</a>            reason: <span class="prelude-val">Some</span>(reason.to_string()),
-<a href=#439 id=439 data-nosnippet>439</a>            details: <span class="prelude-val">Some</span>(<span class="macro">serde_json::json!</span>({ <span class="string">"attention_reasons"</span>: reasons })),
-<a href=#440 id=440 data-nosnippet>440</a>            affected_row_count: <span class="prelude-val">Some</span>(<span class="number">1</span>),
-<a href=#441 id=441 data-nosnippet>441</a>            ..NewCreditRegistrationAdminAction::new(
-<a href=#442 id=442 data-nosnippet>442</a>                CreditRegistrationAdminAction::DismissAttention,
-<a href=#443 id=443 data-nosnippet>443</a>                CreditRegistrationAdminActionTarget::CreditRegistration,
-<a href=#444 id=444 data-nosnippet>444</a>                user.id,
-<a href=#445 id=445 data-nosnippet>445</a>                GLOBAL_ADMIN_ROLE,
-<a href=#446 id=446 data-nosnippet>446</a>            )
-<a href=#447 id=447 data-nosnippet>447</a>        },
-<a href=#448 id=448 data-nosnippet>448</a>    )
-<a href=#449 id=449 data-nosnippet>449</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#450 id=450 data-nosnippet>450</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#451 id=451 data-nosnippet>451</a>
-<a href=#452 id=452 data-nosnippet>452</a>    token.authorized_ok(web::Json(AdminDismissAttentionResult {
-<a href=#453 id=453 data-nosnippet>453</a>        dismissed_reasons: reasons,
-<a href=#454 id=454 data-nosnippet>454</a>    }))
-<a href=#455 id=455 data-nosnippet>455</a>}
-<a href=#456 id=456 data-nosnippet>456</a>
-<a href=#457 id=457 data-nosnippet>457</a><span class="doccomment">/**
-<a href=#458 id=458 data-nosnippet>458</a>GET `/api/v0/main-frontend/credit-registration-admin/errors/by-code` - Error events per code over a
-<a href=#459 id=459 data-nosnippet>459</a>window and the window before it, with the terminal verdicts of the same window beside them.
+<a href=#116 id=116 data-nosnippet>116</a></span><span class="kw">pub struct </span>CreditRegistrationBlockingProblemRows {
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="kw">pub </span>problem: BlockingProblem,
+<a href=#118 id=118 data-nosnippet>118</a>    <span class="doccomment">/// Every row the problem accounts for, oldest first.
+<a href=#119 id=119 data-nosnippet>119</a>    </span><span class="kw">pub </span>items: Vec&lt;CreditRegistrationAttentionItem&gt;,
+<a href=#120 id=120 data-nosnippet>120</a>}
+<a href=#121 id=121 data-nosnippet>121</a>
+<a href=#122 id=122 data-nosnippet>122</a><span class="doccomment">/// The rows of one timeline phase that need attention.
+<a href=#123 id=123 data-nosnippet>123</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#124 id=124 data-nosnippet>124</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionPhaseRows {
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="kw">pub </span>phase: TimelinePhase,
+<a href=#126 id=126 data-nosnippet>126</a>    <span class="doccomment">/// Every row of the phase matching the filters, in the requested order.
+<a href=#127 id=127 data-nosnippet>127</a>    </span><span class="kw">pub </span>items: Vec&lt;CreditRegistrationAttentionItem&gt;,
+<a href=#128 id=128 data-nosnippet>128</a>}
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a><span class="doccomment">/// A dismissal made recently, for the "Dismissed recently" section.
+<a href=#131 id=131 data-nosnippet>131</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#132 id=132 data-nosnippet>132</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionDismissal {
+<a href=#133 id=133 data-nosnippet>133</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
+<a href=#134 id=134 data-nosnippet>134</a>    <span class="kw">pub </span>user_id: Uuid,
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">pub </span>first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="kw">pub </span>last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#137 id=137 data-nosnippet>137</a>    <span class="kw">pub </span>email: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">pub </span>course_id: Uuid,
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">pub </span>course_name: String,
+<a href=#140 id=140 data-nosnippet>140</a>    <span class="kw">pub </span>dismissed_reasons: Vec&lt;AttentionReason&gt;,
+<a href=#141 id=141 data-nosnippet>141</a>    <span class="kw">pub </span>dismissed_at: DateTime&lt;Utc&gt;,
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="kw">pub </span>dismissed_by_user_id: Uuid,
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="kw">pub </span>dismissed_by_first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#144 id=144 data-nosnippet>144</a>    <span class="kw">pub </span>dismissed_by_last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#145 id=145 data-nosnippet>145</a>    <span class="kw">pub </span>reason: String,
+<a href=#146 id=146 data-nosnippet>146</a>}
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#149 id=149 data-nosnippet>149</a></span><span class="kw">pub struct </span>CreditRegistrationAttentionItems {
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="doccomment">/// The Needs attention count, whatever this request filtered to: the tab badge, the same number
+<a href=#151 id=151 data-nosnippet>151</a>    /// `/overview` reports.
+<a href=#152 id=152 data-nosnippet>152</a>    </span><span class="kw">pub </span>total_count: i64,
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="doccomment">/// Over the whole Needs attention section, so the counts stay usable as facets.
+<a href=#154 id=154 data-nosnippet>154</a>    </span><span class="kw">pub </span>counts_by_reason: Vec&lt;CreditRegistrationAttentionReasonCount&gt;,
+<a href=#155 id=155 data-nosnippet>155</a>    <span class="doccomment">/// The rows needing attention that match `reason`, one entry per timeline phase that has any,
+<a href=#156 id=156 data-nosnippet>156</a>    /// in timeline order.
+<a href=#157 id=157 data-nosnippet>157</a>    </span><span class="kw">pub </span>phases: Vec&lt;CreditRegistrationAttentionPhaseRows&gt;,
+<a href=#158 id=158 data-nosnippet>158</a>    <span class="doccomment">/// Over a timing threshold with no person-level cause, oldest first. Not in the count.
+<a href=#159 id=159 data-nosnippet>159</a>    </span><span class="kw">pub </span>running_late: Vec&lt;CreditRegistrationAttentionItem&gt;,
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="doccomment">/// Rows a blocking problem accounts for, under that problem. Not in the count.
+<a href=#161 id=161 data-nosnippet>161</a>    </span><span class="kw">pub </span>explained_by_problem: Vec&lt;CreditRegistrationBlockingProblemRows&gt;,
+<a href=#162 id=162 data-nosnippet>162</a>    <span class="doccomment">/// Dismissals of the last 14 days, newest first, whether or not the row has come back since.
+<a href=#163 id=163 data-nosnippet>163</a>    </span><span class="kw">pub </span>dismissed_recently: Vec&lt;CreditRegistrationAttentionDismissal&gt;,
+<a href=#164 id=164 data-nosnippet>164</a>    <span class="doccomment">/// Before `reacted` narrows the rows, so both stay usable as facets.
+<a href=#165 id=165 data-nosnippet>165</a>    </span><span class="kw">pub </span>reaction_counts: CreditRegistrationAttentionReactionCounts,
+<a href=#166 id=166 data-nosnippet>166</a>}
+<a href=#167 id=167 data-nosnippet>167</a>
+<a href=#168 id=168 data-nosnippet>168</a><span class="attr">#[derive(Debug, Deserialize, ToSchema)]
+<a href=#169 id=169 data-nosnippet>169</a></span><span class="kw">pub struct </span>AdminDismissAttentionPayload {
+<a href=#170 id=170 data-nosnippet>170</a>    <span class="kw">pub </span>reason: String,
+<a href=#171 id=171 data-nosnippet>171</a>}
+<a href=#172 id=172 data-nosnippet>172</a>
+<a href=#173 id=173 data-nosnippet>173</a><span class="doccomment">/// The body of `POST /registrations/{credit_registration_id}/notes`.
+<a href=#174 id=174 data-nosnippet>174</a></span><span class="attr">#[derive(Debug, Deserialize, ToSchema)]
+<a href=#175 id=175 data-nosnippet>175</a></span><span class="kw">pub struct </span>AdminAddCreditRegistrationNotePayload {
+<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">pub </span>note: String,
+<a href=#177 id=177 data-nosnippet>177</a>}
+<a href=#178 id=178 data-nosnippet>178</a>
+<a href=#179 id=179 data-nosnippet>179</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#180 id=180 data-nosnippet>180</a></span><span class="kw">pub struct </span>AdminDismissAttentionResult {
+<a href=#181 id=181 data-nosnippet>181</a>    <span class="doccomment">/// The reasons the dismissal covers; a different one firing brings the row back.
+<a href=#182 id=182 data-nosnippet>182</a>    </span><span class="kw">pub </span>dismissed_reasons: Vec&lt;AttentionReason&gt;,
+<a href=#183 id=183 data-nosnippet>183</a>}
+<a href=#184 id=184 data-nosnippet>184</a>
+<a href=#185 id=185 data-nosnippet>185</a><span class="doccomment">/// One error code over the chosen window and the one before it.
+<a href=#186 id=186 data-nosnippet>186</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#187 id=187 data-nosnippet>187</a></span><span class="kw">pub struct </span>CreditRegistrationErrorCodeWindow {
+<a href=#188 id=188 data-nosnippet>188</a>    <span class="kw">pub </span>error_code: CreditRegistrationErrorCode,
+<a href=#189 id=189 data-nosnippet>189</a>    <span class="doccomment">/// What may be done about the code, which is the difference between a wait and a fix.
+<a href=#190 id=190 data-nosnippet>190</a>    </span><span class="kw">pub </span>retryability: Retryability,
+<a href=#191 id=191 data-nosnippet>191</a>    <span class="doccomment">/// Live rows carrying the code now: what the Registrations list filtered by `error_code`
+<a href=#192 id=192 data-nosnippet>192</a>    /// shows. The other counts are failure events in the window.
+<a href=#193 id=193 data-nosnippet>193</a>    </span><span class="kw">pub </span>live_count: i64,
+<a href=#194 id=194 data-nosnippet>194</a>    <span class="kw">pub </span>current_count: i64,
+<a href=#195 id=195 data-nosnippet>195</a>    <span class="kw">pub </span>previous_count: i64,
+<a href=#196 id=196 data-nosnippet>196</a>    <span class="kw">pub </span>user_count: i64,
+<a href=#197 id=197 data-nosnippet>197</a>    <span class="kw">pub </span>course_count: i64,
+<a href=#198 id=198 data-nosnippet>198</a>    <span class="kw">pub </span>first_seen_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#199 id=199 data-nosnippet>199</a>    <span class="kw">pub </span>last_seen_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#200 id=200 data-nosnippet>200</a>    <span class="kw">pub </span>endpoints: Vec&lt;SuotarEndpoint&gt;,
+<a href=#201 id=201 data-nosnippet>201</a>}
+<a href=#202 id=202 data-nosnippet>202</a>
+<a href=#203 id=203 data-nosnippet>203</a><span class="doccomment">/// The verdicts an operator needs beside the errors to rule them out. `not_improved` is not a
+<a href=#204 id=204 data-nosnippet>204</a>/// failure and is never in the error table above.
+<a href=#205 id=205 data-nosnippet>205</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#206 id=206 data-nosnippet>206</a></span><span class="kw">pub struct </span>CreditRegistrationTerminalVerdicts {
+<a href=#207 id=207 data-nosnippet>207</a>    <span class="kw">pub </span>registered_count: i64,
+<a href=#208 id=208 data-nosnippet>208</a>    <span class="kw">pub </span>duplicate_and_not_improved_count: i64,
+<a href=#209 id=209 data-nosnippet>209</a>    <span class="kw">pub </span>failed_permanent_count: i64,
+<a href=#210 id=210 data-nosnippet>210</a>    <span class="kw">pub </span>cancelled_count: i64,
+<a href=#211 id=211 data-nosnippet>211</a>    <span class="doccomment">/// The denominator of the success rate.
+<a href=#212 id=212 data-nosnippet>212</a>    </span><span class="kw">pub </span>total_count: i64,
+<a href=#213 id=213 data-nosnippet>213</a>}
+<a href=#214 id=214 data-nosnippet>214</a>
+<a href=#215 id=215 data-nosnippet>215</a><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#216 id=216 data-nosnippet>216</a></span><span class="kw">pub struct </span>CreditRegistrationErrorsByCode {
+<a href=#217 id=217 data-nosnippet>217</a>    <span class="kw">pub </span>window_secs: i64,
+<a href=#218 id=218 data-nosnippet>218</a>    <span class="kw">pub </span>codes: Vec&lt;CreditRegistrationErrorCodeWindow&gt;,
+<a href=#219 id=219 data-nosnippet>219</a>    <span class="kw">pub </span>verdicts: CreditRegistrationTerminalVerdicts,
+<a href=#220 id=220 data-nosnippet>220</a>}
+<a href=#221 id=221 data-nosnippet>221</a>
+<a href=#222 id=222 data-nosnippet>222</a><span class="attr">#[derive(Debug, Deserialize)]
+<a href=#223 id=223 data-nosnippet>223</a></span><span class="kw">pub struct </span>ErrorWindowQuery {
+<a href=#224 id=224 data-nosnippet>224</a>    window_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#225 id=225 data-nosnippet>225</a>}
+<a href=#226 id=226 data-nosnippet>226</a>
+<a href=#227 id=227 data-nosnippet>227</a><span class="doccomment">/**
+<a href=#228 id=228 data-nosnippet>228</a>GET `/api/v0/main-frontend/credit-registration-admin/thresholds` - Every number the alert rules and
+<a href=#229 id=229 data-nosnippet>229</a>the stuck detectors use.
+<a href=#230 id=230 data-nosnippet>230</a>
+<a href=#231 id=231 data-nosnippet>231</a>The same values `/overview` embeds in its health block. Separate so a tab explaining "stuck after
+<a href=#232 id=232 data-nosnippet>232</a>2 hours" can say so without reading the whole overview aggregate.
+<a href=#233 id=233 data-nosnippet>233</a>*/
+<a href=#234 id=234 data-nosnippet>234</a></span><span class="attr">#[instrument(skip(pool))]
+<a href=#235 id=235 data-nosnippet>235</a>#[utoipa::path(
+<a href=#236 id=236 data-nosnippet>236</a>    get,
+<a href=#237 id=237 data-nosnippet>237</a>    path = <span class="string">"/thresholds"</span>,
+<a href=#238 id=238 data-nosnippet>238</a>    operation_id = <span class="string">"getCreditRegistrationThresholds"</span>,
+<a href=#239 id=239 data-nosnippet>239</a>    tag = <span class="string">"credit-registration-admin"</span>,
+<a href=#240 id=240 data-nosnippet>240</a>    responses(
+<a href=#241 id=241 data-nosnippet>241</a>        (status = <span class="number">200</span>, description = <span class="string">"The thresholds every rule and detector shares"</span>, body = StuckThresholds)
+<a href=#242 id=242 data-nosnippet>242</a>    )
+<a href=#243 id=243 data-nosnippet>243</a>)]
+<a href=#244 id=244 data-nosnippet>244</a></span><span class="kw">pub async fn </span>get_credit_registration_thresholds(
+<a href=#245 id=245 data-nosnippet>245</a>    user: AuthUser,
+<a href=#246 id=246 data-nosnippet>246</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#247 id=247 data-nosnippet>247</a>) -&gt; ControllerResult&lt;web::Json&lt;StuckThresholds&gt;&gt; {
+<a href=#248 id=248 data-nosnippet>248</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#249 id=249 data-nosnippet>249</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#250 id=250 data-nosnippet>250</a>    token.authorized_ok(web::Json(stuck_thresholds()))
+<a href=#251 id=251 data-nosnippet>251</a>}
+<a href=#252 id=252 data-nosnippet>252</a>
+<a href=#253 id=253 data-nosnippet>253</a><span class="attr">#[derive(Debug, Deserialize)]
+<a href=#254 id=254 data-nosnippet>254</a></span><span class="kw">pub struct </span>AttentionQuery {
+<a href=#255 id=255 data-nosnippet>255</a>    reason: <span class="prelude-ty">Option</span>&lt;Vec&lt;AttentionReason&gt;&gt;,
+<a href=#256 id=256 data-nosnippet>256</a>    sort: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#257 id=257 data-nosnippet>257</a>    reacted: <span class="prelude-ty">Option</span>&lt;bool&gt;,
+<a href=#258 id=258 data-nosnippet>258</a>}
+<a href=#259 id=259 data-nosnippet>259</a>
+<a href=#260 id=260 data-nosnippet>260</a><span class="doccomment">/**
+<a href=#261 id=261 data-nosnippet>261</a>GET `/api/v0/main-frontend/credit-registration-admin/attention` - The Needs attention tab: the rows
+<a href=#262 id=262 data-nosnippet>262</a>that need a person by timeline phase, and the rows running late, explained by a blocking problem or
+<a href=#263 id=263 data-nosnippet>263</a>recently dismissed.
+<a href=#264 id=264 data-nosnippet>264</a>
+<a href=#265 id=265 data-nosnippet>265</a>Superseded attempts are outside every detector: acting on a replaced attempt is never right.
+<a href=#266 id=266 data-nosnippet>266</a>`total_count` is the one Needs attention count; `/overview`'s `needs_attention_count` is the same
+<a href=#267 id=267 data-nosnippet>267</a>number.
+<a href=#268 id=268 data-nosnippet>268</a>*/
+<a href=#269 id=269 data-nosnippet>269</a></span><span class="attr">#[instrument(skip(pool, app_conf))]
+<a href=#270 id=270 data-nosnippet>270</a>#[utoipa::path(
+<a href=#271 id=271 data-nosnippet>271</a>    get,
+<a href=#272 id=272 data-nosnippet>272</a>    path = <span class="string">"/attention"</span>,
+<a href=#273 id=273 data-nosnippet>273</a>    operation_id = <span class="string">"getCreditRegistrationAttentionItems"</span>,
+<a href=#274 id=274 data-nosnippet>274</a>    tag = <span class="string">"credit-registration-admin"</span>,
+<a href=#275 id=275 data-nosnippet>275</a>    params(
+<a href=#276 id=276 data-nosnippet>276</a>        (<span class="string">"reason" </span>= <span class="prelude-ty">Option</span>&lt;Vec&lt;AttentionReason&gt;&gt;, Query, description = <span class="string">"Only rows carrying one of these reasons; repeat the parameter for several"</span>),
+<a href=#277 id=277 data-nosnippet>277</a>        (<span class="string">"sort" </span>= <span class="prelude-ty">Option</span>&lt;String&gt;, Query, description = <span class="string">"time_in_phase, next_attempt or course"</span>),
+<a href=#278 id=278 data-nosnippet>278</a>        (<span class="string">"reacted" </span>= <span class="prelude-ty">Option</span>&lt;bool&gt;, Query, description = <span class="string">"Only rows someone has, or has not, left a note on or sent a linking email for by hand since the row entered its phase; the counts cover every row"</span>)
+<a href=#279 id=279 data-nosnippet>279</a>    ),
+<a href=#280 id=280 data-nosnippet>280</a>    responses(
+<a href=#281 id=281 data-nosnippet>281</a>        (status = <span class="number">200</span>, description = <span class="string">"The Needs attention sections"</span>, body = CreditRegistrationAttentionItems)
+<a href=#282 id=282 data-nosnippet>282</a>    )
+<a href=#283 id=283 data-nosnippet>283</a>)]
+<a href=#284 id=284 data-nosnippet>284</a></span><span class="kw">pub async fn </span>get_credit_registration_attention_items(
+<a href=#285 id=285 data-nosnippet>285</a>    user: AuthUser,
+<a href=#286 id=286 data-nosnippet>286</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#287 id=287 data-nosnippet>287</a>    query: MultiQuery&lt;AttentionQuery&gt;,
+<a href=#288 id=288 data-nosnippet>288</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#289 id=289 data-nosnippet>289</a>) -&gt; ControllerResult&lt;web::Json&lt;CreditRegistrationAttentionItems&gt;&gt; {
+<a href=#290 id=290 data-nosnippet>290</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#291 id=291 data-nosnippet>291</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#292 id=292 data-nosnippet>292</a>
+<a href=#293 id=293 data-nosnippet>293</a>    <span class="kw">let </span>reasons: <span class="kw-2">&amp;</span>[AttentionReason] = query.reason.as_deref().unwrap_or_default();
+<a href=#294 id=294 data-nosnippet>294</a>    <span class="kw">let </span>rules = attention_rules(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>app_conf).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#295 id=295 data-nosnippet>295</a>    <span class="kw">let </span>rows = credit_registrations::get_attention_items(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>rules, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#296 id=296 data-nosnippet>296</a>    <span class="kw">let </span>course_ids: Vec&lt;Uuid&gt; = rows
+<a href=#297 id=297 data-nosnippet>297</a>        .iter()
+<a href=#298 id=298 data-nosnippet>298</a>        .map(|row| row.course_id)
+<a href=#299 id=299 data-nosnippet>299</a>        .collect::&lt;BTreeSet&lt;<span class="kw">_</span>&gt;&gt;()
+<a href=#300 id=300 data-nosnippet>300</a>        .into_iter()
+<a href=#301 id=301 data-nosnippet>301</a>        .collect();
+<a href=#302 id=302 data-nosnippet>302</a>    <span class="kw">let </span><span class="kw-2">mut </span>sends = manual_linking_email_sends_by_registration(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>course_ids).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#303 id=303 data-nosnippet>303</a>    <span class="kw">let </span>registration_ids: Vec&lt;Uuid&gt; = rows.iter().map(|row| row.id).collect();
+<a href=#304 id=304 data-nosnippet>304</a>    <span class="kw">let </span><span class="kw-2">mut </span>notes: HashMap&lt;Uuid, Vec&lt;CreditRegistrationNote&gt;&gt; = HashMap::new();
+<a href=#305 id=305 data-nosnippet>305</a>    <span class="kw">for </span>note <span class="kw">in
+<a href=#306 id=306 data-nosnippet>306</a>        </span>credit_registration_admin_actions::get_notes_by_registrations(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>registration_ids)
+<a href=#307 id=307 data-nosnippet>307</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#308 id=308 data-nosnippet>308</a>    </span>{
+<a href=#309 id=309 data-nosnippet>309</a>        notes
+<a href=#310 id=310 data-nosnippet>310</a>            .entry(note.credit_registration_id)
+<a href=#311 id=311 data-nosnippet>311</a>            .or_default()
+<a href=#312 id=312 data-nosnippet>312</a>            .push(note);
+<a href=#313 id=313 data-nosnippet>313</a>    }
+<a href=#314 id=314 data-nosnippet>314</a>    <span class="kw">let </span>dismissed_recently = credit_registrations::get_dismissals_since(
+<a href=#315 id=315 data-nosnippet>315</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#316 id=316 data-nosnippet>316</a>        Utc::now() - chrono::Duration::days(RECENT_DISMISSAL_DAYS),
+<a href=#317 id=317 data-nosnippet>317</a>        RECENT_DISMISSAL_LIMIT,
+<a href=#318 id=318 data-nosnippet>318</a>    )
+<a href=#319 id=319 data-nosnippet>319</a>    .<span class="kw">await</span><span class="question-mark">?
+<a href=#320 id=320 data-nosnippet>320</a>    </span>.into_iter()
+<a href=#321 id=321 data-nosnippet>321</a>    .map(to_dismissal)
+<a href=#322 id=322 data-nosnippet>322</a>    .collect();
+<a href=#323 id=323 data-nosnippet>323</a>
+<a href=#324 id=324 data-nosnippet>324</a>    <span class="kw">let </span><span class="kw-2">mut </span>needing: Vec&lt;CreditRegistrationAttentionItem&gt; = Vec::new();
+<a href=#325 id=325 data-nosnippet>325</a>    <span class="kw">let </span><span class="kw-2">mut </span>running_late = Vec::new();
+<a href=#326 id=326 data-nosnippet>326</a>    <span class="kw">let </span><span class="kw-2">mut </span>explained_by_problem: Vec&lt;CreditRegistrationBlockingProblemRows&gt; = Vec::new();
+<a href=#327 id=327 data-nosnippet>327</a>    <span class="kw">let </span>matches_reacted = |item: <span class="kw-2">&amp;</span>CreditRegistrationAttentionItem| {
+<a href=#328 id=328 data-nosnippet>328</a>        query
+<a href=#329 id=329 data-nosnippet>329</a>            .reacted
+<a href=#330 id=330 data-nosnippet>330</a>            .is_none_or(|reacted| reacted == item.is_reacted_to())
+<a href=#331 id=331 data-nosnippet>331</a>    };
+<a href=#332 id=332 data-nosnippet>332</a>    <span class="kw">let </span><span class="kw-2">mut </span>reaction_counts = CreditRegistrationAttentionReactionCounts {
+<a href=#333 id=333 data-nosnippet>333</a>        reacted_count: <span class="number">0</span>,
+<a href=#334 id=334 data-nosnippet>334</a>        not_reacted_count: <span class="number">0</span>,
+<a href=#335 id=335 data-nosnippet>335</a>    };
+<a href=#336 id=336 data-nosnippet>336</a>    <span class="kw">for </span>item <span class="kw">in </span>rows.into_iter().map(|row| {
+<a href=#337 id=337 data-nosnippet>337</a>        <span class="kw">let </span>row_sends = sends.remove(<span class="kw-2">&amp;</span>row.id).unwrap_or_default();
+<a href=#338 id=338 data-nosnippet>338</a>        <span class="kw">let </span>row_notes = notes.remove(<span class="kw-2">&amp;</span>row.id).unwrap_or_default();
+<a href=#339 id=339 data-nosnippet>339</a>        to_attention_item(row, <span class="kw-2">&amp;</span>rules.blocking, row_sends, row_notes)
+<a href=#340 id=340 data-nosnippet>340</a>    }) {
+<a href=#341 id=341 data-nosnippet>341</a>        <span class="kw">if </span>item.standing != AttentionStanding::Dismissed {
+<a href=#342 id=342 data-nosnippet>342</a>            <span class="kw">if </span>item.is_reacted_to() {
+<a href=#343 id=343 data-nosnippet>343</a>                reaction_counts.reacted_count += <span class="number">1</span>;
+<a href=#344 id=344 data-nosnippet>344</a>            } <span class="kw">else </span>{
+<a href=#345 id=345 data-nosnippet>345</a>                reaction_counts.not_reacted_count += <span class="number">1</span>;
+<a href=#346 id=346 data-nosnippet>346</a>            }
+<a href=#347 id=347 data-nosnippet>347</a>        }
+<a href=#348 id=348 data-nosnippet>348</a>        <span class="comment">// The tab badge and the reason facets count the whole queue, so needing rows are narrowed
+<a href=#349 id=349 data-nosnippet>349</a>        // only after counting.
+<a href=#350 id=350 data-nosnippet>350</a>        </span><span class="kw">if </span>item.standing != AttentionStanding::NeedsAttention &amp;&amp; !matches_reacted(<span class="kw-2">&amp;</span>item) {
+<a href=#351 id=351 data-nosnippet>351</a>            <span class="kw">continue</span>;
+<a href=#352 id=352 data-nosnippet>352</a>        }
+<a href=#353 id=353 data-nosnippet>353</a>        <span class="kw">match </span>item.standing {
+<a href=#354 id=354 data-nosnippet>354</a>            AttentionStanding::NeedsAttention =&gt; needing.push(item),
+<a href=#355 id=355 data-nosnippet>355</a>            AttentionStanding::RunningLate =&gt; running_late.push(item),
+<a href=#356 id=356 data-nosnippet>356</a>            AttentionStanding::ExplainedByProblem =&gt; {
+<a href=#357 id=357 data-nosnippet>357</a>                <span class="kw">let </span><span class="prelude-val">Some</span>(problem) = item.blocking_problem.clone() <span class="kw">else </span>{
+<a href=#358 id=358 data-nosnippet>358</a>                    <span class="kw">continue</span>;
+<a href=#359 id=359 data-nosnippet>359</a>                };
+<a href=#360 id=360 data-nosnippet>360</a>                <span class="kw">match </span>explained_by_problem
+<a href=#361 id=361 data-nosnippet>361</a>                    .iter_mut()
+<a href=#362 id=362 data-nosnippet>362</a>                    .find(|group| group.problem == problem)
+<a href=#363 id=363 data-nosnippet>363</a>                {
+<a href=#364 id=364 data-nosnippet>364</a>                    <span class="prelude-val">Some</span>(group) =&gt; group.items.push(item),
+<a href=#365 id=365 data-nosnippet>365</a>                    <span class="prelude-val">None </span>=&gt; explained_by_problem.push(CreditRegistrationBlockingProblemRows {
+<a href=#366 id=366 data-nosnippet>366</a>                        problem,
+<a href=#367 id=367 data-nosnippet>367</a>                        items: <span class="macro">vec!</span>[item],
+<a href=#368 id=368 data-nosnippet>368</a>                    }),
+<a href=#369 id=369 data-nosnippet>369</a>                }
+<a href=#370 id=370 data-nosnippet>370</a>            }
+<a href=#371 id=371 data-nosnippet>371</a>            AttentionStanding::Dismissed =&gt; {}
+<a href=#372 id=372 data-nosnippet>372</a>        }
+<a href=#373 id=373 data-nosnippet>373</a>    }
+<a href=#374 id=374 data-nosnippet>374</a>    <span class="kw">let </span><span class="kw-2">mut </span>reason_counts: BTreeMap&lt;AttentionReason, i64&gt; = BTreeMap::new();
+<a href=#375 id=375 data-nosnippet>375</a>    <span class="kw">for </span>reason <span class="kw">in </span>needing.iter().flat_map(|item| item.reasons.iter()) {
+<a href=#376 id=376 data-nosnippet>376</a>        <span class="kw-2">*</span>reason_counts.entry(<span class="kw-2">*</span>reason).or_insert(<span class="number">0</span>) += <span class="number">1</span>;
+<a href=#377 id=377 data-nosnippet>377</a>    }
+<a href=#378 id=378 data-nosnippet>378</a>    <span class="kw">let </span>counts_by_reason = reason_counts
+<a href=#379 id=379 data-nosnippet>379</a>        .into_iter()
+<a href=#380 id=380 data-nosnippet>380</a>        .map(|(reason, count)| CreditRegistrationAttentionReasonCount { reason, count })
+<a href=#381 id=381 data-nosnippet>381</a>        .collect();
+<a href=#382 id=382 data-nosnippet>382</a>    <span class="kw">let </span>total_count = needing.len() <span class="kw">as </span>i64;
+<a href=#383 id=383 data-nosnippet>383</a>
+<a href=#384 id=384 data-nosnippet>384</a>    <span class="kw">let </span><span class="kw-2">mut </span>by_phase: BTreeMap&lt;TimelinePhase, Vec&lt;CreditRegistrationAttentionItem&gt;&gt; =
+<a href=#385 id=385 data-nosnippet>385</a>        BTreeMap::new();
+<a href=#386 id=386 data-nosnippet>386</a>    <span class="kw">for </span>item <span class="kw">in </span>needing.into_iter().filter(|item| {
+<a href=#387 id=387 data-nosnippet>387</a>        (reasons.is_empty() || item.reasons.iter().any(|reason| reasons.contains(reason)))
+<a href=#388 id=388 data-nosnippet>388</a>            &amp;&amp; matches_reacted(item)
+<a href=#389 id=389 data-nosnippet>389</a>    }) {
+<a href=#390 id=390 data-nosnippet>390</a>        by_phase.entry(item.phase).or_default().push(item);
+<a href=#391 id=391 data-nosnippet>391</a>    }
+<a href=#392 id=392 data-nosnippet>392</a>    <span class="kw">let </span>phases = by_phase
+<a href=#393 id=393 data-nosnippet>393</a>        .into_iter()
+<a href=#394 id=394 data-nosnippet>394</a>        .map(|(phase, <span class="kw-2">mut </span>items)| {
+<a href=#395 id=395 data-nosnippet>395</a>            <span class="kw">match </span>query.sort.as_deref() {
+<a href=#396 id=396 data-nosnippet>396</a>                <span class="prelude-val">Some</span>(<span class="string">"next_attempt"</span>) =&gt; items.sort_by_key(|item| item.next_attempt_at),
+<a href=#397 id=397 data-nosnippet>397</a>                <span class="prelude-val">Some</span>(<span class="string">"course"</span>) =&gt; items.sort_by(|a, b| a.course_name.cmp(<span class="kw-2">&amp;</span>b.course_name)),
+<a href=#398 id=398 data-nosnippet>398</a>                <span class="kw">_ </span>=&gt; items.sort_by_key(|item| item.phase_started_at),
+<a href=#399 id=399 data-nosnippet>399</a>            }
+<a href=#400 id=400 data-nosnippet>400</a>            CreditRegistrationAttentionPhaseRows { phase, items }
+<a href=#401 id=401 data-nosnippet>401</a>        })
+<a href=#402 id=402 data-nosnippet>402</a>        .collect();
+<a href=#403 id=403 data-nosnippet>403</a>
+<a href=#404 id=404 data-nosnippet>404</a>    token.authorized_ok(web::Json(CreditRegistrationAttentionItems {
+<a href=#405 id=405 data-nosnippet>405</a>        total_count,
+<a href=#406 id=406 data-nosnippet>406</a>        counts_by_reason,
+<a href=#407 id=407 data-nosnippet>407</a>        phases,
+<a href=#408 id=408 data-nosnippet>408</a>        running_late,
+<a href=#409 id=409 data-nosnippet>409</a>        explained_by_problem,
+<a href=#410 id=410 data-nosnippet>410</a>        dismissed_recently,
+<a href=#411 id=411 data-nosnippet>411</a>        reaction_counts,
+<a href=#412 id=412 data-nosnippet>412</a>    }))
+<a href=#413 id=413 data-nosnippet>413</a>}
+<a href=#414 id=414 data-nosnippet>414</a>
+<a href=#415 id=415 data-nosnippet>415</a><span class="doccomment">/**
+<a href=#416 id=416 data-nosnippet>416</a>POST `/api/v0/main-frontend/credit-registration-admin/registrations/{credit_registration_id}/dismiss-attention`
+<a href=#417 id=417 data-nosnippet>417</a>- Takes a row off the Needs attention queue.
+<a href=#418 id=418 data-nosnippet>418</a>
+<a href=#419 id=419 data-nosnippet>419</a>The dismissal covers the reasons the row carries now; it comes back only when a different one
+<a href=#420 id=420 data-nosnippet>420</a>fires. Leaves the pipeline's own flag alone.
+<a href=#421 id=421 data-nosnippet>421</a>*/
+<a href=#422 id=422 data-nosnippet>422</a></span><span class="attr">#[instrument(skip(pool, payload, app_conf))]
+<a href=#423 id=423 data-nosnippet>423</a>#[utoipa::path(
+<a href=#424 id=424 data-nosnippet>424</a>    post,
+<a href=#425 id=425 data-nosnippet>425</a>    path = <span class="string">"/registrations/{credit_registration_id}/dismiss-attention"</span>,
+<a href=#426 id=426 data-nosnippet>426</a>    operation_id = <span class="string">"adminDismissCreditRegistrationAttention"</span>,
+<a href=#427 id=427 data-nosnippet>427</a>    tag = <span class="string">"credit-registration-admin"</span>,
+<a href=#428 id=428 data-nosnippet>428</a>    params((<span class="string">"credit_registration_id" </span>= Uuid, Path, description = <span class="string">"Credit registration id"</span>)),
+<a href=#429 id=429 data-nosnippet>429</a>    request_body = AdminDismissAttentionPayload,
+<a href=#430 id=430 data-nosnippet>430</a>    responses(
+<a href=#431 id=431 data-nosnippet>431</a>        (status = <span class="number">200</span>, description = <span class="string">"The reasons dismissed"</span>, body = AdminDismissAttentionResult),
+<a href=#432 id=432 data-nosnippet>432</a>        (status = <span class="number">400</span>, description = <span class="string">"No reason given, or nothing picks the row"</span>),
+<a href=#433 id=433 data-nosnippet>433</a>    )
+<a href=#434 id=434 data-nosnippet>434</a>)]
+<a href=#435 id=435 data-nosnippet>435</a></span><span class="kw">pub async fn </span>admin_dismiss_credit_registration_attention(
+<a href=#436 id=436 data-nosnippet>436</a>    user: AuthUser,
+<a href=#437 id=437 data-nosnippet>437</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#438 id=438 data-nosnippet>438</a>    credit_registration_id: web::Path&lt;Uuid&gt;,
+<a href=#439 id=439 data-nosnippet>439</a>    payload: web::Json&lt;AdminDismissAttentionPayload&gt;,
+<a href=#440 id=440 data-nosnippet>440</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#441 id=441 data-nosnippet>441</a>) -&gt; ControllerResult&lt;web::Json&lt;AdminDismissAttentionResult&gt;&gt; {
+<a href=#442 id=442 data-nosnippet>442</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#443 id=443 data-nosnippet>443</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#444 id=444 data-nosnippet>444</a>
+<a href=#445 id=445 data-nosnippet>445</a>    <span class="kw">let </span>reason = required_reason(<span class="kw-2">&amp;</span>payload.reason)<span class="question-mark">?</span>;
+<a href=#446 id=446 data-nosnippet>446</a>    <span class="kw">let </span>id = <span class="kw-2">*</span>credit_registration_id;
+<a href=#447 id=447 data-nosnippet>447</a>    <span class="kw">let </span>rules = attention_rules(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>app_conf).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#448 id=448 data-nosnippet>448</a>    <span class="kw">let </span>reasons = credit_registrations::get_attention_items(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>rules, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[id]))
+<a href=#449 id=449 data-nosnippet>449</a>        .<span class="kw">await</span><span class="question-mark">?
+<a href=#450 id=450 data-nosnippet>450</a>        </span>.into_iter()
+<a href=#451 id=451 data-nosnippet>451</a>        .next()
+<a href=#452 id=452 data-nosnippet>452</a>        .map(|row| row.reasons)
+<a href=#453 id=453 data-nosnippet>453</a>        .unwrap_or_default();
+<a href=#454 id=454 data-nosnippet>454</a>    <span class="kw">if </span>reasons.is_empty() {
+<a href=#455 id=455 data-nosnippet>455</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">controller_err!</span>(
+<a href=#456 id=456 data-nosnippet>456</a>            BadRequest,
+<a href=#457 id=457 data-nosnippet>457</a>            <span class="string">"Nothing puts this registration on the Needs attention queue."</span>.to_string()
+<a href=#458 id=458 data-nosnippet>458</a>        ));
+<a href=#459 id=459 data-nosnippet>459</a>    }
 <a href=#460 id=460 data-nosnippet>460</a>
-<a href=#461 id=461 data-nosnippet>461</a>Counts events, not rows: an error that happened really happened, whether or not a later attempt
-<a href=#462 id=462 data-nosnippet>462</a>succeeded, and hiding it would hide the configuration bug that caused it.
-<a href=#463 id=463 data-nosnippet>463</a>*/
-<a href=#464 id=464 data-nosnippet>464</a></span><span class="attr">#[instrument(skip(pool))]
-<a href=#465 id=465 data-nosnippet>465</a>#[utoipa::path(
-<a href=#466 id=466 data-nosnippet>466</a>    get,
-<a href=#467 id=467 data-nosnippet>467</a>    path = <span class="string">"/errors/by-code"</span>,
-<a href=#468 id=468 data-nosnippet>468</a>    operation_id = <span class="string">"getCreditRegistrationErrorsByCode"</span>,
-<a href=#469 id=469 data-nosnippet>469</a>    tag = <span class="string">"credit-registration-admin"</span>,
-<a href=#470 id=470 data-nosnippet>470</a>    params((<span class="string">"window_secs" </span>= <span class="prelude-ty">Option</span>&lt;i64&gt;, Query, description = <span class="string">"Window length in seconds; the same length before it is the comparison"</span>)),
-<a href=#471 id=471 data-nosnippet>471</a>    responses(
-<a href=#472 id=472 data-nosnippet>472</a>        (status = <span class="number">200</span>, description = <span class="string">"Per-code counts and the window's verdicts"</span>, body = CreditRegistrationErrorsByCode)
-<a href=#473 id=473 data-nosnippet>473</a>    )
-<a href=#474 id=474 data-nosnippet>474</a>)]
-<a href=#475 id=475 data-nosnippet>475</a></span><span class="kw">pub async fn </span>get_credit_registration_errors_by_code(
-<a href=#476 id=476 data-nosnippet>476</a>    user: AuthUser,
-<a href=#477 id=477 data-nosnippet>477</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#478 id=478 data-nosnippet>478</a>    query: web::Query&lt;ErrorWindowQuery&gt;,
-<a href=#479 id=479 data-nosnippet>479</a>) -&gt; ControllerResult&lt;web::Json&lt;CreditRegistrationErrorsByCode&gt;&gt; {
-<a href=#480 id=480 data-nosnippet>480</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#481 id=481 data-nosnippet>481</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#482 id=482 data-nosnippet>482</a>
-<a href=#483 id=483 data-nosnippet>483</a>    <span class="kw">let </span>window_secs = query
-<a href=#484 id=484 data-nosnippet>484</a>        .window_secs
-<a href=#485 id=485 data-nosnippet>485</a>        .unwrap_or(DEFAULT_ERROR_WINDOW_SECS)
-<a href=#486 id=486 data-nosnippet>486</a>        .clamp(<span class="number">60</span>, MAX_ERROR_WINDOW_SECS);
-<a href=#487 id=487 data-nosnippet>487</a>    <span class="kw">let </span>live_counts = credit_registrations::count_by_error_code(<span class="kw-2">&amp;mut </span>conn).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#488 id=488 data-nosnippet>488</a>    <span class="kw">let </span>codes =
-<a href=#489 id=489 data-nosnippet>489</a>        credit_registration_events::get_error_code_counts_for_window(<span class="kw-2">&amp;mut </span>conn, window_secs)
-<a href=#490 id=490 data-nosnippet>490</a>            .<span class="kw">await</span><span class="question-mark">?
-<a href=#491 id=491 data-nosnippet>491</a>            </span>.into_iter()
-<a href=#492 id=492 data-nosnippet>492</a>            .map(|row| {
-<a href=#493 id=493 data-nosnippet>493</a>                <span class="kw">let </span>live_count = live_counts
-<a href=#494 id=494 data-nosnippet>494</a>                    .iter()
-<a href=#495 id=495 data-nosnippet>495</a>                    .find(|live| live.error_code == row.error_code)
-<a href=#496 id=496 data-nosnippet>496</a>                    .map_or(<span class="number">0</span>, |live| live.live_count);
-<a href=#497 id=497 data-nosnippet>497</a>                to_error_code_window(row, live_count)
-<a href=#498 id=498 data-nosnippet>498</a>            })
-<a href=#499 id=499 data-nosnippet>499</a>            .collect();
-<a href=#500 id=500 data-nosnippet>500</a>    <span class="kw">let </span>totals = credit_registrations::count_terminal_outcomes_since(
-<a href=#501 id=501 data-nosnippet>501</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#502 id=502 data-nosnippet>502</a>        Utc::now() - chrono::Duration::seconds(window_secs),
-<a href=#503 id=503 data-nosnippet>503</a>    )
-<a href=#504 id=504 data-nosnippet>504</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#505 id=505 data-nosnippet>505</a>
-<a href=#506 id=506 data-nosnippet>506</a>    token.authorized_ok(web::Json(CreditRegistrationErrorsByCode {
-<a href=#507 id=507 data-nosnippet>507</a>        window_secs,
-<a href=#508 id=508 data-nosnippet>508</a>        codes,
-<a href=#509 id=509 data-nosnippet>509</a>        verdicts: CreditRegistrationTerminalVerdicts {
-<a href=#510 id=510 data-nosnippet>510</a>            registered_count: totals.registered_count,
-<a href=#511 id=511 data-nosnippet>511</a>            duplicate_and_not_improved_count: totals.success_count - totals.registered_count,
-<a href=#512 id=512 data-nosnippet>512</a>            failed_permanent_count: totals.failed_permanent_count,
-<a href=#513 id=513 data-nosnippet>513</a>            cancelled_count: totals.cancelled_count,
-<a href=#514 id=514 data-nosnippet>514</a>            total_count: totals.total_count,
-<a href=#515 id=515 data-nosnippet>515</a>        },
-<a href=#516 id=516 data-nosnippet>516</a>    }))
-<a href=#517 id=517 data-nosnippet>517</a>}
-<a href=#518 id=518 data-nosnippet>518</a>
-<a href=#519 id=519 data-nosnippet>519</a><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_attention_item(
-<a href=#520 id=520 data-nosnippet>520</a>    row: AttentionRegistration,
-<a href=#521 id=521 data-nosnippet>521</a>    problems: <span class="kw-2">&amp;</span>BlockingProblems,
-<a href=#522 id=522 data-nosnippet>522</a>    manual_linking_email_sends: Vec&lt;AdminManualLinkingEmailSend&gt;,
-<a href=#523 id=523 data-nosnippet>523</a>) -&gt; CreditRegistrationAttentionItem {
-<a href=#524 id=524 data-nosnippet>524</a>    <span class="kw">let </span>position = row.position();
-<a href=#525 id=525 data-nosnippet>525</a>    <span class="kw">let </span>standing = row.standing(problems);
-<a href=#526 id=526 data-nosnippet>526</a>    <span class="kw">let </span>waits_on = WaitsOn::of(
-<a href=#527 id=527 data-nosnippet>527</a>        position.step,
-<a href=#528 id=528 data-nosnippet>528</a>        position.engagement,
-<a href=#529 id=529 data-nosnippet>529</a>        standing == AttentionStanding::NeedsAttention,
-<a href=#530 id=530 data-nosnippet>530</a>        row.needs_course_setup(),
-<a href=#531 id=531 data-nosnippet>531</a>    );
-<a href=#532 id=532 data-nosnippet>532</a>    CreditRegistrationAttentionItem {
-<a href=#533 id=533 data-nosnippet>533</a>        blocking_problem: (standing == AttentionStanding::ExplainedByProblem)
-<a href=#534 id=534 data-nosnippet>534</a>            .then(|| row.blocking_problem(problems))
-<a href=#535 id=535 data-nosnippet>535</a>            .flatten(),
-<a href=#536 id=536 data-nosnippet>536</a>        hand_actions: row
-<a href=#537 id=537 data-nosnippet>537</a>            .resubmission_facts()
-<a href=#538 id=538 data-nosnippet>538</a>            .hand_actions(ResubmissionStrictness::AnyExceptSubmissionUncertain),
-<a href=#539 id=539 data-nosnippet>539</a>        timeline_step: position.step,
-<a href=#540 id=540 data-nosnippet>540</a>        phase: position.step.phase(),
-<a href=#541 id=541 data-nosnippet>541</a>        engagement: position.engagement,
-<a href=#542 id=542 data-nosnippet>542</a>        waits_on,
-<a href=#543 id=543 data-nosnippet>543</a>        standing,
-<a href=#544 id=544 data-nosnippet>544</a>        credit_registration_id: row.id,
-<a href=#545 id=545 data-nosnippet>545</a>        user_id: row.user_id,
-<a href=#546 id=546 data-nosnippet>546</a>        first_name: row.first_name,
-<a href=#547 id=547 data-nosnippet>547</a>        last_name: row.last_name,
-<a href=#548 id=548 data-nosnippet>548</a>        email: row.email,
-<a href=#549 id=549 data-nosnippet>549</a>        course_id: row.course_id,
-<a href=#550 id=550 data-nosnippet>550</a>        course_name: row.course_name,
-<a href=#551 id=551 data-nosnippet>551</a>        course_module_id: row.course_module_id,
-<a href=#552 id=552 data-nosnippet>552</a>        course_module_name: row.course_module_name,
-<a href=#553 id=553 data-nosnippet>553</a>        uh_course_code: row.uh_course_code,
-<a href=#554 id=554 data-nosnippet>554</a>        state: row.state,
-<a href=#555 id=555 data-nosnippet>555</a>        state_changed_at: row.state_changed_at,
-<a href=#556 id=556 data-nosnippet>556</a>        phase_started_at: row.phase_started_at,
-<a href=#557 id=557 data-nosnippet>557</a>        error_code: row.error_code,
-<a href=#558 id=558 data-nosnippet>558</a>        attempt_count: row.attempt_count,
-<a href=#559 id=559 data-nosnippet>559</a>        next_attempt_at: row.next_attempt_at,
-<a href=#560 id=560 data-nosnippet>560</a>        student_number: expose_option(<span class="kw-2">&amp;</span>row.student_number).map(str::to_owned),
-<a href=#561 id=561 data-nosnippet>561</a>        reasons: row.reasons,
-<a href=#562 id=562 data-nosnippet>562</a>        pressed_at: row.pressed_at,
-<a href=#563 id=563 data-nosnippet>563</a>        enrolment_route: row.enrolment_route,
-<a href=#564 id=564 data-nosnippet>564</a>        last_mailing_fetch_started_at: row.last_mailing_fetch_started_at,
-<a href=#565 id=565 data-nosnippet>565</a>        is_enrolment_list_empty: row.is_enrolment_list_empty,
-<a href=#566 id=566 data-nosnippet>566</a>        needs_admin_attention: row.needs_admin_attention,
-<a href=#567 id=567 data-nosnippet>567</a>        manual_linking_email_sends,
-<a href=#568 id=568 data-nosnippet>568</a>    }
-<a href=#569 id=569 data-nosnippet>569</a>}
-<a href=#570 id=570 data-nosnippet>570</a>
-<a href=#571 id=571 data-nosnippet>571</a><span class="kw">fn </span>to_dismissal(row: AttentionDismissal) -&gt; CreditRegistrationAttentionDismissal {
-<a href=#572 id=572 data-nosnippet>572</a>    CreditRegistrationAttentionDismissal {
-<a href=#573 id=573 data-nosnippet>573</a>        credit_registration_id: row.credit_registration_id,
-<a href=#574 id=574 data-nosnippet>574</a>        user_id: row.user_id,
-<a href=#575 id=575 data-nosnippet>575</a>        first_name: row.first_name,
-<a href=#576 id=576 data-nosnippet>576</a>        last_name: row.last_name,
-<a href=#577 id=577 data-nosnippet>577</a>        email: row.email,
-<a href=#578 id=578 data-nosnippet>578</a>        course_id: row.course_id,
-<a href=#579 id=579 data-nosnippet>579</a>        course_name: row.course_name,
-<a href=#580 id=580 data-nosnippet>580</a>        dismissed_reasons: row.dismissed_reasons,
-<a href=#581 id=581 data-nosnippet>581</a>        dismissed_at: row.dismissed_at,
-<a href=#582 id=582 data-nosnippet>582</a>        dismissed_by_user_id: row.dismissed_by_user_id,
-<a href=#583 id=583 data-nosnippet>583</a>        dismissed_by_first_name: row.dismissed_by_first_name,
-<a href=#584 id=584 data-nosnippet>584</a>        dismissed_by_last_name: row.dismissed_by_last_name,
-<a href=#585 id=585 data-nosnippet>585</a>        reason: row.reason,
-<a href=#586 id=586 data-nosnippet>586</a>    }
-<a href=#587 id=587 data-nosnippet>587</a>}
-<a href=#588 id=588 data-nosnippet>588</a>
-<a href=#589 id=589 data-nosnippet>589</a><span class="kw">fn </span>to_error_code_window(
-<a href=#590 id=590 data-nosnippet>590</a>    row: ErrorCodeWindowCounts,
-<a href=#591 id=591 data-nosnippet>591</a>    live_count: i64,
-<a href=#592 id=592 data-nosnippet>592</a>) -&gt; CreditRegistrationErrorCodeWindow {
-<a href=#593 id=593 data-nosnippet>593</a>    CreditRegistrationErrorCodeWindow {
-<a href=#594 id=594 data-nosnippet>594</a>        live_count,
-<a href=#595 id=595 data-nosnippet>595</a>        retryability: retryability(row.error_code),
-<a href=#596 id=596 data-nosnippet>596</a>        error_code: row.error_code,
-<a href=#597 id=597 data-nosnippet>597</a>        current_count: row.current_count,
-<a href=#598 id=598 data-nosnippet>598</a>        previous_count: row.previous_count,
-<a href=#599 id=599 data-nosnippet>599</a>        user_count: row.user_count,
-<a href=#600 id=600 data-nosnippet>600</a>        course_count: row.course_count,
-<a href=#601 id=601 data-nosnippet>601</a>        first_seen_at: row.first_seen_at,
-<a href=#602 id=602 data-nosnippet>602</a>        last_seen_at: row.last_seen_at,
-<a href=#603 id=603 data-nosnippet>603</a>        endpoints: row.endpoints,
-<a href=#604 id=604 data-nosnippet>604</a>    }
-<a href=#605 id=605 data-nosnippet>605</a>}
-<a href=#606 id=606 data-nosnippet>606</a>
-<a href=#607 id=607 data-nosnippet>607</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#608 id=608 data-nosnippet>608</a>    cfg.route(
-<a href=#609 id=609 data-nosnippet>609</a>        <span class="string">"/thresholds"</span>,
-<a href=#610 id=610 data-nosnippet>610</a>        web::get().to(get_credit_registration_thresholds),
-<a href=#611 id=611 data-nosnippet>611</a>    )
-<a href=#612 id=612 data-nosnippet>612</a>    .route(
-<a href=#613 id=613 data-nosnippet>613</a>        <span class="string">"/attention"</span>,
-<a href=#614 id=614 data-nosnippet>614</a>        web::get().to(get_credit_registration_attention_items),
-<a href=#615 id=615 data-nosnippet>615</a>    )
-<a href=#616 id=616 data-nosnippet>616</a>    .route(
-<a href=#617 id=617 data-nosnippet>617</a>        <span class="string">"/errors/by-code"</span>,
-<a href=#618 id=618 data-nosnippet>618</a>        web::get().to(get_credit_registration_errors_by_code),
-<a href=#619 id=619 data-nosnippet>619</a>    )
-<a href=#620 id=620 data-nosnippet>620</a>    .route(
-<a href=#621 id=621 data-nosnippet>621</a>        <span class="string">"/registrations/{credit_registration_id}/dismiss-attention"</span>,
-<a href=#622 id=622 data-nosnippet>622</a>        web::post().to(admin_dismiss_credit_registration_attention),
-<a href=#623 id=623 data-nosnippet>623</a>    );
-<a href=#624 id=624 data-nosnippet>624</a>}
+<a href=#461 id=461 data-nosnippet>461</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#462 id=462 data-nosnippet>462</a>    credit_registrations::dismiss_attention(<span class="kw-2">&amp;mut </span>tx, id, <span class="kw-2">&amp;</span>reasons, user.id, reason).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#463 id=463 data-nosnippet>463</a>    insert_admin_action_event(<span class="kw-2">&amp;mut </span>tx, id, user.id, reason).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#464 id=464 data-nosnippet>464</a>    models::credit_registration_admin_actions::record(
+<a href=#465 id=465 data-nosnippet>465</a>        <span class="kw-2">&amp;mut </span>tx,
+<a href=#466 id=466 data-nosnippet>466</a>        <span class="kw-2">&amp;</span>NewCreditRegistrationAdminAction {
+<a href=#467 id=467 data-nosnippet>467</a>            target_id: <span class="prelude-val">Some</span>(id),
+<a href=#468 id=468 data-nosnippet>468</a>            reason: <span class="prelude-val">Some</span>(reason.to_string()),
+<a href=#469 id=469 data-nosnippet>469</a>            details: <span class="prelude-val">Some</span>(<span class="macro">serde_json::json!</span>({ <span class="string">"attention_reasons"</span>: reasons })),
+<a href=#470 id=470 data-nosnippet>470</a>            affected_row_count: <span class="prelude-val">Some</span>(<span class="number">1</span>),
+<a href=#471 id=471 data-nosnippet>471</a>            ..NewCreditRegistrationAdminAction::new(
+<a href=#472 id=472 data-nosnippet>472</a>                CreditRegistrationAdminAction::DismissAttention,
+<a href=#473 id=473 data-nosnippet>473</a>                CreditRegistrationAdminActionTarget::CreditRegistration,
+<a href=#474 id=474 data-nosnippet>474</a>                user.id,
+<a href=#475 id=475 data-nosnippet>475</a>                GLOBAL_ADMIN_ROLE,
+<a href=#476 id=476 data-nosnippet>476</a>            )
+<a href=#477 id=477 data-nosnippet>477</a>        },
+<a href=#478 id=478 data-nosnippet>478</a>    )
+<a href=#479 id=479 data-nosnippet>479</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#480 id=480 data-nosnippet>480</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#481 id=481 data-nosnippet>481</a>
+<a href=#482 id=482 data-nosnippet>482</a>    token.authorized_ok(web::Json(AdminDismissAttentionResult {
+<a href=#483 id=483 data-nosnippet>483</a>        dismissed_reasons: reasons,
+<a href=#484 id=484 data-nosnippet>484</a>    }))
+<a href=#485 id=485 data-nosnippet>485</a>}
+<a href=#486 id=486 data-nosnippet>486</a>
+<a href=#487 id=487 data-nosnippet>487</a><span class="doccomment">/**
+<a href=#488 id=488 data-nosnippet>488</a>POST `/api/v0/main-frontend/credit-registration-admin/registrations/{credit_registration_id}/notes`
+<a href=#489 id=489 data-nosnippet>489</a>- Leaves a note on a registration for whoever handles it next.
+<a href=#490 id=490 data-nosnippet>490</a>
+<a href=#491 id=491 data-nosnippet>491</a>Changes nothing else: the row stays on the Needs attention queue, counted as reacted to.
+<a href=#492 id=492 data-nosnippet>492</a>*/
+<a href=#493 id=493 data-nosnippet>493</a></span><span class="attr">#[instrument(skip(pool, payload))]
+<a href=#494 id=494 data-nosnippet>494</a>#[utoipa::path(
+<a href=#495 id=495 data-nosnippet>495</a>    post,
+<a href=#496 id=496 data-nosnippet>496</a>    path = <span class="string">"/registrations/{credit_registration_id}/notes"</span>,
+<a href=#497 id=497 data-nosnippet>497</a>    operation_id = <span class="string">"adminAddCreditRegistrationNote"</span>,
+<a href=#498 id=498 data-nosnippet>498</a>    tag = <span class="string">"credit-registration-admin"</span>,
+<a href=#499 id=499 data-nosnippet>499</a>    params((<span class="string">"credit_registration_id" </span>= Uuid, Path, description = <span class="string">"Credit registration id"</span>)),
+<a href=#500 id=500 data-nosnippet>500</a>    request_body = AdminAddCreditRegistrationNotePayload,
+<a href=#501 id=501 data-nosnippet>501</a>    responses(
+<a href=#502 id=502 data-nosnippet>502</a>        (status = <span class="number">200</span>, description = <span class="string">"The note was added"</span>),
+<a href=#503 id=503 data-nosnippet>503</a>        (status = <span class="number">400</span>, description = <span class="string">"The note is empty"</span>),
+<a href=#504 id=504 data-nosnippet>504</a>    )
+<a href=#505 id=505 data-nosnippet>505</a>)]
+<a href=#506 id=506 data-nosnippet>506</a></span><span class="kw">pub async fn </span>admin_add_credit_registration_note(
+<a href=#507 id=507 data-nosnippet>507</a>    user: AuthUser,
+<a href=#508 id=508 data-nosnippet>508</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#509 id=509 data-nosnippet>509</a>    credit_registration_id: web::Path&lt;Uuid&gt;,
+<a href=#510 id=510 data-nosnippet>510</a>    payload: web::Json&lt;AdminAddCreditRegistrationNotePayload&gt;,
+<a href=#511 id=511 data-nosnippet>511</a>) -&gt; ControllerResult&lt;web::Json&lt;()&gt;&gt; {
+<a href=#512 id=512 data-nosnippet>512</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#513 id=513 data-nosnippet>513</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#514 id=514 data-nosnippet>514</a>
+<a href=#515 id=515 data-nosnippet>515</a>    <span class="kw">let </span>note = required_reason(<span class="kw-2">&amp;</span>payload.note)<span class="question-mark">?</span>;
+<a href=#516 id=516 data-nosnippet>516</a>    <span class="kw">let </span>id = <span class="kw-2">*</span>credit_registration_id;
+<a href=#517 id=517 data-nosnippet>517</a>    <span class="comment">// Refuses an unknown id with a 404 rather than an orphan audit row.
+<a href=#518 id=518 data-nosnippet>518</a>    </span>credit_registrations::get_by_id(<span class="kw-2">&amp;mut </span>conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#519 id=519 data-nosnippet>519</a>
+<a href=#520 id=520 data-nosnippet>520</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = conn.begin().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#521 id=521 data-nosnippet>521</a>    insert_admin_action_event(<span class="kw-2">&amp;mut </span>tx, id, user.id, note).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#522 id=522 data-nosnippet>522</a>    models::credit_registration_admin_actions::record(
+<a href=#523 id=523 data-nosnippet>523</a>        <span class="kw-2">&amp;mut </span>tx,
+<a href=#524 id=524 data-nosnippet>524</a>        <span class="kw-2">&amp;</span>NewCreditRegistrationAdminAction {
+<a href=#525 id=525 data-nosnippet>525</a>            target_id: <span class="prelude-val">Some</span>(id),
+<a href=#526 id=526 data-nosnippet>526</a>            reason: <span class="prelude-val">Some</span>(note.to_string()),
+<a href=#527 id=527 data-nosnippet>527</a>            affected_row_count: <span class="prelude-val">Some</span>(<span class="number">1</span>),
+<a href=#528 id=528 data-nosnippet>528</a>            ..NewCreditRegistrationAdminAction::new(
+<a href=#529 id=529 data-nosnippet>529</a>                CreditRegistrationAdminAction::AddNote,
+<a href=#530 id=530 data-nosnippet>530</a>                CreditRegistrationAdminActionTarget::CreditRegistration,
+<a href=#531 id=531 data-nosnippet>531</a>                user.id,
+<a href=#532 id=532 data-nosnippet>532</a>                GLOBAL_ADMIN_ROLE,
+<a href=#533 id=533 data-nosnippet>533</a>            )
+<a href=#534 id=534 data-nosnippet>534</a>        },
+<a href=#535 id=535 data-nosnippet>535</a>    )
+<a href=#536 id=536 data-nosnippet>536</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#537 id=537 data-nosnippet>537</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#538 id=538 data-nosnippet>538</a>
+<a href=#539 id=539 data-nosnippet>539</a>    token.authorized_ok(web::Json(()))
+<a href=#540 id=540 data-nosnippet>540</a>}
+<a href=#541 id=541 data-nosnippet>541</a>
+<a href=#542 id=542 data-nosnippet>542</a><span class="doccomment">/**
+<a href=#543 id=543 data-nosnippet>543</a>GET `/api/v0/main-frontend/credit-registration-admin/errors/by-code` - Error events per code over a
+<a href=#544 id=544 data-nosnippet>544</a>window and the window before it, with the terminal verdicts of the same window beside them.
+<a href=#545 id=545 data-nosnippet>545</a>
+<a href=#546 id=546 data-nosnippet>546</a>Counts events, not rows: an error that happened really happened, whether or not a later attempt
+<a href=#547 id=547 data-nosnippet>547</a>succeeded, and hiding it would hide the configuration bug that caused it.
+<a href=#548 id=548 data-nosnippet>548</a>*/
+<a href=#549 id=549 data-nosnippet>549</a></span><span class="attr">#[instrument(skip(pool))]
+<a href=#550 id=550 data-nosnippet>550</a>#[utoipa::path(
+<a href=#551 id=551 data-nosnippet>551</a>    get,
+<a href=#552 id=552 data-nosnippet>552</a>    path = <span class="string">"/errors/by-code"</span>,
+<a href=#553 id=553 data-nosnippet>553</a>    operation_id = <span class="string">"getCreditRegistrationErrorsByCode"</span>,
+<a href=#554 id=554 data-nosnippet>554</a>    tag = <span class="string">"credit-registration-admin"</span>,
+<a href=#555 id=555 data-nosnippet>555</a>    params((<span class="string">"window_secs" </span>= <span class="prelude-ty">Option</span>&lt;i64&gt;, Query, description = <span class="string">"Window length in seconds; the same length before it is the comparison"</span>)),
+<a href=#556 id=556 data-nosnippet>556</a>    responses(
+<a href=#557 id=557 data-nosnippet>557</a>        (status = <span class="number">200</span>, description = <span class="string">"Per-code counts and the window's verdicts"</span>, body = CreditRegistrationErrorsByCode)
+<a href=#558 id=558 data-nosnippet>558</a>    )
+<a href=#559 id=559 data-nosnippet>559</a>)]
+<a href=#560 id=560 data-nosnippet>560</a></span><span class="kw">pub async fn </span>get_credit_registration_errors_by_code(
+<a href=#561 id=561 data-nosnippet>561</a>    user: AuthUser,
+<a href=#562 id=562 data-nosnippet>562</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#563 id=563 data-nosnippet>563</a>    query: web::Query&lt;ErrorWindowQuery&gt;,
+<a href=#564 id=564 data-nosnippet>564</a>) -&gt; ControllerResult&lt;web::Json&lt;CreditRegistrationErrorsByCode&gt;&gt; {
+<a href=#565 id=565 data-nosnippet>565</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#566 id=566 data-nosnippet>566</a>    <span class="kw">let </span>token = authorize_credit_registration_admin(<span class="kw-2">&amp;mut </span>conn, user.id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#567 id=567 data-nosnippet>567</a>
+<a href=#568 id=568 data-nosnippet>568</a>    <span class="kw">let </span>window_secs = query
+<a href=#569 id=569 data-nosnippet>569</a>        .window_secs
+<a href=#570 id=570 data-nosnippet>570</a>        .unwrap_or(DEFAULT_ERROR_WINDOW_SECS)
+<a href=#571 id=571 data-nosnippet>571</a>        .clamp(<span class="number">60</span>, MAX_ERROR_WINDOW_SECS);
+<a href=#572 id=572 data-nosnippet>572</a>    <span class="kw">let </span>live_counts = credit_registrations::count_by_error_code(<span class="kw-2">&amp;mut </span>conn).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#573 id=573 data-nosnippet>573</a>    <span class="kw">let </span>codes =
+<a href=#574 id=574 data-nosnippet>574</a>        credit_registration_events::get_error_code_counts_for_window(<span class="kw-2">&amp;mut </span>conn, window_secs)
+<a href=#575 id=575 data-nosnippet>575</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#576 id=576 data-nosnippet>576</a>            </span>.into_iter()
+<a href=#577 id=577 data-nosnippet>577</a>            .map(|row| {
+<a href=#578 id=578 data-nosnippet>578</a>                <span class="kw">let </span>live_count = live_counts
+<a href=#579 id=579 data-nosnippet>579</a>                    .iter()
+<a href=#580 id=580 data-nosnippet>580</a>                    .find(|live| live.error_code == row.error_code)
+<a href=#581 id=581 data-nosnippet>581</a>                    .map_or(<span class="number">0</span>, |live| live.live_count);
+<a href=#582 id=582 data-nosnippet>582</a>                to_error_code_window(row, live_count)
+<a href=#583 id=583 data-nosnippet>583</a>            })
+<a href=#584 id=584 data-nosnippet>584</a>            .collect();
+<a href=#585 id=585 data-nosnippet>585</a>    <span class="kw">let </span>totals = credit_registrations::count_terminal_outcomes_since(
+<a href=#586 id=586 data-nosnippet>586</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#587 id=587 data-nosnippet>587</a>        Utc::now() - chrono::Duration::seconds(window_secs),
+<a href=#588 id=588 data-nosnippet>588</a>    )
+<a href=#589 id=589 data-nosnippet>589</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#590 id=590 data-nosnippet>590</a>
+<a href=#591 id=591 data-nosnippet>591</a>    token.authorized_ok(web::Json(CreditRegistrationErrorsByCode {
+<a href=#592 id=592 data-nosnippet>592</a>        window_secs,
+<a href=#593 id=593 data-nosnippet>593</a>        codes,
+<a href=#594 id=594 data-nosnippet>594</a>        verdicts: CreditRegistrationTerminalVerdicts {
+<a href=#595 id=595 data-nosnippet>595</a>            registered_count: totals.registered_count,
+<a href=#596 id=596 data-nosnippet>596</a>            duplicate_and_not_improved_count: totals.success_count - totals.registered_count,
+<a href=#597 id=597 data-nosnippet>597</a>            failed_permanent_count: totals.failed_permanent_count,
+<a href=#598 id=598 data-nosnippet>598</a>            cancelled_count: totals.cancelled_count,
+<a href=#599 id=599 data-nosnippet>599</a>            total_count: totals.total_count,
+<a href=#600 id=600 data-nosnippet>600</a>        },
+<a href=#601 id=601 data-nosnippet>601</a>    }))
+<a href=#602 id=602 data-nosnippet>602</a>}
+<a href=#603 id=603 data-nosnippet>603</a>
+<a href=#604 id=604 data-nosnippet>604</a><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_attention_item(
+<a href=#605 id=605 data-nosnippet>605</a>    row: AttentionRegistration,
+<a href=#606 id=606 data-nosnippet>606</a>    problems: <span class="kw-2">&amp;</span>BlockingProblems,
+<a href=#607 id=607 data-nosnippet>607</a>    manual_linking_email_sends: Vec&lt;AdminManualLinkingEmailSend&gt;,
+<a href=#608 id=608 data-nosnippet>608</a>    notes: Vec&lt;CreditRegistrationNote&gt;,
+<a href=#609 id=609 data-nosnippet>609</a>) -&gt; CreditRegistrationAttentionItem {
+<a href=#610 id=610 data-nosnippet>610</a>    <span class="kw">let </span>position = row.position();
+<a href=#611 id=611 data-nosnippet>611</a>    <span class="kw">let </span>standing = row.standing(problems);
+<a href=#612 id=612 data-nosnippet>612</a>    <span class="kw">let </span>waits_on = WaitsOn::of(
+<a href=#613 id=613 data-nosnippet>613</a>        position.step,
+<a href=#614 id=614 data-nosnippet>614</a>        position.engagement,
+<a href=#615 id=615 data-nosnippet>615</a>        standing == AttentionStanding::NeedsAttention,
+<a href=#616 id=616 data-nosnippet>616</a>        row.needs_course_setup(),
+<a href=#617 id=617 data-nosnippet>617</a>    );
+<a href=#618 id=618 data-nosnippet>618</a>    CreditRegistrationAttentionItem {
+<a href=#619 id=619 data-nosnippet>619</a>        blocking_problem: (standing == AttentionStanding::ExplainedByProblem)
+<a href=#620 id=620 data-nosnippet>620</a>            .then(|| row.blocking_problem(problems))
+<a href=#621 id=621 data-nosnippet>621</a>            .flatten(),
+<a href=#622 id=622 data-nosnippet>622</a>        hand_actions: row
+<a href=#623 id=623 data-nosnippet>623</a>            .resubmission_facts()
+<a href=#624 id=624 data-nosnippet>624</a>            .hand_actions(ResubmissionStrictness::AnyExceptSubmissionUncertain),
+<a href=#625 id=625 data-nosnippet>625</a>        timeline_step: position.step,
+<a href=#626 id=626 data-nosnippet>626</a>        phase: position.step.phase(),
+<a href=#627 id=627 data-nosnippet>627</a>        engagement: position.engagement,
+<a href=#628 id=628 data-nosnippet>628</a>        waits_on,
+<a href=#629 id=629 data-nosnippet>629</a>        standing,
+<a href=#630 id=630 data-nosnippet>630</a>        credit_registration_id: row.id,
+<a href=#631 id=631 data-nosnippet>631</a>        user_id: row.user_id,
+<a href=#632 id=632 data-nosnippet>632</a>        first_name: row.first_name,
+<a href=#633 id=633 data-nosnippet>633</a>        last_name: row.last_name,
+<a href=#634 id=634 data-nosnippet>634</a>        email: row.email,
+<a href=#635 id=635 data-nosnippet>635</a>        course_id: row.course_id,
+<a href=#636 id=636 data-nosnippet>636</a>        course_name: row.course_name,
+<a href=#637 id=637 data-nosnippet>637</a>        course_module_id: row.course_module_id,
+<a href=#638 id=638 data-nosnippet>638</a>        course_module_name: row.course_module_name,
+<a href=#639 id=639 data-nosnippet>639</a>        uh_course_code: row.uh_course_code,
+<a href=#640 id=640 data-nosnippet>640</a>        state: row.state,
+<a href=#641 id=641 data-nosnippet>641</a>        state_changed_at: row.state_changed_at,
+<a href=#642 id=642 data-nosnippet>642</a>        phase_started_at: row.phase_started_at,
+<a href=#643 id=643 data-nosnippet>643</a>        error_code: row.error_code,
+<a href=#644 id=644 data-nosnippet>644</a>        attempt_count: row.attempt_count,
+<a href=#645 id=645 data-nosnippet>645</a>        next_attempt_at: row.next_attempt_at,
+<a href=#646 id=646 data-nosnippet>646</a>        student_number: expose_option(<span class="kw-2">&amp;</span>row.student_number).map(str::to_owned),
+<a href=#647 id=647 data-nosnippet>647</a>        reasons: row.reasons,
+<a href=#648 id=648 data-nosnippet>648</a>        pressed_at: row.pressed_at,
+<a href=#649 id=649 data-nosnippet>649</a>        enrolment_route: row.enrolment_route,
+<a href=#650 id=650 data-nosnippet>650</a>        last_mailing_fetch_started_at: row.last_mailing_fetch_started_at,
+<a href=#651 id=651 data-nosnippet>651</a>        is_enrolment_list_empty: row.is_enrolment_list_empty,
+<a href=#652 id=652 data-nosnippet>652</a>        needs_admin_attention: row.needs_admin_attention,
+<a href=#653 id=653 data-nosnippet>653</a>        manual_linking_email_sends,
+<a href=#654 id=654 data-nosnippet>654</a>        notes,
+<a href=#655 id=655 data-nosnippet>655</a>    }
+<a href=#656 id=656 data-nosnippet>656</a>}
+<a href=#657 id=657 data-nosnippet>657</a>
+<a href=#658 id=658 data-nosnippet>658</a><span class="kw">fn </span>to_dismissal(row: AttentionDismissal) -&gt; CreditRegistrationAttentionDismissal {
+<a href=#659 id=659 data-nosnippet>659</a>    CreditRegistrationAttentionDismissal {
+<a href=#660 id=660 data-nosnippet>660</a>        credit_registration_id: row.credit_registration_id,
+<a href=#661 id=661 data-nosnippet>661</a>        user_id: row.user_id,
+<a href=#662 id=662 data-nosnippet>662</a>        first_name: row.first_name,
+<a href=#663 id=663 data-nosnippet>663</a>        last_name: row.last_name,
+<a href=#664 id=664 data-nosnippet>664</a>        email: row.email,
+<a href=#665 id=665 data-nosnippet>665</a>        course_id: row.course_id,
+<a href=#666 id=666 data-nosnippet>666</a>        course_name: row.course_name,
+<a href=#667 id=667 data-nosnippet>667</a>        dismissed_reasons: row.dismissed_reasons,
+<a href=#668 id=668 data-nosnippet>668</a>        dismissed_at: row.dismissed_at,
+<a href=#669 id=669 data-nosnippet>669</a>        dismissed_by_user_id: row.dismissed_by_user_id,
+<a href=#670 id=670 data-nosnippet>670</a>        dismissed_by_first_name: row.dismissed_by_first_name,
+<a href=#671 id=671 data-nosnippet>671</a>        dismissed_by_last_name: row.dismissed_by_last_name,
+<a href=#672 id=672 data-nosnippet>672</a>        reason: row.reason,
+<a href=#673 id=673 data-nosnippet>673</a>    }
+<a href=#674 id=674 data-nosnippet>674</a>}
+<a href=#675 id=675 data-nosnippet>675</a>
+<a href=#676 id=676 data-nosnippet>676</a><span class="kw">fn </span>to_error_code_window(
+<a href=#677 id=677 data-nosnippet>677</a>    row: ErrorCodeWindowCounts,
+<a href=#678 id=678 data-nosnippet>678</a>    live_count: i64,
+<a href=#679 id=679 data-nosnippet>679</a>) -&gt; CreditRegistrationErrorCodeWindow {
+<a href=#680 id=680 data-nosnippet>680</a>    CreditRegistrationErrorCodeWindow {
+<a href=#681 id=681 data-nosnippet>681</a>        live_count,
+<a href=#682 id=682 data-nosnippet>682</a>        retryability: retryability(row.error_code),
+<a href=#683 id=683 data-nosnippet>683</a>        error_code: row.error_code,
+<a href=#684 id=684 data-nosnippet>684</a>        current_count: row.current_count,
+<a href=#685 id=685 data-nosnippet>685</a>        previous_count: row.previous_count,
+<a href=#686 id=686 data-nosnippet>686</a>        user_count: row.user_count,
+<a href=#687 id=687 data-nosnippet>687</a>        course_count: row.course_count,
+<a href=#688 id=688 data-nosnippet>688</a>        first_seen_at: row.first_seen_at,
+<a href=#689 id=689 data-nosnippet>689</a>        last_seen_at: row.last_seen_at,
+<a href=#690 id=690 data-nosnippet>690</a>        endpoints: row.endpoints,
+<a href=#691 id=691 data-nosnippet>691</a>    }
+<a href=#692 id=692 data-nosnippet>692</a>}
+<a href=#693 id=693 data-nosnippet>693</a>
+<a href=#694 id=694 data-nosnippet>694</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#695 id=695 data-nosnippet>695</a>    cfg.route(
+<a href=#696 id=696 data-nosnippet>696</a>        <span class="string">"/thresholds"</span>,
+<a href=#697 id=697 data-nosnippet>697</a>        web::get().to(get_credit_registration_thresholds),
+<a href=#698 id=698 data-nosnippet>698</a>    )
+<a href=#699 id=699 data-nosnippet>699</a>    .route(
+<a href=#700 id=700 data-nosnippet>700</a>        <span class="string">"/attention"</span>,
+<a href=#701 id=701 data-nosnippet>701</a>        web::get().to(get_credit_registration_attention_items),
+<a href=#702 id=702 data-nosnippet>702</a>    )
+<a href=#703 id=703 data-nosnippet>703</a>    .route(
+<a href=#704 id=704 data-nosnippet>704</a>        <span class="string">"/errors/by-code"</span>,
+<a href=#705 id=705 data-nosnippet>705</a>        web::get().to(get_credit_registration_errors_by_code),
+<a href=#706 id=706 data-nosnippet>706</a>    )
+<a href=#707 id=707 data-nosnippet>707</a>    .route(
+<a href=#708 id=708 data-nosnippet>708</a>        <span class="string">"/registrations/{credit_registration_id}/dismiss-attention"</span>,
+<a href=#709 id=709 data-nosnippet>709</a>        web::post().to(admin_dismiss_credit_registration_attention),
+<a href=#710 id=710 data-nosnippet>710</a>    )
+<a href=#711 id=711 data-nosnippet>711</a>    .route(
+<a href=#712 id=712 data-nosnippet>712</a>        <span class="string">"/registrations/{credit_registration_id}/notes"</span>,
+<a href=#713 id=713 data-nosnippet>713</a>        web::post().to(admin_add_credit_registration_note),
+<a href=#714 id=714 data-nosnippet>714</a>    );
+<a href=#715 id=715 data-nosnippet>715</a>}
 </code></pre></div></section></main></body></html>
