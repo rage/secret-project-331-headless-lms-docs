@@ -127,14 +127,15 @@
 <a href=#127 id=127 data-nosnippet>127</a>  AND conf.deleted_at IS NULL
 <a href=#128 id=128 data-nosnippet>128</a>WHERE cm.deleted_at IS NULL
 <a href=#129 id=129 data-nosnippet>129</a>  AND TRIM(cm.uh_course_code) &lt;&gt; ''
-<a href=#130 id=130 data-nosnippet>130</a>ORDER BY c.name,
-<a href=#131 id=131 data-nosnippet>131</a>  cm.order_number
-<a href=#132 id=132 data-nosnippet>132</a>LIMIT $1
-<a href=#133 id=133 data-nosnippet>133</a>        "#</span>,
-<a href=#134 id=134 data-nosnippet>134</a>        limit,
-<a href=#135 id=135 data-nosnippet>135</a>    )
-<a href=#136 id=136 data-nosnippet>136</a>    .fetch_all(conn)
-<a href=#137 id=137 data-nosnippet>137</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#138 id=138 data-nosnippet>138</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#139 id=139 data-nosnippet>139</a>}
+<a href=#130 id=130 data-nosnippet>130</a>  AND cm.completions_can_be_registered_to_sisu
+<a href=#131 id=131 data-nosnippet>131</a>ORDER BY c.name,
+<a href=#132 id=132 data-nosnippet>132</a>  cm.order_number
+<a href=#133 id=133 data-nosnippet>133</a>LIMIT $1
+<a href=#134 id=134 data-nosnippet>134</a>        "#</span>,
+<a href=#135 id=135 data-nosnippet>135</a>        limit,
+<a href=#136 id=136 data-nosnippet>136</a>    )
+<a href=#137 id=137 data-nosnippet>137</a>    .fetch_all(conn)
+<a href=#138 id=138 data-nosnippet>138</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#140 id=140 data-nosnippet>140</a>}
 </code></pre></div></section></main></body></html>

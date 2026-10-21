@@ -825,95 +825,100 @@
 <a href=#825 id=825 data-nosnippet>825</a>        <span class="string">r#"
 <a href=#826 id=826 data-nosnippet>826</a>SELECT *
 <a href=#827 id=827 data-nosnippet>827</a>FROM course_module_completions
-<a href=#828 id=828 data-nosnippet>828</a>WHERE course_module_id = ANY($1)
-<a href=#829 id=829 data-nosnippet>829</a>  AND prerequisite_modules_completed
-<a href=#830 id=830 data-nosnippet>830</a>  AND eligible_for_ects IS TRUE
-<a href=#831 id=831 data-nosnippet>831</a>  -- Completions still awaiting suspected-cheater review are withheld from study-registry
-<a href=#832 id=832 data-nosnippet>832</a>  -- registration until a teacher dismisses or confirms them.
-<a href=#833 id=833 data-nosnippet>833</a>  AND needs_to_be_reviewed = FALSE
-<a href=#834 id=834 data-nosnippet>834</a>  AND deleted_at IS NULL
-<a href=#835 id=835 data-nosnippet>835</a>  -- Completions on the push path are registered by us; letting the registry pull them too would put
-<a href=#836 id=836 data-nosnippet>836</a>  -- a second attainment on the student's transcript. Per student and module: a completion from
-<a href=#837 id=837 data-nosnippet>837</a>  -- before the push path stays the pull path's until the student gets a flagged one, which takes
-<a href=#838 id=838 data-nosnippet>838</a>  -- its siblings along, since any of them registers the same credit.
-<a href=#839 id=839 data-nosnippet>839</a>  AND NOT EXISTS (
-<a href=#840 id=840 data-nosnippet>840</a>    SELECT 1
-<a href=#841 id=841 data-nosnippet>841</a>    FROM course_module_completions sibling
-<a href=#842 id=842 data-nosnippet>842</a>    WHERE sibling.user_id = course_module_completions.user_id
-<a href=#843 id=843 data-nosnippet>843</a>      AND sibling.course_module_id = course_module_completions.course_module_id
-<a href=#844 id=844 data-nosnippet>844</a>      AND sibling.register_credits_via_suotar
-<a href=#845 id=845 data-nosnippet>845</a>      AND sibling.deleted_at IS NULL
-<a href=#846 id=846 data-nosnippet>846</a>  )
-<a href=#847 id=847 data-nosnippet>847</a>  -- Belt and braces behind the flag above: once the push path has sent anything for the student and
-<a href=#848 id=848 data-nosnippet>848</a>  -- module, it stays out for good, since re-registering would double the attainment on a real
-<a href=#849 id=849 data-nosnippet>849</a>  -- transcript.
-<a href=#850 id=850 data-nosnippet>850</a>  AND NOT EXISTS (
-<a href=#851 id=851 data-nosnippet>851</a>    SELECT 1
-<a href=#852 id=852 data-nosnippet>852</a>    FROM credit_registrations cr
-<a href=#853 id=853 data-nosnippet>853</a>    WHERE cr.user_id = course_module_completions.user_id
-<a href=#854 id=854 data-nosnippet>854</a>      AND cr.course_module_id = course_module_completions.course_module_id
-<a href=#855 id=855 data-nosnippet>855</a>      AND cr.submitted_at IS NOT NULL
-<a href=#856 id=856 data-nosnippet>856</a>      AND cr.deleted_at IS NULL
-<a href=#857 id=857 data-nosnippet>857</a>  )
-<a href=#858 id=858 data-nosnippet>858</a>  AND id NOT IN (
-<a href=#859 id=859 data-nosnippet>859</a>    SELECT course_module_completion_id
-<a href=#860 id=860 data-nosnippet>860</a>    FROM course_module_completion_registered_to_study_registries
-<a href=#861 id=861 data-nosnippet>861</a>    WHERE course_module_id = ANY($1)
-<a href=#862 id=862 data-nosnippet>862</a>      AND (
-<a href=#863 id=863 data-nosnippet>863</a>        study_registry_registrar_id = $2
-<a href=#864 id=864 data-nosnippet>864</a>        -- Our own rows count as already registered too: what the push path put in the registry is
-<a href=#865 id=865 data-nosnippet>865</a>        -- in it whichever registrar's export this is.
-<a href=#866 id=866 data-nosnippet>866</a>        OR study_registry_registrar_id IS NULL
-<a href=#867 id=867 data-nosnippet>867</a>      )
-<a href=#868 id=868 data-nosnippet>868</a>      AND deleted_at IS NULL
-<a href=#869 id=869 data-nosnippet>869</a>  )
-<a href=#870 id=870 data-nosnippet>870</a>        "#</span>,
-<a href=#871 id=871 data-nosnippet>871</a>        course_module_ids,
-<a href=#872 id=872 data-nosnippet>872</a>        study_module_registrar_id,
-<a href=#873 id=873 data-nosnippet>873</a>    )
-<a href=#874 id=874 data-nosnippet>874</a>    .map(StudyRegistryCompletion::from)
-<a href=#875 id=875 data-nosnippet>875</a>    .fetch(conn)
-<a href=#876 id=876 data-nosnippet>876</a>}
-<a href=#877 id=877 data-nosnippet>877</a>
-<a href=#878 id=878 data-nosnippet>878</a><span class="kw">pub async fn </span>delete(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;()&gt; {
-<a href=#879 id=879 data-nosnippet>879</a>    <span class="macro">sqlx::query!</span>(
-<a href=#880 id=880 data-nosnippet>880</a>        <span class="string">"
-<a href=#881 id=881 data-nosnippet>881</a>
-<a href=#882 id=882 data-nosnippet>882</a>UPDATE course_module_completions
-<a href=#883 id=883 data-nosnippet>883</a>SET deleted_at = now()
-<a href=#884 id=884 data-nosnippet>884</a>WHERE id = $1
-<a href=#885 id=885 data-nosnippet>885</a>AND deleted_at IS NULL
-<a href=#886 id=886 data-nosnippet>886</a>        "</span>,
-<a href=#887 id=887 data-nosnippet>887</a>        id,
-<a href=#888 id=888 data-nosnippet>888</a>    )
-<a href=#889 id=889 data-nosnippet>889</a>    .execute(conn)
-<a href=#890 id=890 data-nosnippet>890</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#891 id=891 data-nosnippet>891</a>    <span class="prelude-val">Ok</span>(())
-<a href=#892 id=892 data-nosnippet>892</a>}
-<a href=#893 id=893 data-nosnippet>893</a>
-<a href=#894 id=894 data-nosnippet>894</a><span class="kw">pub async fn </span>find_existing(
-<a href=#895 id=895 data-nosnippet>895</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#896 id=896 data-nosnippet>896</a>    course_id: Uuid,
-<a href=#897 id=897 data-nosnippet>897</a>    course_module_id: Uuid,
-<a href=#898 id=898 data-nosnippet>898</a>    user_id: Uuid,
-<a href=#899 id=899 data-nosnippet>899</a>) -&gt; ModelResult&lt;Uuid&gt; {
-<a href=#900 id=900 data-nosnippet>900</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query!</span>(
-<a href=#901 id=901 data-nosnippet>901</a>        <span class="string">r#"
-<a href=#902 id=902 data-nosnippet>902</a>        SELECT id
-<a href=#903 id=903 data-nosnippet>903</a>        FROM course_module_completions
-<a href=#904 id=904 data-nosnippet>904</a>        WHERE course_id = $1
-<a href=#905 id=905 data-nosnippet>905</a>          AND course_module_id = $2
-<a href=#906 id=906 data-nosnippet>906</a>          AND user_id = $3
-<a href=#907 id=907 data-nosnippet>907</a>          AND completion_granter_user_id IS NULL
-<a href=#908 id=908 data-nosnippet>908</a>          AND deleted_at IS NULL
-<a href=#909 id=909 data-nosnippet>909</a>        "#</span>,
-<a href=#910 id=910 data-nosnippet>910</a>        course_id,
-<a href=#911 id=911 data-nosnippet>911</a>        course_module_id,
-<a href=#912 id=912 data-nosnippet>912</a>        user_id,
-<a href=#913 id=913 data-nosnippet>913</a>    )
-<a href=#914 id=914 data-nosnippet>914</a>    .fetch_one(conn)
-<a href=#915 id=915 data-nosnippet>915</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#916 id=916 data-nosnippet>916</a>
-<a href=#917 id=917 data-nosnippet>917</a>    <span class="prelude-val">Ok</span>(row.id)
-<a href=#918 id=918 data-nosnippet>918</a>}
+<a href=#828 id=828 data-nosnippet>828</a>WHERE course_module_id IN (
+<a href=#829 id=829 data-nosnippet>829</a>    SELECT id
+<a href=#830 id=830 data-nosnippet>830</a>    FROM course_modules
+<a href=#831 id=831 data-nosnippet>831</a>    WHERE id = ANY($1)
+<a href=#832 id=832 data-nosnippet>832</a>      AND completions_can_be_registered_to_sisu
+<a href=#833 id=833 data-nosnippet>833</a>  )
+<a href=#834 id=834 data-nosnippet>834</a>  AND prerequisite_modules_completed
+<a href=#835 id=835 data-nosnippet>835</a>  AND eligible_for_ects IS TRUE
+<a href=#836 id=836 data-nosnippet>836</a>  -- Completions still awaiting suspected-cheater review are withheld from study-registry
+<a href=#837 id=837 data-nosnippet>837</a>  -- registration until a teacher dismisses or confirms them.
+<a href=#838 id=838 data-nosnippet>838</a>  AND needs_to_be_reviewed = FALSE
+<a href=#839 id=839 data-nosnippet>839</a>  AND deleted_at IS NULL
+<a href=#840 id=840 data-nosnippet>840</a>  -- Completions on the push path are registered by us; letting the registry pull them too would put
+<a href=#841 id=841 data-nosnippet>841</a>  -- a second attainment on the student's transcript. Per student and module: a completion from
+<a href=#842 id=842 data-nosnippet>842</a>  -- before the push path stays the pull path's until the student gets a flagged one, which takes
+<a href=#843 id=843 data-nosnippet>843</a>  -- its siblings along, since any of them registers the same credit.
+<a href=#844 id=844 data-nosnippet>844</a>  AND NOT EXISTS (
+<a href=#845 id=845 data-nosnippet>845</a>    SELECT 1
+<a href=#846 id=846 data-nosnippet>846</a>    FROM course_module_completions sibling
+<a href=#847 id=847 data-nosnippet>847</a>    WHERE sibling.user_id = course_module_completions.user_id
+<a href=#848 id=848 data-nosnippet>848</a>      AND sibling.course_module_id = course_module_completions.course_module_id
+<a href=#849 id=849 data-nosnippet>849</a>      AND sibling.register_credits_via_suotar
+<a href=#850 id=850 data-nosnippet>850</a>      AND sibling.deleted_at IS NULL
+<a href=#851 id=851 data-nosnippet>851</a>  )
+<a href=#852 id=852 data-nosnippet>852</a>  -- Belt and braces behind the flag above: once the push path has sent anything for the student and
+<a href=#853 id=853 data-nosnippet>853</a>  -- module, it stays out for good, since re-registering would double the attainment on a real
+<a href=#854 id=854 data-nosnippet>854</a>  -- transcript.
+<a href=#855 id=855 data-nosnippet>855</a>  AND NOT EXISTS (
+<a href=#856 id=856 data-nosnippet>856</a>    SELECT 1
+<a href=#857 id=857 data-nosnippet>857</a>    FROM credit_registrations cr
+<a href=#858 id=858 data-nosnippet>858</a>    WHERE cr.user_id = course_module_completions.user_id
+<a href=#859 id=859 data-nosnippet>859</a>      AND cr.course_module_id = course_module_completions.course_module_id
+<a href=#860 id=860 data-nosnippet>860</a>      AND cr.submitted_at IS NOT NULL
+<a href=#861 id=861 data-nosnippet>861</a>      AND cr.deleted_at IS NULL
+<a href=#862 id=862 data-nosnippet>862</a>  )
+<a href=#863 id=863 data-nosnippet>863</a>  AND id NOT IN (
+<a href=#864 id=864 data-nosnippet>864</a>    SELECT course_module_completion_id
+<a href=#865 id=865 data-nosnippet>865</a>    FROM course_module_completion_registered_to_study_registries
+<a href=#866 id=866 data-nosnippet>866</a>    WHERE course_module_id = ANY($1)
+<a href=#867 id=867 data-nosnippet>867</a>      AND (
+<a href=#868 id=868 data-nosnippet>868</a>        study_registry_registrar_id = $2
+<a href=#869 id=869 data-nosnippet>869</a>        -- Our own rows count as already registered too: what the push path put in the registry is
+<a href=#870 id=870 data-nosnippet>870</a>        -- in it whichever registrar's export this is.
+<a href=#871 id=871 data-nosnippet>871</a>        OR study_registry_registrar_id IS NULL
+<a href=#872 id=872 data-nosnippet>872</a>      )
+<a href=#873 id=873 data-nosnippet>873</a>      AND deleted_at IS NULL
+<a href=#874 id=874 data-nosnippet>874</a>  )
+<a href=#875 id=875 data-nosnippet>875</a>        "#</span>,
+<a href=#876 id=876 data-nosnippet>876</a>        course_module_ids,
+<a href=#877 id=877 data-nosnippet>877</a>        study_module_registrar_id,
+<a href=#878 id=878 data-nosnippet>878</a>    )
+<a href=#879 id=879 data-nosnippet>879</a>    .map(StudyRegistryCompletion::from)
+<a href=#880 id=880 data-nosnippet>880</a>    .fetch(conn)
+<a href=#881 id=881 data-nosnippet>881</a>}
+<a href=#882 id=882 data-nosnippet>882</a>
+<a href=#883 id=883 data-nosnippet>883</a><span class="kw">pub async fn </span>delete(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;()&gt; {
+<a href=#884 id=884 data-nosnippet>884</a>    <span class="macro">sqlx::query!</span>(
+<a href=#885 id=885 data-nosnippet>885</a>        <span class="string">"
+<a href=#886 id=886 data-nosnippet>886</a>
+<a href=#887 id=887 data-nosnippet>887</a>UPDATE course_module_completions
+<a href=#888 id=888 data-nosnippet>888</a>SET deleted_at = now()
+<a href=#889 id=889 data-nosnippet>889</a>WHERE id = $1
+<a href=#890 id=890 data-nosnippet>890</a>AND deleted_at IS NULL
+<a href=#891 id=891 data-nosnippet>891</a>        "</span>,
+<a href=#892 id=892 data-nosnippet>892</a>        id,
+<a href=#893 id=893 data-nosnippet>893</a>    )
+<a href=#894 id=894 data-nosnippet>894</a>    .execute(conn)
+<a href=#895 id=895 data-nosnippet>895</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#896 id=896 data-nosnippet>896</a>    <span class="prelude-val">Ok</span>(())
+<a href=#897 id=897 data-nosnippet>897</a>}
+<a href=#898 id=898 data-nosnippet>898</a>
+<a href=#899 id=899 data-nosnippet>899</a><span class="kw">pub async fn </span>find_existing(
+<a href=#900 id=900 data-nosnippet>900</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#901 id=901 data-nosnippet>901</a>    course_id: Uuid,
+<a href=#902 id=902 data-nosnippet>902</a>    course_module_id: Uuid,
+<a href=#903 id=903 data-nosnippet>903</a>    user_id: Uuid,
+<a href=#904 id=904 data-nosnippet>904</a>) -&gt; ModelResult&lt;Uuid&gt; {
+<a href=#905 id=905 data-nosnippet>905</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query!</span>(
+<a href=#906 id=906 data-nosnippet>906</a>        <span class="string">r#"
+<a href=#907 id=907 data-nosnippet>907</a>        SELECT id
+<a href=#908 id=908 data-nosnippet>908</a>        FROM course_module_completions
+<a href=#909 id=909 data-nosnippet>909</a>        WHERE course_id = $1
+<a href=#910 id=910 data-nosnippet>910</a>          AND course_module_id = $2
+<a href=#911 id=911 data-nosnippet>911</a>          AND user_id = $3
+<a href=#912 id=912 data-nosnippet>912</a>          AND completion_granter_user_id IS NULL
+<a href=#913 id=913 data-nosnippet>913</a>          AND deleted_at IS NULL
+<a href=#914 id=914 data-nosnippet>914</a>        "#</span>,
+<a href=#915 id=915 data-nosnippet>915</a>        course_id,
+<a href=#916 id=916 data-nosnippet>916</a>        course_module_id,
+<a href=#917 id=917 data-nosnippet>917</a>        user_id,
+<a href=#918 id=918 data-nosnippet>918</a>    )
+<a href=#919 id=919 data-nosnippet>919</a>    .fetch_one(conn)
+<a href=#920 id=920 data-nosnippet>920</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#921 id=921 data-nosnippet>921</a>
+<a href=#922 id=922 data-nosnippet>922</a>    <span class="prelude-val">Ok</span>(row.id)
+<a href=#923 id=923 data-nosnippet>923</a>}
 </code></pre></div></section></main></body></html>

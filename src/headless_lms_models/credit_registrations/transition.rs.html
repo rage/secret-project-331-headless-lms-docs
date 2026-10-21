@@ -564,4 +564,59 @@
 <a href=#564 id=564 data-nosnippet>564</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#565 id=565 data-nosnippet>565</a>    <span class="prelude-val">Ok</span>(i64::try_from(writes.len()).unwrap_or(i64::MAX))
 <a href=#566 id=566 data-nosnippet>566</a>}
+<a href=#567 id=567 data-nosnippet>567</a>
+<a href=#568 id=568 data-nosnippet>568</a><span class="doccomment">/// States of a row with nothing sent to Sisu, provided it has no submitted attainment: a
+<a href=#569 id=569 data-nosnippet>569</a>/// `failed_retryable` row with one resumes at verification.
+<a href=#570 id=570 data-nosnippet>570</a></span><span class="kw">const </span>UNSENT_STATES: [CreditRegistrationState; <span class="number">7</span>] = [
+<a href=#571 id=571 data-nosnippet>571</a>    CreditRegistrationState::Pending,
+<a href=#572 id=572 data-nosnippet>572</a>    CreditRegistrationState::ReadyToSubmit,
+<a href=#573 id=573 data-nosnippet>573</a>    CreditRegistrationState::ResolvingEnrolment,
+<a href=#574 id=574 data-nosnippet>574</a>    CreditRegistrationState::CheckingEnrolment,
+<a href=#575 id=575 data-nosnippet>575</a>    CreditRegistrationState::NoUsableEnrolment,
+<a href=#576 id=576 data-nosnippet>576</a>    CreditRegistrationState::Blocked,
+<a href=#577 id=577 data-nosnippet>577</a>    CreditRegistrationState::FailedRetryable,
+<a href=#578 id=578 data-nosnippet>578</a>];
+<a href=#579 id=579 data-nosnippet>579</a>
+<a href=#580 id=580 data-nosnippet>580</a><span class="doccomment">/// Cancels the module's registrations that have not been sent to Sisu, for when a teacher stops
+<a href=#581 id=581 data-nosnippet>581</a>/// its completions being registered there. Rows Sisu may already hold are left alone. Returns how
+<a href=#582 id=582 data-nosnippet>582</a>/// many moved.
+<a href=#583 id=583 data-nosnippet>583</a></span><span class="kw">pub async fn </span>cancel_unsent_for_course_module(
+<a href=#584 id=584 data-nosnippet>584</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#585 id=585 data-nosnippet>585</a>    course_module_id: Uuid,
+<a href=#586 id=586 data-nosnippet>586</a>    actor_user_id: Uuid,
+<a href=#587 id=587 data-nosnippet>587</a>) -&gt; ModelResult&lt;i64&gt; {
+<a href=#588 id=588 data-nosnippet>588</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query!</span>(
+<a href=#589 id=589 data-nosnippet>589</a>        <span class="string">r#"
+<a href=#590 id=590 data-nosnippet>590</a>SELECT id,
+<a href=#591 id=591 data-nosnippet>591</a>  state
+<a href=#592 id=592 data-nosnippet>592</a>FROM credit_registrations
+<a href=#593 id=593 data-nosnippet>593</a>WHERE course_module_id = $1
+<a href=#594 id=594 data-nosnippet>594</a>  AND state = ANY($2::credit_registration_state [])
+<a href=#595 id=595 data-nosnippet>595</a>  AND submitted_attainment_id IS NULL
+<a href=#596 id=596 data-nosnippet>596</a>  AND superseded_by_id IS NULL
+<a href=#597 id=597 data-nosnippet>597</a>  AND deleted_at IS NULL
+<a href=#598 id=598 data-nosnippet>598</a>        "#</span>,
+<a href=#599 id=599 data-nosnippet>599</a>        course_module_id,
+<a href=#600 id=600 data-nosnippet>600</a>        <span class="kw-2">&amp;</span>UNSENT_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#601 id=601 data-nosnippet>601</a>    )
+<a href=#602 id=602 data-nosnippet>602</a>    .fetch_all(<span class="kw-2">&amp;mut *</span>conn)
+<a href=#603 id=603 data-nosnippet>603</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#604 id=604 data-nosnippet>604</a>    <span class="kw">let </span>moves: Vec&lt;BatchMove&gt; = rows
+<a href=#605 id=605 data-nosnippet>605</a>        .into_iter()
+<a href=#606 id=606 data-nosnippet>606</a>        .map(|row| BatchMove {
+<a href=#607 id=607 data-nosnippet>607</a>            id: row.id,
+<a href=#608 id=608 data-nosnippet>608</a>            transition: Transition {
+<a href=#609 id=609 data-nosnippet>609</a>                needs_admin_attention: <span class="prelude-val">Some</span>(AdminAttention::Clear),
+<a href=#610 id=610 data-nosnippet>610</a>                event_message: <span class="prelude-val">Some</span>(
+<a href=#611 id=611 data-nosnippet>611</a>                    <span class="string">"Completions of this module are no longer registered to Sisu."</span>.to_string(),
+<a href=#612 id=612 data-nosnippet>612</a>                ),
+<a href=#613 id=613 data-nosnippet>613</a>                actor_user_id: <span class="prelude-val">Some</span>(actor_user_id),
+<a href=#614 id=614 data-nosnippet>614</a>                <span class="comment">// Read without a lock: a row a phase has moved on since is that phase's.
+<a href=#615 id=615 data-nosnippet>615</a>                </span>expected_from_state: <span class="prelude-val">Some</span>(row.state),
+<a href=#616 id=616 data-nosnippet>616</a>                ..Transition::to(CreditRegistrationState::Cancelled)
+<a href=#617 id=617 data-nosnippet>617</a>            },
+<a href=#618 id=618 data-nosnippet>618</a>        })
+<a href=#619 id=619 data-nosnippet>619</a>        .collect();
+<a href=#620 id=620 data-nosnippet>620</a>    transition_batch(conn, <span class="kw-2">&amp;</span>moves).<span class="kw">await
+<a href=#621 id=621 data-nosnippet>621</a></span>}
 </code></pre></div></section></main></body></html>
