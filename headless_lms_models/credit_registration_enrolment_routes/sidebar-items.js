@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CreditRegistrationEnrolmentRoute"],"fn":["get_by_completion_id","set_enrolment_confirmed","set_route"],"struct":["EnrolmentRouteAnswer"]};
+window.SIDEBAR_ITEMS = {"enum":["CreditRegistrationEnrolmentRoute","CreditRegistrationIdentification","CreditRegistrationNeed"],"fn":["delete_all_by_user_id","get_by_completion_id","set_answers","set_certificate_chosen","set_enrolment_confirmed"],"struct":["EnrolmentAnswers","EnrolmentRouteAnswer"]};

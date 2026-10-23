@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ENROLMENT_FOUND_STATE"],"enum":["Position","StudentRegistrationProgressStep"],"fn":["position"],"struct":["CompletedProgressStep","ProgressFacts","StudentRegistrationProgress"]};
