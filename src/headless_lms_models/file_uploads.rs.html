@@ -74,48 +74,60 @@
 <a href=#74 id=74 data-nosnippet>74</a>    <span class="prelude-val">Ok</span>(res)
 <a href=#75 id=75 data-nosnippet>75</a>}
 <a href=#76 id=76 data-nosnippet>76</a>
-<a href=#77 id=77 data-nosnippet>77</a><span class="kw">pub async fn </span>get_filename(conn: <span class="kw-2">&amp;mut </span>PgConnection, path: <span class="kw-2">&amp;</span>str) -&gt; ModelResult&lt;String&gt; {
-<a href=#78 id=78 data-nosnippet>78</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
-<a href=#79 id=79 data-nosnippet>79</a>        <span class="string">r#"
-<a href=#80 id=80 data-nosnippet>80</a>SELECT *
-<a href=#81 id=81 data-nosnippet>81</a>FROM file_uploads
-<a href=#82 id=82 data-nosnippet>82</a>WHERE path = $1
-<a href=#83 id=83 data-nosnippet>83</a>"#</span>,
-<a href=#84 id=84 data-nosnippet>84</a>        path,
-<a href=#85 id=85 data-nosnippet>85</a>    )
-<a href=#86 id=86 data-nosnippet>86</a>    .fetch_one(conn)
-<a href=#87 id=87 data-nosnippet>87</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#88 id=88 data-nosnippet>88</a>    <span class="prelude-val">Ok</span>(res.name)
-<a href=#89 id=89 data-nosnippet>89</a>}
-<a href=#90 id=90 data-nosnippet>90</a>
-<a href=#91 id=91 data-nosnippet>91</a><span class="kw">pub async fn </span>delete_and_fetch_path(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;String&gt; {
-<a href=#92 id=92 data-nosnippet>92</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
-<a href=#93 id=93 data-nosnippet>93</a>        <span class="string">"
-<a href=#94 id=94 data-nosnippet>94</a>UPDATE file_uploads
-<a href=#95 id=95 data-nosnippet>95</a>SET deleted_at = now()
-<a href=#96 id=96 data-nosnippet>96</a>WHERE id = $1
-<a href=#97 id=97 data-nosnippet>97</a>AND deleted_at IS NULL
-<a href=#98 id=98 data-nosnippet>98</a>RETURNING *
-<a href=#99 id=99 data-nosnippet>99</a>"</span>,
-<a href=#100 id=100 data-nosnippet>100</a>        id
-<a href=#101 id=101 data-nosnippet>101</a>    )
-<a href=#102 id=102 data-nosnippet>102</a>    .fetch_one(conn)
-<a href=#103 id=103 data-nosnippet>103</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#104 id=104 data-nosnippet>104</a>    <span class="prelude-val">Ok</span>(res.path)
-<a href=#105 id=105 data-nosnippet>105</a>}
-<a href=#106 id=106 data-nosnippet>106</a>
-<a href=#107 id=107 data-nosnippet>107</a><span class="doccomment">/// Moves an upload's creation time `age` into the past, to bring it within a retention window.
-<a href=#108 id=108 data-nosnippet>108</a>///
-<a href=#109 id=109 data-nosnippet>109</a>/// Shifts the row rather than the clock because the retention filters compare against Postgres
-<a href=#110 id=110 data-nosnippet>110</a>/// `now()`, which no Rust-side clock reaches.
-<a href=#111 id=111 data-nosnippet>111</a></span><span class="kw">pub async fn </span>backdate(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid, age: Duration) -&gt; ModelResult&lt;()&gt; {
-<a href=#112 id=112 data-nosnippet>112</a>    <span class="macro">sqlx::query!</span>(
-<a href=#113 id=113 data-nosnippet>113</a>        <span class="string">"UPDATE file_uploads SET created_at = now() - $2::interval WHERE id = $1"</span>,
-<a href=#114 id=114 data-nosnippet>114</a>        id,
-<a href=#115 id=115 data-nosnippet>115</a>        age <span class="kw">as </span>Duration
-<a href=#116 id=116 data-nosnippet>116</a>    )
-<a href=#117 id=117 data-nosnippet>117</a>    .execute(conn)
-<a href=#118 id=118 data-nosnippet>118</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#119 id=119 data-nosnippet>119</a>    <span class="prelude-val">Ok</span>(())
-<a href=#120 id=120 data-nosnippet>120</a>}
+<a href=#77 id=77 data-nosnippet>77</a><span class="kw">pub struct </span>StoredFileDetails {
+<a href=#78 id=78 data-nosnippet>78</a>    <span class="kw">pub </span>name: String,
+<a href=#79 id=79 data-nosnippet>79</a>    <span class="kw">pub </span>mime: String,
+<a href=#80 id=80 data-nosnippet>80</a>}
+<a href=#81 id=81 data-nosnippet>81</a>
+<a href=#82 id=82 data-nosnippet>82</a><span class="doccomment">/// The original file name and MIME type of the upload stored at `path`.
+<a href=#83 id=83 data-nosnippet>83</a></span><span class="kw">pub async fn </span>get_details_by_path(
+<a href=#84 id=84 data-nosnippet>84</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#85 id=85 data-nosnippet>85</a>    path: <span class="kw-2">&amp;</span>str,
+<a href=#86 id=86 data-nosnippet>86</a>) -&gt; ModelResult&lt;StoredFileDetails&gt; {
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#88 id=88 data-nosnippet>88</a>        StoredFileDetails,
+<a href=#89 id=89 data-nosnippet>89</a>        <span class="string">r#"
+<a href=#90 id=90 data-nosnippet>90</a>SELECT name,
+<a href=#91 id=91 data-nosnippet>91</a>  mime
+<a href=#92 id=92 data-nosnippet>92</a>FROM file_uploads
+<a href=#93 id=93 data-nosnippet>93</a>WHERE path = $1
+<a href=#94 id=94 data-nosnippet>94</a>  AND deleted_at IS NULL
+<a href=#95 id=95 data-nosnippet>95</a>"#</span>,
+<a href=#96 id=96 data-nosnippet>96</a>        path,
+<a href=#97 id=97 data-nosnippet>97</a>    )
+<a href=#98 id=98 data-nosnippet>98</a>    .fetch_one(conn)
+<a href=#99 id=99 data-nosnippet>99</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#100 id=100 data-nosnippet>100</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#101 id=101 data-nosnippet>101</a>}
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a><span class="kw">pub async fn </span>delete_and_fetch_path(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid) -&gt; ModelResult&lt;String&gt; {
+<a href=#104 id=104 data-nosnippet>104</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query!</span>(
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="string">"
+<a href=#106 id=106 data-nosnippet>106</a>UPDATE file_uploads
+<a href=#107 id=107 data-nosnippet>107</a>SET deleted_at = now()
+<a href=#108 id=108 data-nosnippet>108</a>WHERE id = $1
+<a href=#109 id=109 data-nosnippet>109</a>AND deleted_at IS NULL
+<a href=#110 id=110 data-nosnippet>110</a>RETURNING *
+<a href=#111 id=111 data-nosnippet>111</a>"</span>,
+<a href=#112 id=112 data-nosnippet>112</a>        id
+<a href=#113 id=113 data-nosnippet>113</a>    )
+<a href=#114 id=114 data-nosnippet>114</a>    .fetch_one(conn)
+<a href=#115 id=115 data-nosnippet>115</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="prelude-val">Ok</span>(res.path)
+<a href=#117 id=117 data-nosnippet>117</a>}
+<a href=#118 id=118 data-nosnippet>118</a>
+<a href=#119 id=119 data-nosnippet>119</a><span class="doccomment">/// Moves an upload's creation time `age` into the past, to bring it within a retention window.
+<a href=#120 id=120 data-nosnippet>120</a>///
+<a href=#121 id=121 data-nosnippet>121</a>/// Shifts the row rather than the clock because the retention filters compare against Postgres
+<a href=#122 id=122 data-nosnippet>122</a>/// `now()`, which no Rust-side clock reaches.
+<a href=#123 id=123 data-nosnippet>123</a></span><span class="kw">pub async fn </span>backdate(conn: <span class="kw-2">&amp;mut </span>PgConnection, id: Uuid, age: Duration) -&gt; ModelResult&lt;()&gt; {
+<a href=#124 id=124 data-nosnippet>124</a>    <span class="macro">sqlx::query!</span>(
+<a href=#125 id=125 data-nosnippet>125</a>        <span class="string">"UPDATE file_uploads SET created_at = now() - $2::interval WHERE id = $1"</span>,
+<a href=#126 id=126 data-nosnippet>126</a>        id,
+<a href=#127 id=127 data-nosnippet>127</a>        age <span class="kw">as </span>Duration
+<a href=#128 id=128 data-nosnippet>128</a>    )
+<a href=#129 id=129 data-nosnippet>129</a>    .execute(conn)
+<a href=#130 id=130 data-nosnippet>130</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#131 id=131 data-nosnippet>131</a>    <span class="prelude-val">Ok</span>(())
+<a href=#132 id=132 data-nosnippet>132</a>}
 </code></pre></div></section></main></body></html>
