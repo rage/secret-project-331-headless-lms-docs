@@ -72,27 +72,29 @@
 <a href=#72 id=72 data-nosnippet>72</a>            initial_message: <span class="string">"Ah, there you are, my dear old bean. Shall we begin?"</span>.to_string(),
 <a href=#73 id=73 data-nosnippet>73</a>            model_id: llm.id,
 <a href=#74 id=74 data-nosnippet>74</a>            publicly_accessible: <span class="bool-val">true</span>,
-<a href=#75 id=75 data-nosnippet>75</a>            ..Default::default()
-<a href=#76 id=76 data-nosnippet>76</a>        },
-<a href=#77 id=77 data-nosnippet>77</a>    )
-<a href=#78 id=78 data-nosnippet>78</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#79 id=79 data-nosnippet>79</a>
-<a href=#80 id=80 data-nosnippet>80</a>    chatbot_configurations::insert(
-<a href=#81 id=81 data-nosnippet>81</a>        <span class="kw-2">&amp;mut </span>conn,
-<a href=#82 id=82 data-nosnippet>82</a>        PKeyPolicy::Fixed(Uuid::parse_str(GLOBAL_CHATBOT_CONFIGURATION_ID_ADMIN_SUPPORT).unwrap()),
-<a href=#83 id=83 data-nosnippet>83</a>        NewChatbotConf {
-<a href=#84 id=84 data-nosnippet>84</a>            course_id: <span class="prelude-val">None</span>,
-<a href=#85 id=85 data-nosnippet>85</a>            chatbot_name: <span class="string">"Admin support bot"</span>.to_string(),
-<a href=#86 id=86 data-nosnippet>86</a>            prompt: <span class="string">"You are a support assistant for site administrators: look up users and courses, inspect a user's progress and account, and perform account/exercise/cheating-status actions an admin confirms."</span>.to_string(),
-<a href=#87 id=87 data-nosnippet>87</a>            initial_message: <span class="string">"Hi, I'm here to help with admin support tasks. Who or what course are we looking at?"</span>.to_string(),
-<a href=#88 id=88 data-nosnippet>88</a>            model_id: llm.id,
-<a href=#89 id=89 data-nosnippet>89</a>            publicly_accessible: <span class="bool-val">true</span>,
-<a href=#90 id=90 data-nosnippet>90</a>            enabled_tool_categories: ToolCategory::ALL.to_vec(),
-<a href=#91 id=91 data-nosnippet>91</a>            ..Default::default()
-<a href=#92 id=92 data-nosnippet>92</a>        },
-<a href=#93 id=93 data-nosnippet>93</a>    )
-<a href=#94 id=94 data-nosnippet>94</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#95 id=95 data-nosnippet>95</a>
-<a href=#96 id=96 data-nosnippet>96</a>    <span class="prelude-val">Ok</span>(())
-<a href=#97 id=97 data-nosnippet>97</a>}
+<a href=#75 id=75 data-nosnippet>75</a>            embeddable: <span class="bool-val">true</span>,
+<a href=#76 id=76 data-nosnippet>76</a>            ..Default::default()
+<a href=#77 id=77 data-nosnippet>77</a>        },
+<a href=#78 id=78 data-nosnippet>78</a>    )
+<a href=#79 id=79 data-nosnippet>79</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#80 id=80 data-nosnippet>80</a>
+<a href=#81 id=81 data-nosnippet>81</a>    chatbot_configurations::insert(
+<a href=#82 id=82 data-nosnippet>82</a>        <span class="kw-2">&amp;mut </span>conn,
+<a href=#83 id=83 data-nosnippet>83</a>        PKeyPolicy::Fixed(Uuid::parse_str(GLOBAL_CHATBOT_CONFIGURATION_ID_ADMIN_SUPPORT).unwrap()),
+<a href=#84 id=84 data-nosnippet>84</a>        NewChatbotConf {
+<a href=#85 id=85 data-nosnippet>85</a>            course_id: <span class="prelude-val">None</span>,
+<a href=#86 id=86 data-nosnippet>86</a>            chatbot_name: <span class="string">"Admin support bot"</span>.to_string(),
+<a href=#87 id=87 data-nosnippet>87</a>            prompt: <span class="string">"You are a support assistant for site administrators: look up users and courses, inspect a user's progress and account, and perform account/exercise/cheating-status actions an admin confirms."</span>.to_string(),
+<a href=#88 id=88 data-nosnippet>88</a>            initial_message: <span class="string">"Hi, I'm here to help with admin support tasks. Who or what course are we looking at?"</span>.to_string(),
+<a href=#89 id=89 data-nosnippet>89</a>            model_id: llm.id,
+<a href=#90 id=90 data-nosnippet>90</a>            publicly_accessible: <span class="bool-val">true</span>,
+<a href=#91 id=91 data-nosnippet>91</a>            enabled_tool_categories: ToolCategory::ALL.to_vec(),
+<a href=#92 id=92 data-nosnippet>92</a>            embeddable: <span class="bool-val">true</span>,
+<a href=#93 id=93 data-nosnippet>93</a>            ..Default::default()
+<a href=#94 id=94 data-nosnippet>94</a>        },
+<a href=#95 id=95 data-nosnippet>95</a>    )
+<a href=#96 id=96 data-nosnippet>96</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#97 id=97 data-nosnippet>97</a>
+<a href=#98 id=98 data-nosnippet>98</a>    <span class="prelude-val">Ok</span>(())
+<a href=#99 id=99 data-nosnippet>99</a>}
 </code></pre></div></section></main></body></html>
