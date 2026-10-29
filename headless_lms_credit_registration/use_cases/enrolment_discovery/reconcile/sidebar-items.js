@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["claim_linking_mails","distinct_people","enrolled_since","linking_candidates","list_unlinked","list_unlinked_enrolled_before","load_linked_accounts","reconcile_roster","roster_enrolees","unlinked_enrolled_before"],"struct":["LinkedAccounts"]};
+window.SIDEBAR_ITEMS = {"fn":["claim_linking_mails","distinct_people","enrolled_since","late_completer_courses","linking_candidates","list_unlinked","list_unlinked_enrolled_before","load_linked_accounts","reconcile_roster","roster_enrolees","unlinked_enrolled_before"],"struct":["LinkedAccounts"]};
