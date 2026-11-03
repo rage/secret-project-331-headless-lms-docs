@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["course_default_to_copy","edit_exercise","page_writes"],"struct":["PageWrites"]};

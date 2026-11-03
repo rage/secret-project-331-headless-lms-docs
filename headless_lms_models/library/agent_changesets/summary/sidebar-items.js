@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_summaries","get_summaries_for_user"],"struct":["ChangesetSummary"]};

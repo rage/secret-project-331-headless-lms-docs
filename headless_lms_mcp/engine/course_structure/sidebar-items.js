@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["apply"],"mod":["editor","fields","model","outline","paths"],"struct":["ChapterRenumber","PageCopy","StructureResult"]};

@@ -1254,7 +1254,7 @@
 <a href=#1254 id=1254 data-nosnippet>1254</a>
 <a href=#1255 id=1255 data-nosnippet>1255</a>    <span class="macro">macro_rules!</span> exercises_app {
 <a href=#1256 id=1256 data-nosnippet>1256</a>        (<span class="macro-nonterminal">$file_store</span>:expr) =&gt; {{
-<a href=#1257 id=1257 data-nosnippet>1257</a>            <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>test_database_url()).<span class="kw">await</span>.expect(<span class="string">"pool"</span>);
+<a href=#1257 id=1257 data-nosnippet>1257</a>            <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>dev_database_url()).<span class="kw">await</span>.expect(<span class="string">"pool"</span>);
 <a href=#1258 id=1258 data-nosnippet>1258</a>            <span class="kw">let </span>file_store: Arc&lt;<span class="kw">dyn </span>FileStore&gt; = <span class="macro-nonterminal">$file_store</span>;
 <a href=#1259 id=1259 data-nosnippet>1259</a>            test::init_service(
 <a href=#1260 id=1260 data-nosnippet>1260</a>                App::new()

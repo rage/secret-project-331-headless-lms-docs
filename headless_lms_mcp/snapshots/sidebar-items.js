@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["apply_glossary","apply_page_documents","apply_settings","apply_structure","completion_policy","glossary_document","increasing_order_numbers","list_order_numbers","model_completion_policy","page_document","page_lists","page_ref","page_refs","page_type","settings_document","structure","structure_page"],"struct":["PageFacts"]};

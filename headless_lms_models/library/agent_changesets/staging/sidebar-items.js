@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EntityPlan","PriorState","StageCallOutcome"],"fn":["check_snapshot","foreign_parents","plan_entity","stage","stage_call","stage_call_dry_run"],"struct":["StageCall","StageCallResult","StagedStateRead"]};

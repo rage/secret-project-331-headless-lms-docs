@@ -444,236 +444,256 @@
 <a href=#444 id=444 data-nosnippet>444</a>    resource: Resource,
 <a href=#445 id=445 data-nosnippet>445</a>    user_roles: <span class="kw-2">&amp;</span>[Role],
 <a href=#446 id=446 data-nosnippet>446</a>) -&gt; AuthorizationResult&lt;bool&gt; {
-<a href=#447 id=447 data-nosnippet>447</a>    <span class="kw">for </span>role <span class="kw">in </span>user_roles {
-<a href=#448 id=448 data-nosnippet>448</a>        <span class="kw">if </span>role.is_global() &amp;&amp; has_permission(role.role, action) {
-<a href=#449 id=449 data-nosnippet>449</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
-<a href=#450 id=450 data-nosnippet>450</a>        }
-<a href=#451 id=451 data-nosnippet>451</a>    }
-<a href=#452 id=452 data-nosnippet>452</a>
-<a href=#453 id=453 data-nosnippet>453</a>    <span class="comment">// for this resource, the domain of the role does not matter (e.g. organization role, course role, etc.)
-<a href=#454 id=454 data-nosnippet>454</a>    </span><span class="kw">if </span>resource == Resource::AnyCourse {
-<a href=#455 id=455 data-nosnippet>455</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(user_roles
-<a href=#456 id=456 data-nosnippet>456</a>            .iter()
-<a href=#457 id=457 data-nosnippet>457</a>            .any(|role| has_permission(role.role, action)));
-<a href=#458 id=458 data-nosnippet>458</a>    }
-<a href=#459 id=459 data-nosnippet>459</a>
-<a href=#460 id=460 data-nosnippet>460</a>    <span class="kw">match </span>resource {
-<a href=#461 id=461 data-nosnippet>461</a>        Resource::Chapter(id) =&gt; {
-<a href=#462 id=462 data-nosnippet>462</a>            <span class="comment">// if trying to View a chapter that is not open, check for permission to view the material
-<a href=#463 id=463 data-nosnippet>463</a>            </span><span class="kw">let </span>action =
-<a href=#464 id=464 data-nosnippet>464</a>                <span class="kw">if </span><span class="macro">matches!</span>(action, Action::View) &amp;&amp; !models::chapters::is_open(conn, id).<span class="kw">await</span><span class="question-mark">? </span>{
-<a href=#465 id=465 data-nosnippet>465</a>                    Action::ViewMaterial
-<a href=#466 id=466 data-nosnippet>466</a>                } <span class="kw">else </span>{
-<a href=#467 id=467 data-nosnippet>467</a>                    action
-<a href=#468 id=468 data-nosnippet>468</a>                };
-<a href=#469 id=469 data-nosnippet>469</a>            <span class="comment">// there are no chapter roles so we check the course instead
-<a href=#470 id=470 data-nosnippet>470</a>            </span><span class="kw">let </span>course_id = models::chapters::get_course_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#471 id=471 data-nosnippet>471</a>            check_course_permission(conn, user_roles, action, course_id).<span class="kw">await
-<a href=#472 id=472 data-nosnippet>472</a>        </span>}
-<a href=#473 id=473 data-nosnippet>473</a>        Resource::Course(id) =&gt; check_course_permission(conn, user_roles, action, id).<span class="kw">await</span>,
-<a href=#474 id=474 data-nosnippet>474</a>        Resource::CourseInstance(id) =&gt; {
-<a href=#475 id=475 data-nosnippet>475</a>            check_course_instance_permission(conn, user_roles, action, id).<span class="kw">await
-<a href=#476 id=476 data-nosnippet>476</a>        </span>}
-<a href=#477 id=477 data-nosnippet>477</a>        Resource::Exercise(id) =&gt; {
-<a href=#478 id=478 data-nosnippet>478</a>            <span class="kw">let </span>course_or_exam_id = models::exercises::get_course_or_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#479 id=479 data-nosnippet>479</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
-<a href=#480 id=480 data-nosnippet>480</a>        </span>}
-<a href=#481 id=481 data-nosnippet>481</a>        Resource::ExerciseSlideSubmission(id) =&gt; {
-<a href=#482 id=482 data-nosnippet>482</a>            <span class="kw">let </span>course_or_exam_id =
-<a href=#483 id=483 data-nosnippet>483</a>                models::exercise_slide_submissions::get_course_and_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#484 id=484 data-nosnippet>484</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
-<a href=#485 id=485 data-nosnippet>485</a>        </span>}
-<a href=#486 id=486 data-nosnippet>486</a>        Resource::ExerciseTask(id) =&gt; {
-<a href=#487 id=487 data-nosnippet>487</a>            <span class="kw">let </span>course_or_exam_id = models::exercise_tasks::get_course_or_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#488 id=488 data-nosnippet>488</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
-<a href=#489 id=489 data-nosnippet>489</a>        </span>}
-<a href=#490 id=490 data-nosnippet>490</a>        Resource::ExerciseTaskSubmission(id) =&gt; {
-<a href=#491 id=491 data-nosnippet>491</a>            <span class="kw">let </span>course_or_exam_id =
-<a href=#492 id=492 data-nosnippet>492</a>                models::exercise_task_submissions::get_course_and_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#493 id=493 data-nosnippet>493</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
-<a href=#494 id=494 data-nosnippet>494</a>        </span>}
-<a href=#495 id=495 data-nosnippet>495</a>        Resource::ExerciseTaskGrading(id) =&gt; {
-<a href=#496 id=496 data-nosnippet>496</a>            <span class="kw">let </span>course_or_exam_id =
-<a href=#497 id=497 data-nosnippet>497</a>                models::exercise_task_gradings::get_course_or_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#498 id=498 data-nosnippet>498</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
-<a href=#499 id=499 data-nosnippet>499</a>        </span>}
-<a href=#500 id=500 data-nosnippet>500</a>        Resource::Organization(id) =&gt; <span class="prelude-val">Ok</span>(check_organization_permission(user_roles, action, id)),
-<a href=#501 id=501 data-nosnippet>501</a>        Resource::Page(id) =&gt; {
-<a href=#502 id=502 data-nosnippet>502</a>            <span class="kw">let </span>course_or_exam_id = models::pages::get_course_and_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#503 id=503 data-nosnippet>503</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
-<a href=#504 id=504 data-nosnippet>504</a>        </span>}
-<a href=#505 id=505 data-nosnippet>505</a>        Resource::StudyRegistry(secret_key) =&gt; {
-<a href=#506 id=506 data-nosnippet>506</a>            check_study_registry_permission(conn, secret_key, action).<span class="kw">await
-<a href=#507 id=507 data-nosnippet>507</a>        </span>}
-<a href=#508 id=508 data-nosnippet>508</a>        Resource::Exam(exam_id) =&gt; check_exam_permission(conn, user_roles, action, exam_id).<span class="kw">await</span>,
-<a href=#509 id=509 data-nosnippet>509</a>        Resource::Role
-<a href=#510 id=510 data-nosnippet>510</a>        | Resource::User(<span class="kw">_</span>)
-<a href=#511 id=511 data-nosnippet>511</a>        | Resource::AnyCourse
-<a href=#512 id=512 data-nosnippet>512</a>        | Resource::PlaygroundExample
-<a href=#513 id=513 data-nosnippet>513</a>        | Resource::ExerciseService
-<a href=#514 id=514 data-nosnippet>514</a>        | Resource::GlobalPermissions =&gt; {
-<a href=#515 id=515 data-nosnippet>515</a>            <span class="comment">// permissions for these resources have already been checked
-<a href=#516 id=516 data-nosnippet>516</a>            </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-<a href=#517 id=517 data-nosnippet>517</a>        }
-<a href=#518 id=518 data-nosnippet>518</a>    }
-<a href=#519 id=519 data-nosnippet>519</a>}
-<a href=#520 id=520 data-nosnippet>520</a>
-<a href=#521 id=521 data-nosnippet>521</a><span class="kw">fn </span>check_organization_permission(roles: <span class="kw-2">&amp;</span>[Role], action: Action, organization_id: Uuid) -&gt; bool {
-<a href=#522 id=522 data-nosnippet>522</a>    <span class="kw">if </span>action == Action::View {
-<a href=#523 id=523 data-nosnippet>523</a>        <span class="kw">return </span><span class="bool-val">true</span>;
-<a href=#524 id=524 data-nosnippet>524</a>    };
-<a href=#525 id=525 data-nosnippet>525</a>
-<a href=#526 id=526 data-nosnippet>526</a>    roles.iter().any(|role| {
-<a href=#527 id=527 data-nosnippet>527</a>        role.is_role_for_organization(organization_id) &amp;&amp; has_permission(role.role, action)
-<a href=#528 id=528 data-nosnippet>528</a>    })
-<a href=#529 id=529 data-nosnippet>529</a>}
-<a href=#530 id=530 data-nosnippet>530</a>
-<a href=#531 id=531 data-nosnippet>531</a><span class="doccomment">/// Also checks organization role which is valid for courses.
-<a href=#532 id=532 data-nosnippet>532</a></span><span class="kw">async fn </span>check_course_permission(
-<a href=#533 id=533 data-nosnippet>533</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#534 id=534 data-nosnippet>534</a>    roles: <span class="kw-2">&amp;</span>[Role],
-<a href=#535 id=535 data-nosnippet>535</a>    action: Action,
-<a href=#536 id=536 data-nosnippet>536</a>    course_id: Uuid,
-<a href=#537 id=537 data-nosnippet>537</a>) -&gt; AuthorizationResult&lt;bool&gt; {
-<a href=#538 id=538 data-nosnippet>538</a>    <span class="kw">if </span>roles
-<a href=#539 id=539 data-nosnippet>539</a>        .iter()
-<a href=#540 id=540 data-nosnippet>540</a>        .any(|role| role.is_role_for_course(course_id) &amp;&amp; has_permission(role.role, action))
-<a href=#541 id=541 data-nosnippet>541</a>    {
-<a href=#542 id=542 data-nosnippet>542</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
-<a href=#543 id=543 data-nosnippet>543</a>    }
-<a href=#544 id=544 data-nosnippet>544</a>    <span class="kw">let </span>organization_id = models::courses::get_organization_id(conn, course_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#545 id=545 data-nosnippet>545</a>    <span class="prelude-val">Ok</span>(check_organization_permission(
-<a href=#546 id=546 data-nosnippet>546</a>        roles,
-<a href=#547 id=547 data-nosnippet>547</a>        action,
-<a href=#548 id=548 data-nosnippet>548</a>        organization_id,
-<a href=#549 id=549 data-nosnippet>549</a>    ))
-<a href=#550 id=550 data-nosnippet>550</a>}
-<a href=#551 id=551 data-nosnippet>551</a>
-<a href=#552 id=552 data-nosnippet>552</a><span class="doccomment">/// Also checks organization and course roles which are valid for course instances.
-<a href=#553 id=553 data-nosnippet>553</a></span><span class="kw">async fn </span>check_course_instance_permission(
-<a href=#554 id=554 data-nosnippet>554</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#555 id=555 data-nosnippet>555</a>    roles: <span class="kw-2">&amp;</span>[Role],
-<a href=#556 id=556 data-nosnippet>556</a>    <span class="kw-2">mut </span>action: Action,
-<a href=#557 id=557 data-nosnippet>557</a>    course_instance_id: Uuid,
-<a href=#558 id=558 data-nosnippet>558</a>) -&gt; AuthorizationResult&lt;bool&gt; {
-<a href=#559 id=559 data-nosnippet>559</a>    <span class="comment">// if trying to View a course instance that is not open, we check for permission to Teach
-<a href=#560 id=560 data-nosnippet>560</a>    </span><span class="kw">if </span>action == Action::View
-<a href=#561 id=561 data-nosnippet>561</a>        &amp;&amp; !models::course_instances::is_open(conn, course_instance_id).<span class="kw">await</span><span class="question-mark">?
-<a href=#562 id=562 data-nosnippet>562</a>    </span>{
-<a href=#563 id=563 data-nosnippet>563</a>        action = Action::Teach;
-<a href=#564 id=564 data-nosnippet>564</a>    }
-<a href=#565 id=565 data-nosnippet>565</a>
-<a href=#566 id=566 data-nosnippet>566</a>    <span class="kw">if </span>roles.iter().any(|role| {
-<a href=#567 id=567 data-nosnippet>567</a>        role.is_role_for_course_instance(course_instance_id) &amp;&amp; has_permission(role.role, action)
-<a href=#568 id=568 data-nosnippet>568</a>    }) {
-<a href=#569 id=569 data-nosnippet>569</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
-<a href=#570 id=570 data-nosnippet>570</a>    }
-<a href=#571 id=571 data-nosnippet>571</a>    <span class="kw">let </span>course_id = models::course_instances::get_course_id(conn, course_instance_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#572 id=572 data-nosnippet>572</a>    check_course_permission(conn, roles, action, course_id).<span class="kw">await
-<a href=#573 id=573 data-nosnippet>573</a></span>}
-<a href=#574 id=574 data-nosnippet>574</a>
-<a href=#575 id=575 data-nosnippet>575</a><span class="doccomment">/// Also checks organization role which is valid for exams.
-<a href=#576 id=576 data-nosnippet>576</a></span><span class="kw">async fn </span>check_exam_permission(
-<a href=#577 id=577 data-nosnippet>577</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#578 id=578 data-nosnippet>578</a>    roles: <span class="kw-2">&amp;</span>[Role],
-<a href=#579 id=579 data-nosnippet>579</a>    action: Action,
-<a href=#580 id=580 data-nosnippet>580</a>    exam_id: Uuid,
-<a href=#581 id=581 data-nosnippet>581</a>) -&gt; AuthorizationResult&lt;bool&gt; {
-<a href=#582 id=582 data-nosnippet>582</a>    <span class="kw">if </span>roles
-<a href=#583 id=583 data-nosnippet>583</a>        .iter()
-<a href=#584 id=584 data-nosnippet>584</a>        .any(|role| role.is_role_for_exam(exam_id) &amp;&amp; has_permission(role.role, action))
-<a href=#585 id=585 data-nosnippet>585</a>    {
-<a href=#586 id=586 data-nosnippet>586</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
-<a href=#587 id=587 data-nosnippet>587</a>    }
-<a href=#588 id=588 data-nosnippet>588</a>    <span class="kw">let </span>organization_id = models::exams::get_organization_id(conn, exam_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#589 id=589 data-nosnippet>589</a>    <span class="prelude-val">Ok</span>(check_organization_permission(
-<a href=#590 id=590 data-nosnippet>590</a>        roles,
-<a href=#591 id=591 data-nosnippet>591</a>        action,
-<a href=#592 id=592 data-nosnippet>592</a>        organization_id,
-<a href=#593 id=593 data-nosnippet>593</a>    ))
-<a href=#594 id=594 data-nosnippet>594</a>}
-<a href=#595 id=595 data-nosnippet>595</a>
-<a href=#596 id=596 data-nosnippet>596</a><span class="kw">async fn </span>check_course_or_exam_permission(
+<a href=#447 id=447 data-nosnippet>447</a>    <span class="kw">if </span>has_global_permission(user_roles, action) {
+<a href=#448 id=448 data-nosnippet>448</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
+<a href=#449 id=449 data-nosnippet>449</a>    }
+<a href=#450 id=450 data-nosnippet>450</a>
+<a href=#451 id=451 data-nosnippet>451</a>    <span class="comment">// for this resource, the domain of the role does not matter (e.g. organization role, course role, etc.)
+<a href=#452 id=452 data-nosnippet>452</a>    </span><span class="kw">if </span>resource == Resource::AnyCourse {
+<a href=#453 id=453 data-nosnippet>453</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(user_roles
+<a href=#454 id=454 data-nosnippet>454</a>            .iter()
+<a href=#455 id=455 data-nosnippet>455</a>            .any(|role| has_permission(role.role, action)));
+<a href=#456 id=456 data-nosnippet>456</a>    }
+<a href=#457 id=457 data-nosnippet>457</a>
+<a href=#458 id=458 data-nosnippet>458</a>    <span class="kw">match </span>resource {
+<a href=#459 id=459 data-nosnippet>459</a>        Resource::Chapter(id) =&gt; {
+<a href=#460 id=460 data-nosnippet>460</a>            <span class="comment">// if trying to View a chapter that is not open, check for permission to view the material
+<a href=#461 id=461 data-nosnippet>461</a>            </span><span class="kw">let </span>action =
+<a href=#462 id=462 data-nosnippet>462</a>                <span class="kw">if </span><span class="macro">matches!</span>(action, Action::View) &amp;&amp; !models::chapters::is_open(conn, id).<span class="kw">await</span><span class="question-mark">? </span>{
+<a href=#463 id=463 data-nosnippet>463</a>                    Action::ViewMaterial
+<a href=#464 id=464 data-nosnippet>464</a>                } <span class="kw">else </span>{
+<a href=#465 id=465 data-nosnippet>465</a>                    action
+<a href=#466 id=466 data-nosnippet>466</a>                };
+<a href=#467 id=467 data-nosnippet>467</a>            <span class="comment">// there are no chapter roles so we check the course instead
+<a href=#468 id=468 data-nosnippet>468</a>            </span><span class="kw">let </span>course_id = models::chapters::get_course_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#469 id=469 data-nosnippet>469</a>            check_course_permission(conn, user_roles, action, course_id).<span class="kw">await
+<a href=#470 id=470 data-nosnippet>470</a>        </span>}
+<a href=#471 id=471 data-nosnippet>471</a>        Resource::Course(id) =&gt; check_course_permission(conn, user_roles, action, id).<span class="kw">await</span>,
+<a href=#472 id=472 data-nosnippet>472</a>        Resource::CourseInstance(id) =&gt; {
+<a href=#473 id=473 data-nosnippet>473</a>            check_course_instance_permission(conn, user_roles, action, id).<span class="kw">await
+<a href=#474 id=474 data-nosnippet>474</a>        </span>}
+<a href=#475 id=475 data-nosnippet>475</a>        Resource::Exercise(id) =&gt; {
+<a href=#476 id=476 data-nosnippet>476</a>            <span class="kw">let </span>course_or_exam_id = models::exercises::get_course_or_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#477 id=477 data-nosnippet>477</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
+<a href=#478 id=478 data-nosnippet>478</a>        </span>}
+<a href=#479 id=479 data-nosnippet>479</a>        Resource::ExerciseSlideSubmission(id) =&gt; {
+<a href=#480 id=480 data-nosnippet>480</a>            <span class="kw">let </span>course_or_exam_id =
+<a href=#481 id=481 data-nosnippet>481</a>                models::exercise_slide_submissions::get_course_and_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#482 id=482 data-nosnippet>482</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
+<a href=#483 id=483 data-nosnippet>483</a>        </span>}
+<a href=#484 id=484 data-nosnippet>484</a>        Resource::ExerciseTask(id) =&gt; {
+<a href=#485 id=485 data-nosnippet>485</a>            <span class="kw">let </span>course_or_exam_id = models::exercise_tasks::get_course_or_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#486 id=486 data-nosnippet>486</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
+<a href=#487 id=487 data-nosnippet>487</a>        </span>}
+<a href=#488 id=488 data-nosnippet>488</a>        Resource::ExerciseTaskSubmission(id) =&gt; {
+<a href=#489 id=489 data-nosnippet>489</a>            <span class="kw">let </span>course_or_exam_id =
+<a href=#490 id=490 data-nosnippet>490</a>                models::exercise_task_submissions::get_course_and_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#491 id=491 data-nosnippet>491</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
+<a href=#492 id=492 data-nosnippet>492</a>        </span>}
+<a href=#493 id=493 data-nosnippet>493</a>        Resource::ExerciseTaskGrading(id) =&gt; {
+<a href=#494 id=494 data-nosnippet>494</a>            <span class="kw">let </span>course_or_exam_id =
+<a href=#495 id=495 data-nosnippet>495</a>                models::exercise_task_gradings::get_course_or_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#496 id=496 data-nosnippet>496</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
+<a href=#497 id=497 data-nosnippet>497</a>        </span>}
+<a href=#498 id=498 data-nosnippet>498</a>        Resource::Organization(id) =&gt; <span class="prelude-val">Ok</span>(check_organization_permission(user_roles, action, id)),
+<a href=#499 id=499 data-nosnippet>499</a>        Resource::Page(id) =&gt; {
+<a href=#500 id=500 data-nosnippet>500</a>            <span class="kw">let </span>course_or_exam_id = models::pages::get_course_and_exam_id(conn, id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#501 id=501 data-nosnippet>501</a>            check_course_or_exam_permission(conn, user_roles, action, course_or_exam_id).<span class="kw">await
+<a href=#502 id=502 data-nosnippet>502</a>        </span>}
+<a href=#503 id=503 data-nosnippet>503</a>        Resource::StudyRegistry(secret_key) =&gt; {
+<a href=#504 id=504 data-nosnippet>504</a>            check_study_registry_permission(conn, secret_key, action).<span class="kw">await
+<a href=#505 id=505 data-nosnippet>505</a>        </span>}
+<a href=#506 id=506 data-nosnippet>506</a>        Resource::Exam(exam_id) =&gt; check_exam_permission(conn, user_roles, action, exam_id).<span class="kw">await</span>,
+<a href=#507 id=507 data-nosnippet>507</a>        Resource::Role
+<a href=#508 id=508 data-nosnippet>508</a>        | Resource::User(<span class="kw">_</span>)
+<a href=#509 id=509 data-nosnippet>509</a>        | Resource::AnyCourse
+<a href=#510 id=510 data-nosnippet>510</a>        | Resource::PlaygroundExample
+<a href=#511 id=511 data-nosnippet>511</a>        | Resource::ExerciseService
+<a href=#512 id=512 data-nosnippet>512</a>        | Resource::GlobalPermissions =&gt; {
+<a href=#513 id=513 data-nosnippet>513</a>            <span class="comment">// permissions for these resources have already been checked
+<a href=#514 id=514 data-nosnippet>514</a>            </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
+<a href=#515 id=515 data-nosnippet>515</a>        }
+<a href=#516 id=516 data-nosnippet>516</a>    }
+<a href=#517 id=517 data-nosnippet>517</a>}
+<a href=#518 id=518 data-nosnippet>518</a>
+<a href=#519 id=519 data-nosnippet>519</a><span class="doccomment">/// [`is_permitted`] on a course whose organization the caller already knows, without querying the
+<a href=#520 id=520 data-nosnippet>520</a>/// database.
+<a href=#521 id=521 data-nosnippet>521</a></span><span class="kw">pub fn </span>is_permitted_on_course(
+<a href=#522 id=522 data-nosnippet>522</a>    user_roles: <span class="kw-2">&amp;</span>[Role],
+<a href=#523 id=523 data-nosnippet>523</a>    action: Action,
+<a href=#524 id=524 data-nosnippet>524</a>    course_id: Uuid,
+<a href=#525 id=525 data-nosnippet>525</a>    organization_id: Uuid,
+<a href=#526 id=526 data-nosnippet>526</a>) -&gt; bool {
+<a href=#527 id=527 data-nosnippet>527</a>    has_global_permission(user_roles, action)
+<a href=#528 id=528 data-nosnippet>528</a>        || has_course_role_permission(user_roles, action, course_id)
+<a href=#529 id=529 data-nosnippet>529</a>        || check_organization_permission(user_roles, action, organization_id)
+<a href=#530 id=530 data-nosnippet>530</a>}
+<a href=#531 id=531 data-nosnippet>531</a>
+<a href=#532 id=532 data-nosnippet>532</a><span class="kw">fn </span>has_global_permission(roles: <span class="kw-2">&amp;</span>[Role], action: Action) -&gt; bool {
+<a href=#533 id=533 data-nosnippet>533</a>    roles
+<a href=#534 id=534 data-nosnippet>534</a>        .iter()
+<a href=#535 id=535 data-nosnippet>535</a>        .any(|role| role.is_global() &amp;&amp; has_permission(role.role, action))
+<a href=#536 id=536 data-nosnippet>536</a>}
+<a href=#537 id=537 data-nosnippet>537</a>
+<a href=#538 id=538 data-nosnippet>538</a><span class="kw">fn </span>has_course_role_permission(roles: <span class="kw-2">&amp;</span>[Role], action: Action, course_id: Uuid) -&gt; bool {
+<a href=#539 id=539 data-nosnippet>539</a>    roles
+<a href=#540 id=540 data-nosnippet>540</a>        .iter()
+<a href=#541 id=541 data-nosnippet>541</a>        .any(|role| role.is_role_for_course(course_id) &amp;&amp; has_permission(role.role, action))
+<a href=#542 id=542 data-nosnippet>542</a>}
+<a href=#543 id=543 data-nosnippet>543</a>
+<a href=#544 id=544 data-nosnippet>544</a><span class="kw">fn </span>check_organization_permission(roles: <span class="kw-2">&amp;</span>[Role], action: Action, organization_id: Uuid) -&gt; bool {
+<a href=#545 id=545 data-nosnippet>545</a>    <span class="kw">if </span>action == Action::View {
+<a href=#546 id=546 data-nosnippet>546</a>        <span class="kw">return </span><span class="bool-val">true</span>;
+<a href=#547 id=547 data-nosnippet>547</a>    };
+<a href=#548 id=548 data-nosnippet>548</a>
+<a href=#549 id=549 data-nosnippet>549</a>    roles.iter().any(|role| {
+<a href=#550 id=550 data-nosnippet>550</a>        role.is_role_for_organization(organization_id) &amp;&amp; has_permission(role.role, action)
+<a href=#551 id=551 data-nosnippet>551</a>    })
+<a href=#552 id=552 data-nosnippet>552</a>}
+<a href=#553 id=553 data-nosnippet>553</a>
+<a href=#554 id=554 data-nosnippet>554</a><span class="doccomment">/// Also checks organization role which is valid for courses.
+<a href=#555 id=555 data-nosnippet>555</a></span><span class="kw">async fn </span>check_course_permission(
+<a href=#556 id=556 data-nosnippet>556</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#557 id=557 data-nosnippet>557</a>    roles: <span class="kw-2">&amp;</span>[Role],
+<a href=#558 id=558 data-nosnippet>558</a>    action: Action,
+<a href=#559 id=559 data-nosnippet>559</a>    course_id: Uuid,
+<a href=#560 id=560 data-nosnippet>560</a>) -&gt; AuthorizationResult&lt;bool&gt; {
+<a href=#561 id=561 data-nosnippet>561</a>    <span class="kw">if </span>has_course_role_permission(roles, action, course_id) {
+<a href=#562 id=562 data-nosnippet>562</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
+<a href=#563 id=563 data-nosnippet>563</a>    }
+<a href=#564 id=564 data-nosnippet>564</a>    <span class="kw">let </span>organization_id = models::courses::get_organization_id(conn, course_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#565 id=565 data-nosnippet>565</a>    <span class="prelude-val">Ok</span>(check_organization_permission(
+<a href=#566 id=566 data-nosnippet>566</a>        roles,
+<a href=#567 id=567 data-nosnippet>567</a>        action,
+<a href=#568 id=568 data-nosnippet>568</a>        organization_id,
+<a href=#569 id=569 data-nosnippet>569</a>    ))
+<a href=#570 id=570 data-nosnippet>570</a>}
+<a href=#571 id=571 data-nosnippet>571</a>
+<a href=#572 id=572 data-nosnippet>572</a><span class="doccomment">/// Also checks organization and course roles which are valid for course instances.
+<a href=#573 id=573 data-nosnippet>573</a></span><span class="kw">async fn </span>check_course_instance_permission(
+<a href=#574 id=574 data-nosnippet>574</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#575 id=575 data-nosnippet>575</a>    roles: <span class="kw-2">&amp;</span>[Role],
+<a href=#576 id=576 data-nosnippet>576</a>    <span class="kw-2">mut </span>action: Action,
+<a href=#577 id=577 data-nosnippet>577</a>    course_instance_id: Uuid,
+<a href=#578 id=578 data-nosnippet>578</a>) -&gt; AuthorizationResult&lt;bool&gt; {
+<a href=#579 id=579 data-nosnippet>579</a>    <span class="comment">// if trying to View a course instance that is not open, we check for permission to Teach
+<a href=#580 id=580 data-nosnippet>580</a>    </span><span class="kw">if </span>action == Action::View
+<a href=#581 id=581 data-nosnippet>581</a>        &amp;&amp; !models::course_instances::is_open(conn, course_instance_id).<span class="kw">await</span><span class="question-mark">?
+<a href=#582 id=582 data-nosnippet>582</a>    </span>{
+<a href=#583 id=583 data-nosnippet>583</a>        action = Action::Teach;
+<a href=#584 id=584 data-nosnippet>584</a>    }
+<a href=#585 id=585 data-nosnippet>585</a>
+<a href=#586 id=586 data-nosnippet>586</a>    <span class="kw">if </span>roles.iter().any(|role| {
+<a href=#587 id=587 data-nosnippet>587</a>        role.is_role_for_course_instance(course_instance_id) &amp;&amp; has_permission(role.role, action)
+<a href=#588 id=588 data-nosnippet>588</a>    }) {
+<a href=#589 id=589 data-nosnippet>589</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
+<a href=#590 id=590 data-nosnippet>590</a>    }
+<a href=#591 id=591 data-nosnippet>591</a>    <span class="kw">let </span>course_id = models::course_instances::get_course_id(conn, course_instance_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#592 id=592 data-nosnippet>592</a>    check_course_permission(conn, roles, action, course_id).<span class="kw">await
+<a href=#593 id=593 data-nosnippet>593</a></span>}
+<a href=#594 id=594 data-nosnippet>594</a>
+<a href=#595 id=595 data-nosnippet>595</a><span class="doccomment">/// Also checks organization role which is valid for exams.
+<a href=#596 id=596 data-nosnippet>596</a></span><span class="kw">async fn </span>check_exam_permission(
 <a href=#597 id=597 data-nosnippet>597</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
 <a href=#598 id=598 data-nosnippet>598</a>    roles: <span class="kw-2">&amp;</span>[Role],
 <a href=#599 id=599 data-nosnippet>599</a>    action: Action,
-<a href=#600 id=600 data-nosnippet>600</a>    course_or_exam_id: CourseOrExamId,
+<a href=#600 id=600 data-nosnippet>600</a>    exam_id: Uuid,
 <a href=#601 id=601 data-nosnippet>601</a>) -&gt; AuthorizationResult&lt;bool&gt; {
-<a href=#602 id=602 data-nosnippet>602</a>    <span class="kw">match </span>course_or_exam_id {
-<a href=#603 id=603 data-nosnippet>603</a>        CourseOrExamId::Course(course_id) =&gt; {
-<a href=#604 id=604 data-nosnippet>604</a>            check_course_permission(conn, roles, action, course_id).<span class="kw">await
-<a href=#605 id=605 data-nosnippet>605</a>        </span>}
-<a href=#606 id=606 data-nosnippet>606</a>        CourseOrExamId::Exam(exam_id) =&gt; check_exam_permission(conn, roles, action, exam_id).<span class="kw">await</span>,
+<a href=#602 id=602 data-nosnippet>602</a>    <span class="kw">if </span>roles
+<a href=#603 id=603 data-nosnippet>603</a>        .iter()
+<a href=#604 id=604 data-nosnippet>604</a>        .any(|role| role.is_role_for_exam(exam_id) &amp;&amp; has_permission(role.role, action))
+<a href=#605 id=605 data-nosnippet>605</a>    {
+<a href=#606 id=606 data-nosnippet>606</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
 <a href=#607 id=607 data-nosnippet>607</a>    }
-<a href=#608 id=608 data-nosnippet>608</a>}
-<a href=#609 id=609 data-nosnippet>609</a>
-<a href=#610 id=610 data-nosnippet>610</a><span class="kw">async fn </span>check_study_registry_permission(
-<a href=#611 id=611 data-nosnippet>611</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#612 id=612 data-nosnippet>612</a>    secret_key: String,
-<a href=#613 id=613 data-nosnippet>613</a>    action: Action,
-<a href=#614 id=614 data-nosnippet>614</a>) -&gt; AuthorizationResult&lt;bool&gt; {
-<a href=#615 id=615 data-nosnippet>615</a>    <span class="kw">let </span>_registrar = models::study_registry_registrars::get_by_secret_key(conn, <span class="kw-2">&amp;</span>secret_key)
-<a href=#616 id=616 data-nosnippet>616</a>        .<span class="kw">await
-<a href=#617 id=617 data-nosnippet>617</a>        </span>.map_err(|original_error| {
-<a href=#618 id=618 data-nosnippet>618</a>            <span class="macro">authorization_err!</span>(
-<a href=#619 id=619 data-nosnippet>619</a>                Forbidden,
-<a href=#620 id=620 data-nosnippet>620</a>                <span class="macro">format!</span>(<span class="string">"Study registry access denied: Invalid or missing secret key. The operation {:?} cannot be performed."</span>, action),
-<a href=#621 id=621 data-nosnippet>621</a>                original_error
-<a href=#622 id=622 data-nosnippet>622</a>            )
-<a href=#623 id=623 data-nosnippet>623</a>        })<span class="question-mark">?</span>;
-<a href=#624 id=624 data-nosnippet>624</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-<a href=#625 id=625 data-nosnippet>625</a>}
-<a href=#626 id=626 data-nosnippet>626</a>
-<a href=#627 id=627 data-nosnippet>627</a><span class="kw">fn </span>has_permission(user_role: UserRole, action: Action) -&gt; bool {
-<a href=#628 id=628 data-nosnippet>628</a>    <span class="kw">use </span>Action::<span class="kw-2">*</span>;
-<a href=#629 id=629 data-nosnippet>629</a>    <span class="kw">use </span>UserRole::<span class="kw-2">*</span>;
-<a href=#630 id=630 data-nosnippet>630</a>
-<a href=#631 id=631 data-nosnippet>631</a>    <span class="kw">match </span>user_role {
-<a href=#632 id=632 data-nosnippet>632</a>        Admin =&gt; <span class="bool-val">true</span>,
-<a href=#633 id=633 data-nosnippet>633</a>        Teacher =&gt; <span class="macro">matches!</span>(
-<a href=#634 id=634 data-nosnippet>634</a>            action,
-<a href=#635 id=635 data-nosnippet>635</a>            View | Teach
-<a href=#636 id=636 data-nosnippet>636</a>                | Edit
-<a href=#637 id=637 data-nosnippet>637</a>                | Grade
-<a href=#638 id=638 data-nosnippet>638</a>                | Duplicate
-<a href=#639 id=639 data-nosnippet>639</a>                | DeleteAnswer
-<a href=#640 id=640 data-nosnippet>640</a>                | EditRole(Teacher | Assistant | Reviewer | MaterialViewer | StatsViewer)
-<a href=#641 id=641 data-nosnippet>641</a>                | CreateCoursesOrExams
-<a href=#642 id=642 data-nosnippet>642</a>                | ViewMaterial
-<a href=#643 id=643 data-nosnippet>643</a>                | UploadFile
-<a href=#644 id=644 data-nosnippet>644</a>                | ViewUserProgressOrDetails
-<a href=#645 id=645 data-nosnippet>645</a>                | ViewInternalCourseStructure
-<a href=#646 id=646 data-nosnippet>646</a>                | ViewStats
-<a href=#647 id=647 data-nosnippet>647</a>                | ViewAndManageCreditRegistrations
-<a href=#648 id=648 data-nosnippet>648</a>        ),
-<a href=#649 id=649 data-nosnippet>649</a>        Assistant =&gt; <span class="macro">matches!</span>(
-<a href=#650 id=650 data-nosnippet>650</a>            action,
-<a href=#651 id=651 data-nosnippet>651</a>            View | Edit
-<a href=#652 id=652 data-nosnippet>652</a>                | Grade
-<a href=#653 id=653 data-nosnippet>653</a>                | DeleteAnswer
-<a href=#654 id=654 data-nosnippet>654</a>                | EditRole(Assistant | Reviewer | MaterialViewer)
-<a href=#655 id=655 data-nosnippet>655</a>                | Teach
-<a href=#656 id=656 data-nosnippet>656</a>                | ViewMaterial
-<a href=#657 id=657 data-nosnippet>657</a>                | ViewUserProgressOrDetails
-<a href=#658 id=658 data-nosnippet>658</a>                | ViewInternalCourseStructure
-<a href=#659 id=659 data-nosnippet>659</a>        ),
-<a href=#660 id=660 data-nosnippet>660</a>        Reviewer =&gt; <span class="macro">matches!</span>(
-<a href=#661 id=661 data-nosnippet>661</a>            action,
-<a href=#662 id=662 data-nosnippet>662</a>            View | Grade | ViewMaterial | ViewInternalCourseStructure
-<a href=#663 id=663 data-nosnippet>663</a>        ),
-<a href=#664 id=664 data-nosnippet>664</a>        CourseOrExamCreator =&gt; <span class="macro">matches!</span>(action, CreateCoursesOrExams),
-<a href=#665 id=665 data-nosnippet>665</a>        MaterialViewer =&gt; <span class="macro">matches!</span>(action, ViewMaterial),
-<a href=#666 id=666 data-nosnippet>666</a>        TeachingAndLearningServices =&gt; {
-<a href=#667 id=667 data-nosnippet>667</a>            <span class="macro">matches!</span>(
-<a href=#668 id=668 data-nosnippet>668</a>                action,
-<a href=#669 id=669 data-nosnippet>669</a>                View | ViewMaterial
-<a href=#670 id=670 data-nosnippet>670</a>                    | ViewUserProgressOrDetails
-<a href=#671 id=671 data-nosnippet>671</a>                    | ViewInternalCourseStructure
-<a href=#672 id=672 data-nosnippet>672</a>                    | ViewStats
-<a href=#673 id=673 data-nosnippet>673</a>            )
-<a href=#674 id=674 data-nosnippet>674</a>        }
-<a href=#675 id=675 data-nosnippet>675</a>        StatsViewer =&gt; <span class="macro">matches!</span>(action, ViewStats),
-<a href=#676 id=676 data-nosnippet>676</a>        CreditRegistrationAdmin =&gt; <span class="macro">matches!</span>(action, AdministrateCreditRegistrations),
-<a href=#677 id=677 data-nosnippet>677</a>    }
-<a href=#678 id=678 data-nosnippet>678</a>}
+<a href=#608 id=608 data-nosnippet>608</a>    <span class="kw">let </span>organization_id = models::exams::get_organization_id(conn, exam_id).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#609 id=609 data-nosnippet>609</a>    <span class="prelude-val">Ok</span>(check_organization_permission(
+<a href=#610 id=610 data-nosnippet>610</a>        roles,
+<a href=#611 id=611 data-nosnippet>611</a>        action,
+<a href=#612 id=612 data-nosnippet>612</a>        organization_id,
+<a href=#613 id=613 data-nosnippet>613</a>    ))
+<a href=#614 id=614 data-nosnippet>614</a>}
+<a href=#615 id=615 data-nosnippet>615</a>
+<a href=#616 id=616 data-nosnippet>616</a><span class="kw">async fn </span>check_course_or_exam_permission(
+<a href=#617 id=617 data-nosnippet>617</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#618 id=618 data-nosnippet>618</a>    roles: <span class="kw-2">&amp;</span>[Role],
+<a href=#619 id=619 data-nosnippet>619</a>    action: Action,
+<a href=#620 id=620 data-nosnippet>620</a>    course_or_exam_id: CourseOrExamId,
+<a href=#621 id=621 data-nosnippet>621</a>) -&gt; AuthorizationResult&lt;bool&gt; {
+<a href=#622 id=622 data-nosnippet>622</a>    <span class="kw">match </span>course_or_exam_id {
+<a href=#623 id=623 data-nosnippet>623</a>        CourseOrExamId::Course(course_id) =&gt; {
+<a href=#624 id=624 data-nosnippet>624</a>            check_course_permission(conn, roles, action, course_id).<span class="kw">await
+<a href=#625 id=625 data-nosnippet>625</a>        </span>}
+<a href=#626 id=626 data-nosnippet>626</a>        CourseOrExamId::Exam(exam_id) =&gt; check_exam_permission(conn, roles, action, exam_id).<span class="kw">await</span>,
+<a href=#627 id=627 data-nosnippet>627</a>    }
+<a href=#628 id=628 data-nosnippet>628</a>}
+<a href=#629 id=629 data-nosnippet>629</a>
+<a href=#630 id=630 data-nosnippet>630</a><span class="kw">async fn </span>check_study_registry_permission(
+<a href=#631 id=631 data-nosnippet>631</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#632 id=632 data-nosnippet>632</a>    secret_key: String,
+<a href=#633 id=633 data-nosnippet>633</a>    action: Action,
+<a href=#634 id=634 data-nosnippet>634</a>) -&gt; AuthorizationResult&lt;bool&gt; {
+<a href=#635 id=635 data-nosnippet>635</a>    <span class="kw">let </span>_registrar = models::study_registry_registrars::get_by_secret_key(conn, <span class="kw-2">&amp;</span>secret_key)
+<a href=#636 id=636 data-nosnippet>636</a>        .<span class="kw">await
+<a href=#637 id=637 data-nosnippet>637</a>        </span>.map_err(|original_error| {
+<a href=#638 id=638 data-nosnippet>638</a>            <span class="macro">authorization_err!</span>(
+<a href=#639 id=639 data-nosnippet>639</a>                Forbidden,
+<a href=#640 id=640 data-nosnippet>640</a>                <span class="macro">format!</span>(<span class="string">"Study registry access denied: Invalid or missing secret key. The operation {:?} cannot be performed."</span>, action),
+<a href=#641 id=641 data-nosnippet>641</a>                original_error
+<a href=#642 id=642 data-nosnippet>642</a>            )
+<a href=#643 id=643 data-nosnippet>643</a>        })<span class="question-mark">?</span>;
+<a href=#644 id=644 data-nosnippet>644</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+<a href=#645 id=645 data-nosnippet>645</a>}
+<a href=#646 id=646 data-nosnippet>646</a>
+<a href=#647 id=647 data-nosnippet>647</a><span class="kw">fn </span>has_permission(user_role: UserRole, action: Action) -&gt; bool {
+<a href=#648 id=648 data-nosnippet>648</a>    <span class="kw">use </span>Action::<span class="kw-2">*</span>;
+<a href=#649 id=649 data-nosnippet>649</a>    <span class="kw">use </span>UserRole::<span class="kw-2">*</span>;
+<a href=#650 id=650 data-nosnippet>650</a>
+<a href=#651 id=651 data-nosnippet>651</a>    <span class="kw">match </span>user_role {
+<a href=#652 id=652 data-nosnippet>652</a>        Admin =&gt; <span class="bool-val">true</span>,
+<a href=#653 id=653 data-nosnippet>653</a>        Teacher =&gt; <span class="macro">matches!</span>(
+<a href=#654 id=654 data-nosnippet>654</a>            action,
+<a href=#655 id=655 data-nosnippet>655</a>            View | Teach
+<a href=#656 id=656 data-nosnippet>656</a>                | Edit
+<a href=#657 id=657 data-nosnippet>657</a>                | Grade
+<a href=#658 id=658 data-nosnippet>658</a>                | Duplicate
+<a href=#659 id=659 data-nosnippet>659</a>                | DeleteAnswer
+<a href=#660 id=660 data-nosnippet>660</a>                | EditRole(Teacher | Assistant | Reviewer | MaterialViewer | StatsViewer)
+<a href=#661 id=661 data-nosnippet>661</a>                | CreateCoursesOrExams
+<a href=#662 id=662 data-nosnippet>662</a>                | ViewMaterial
+<a href=#663 id=663 data-nosnippet>663</a>                | UploadFile
+<a href=#664 id=664 data-nosnippet>664</a>                | ViewUserProgressOrDetails
+<a href=#665 id=665 data-nosnippet>665</a>                | ViewInternalCourseStructure
+<a href=#666 id=666 data-nosnippet>666</a>                | ViewStats
+<a href=#667 id=667 data-nosnippet>667</a>                | ViewAndManageCreditRegistrations
+<a href=#668 id=668 data-nosnippet>668</a>        ),
+<a href=#669 id=669 data-nosnippet>669</a>        Assistant =&gt; <span class="macro">matches!</span>(
+<a href=#670 id=670 data-nosnippet>670</a>            action,
+<a href=#671 id=671 data-nosnippet>671</a>            View | Edit
+<a href=#672 id=672 data-nosnippet>672</a>                | Grade
+<a href=#673 id=673 data-nosnippet>673</a>                | DeleteAnswer
+<a href=#674 id=674 data-nosnippet>674</a>                | EditRole(Assistant | Reviewer | MaterialViewer)
+<a href=#675 id=675 data-nosnippet>675</a>                | Teach
+<a href=#676 id=676 data-nosnippet>676</a>                | ViewMaterial
+<a href=#677 id=677 data-nosnippet>677</a>                | ViewUserProgressOrDetails
+<a href=#678 id=678 data-nosnippet>678</a>                | ViewInternalCourseStructure
+<a href=#679 id=679 data-nosnippet>679</a>        ),
+<a href=#680 id=680 data-nosnippet>680</a>        Reviewer =&gt; <span class="macro">matches!</span>(
+<a href=#681 id=681 data-nosnippet>681</a>            action,
+<a href=#682 id=682 data-nosnippet>682</a>            View | Grade | ViewMaterial | ViewInternalCourseStructure
+<a href=#683 id=683 data-nosnippet>683</a>        ),
+<a href=#684 id=684 data-nosnippet>684</a>        CourseOrExamCreator =&gt; <span class="macro">matches!</span>(action, CreateCoursesOrExams),
+<a href=#685 id=685 data-nosnippet>685</a>        MaterialViewer =&gt; <span class="macro">matches!</span>(action, ViewMaterial),
+<a href=#686 id=686 data-nosnippet>686</a>        TeachingAndLearningServices =&gt; {
+<a href=#687 id=687 data-nosnippet>687</a>            <span class="macro">matches!</span>(
+<a href=#688 id=688 data-nosnippet>688</a>                action,
+<a href=#689 id=689 data-nosnippet>689</a>                View | ViewMaterial
+<a href=#690 id=690 data-nosnippet>690</a>                    | ViewUserProgressOrDetails
+<a href=#691 id=691 data-nosnippet>691</a>                    | ViewInternalCourseStructure
+<a href=#692 id=692 data-nosnippet>692</a>                    | ViewStats
+<a href=#693 id=693 data-nosnippet>693</a>            )
+<a href=#694 id=694 data-nosnippet>694</a>        }
+<a href=#695 id=695 data-nosnippet>695</a>        StatsViewer =&gt; <span class="macro">matches!</span>(action, ViewStats),
+<a href=#696 id=696 data-nosnippet>696</a>        CreditRegistrationAdmin =&gt; <span class="macro">matches!</span>(action, AdministrateCreditRegistrations),
+<a href=#697 id=697 data-nosnippet>697</a>    }
+<a href=#698 id=698 data-nosnippet>698</a>}
 </code></pre></div></section></main></body></html>

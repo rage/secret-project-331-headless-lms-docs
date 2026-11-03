@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["conflicts","course_state","field_changes","locking","preview","publishing","reverting","review","risk","staging","summary"]};

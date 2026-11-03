@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PAGE_TITLE_BLOCKS"],"fn":["has_page_title","pages_with_content_changes","placeholder_texts"],"struct":["PlaceholderText"]};

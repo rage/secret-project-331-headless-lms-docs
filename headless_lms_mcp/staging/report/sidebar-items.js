@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["StagingSummary"],"fn":["page_hints","write_hints"],"struct":["BriefDryRunSummary","DryRunEntity","DryRunSummary","NothingStaged","StagedSummary","WriteReport"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AgentChangesetEntityOperation","RiskReason"],"fn":["delete","get_bases","get_by_changeset_id","get_by_keys","get_one","get_operation","get_summaries_by_changeset_ids","insert","restage","set_risk_reasons"],"struct":["AgentChangesetEntity","AgentChangesetEntityRow","ChangesetEntitySummary","NewStagedEntity","RestagedEntity"]};

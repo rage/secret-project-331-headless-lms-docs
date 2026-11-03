@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_all_pages_in_page_language_group_mapping","insert"],"struct":["PageLanguageGroup","PageLanguageGroupNavigationInfo"]};
+window.SIDEBAR_ITEMS = {"enum":["PairingRefusal"],"fn":["course_has_other_page","get_all_pages_in_page_language_group_mapping","get_by_course_id","insert","resolve_pairing"],"struct":["PageLanguageGroup","PageLanguageGroupNavigationInfo"]};

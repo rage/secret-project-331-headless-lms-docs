@@ -217,7 +217,7 @@
 <a href=#217 id=217 data-nosnippet>217</a>        backdate(tx.as_mut(), file_id, Duration::hours(<span class="number">2</span>)).<span class="kw">await</span>;
 <a href=#218 id=218 data-nosnippet>218</a>        tx.commit().<span class="kw">await</span>;
 <a href=#219 id=219 data-nosnippet>219</a>
-<a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>test_database_url())
+<a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>dev_database_url())
 <a href=#221 id=221 data-nosnippet>221</a>            .<span class="kw">await
 <a href=#222 id=222 data-nosnippet>222</a>            </span>.expect(<span class="string">"test pool"</span>);
 <a href=#223 id=223 data-nosnippet>223</a>        <span class="kw">let </span>file_store = RecordingFileStore::default();
@@ -271,7 +271,7 @@
 <a href=#271 id=271 data-nosnippet>271</a>        </span>.expect(<span class="string">"binding"</span>);
 <a href=#272 id=272 data-nosnippet>272</a>        tx.commit().<span class="kw">await</span>;
 <a href=#273 id=273 data-nosnippet>273</a>
-<a href=#274 id=274 data-nosnippet>274</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>test_database_url())
+<a href=#274 id=274 data-nosnippet>274</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>dev_database_url())
 <a href=#275 id=275 data-nosnippet>275</a>            .<span class="kw">await
 <a href=#276 id=276 data-nosnippet>276</a>            </span>.expect(<span class="string">"test pool"</span>);
 <a href=#277 id=277 data-nosnippet>277</a>        <span class="kw">let </span>file_store = RecordingFileStore::default();
@@ -324,7 +324,7 @@
 <a href=#324 id=324 data-nosnippet>324</a>        backdate(tx.as_mut(), file_id, Duration::hours(<span class="number">2</span>)).<span class="kw">await</span>;
 <a href=#325 id=325 data-nosnippet>325</a>        tx.commit().<span class="kw">await</span>;
 <a href=#326 id=326 data-nosnippet>326</a>
-<a href=#327 id=327 data-nosnippet>327</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>test_database_url())
+<a href=#327 id=327 data-nosnippet>327</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>dev_database_url())
 <a href=#328 id=328 data-nosnippet>328</a>            .<span class="kw">await
 <a href=#329 id=329 data-nosnippet>329</a>            </span>.expect(<span class="string">"test pool"</span>);
 <a href=#330 id=330 data-nosnippet>330</a>        <span class="kw">let </span>file_store = RecordingFileStore::default();
@@ -371,7 +371,7 @@
 <a href=#371 id=371 data-nosnippet>371</a>        backdate(tx.as_mut(), file_id, Duration::days(<span class="number">8</span>)).<span class="kw">await</span>;
 <a href=#372 id=372 data-nosnippet>372</a>        tx.commit().<span class="kw">await</span>;
 <a href=#373 id=373 data-nosnippet>373</a>
-<a href=#374 id=374 data-nosnippet>374</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>test_database_url())
+<a href=#374 id=374 data-nosnippet>374</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>dev_database_url())
 <a href=#375 id=375 data-nosnippet>375</a>            .<span class="kw">await
 <a href=#376 id=376 data-nosnippet>376</a>            </span>.expect(<span class="string">"test pool"</span>);
 <a href=#377 id=377 data-nosnippet>377</a>        <span class="kw">let </span>file_store = RecordingFileStore::default();
@@ -482,7 +482,7 @@
 <a href=#482 id=482 data-nosnippet>482</a>        backdate(tx.as_mut(), file_id, Duration::hours(<span class="number">2</span>)).<span class="kw">await</span>;
 <a href=#483 id=483 data-nosnippet>483</a>        tx.commit().<span class="kw">await</span>;
 <a href=#484 id=484 data-nosnippet>484</a>
-<a href=#485 id=485 data-nosnippet>485</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>test_database_url())
+<a href=#485 id=485 data-nosnippet>485</a>        <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>dev_database_url())
 <a href=#486 id=486 data-nosnippet>486</a>            .<span class="kw">await
 <a href=#487 id=487 data-nosnippet>487</a>            </span>.expect(<span class="string">"test pool"</span>);
 <a href=#488 id=488 data-nosnippet>488</a>        <span class="kw">let </span>failing = FailingFileStore::default();

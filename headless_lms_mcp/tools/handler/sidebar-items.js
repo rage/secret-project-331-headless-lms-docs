@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["Tool","ToolRegistry"],"trait":["JsonToolHandler","ToolHandler"]};

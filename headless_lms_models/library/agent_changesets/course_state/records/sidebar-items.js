@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExerciseEditError","ExerciseReviewConfig","ReviewConfigKind"],"fn":["copy_course_default_review_config","review_instructions_for_storage"],"struct":["ExerciseDeadline","ExerciseRecord","ExerciseTaskRecord","PageRecord"]};

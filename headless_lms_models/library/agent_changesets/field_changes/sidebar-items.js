@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EntityField","FieldValue"],"fn":["date_time","diff","exercise_field_changes","exercises_field_changes","field_changes","flag","number","optional_text","reference","text"],"struct":["ExerciseFieldOwner","FieldChange"],"trait":["HasFields"],"type":["Fields"]};

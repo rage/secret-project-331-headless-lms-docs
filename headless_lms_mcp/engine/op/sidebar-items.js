@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ALL_FIELDS","REORDER_ON_PAGE_FIX"],"enum":["Op","OpKind","PatchTarget","Position"],"fn":["check_unknown_fields","field_not_allowed","from_wire_name","invalid_position","missing_field","optional_string","parse_op","parse_ops","quote_list"],"struct":["PatchOp","Transfer"]};

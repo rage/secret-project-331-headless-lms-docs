@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ChangeKind"],"fn":["changed_roots","diff_blocks","diff_pages","place_blocks","structure_changes"],"struct":["BlockChange","Placed"]};

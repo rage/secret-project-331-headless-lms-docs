@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExerciseChangeWarning","ReviewEntity"],"fn":["add_review_config_warnings","chapter_front_page_ids","get_review","references_mut","review_entity"],"struct":["ChangesetReview","CourseDefaultReviewConfigChange","EntityChange","PageChange"]};

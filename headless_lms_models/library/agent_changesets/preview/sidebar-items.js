@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["changed_page_links","mint_preview_token","preview_path","resolve_changeset_preview","resolve_preview","resolve_published_course_preview","resolve_published_preview","validate_preview_token"],"mod":["page","token"],"struct":["PagePreview","PreviewClaim","PreviewExercise","PreviewPage","PreviewPageLink","PreviewReference","PreviewToken"]};

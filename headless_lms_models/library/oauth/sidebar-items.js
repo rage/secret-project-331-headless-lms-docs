@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["digest","grant_type","pkce","scopes","tokens"]};
+window.SIDEBAR_ITEMS = {"fn":["is_bound_to"],"mod":["bearer","digest","grant_type","mcp","pkce","scopes","tokens"]};

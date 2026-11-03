@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EditErrorCode","WarningCode"],"struct":["EditError","Warning"]};

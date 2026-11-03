@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["AUTHORITY","DERIVED_AT_PUBLISH"],"enum":["SpecKind"],"fn":["load_task_specs","parse_spec_path","read_specs"],"struct":["SpecPath","TaskSpecs"]};

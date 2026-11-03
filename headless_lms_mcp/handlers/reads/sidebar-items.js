@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["GLOSSARY_ENTITIES","SETTINGS_ENTITIES","STRUCTURE_ENTITIES"],"fn":["missing_page","page_pending","read_options","selectors_or_outline","staged_keys"],"struct":["GetCourseSettings","GetCourseStructure","GetGlossaryAndReferences","GetPageContent","ListCourses","PageInfo"]};

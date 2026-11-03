@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["EXERCISE_SERVICES_SCOPE"]};
+window.SIDEBAR_ITEMS = {"constant":["EXERCISE_SERVICES_SCOPE","OFFLINE_ACCESS_SCOPE"],"fn":["metadata_document_client_scopes","supported_scopes"]};

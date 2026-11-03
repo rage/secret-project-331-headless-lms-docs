@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CONFIRMATION_TTL","DISCOVER_TTL_MS","SERVER_INFO_META_KEY","SERVER_NAME","SERVER_TITLE","TOOLS_LIST_TTL_MS"],"fn":["confirmation_binding","to_json"],"struct":["HttpRequest","HttpResponse","McpServer","RpcError","ServerConfig"]};

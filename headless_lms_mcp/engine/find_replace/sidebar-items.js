@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AttributeFilter","Matcher"],"fn":["attribute_filters","attribute_selected","context_preview","find_replace","for_each_text","for_each_text_mut"],"struct":["FindReplaceRequest","FindReplaceResult","InflectedVariant","TextMatch"]};

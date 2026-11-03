@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["changed_page_links","ensure_open","find_row","page_links","render_page","render_with_page_links","resolve_changeset_preview","resolve_preview","resolve_published_course_preview","resolve_published_preview","staged_front_page_id"],"struct":["PagePreview","PreviewExercise","PreviewPage","PreviewPageLink","PreviewReference"]};

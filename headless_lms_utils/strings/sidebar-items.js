@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["generate_easily_writable_random_string","generate_random_string","is_ietf_language_code_like","non_empty_trimmed","strip_html_tags","truncate_utf8_at_boundary"],"static":["HTML_TAG_REGEX","IETF_LANGUAGE_CODE_REGEX"]};
+window.SIDEBAR_ITEMS = {"fn":["decode_html_entities","escape","escape_html","escape_html_text","generate_easily_writable_random_string","generate_random_string","is_ietf_language_code_like","non_empty_trimmed","slugify","strip_html_tags","truncate_utf8_at_boundary"],"static":["HTML_TAG_REGEX","IETF_LANGUAGE_CODE_REGEX"]};

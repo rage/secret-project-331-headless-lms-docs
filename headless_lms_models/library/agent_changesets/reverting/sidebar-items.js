@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RevertPlan"],"fn":["plan_revert"]};

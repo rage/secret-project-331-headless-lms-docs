@@ -958,7 +958,7 @@
 <a href=#958 id=958 data-nosnippet>958</a>            task,
 <a href=#959 id=959 data-nosnippet>959</a>        };
 <a href=#960 id=960 data-nosnippet>960</a>        <span class="kw">let </span>submitting = actix_web::rt::spawn(<span class="kw">async move </span>{
-<a href=#961 id=961 data-nosnippet>961</a>            <span class="kw">let </span><span class="kw-2">mut </span>conn = PgConnection::connect(<span class="kw-2">&amp;</span>test_database_url())
+<a href=#961 id=961 data-nosnippet>961</a>            <span class="kw">let </span><span class="kw-2">mut </span>conn = PgConnection::connect(<span class="kw-2">&amp;</span>dev_database_url())
 <a href=#962 id=962 data-nosnippet>962</a>                .<span class="kw">await
 <a href=#963 id=963 data-nosnippet>963</a>                </span>.expect(<span class="string">"submit connection"</span>);
 <a href=#964 id=964 data-nosnippet>964</a>            <span class="kw">let </span>store = temp_file_store();
@@ -993,7 +993,7 @@
 <a href=#993 id=993 data-nosnippet>993</a>            <span class="string">"the submit must reach the grading hop, which is what holds its transaction open"
 <a href=#994 id=994 data-nosnippet>994</a>        </span>);
 <a href=#995 id=995 data-nosnippet>995</a>
-<a href=#996 id=996 data-nosnippet>996</a>        <span class="kw">let </span><span class="kw-2">mut </span>reaper_conn = PgConnection::connect(<span class="kw-2">&amp;</span>test_database_url())
+<a href=#996 id=996 data-nosnippet>996</a>        <span class="kw">let </span><span class="kw-2">mut </span>reaper_conn = PgConnection::connect(<span class="kw-2">&amp;</span>dev_database_url())
 <a href=#997 id=997 data-nosnippet>997</a>            .<span class="kw">await
 <a href=#998 id=998 data-nosnippet>998</a>            </span>.expect(<span class="string">"reaper connection"</span>);
 <a href=#999 id=999 data-nosnippet>999</a>        <span class="comment">// Scoped so the pinned future releases its borrow before the connection is dropped.

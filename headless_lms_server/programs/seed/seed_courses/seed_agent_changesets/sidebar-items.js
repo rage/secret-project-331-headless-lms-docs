@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["AGENT_CLIENT_ID","AGENT_CLIENT_NAME"],"fn":["agent_actor","peer_reviewed_exercise","seed_agent_changesets_course","stage_course_default_review_instructions","stage_page_edit","stage_page_edit_with_tool"],"struct":["PageIds"]};

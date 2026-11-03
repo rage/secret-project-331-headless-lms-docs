@@ -459,7 +459,7 @@
 <a href=#459 id=459 data-nosnippet>459</a>        <span class="kw-2">&amp;mut </span>tx,
 <a href=#460 id=460 data-nosnippet>460</a>        PageUpdateArgs {
 <a href=#461 id=461 data-nosnippet>461</a>            page_id: page_with_exercises.page.id,
-<a href=#462 id=462 data-nosnippet>462</a>            author,
+<a href=#462 id=462 data-nosnippet>462</a>            author: <span class="kw">crate</span>::entity_history::HistoryAuthor::user(author),
 <a href=#463 id=463 data-nosnippet>463</a>            cms_page_update,
 <a href=#464 id=464 data-nosnippet>464</a>            retain_ids: <span class="bool-val">true</span>,
 <a href=#465 id=465 data-nosnippet>465</a>            history_change_reason: HistoryChangeReason::PageSaved,
@@ -561,186 +561,239 @@
 <a href=#561 id=561 data-nosnippet>561</a>    <span class="prelude-val">Ok</span>(())
 <a href=#562 id=562 data-nosnippet>562</a>}
 <a href=#563 id=563 data-nosnippet>563</a>
-<a href=#564 id=564 data-nosnippet>564</a><span class="attr">#[cfg(test)]
-<a href=#565 id=565 data-nosnippet>565</a></span><span class="kw">mod </span>test {
-<a href=#566 id=566 data-nosnippet>566</a>    <span class="kw">use </span>headless_lms_utils::document_schema_processor::{GutenbergBlock, attributes};
-<a href=#567 id=567 data-nosnippet>567</a>
-<a href=#568 id=568 data-nosnippet>568</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
-<a href=#569 id=569 data-nosnippet>569</a>    <span class="kw">use </span>crate::{pages::PageUpdateArgs, proposed_block_edits::<span class="kw-2">*</span>, test_helper::<span class="kw-2">*</span>};
-<a href=#570 id=570 data-nosnippet>570</a>
-<a href=#571 id=571 data-nosnippet>571</a>    <span class="kw">async fn </span>init_content(
-<a href=#572 id=572 data-nosnippet>572</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#573 id=573 data-nosnippet>573</a>        chapter: Uuid,
-<a href=#574 id=574 data-nosnippet>574</a>        page: Uuid,
-<a href=#575 id=575 data-nosnippet>575</a>        user: Uuid,
-<a href=#576 id=576 data-nosnippet>576</a>        content: <span class="kw-2">&amp;</span>str,
-<a href=#577 id=577 data-nosnippet>577</a>    ) -&gt; Uuid {
-<a href=#578 id=578 data-nosnippet>578</a>        <span class="kw">let </span>client_id = Uuid::new_v4();
-<a href=#579 id=579 data-nosnippet>579</a>        <span class="kw">let </span>new_content: Vec&lt;GutenbergBlock&gt; = <span class="macro">vec!</span>[GutenbergBlock {
-<a href=#580 id=580 data-nosnippet>580</a>            client_id,
-<a href=#581 id=581 data-nosnippet>581</a>            name: <span class="string">"core/paragraph"</span>.to_string(),
-<a href=#582 id=582 data-nosnippet>582</a>            is_valid: <span class="bool-val">true</span>,
-<a href=#583 id=583 data-nosnippet>583</a>            attributes: <span class="macro">attributes!</span> {
-<a href=#584 id=584 data-nosnippet>584</a>                <span class="string">"content"</span>: content
-<a href=#585 id=585 data-nosnippet>585</a>            },
-<a href=#586 id=586 data-nosnippet>586</a>            inner_blocks: <span class="macro">vec!</span>[],
-<a href=#587 id=587 data-nosnippet>587</a>        }];
-<a href=#588 id=588 data-nosnippet>588</a>        <span class="kw">let </span>cms_page_update = CmsPageUpdate {
-<a href=#589 id=589 data-nosnippet>589</a>            content: new_content,
-<a href=#590 id=590 data-nosnippet>590</a>            url_path: <span class="string">""</span>.to_string(),
-<a href=#591 id=591 data-nosnippet>591</a>            title: <span class="string">""</span>.to_string(),
-<a href=#592 id=592 data-nosnippet>592</a>            chapter_id: <span class="prelude-val">Some</span>(chapter),
-<a href=#593 id=593 data-nosnippet>593</a>            exercises: <span class="macro">vec!</span>[],
-<a href=#594 id=594 data-nosnippet>594</a>            exercise_slides: <span class="macro">vec!</span>[],
-<a href=#595 id=595 data-nosnippet>595</a>            exercise_tasks: <span class="macro">vec!</span>[],
-<a href=#596 id=596 data-nosnippet>596</a>            hidden: <span class="bool-val">false</span>,
-<a href=#597 id=597 data-nosnippet>597</a>        };
-<a href=#598 id=598 data-nosnippet>598</a>        <span class="kw">crate</span>::pages::update_page(
-<a href=#599 id=599 data-nosnippet>599</a>            conn,
-<a href=#600 id=600 data-nosnippet>600</a>            PageUpdateArgs {
-<a href=#601 id=601 data-nosnippet>601</a>                page_id: page,
-<a href=#602 id=602 data-nosnippet>602</a>                author: user,
-<a href=#603 id=603 data-nosnippet>603</a>                cms_page_update,
-<a href=#604 id=604 data-nosnippet>604</a>                retain_ids: <span class="bool-val">true</span>,
-<a href=#605 id=605 data-nosnippet>605</a>                history_change_reason: HistoryChangeReason::PageSaved,
-<a href=#606 id=606 data-nosnippet>606</a>                is_exam_page: <span class="bool-val">false</span>,
-<a href=#607 id=607 data-nosnippet>607</a>            },
-<a href=#608 id=608 data-nosnippet>608</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#609 id=609 data-nosnippet>609</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#610 id=610 data-nosnippet>610</a>        )
-<a href=#611 id=611 data-nosnippet>611</a>        .<span class="kw">await
-<a href=#612 id=612 data-nosnippet>612</a>        </span>.unwrap();
-<a href=#613 id=613 data-nosnippet>613</a>        client_id
-<a href=#614 id=614 data-nosnippet>614</a>    }
-<a href=#615 id=615 data-nosnippet>615</a>
-<a href=#616 id=616 data-nosnippet>616</a>    <span class="kw">async fn </span>assert_content(conn: <span class="kw-2">&amp;mut </span>PgConnection, page_id: Uuid, expected: <span class="kw-2">&amp;</span>str) {
-<a href=#617 id=617 data-nosnippet>617</a>        <span class="kw">let </span>page = <span class="kw">crate</span>::pages::get_page(conn, page_id).<span class="kw">await</span>.unwrap();
-<a href=#618 id=618 data-nosnippet>618</a>        <span class="kw">let </span><span class="kw-2">mut </span>new_content: Vec&lt;GutenbergBlock&gt; = serde_json::from_value(page.content).unwrap();
-<a href=#619 id=619 data-nosnippet>619</a>        <span class="kw">let </span>block = new_content.pop().unwrap();
-<a href=#620 id=620 data-nosnippet>620</a>        <span class="kw">let </span>content = block.attributes.get(<span class="string">"content"</span>).unwrap().as_str().unwrap();
-<a href=#621 id=621 data-nosnippet>621</a>        <span class="macro">assert_eq!</span>(content, expected);
-<a href=#622 id=622 data-nosnippet>622</a>    }
+<a href=#564 id=564 data-nosnippet>564</a><span class="doccomment">/// Edit proposals on the given pages of the course, handled ones included.
+<a href=#565 id=565 data-nosnippet>565</a></span><span class="kw">pub async fn </span>get_block_ids_by_page_ids(
+<a href=#566 id=566 data-nosnippet>566</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#567 id=567 data-nosnippet>567</a>    course_id: Uuid,
+<a href=#568 id=568 data-nosnippet>568</a>    page_ids: <span class="kw-2">&amp;</span>[Uuid],
+<a href=#569 id=569 data-nosnippet>569</a>) -&gt; ModelResult&lt;Vec&lt;<span class="kw">crate</span>::pages::PageBlockReferences&gt;&gt; {
+<a href=#570 id=570 data-nosnippet>570</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#571 id=571 data-nosnippet>571</a>        <span class="kw">crate</span>::pages::PageBlockReferences,
+<a href=#572 id=572 data-nosnippet>572</a>        <span class="string">r#"
+<a href=#573 id=573 data-nosnippet>573</a>SELECT proposed_page_edits.id,
+<a href=#574 id=574 data-nosnippet>574</a>  proposed_page_edits.page_id,
+<a href=#575 id=575 data-nosnippet>575</a>  array_agg(
+<a href=#576 id=576 data-nosnippet>576</a>    proposed_block_edits.block_id
+<a href=#577 id=577 data-nosnippet>577</a>    ORDER BY proposed_block_edits.created_at,
+<a href=#578 id=578 data-nosnippet>578</a>      proposed_block_edits.id
+<a href=#579 id=579 data-nosnippet>579</a>  ) AS "block_ids!"
+<a href=#580 id=580 data-nosnippet>580</a>FROM proposed_page_edits
+<a href=#581 id=581 data-nosnippet>581</a>  JOIN proposed_block_edits ON proposed_block_edits.proposal_id = proposed_page_edits.id
+<a href=#582 id=582 data-nosnippet>582</a>  AND proposed_block_edits.deleted_at IS NULL
+<a href=#583 id=583 data-nosnippet>583</a>WHERE proposed_page_edits.page_id = ANY($1)
+<a href=#584 id=584 data-nosnippet>584</a>  AND proposed_page_edits.course_id = $2
+<a href=#585 id=585 data-nosnippet>585</a>  AND proposed_page_edits.deleted_at IS NULL
+<a href=#586 id=586 data-nosnippet>586</a>GROUP BY proposed_page_edits.id
+<a href=#587 id=587 data-nosnippet>587</a>        "#</span>,
+<a href=#588 id=588 data-nosnippet>588</a>        page_ids,
+<a href=#589 id=589 data-nosnippet>589</a>        course_id
+<a href=#590 id=590 data-nosnippet>590</a>    )
+<a href=#591 id=591 data-nosnippet>591</a>    .fetch_all(conn)
+<a href=#592 id=592 data-nosnippet>592</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#593 id=593 data-nosnippet>593</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#594 id=594 data-nosnippet>594</a>}
+<a href=#595 id=595 data-nosnippet>595</a>
+<a href=#596 id=596 data-nosnippet>596</a><span class="doccomment">/// Sets each proposal's page; `proposal_ids` and `page_ids` are parallel.
+<a href=#597 id=597 data-nosnippet>597</a></span><span class="kw">pub async fn </span>set_page_ids(
+<a href=#598 id=598 data-nosnippet>598</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#599 id=599 data-nosnippet>599</a>    proposal_ids: <span class="kw-2">&amp;</span>[Uuid],
+<a href=#600 id=600 data-nosnippet>600</a>    page_ids: <span class="kw-2">&amp;</span>[Uuid],
+<a href=#601 id=601 data-nosnippet>601</a>) -&gt; ModelResult&lt;()&gt; {
+<a href=#602 id=602 data-nosnippet>602</a>    <span class="macro">sqlx::query!</span>(
+<a href=#603 id=603 data-nosnippet>603</a>        <span class="string">"
+<a href=#604 id=604 data-nosnippet>604</a>UPDATE proposed_page_edits
+<a href=#605 id=605 data-nosnippet>605</a>SET page_id = moved.page_id
+<a href=#606 id=606 data-nosnippet>606</a>FROM UNNEST($1::uuid [], $2::uuid []) AS moved(id, page_id)
+<a href=#607 id=607 data-nosnippet>607</a>WHERE proposed_page_edits.id = moved.id
+<a href=#608 id=608 data-nosnippet>608</a>        "</span>,
+<a href=#609 id=609 data-nosnippet>609</a>        proposal_ids,
+<a href=#610 id=610 data-nosnippet>610</a>        page_ids
+<a href=#611 id=611 data-nosnippet>611</a>    )
+<a href=#612 id=612 data-nosnippet>612</a>    .execute(conn)
+<a href=#613 id=613 data-nosnippet>613</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#614 id=614 data-nosnippet>614</a>    <span class="prelude-val">Ok</span>(())
+<a href=#615 id=615 data-nosnippet>615</a>}
+<a href=#616 id=616 data-nosnippet>616</a>
+<a href=#617 id=617 data-nosnippet>617</a><span class="attr">#[cfg(test)]
+<a href=#618 id=618 data-nosnippet>618</a></span><span class="kw">mod </span>test {
+<a href=#619 id=619 data-nosnippet>619</a>    <span class="kw">use </span>headless_lms_utils::document_schema_processor::{GutenbergBlock, attributes};
+<a href=#620 id=620 data-nosnippet>620</a>
+<a href=#621 id=621 data-nosnippet>621</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#622 id=622 data-nosnippet>622</a>    <span class="kw">use </span>crate::{pages::PageUpdateArgs, proposed_block_edits::<span class="kw-2">*</span>, test_helper::<span class="kw-2">*</span>};
 <a href=#623 id=623 data-nosnippet>623</a>
-<a href=#624 id=624 data-nosnippet>624</a>    <span class="attr">#[tokio::test]
-<a href=#625 id=625 data-nosnippet>625</a>    </span><span class="kw">async fn </span>typo_fix() {
-<a href=#626 id=626 data-nosnippet>626</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, :chapter, :page);
-<a href=#627 id=627 data-nosnippet>627</a>        <span class="kw">let </span>block_id = init_content(
-<a href=#628 id=628 data-nosnippet>628</a>            tx.as_mut(),
-<a href=#629 id=629 data-nosnippet>629</a>            chapter,
-<a href=#630 id=630 data-nosnippet>630</a>            page,
-<a href=#631 id=631 data-nosnippet>631</a>            user,
-<a href=#632 id=632 data-nosnippet>632</a>            <span class="string">"Content with a tpo in it."</span>,
-<a href=#633 id=633 data-nosnippet>633</a>        )
-<a href=#634 id=634 data-nosnippet>634</a>        .<span class="kw">await</span>;
-<a href=#635 id=635 data-nosnippet>635</a>
-<a href=#636 id=636 data-nosnippet>636</a>        <span class="kw">let </span>new = NewProposedPageEdits {
-<a href=#637 id=637 data-nosnippet>637</a>            page_id: page,
-<a href=#638 id=638 data-nosnippet>638</a>            block_edits: <span class="macro">vec!</span>[NewProposedBlockEdit {
-<a href=#639 id=639 data-nosnippet>639</a>                block_id,
-<a href=#640 id=640 data-nosnippet>640</a>                block_attribute: <span class="string">"content"</span>.to_string(),
-<a href=#641 id=641 data-nosnippet>641</a>                original_text: <span class="string">"Content with a tpo in it."</span>.to_string(),
-<a href=#642 id=642 data-nosnippet>642</a>                changed_text: <span class="string">"Content with a typo in it."</span>.to_string(),
-<a href=#643 id=643 data-nosnippet>643</a>            }],
-<a href=#644 id=644 data-nosnippet>644</a>        };
-<a href=#645 id=645 data-nosnippet>645</a>        insert(tx.as_mut(), PKeyPolicy::Generate, course, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>new)
-<a href=#646 id=646 data-nosnippet>646</a>            .<span class="kw">await
-<a href=#647 id=647 data-nosnippet>647</a>            </span>.unwrap();
-<a href=#648 id=648 data-nosnippet>648</a>        <span class="kw">let </span><span class="kw-2">mut </span>ps = get_proposals_for_course(tx.as_mut(), course, <span class="bool-val">true</span>, Pagination::default())
-<a href=#649 id=649 data-nosnippet>649</a>            .<span class="kw">await
-<a href=#650 id=650 data-nosnippet>650</a>            </span>.unwrap();
-<a href=#651 id=651 data-nosnippet>651</a>        <span class="kw">let </span><span class="kw-2">mut </span>p = ps.pop().unwrap();
-<a href=#652 id=652 data-nosnippet>652</a>        <span class="kw">let </span>b = p.block_proposals.pop().unwrap();
-<a href=#653 id=653 data-nosnippet>653</a>        <span class="kw">match </span>b {
-<a href=#654 id=654 data-nosnippet>654</a>            BlockProposal::EditedBlockStillExists(b) =&gt; {
-<a href=#655 id=655 data-nosnippet>655</a>                <span class="macro">assert_eq!</span>(b.accept_preview.unwrap(), <span class="string">"Content with a typo in it."</span>);
-<a href=#656 id=656 data-nosnippet>656</a>                process_proposal(
-<a href=#657 id=657 data-nosnippet>657</a>                    tx.as_mut(),
-<a href=#658 id=658 data-nosnippet>658</a>                    page,
-<a href=#659 id=659 data-nosnippet>659</a>                    p.id,
-<a href=#660 id=660 data-nosnippet>660</a>                    <span class="macro">vec!</span>[BlockProposalInfo {
-<a href=#661 id=661 data-nosnippet>661</a>                        id: b.id,
-<a href=#662 id=662 data-nosnippet>662</a>                        action: BlockProposalAction::Accept(
-<a href=#663 id=663 data-nosnippet>663</a>                            <span class="string">"Content with a typo in it."</span>.to_string(),
-<a href=#664 id=664 data-nosnippet>664</a>                        ),
-<a href=#665 id=665 data-nosnippet>665</a>                    }],
-<a href=#666 id=666 data-nosnippet>666</a>                    user,
-<a href=#667 id=667 data-nosnippet>667</a>                    |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#668 id=668 data-nosnippet>668</a>                    |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#669 id=669 data-nosnippet>669</a>                )
-<a href=#670 id=670 data-nosnippet>670</a>                .<span class="kw">await
-<a href=#671 id=671 data-nosnippet>671</a>                </span>.unwrap();
-<a href=#672 id=672 data-nosnippet>672</a>
-<a href=#673 id=673 data-nosnippet>673</a>                <span class="kw">let </span><span class="kw-2">mut </span>ps =
-<a href=#674 id=674 data-nosnippet>674</a>                    get_proposals_for_course(tx.as_mut(), course, <span class="bool-val">false</span>, Pagination::default())
-<a href=#675 id=675 data-nosnippet>675</a>                        .<span class="kw">await
-<a href=#676 id=676 data-nosnippet>676</a>                        </span>.unwrap();
-<a href=#677 id=677 data-nosnippet>677</a>                <span class="kw">let _ </span>= ps.pop().unwrap();
-<a href=#678 id=678 data-nosnippet>678</a>
-<a href=#679 id=679 data-nosnippet>679</a>                assert_content(tx.as_mut(), page, <span class="string">"Content with a typo in it."</span>).<span class="kw">await</span>;
-<a href=#680 id=680 data-nosnippet>680</a>            }
-<a href=#681 id=681 data-nosnippet>681</a>            BlockProposal::EditedBlockNoLongerExists(_o) =&gt; <span class="macro">panic!</span>(<span class="string">"Wrong block proposal"</span>),
-<a href=#682 id=682 data-nosnippet>682</a>        };
-<a href=#683 id=683 data-nosnippet>683</a>    }
-<a href=#684 id=684 data-nosnippet>684</a>
-<a href=#685 id=685 data-nosnippet>685</a>    <span class="attr">#[tokio::test]
-<a href=#686 id=686 data-nosnippet>686</a>    </span><span class="kw">async fn </span>rejection() {
-<a href=#687 id=687 data-nosnippet>687</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, :chapter, :page);
-<a href=#688 id=688 data-nosnippet>688</a>        <span class="kw">let </span>block_id = init_content(
-<a href=#689 id=689 data-nosnippet>689</a>            tx.as_mut(),
-<a href=#690 id=690 data-nosnippet>690</a>            chapter,
-<a href=#691 id=691 data-nosnippet>691</a>            page,
-<a href=#692 id=692 data-nosnippet>692</a>            user,
-<a href=#693 id=693 data-nosnippet>693</a>            <span class="string">"Content with a tpo in it."</span>,
-<a href=#694 id=694 data-nosnippet>694</a>        )
-<a href=#695 id=695 data-nosnippet>695</a>        .<span class="kw">await</span>;
-<a href=#696 id=696 data-nosnippet>696</a>        <span class="kw">let </span>new = NewProposedPageEdits {
-<a href=#697 id=697 data-nosnippet>697</a>            page_id: page,
-<a href=#698 id=698 data-nosnippet>698</a>            block_edits: <span class="macro">vec!</span>[NewProposedBlockEdit {
-<a href=#699 id=699 data-nosnippet>699</a>                block_id,
-<a href=#700 id=700 data-nosnippet>700</a>                block_attribute: <span class="string">"content"</span>.to_string(),
-<a href=#701 id=701 data-nosnippet>701</a>                original_text: <span class="string">"Content with a tpo in it."</span>.to_string(),
-<a href=#702 id=702 data-nosnippet>702</a>                changed_text: <span class="string">"Content with a typo in it."</span>.to_string(),
-<a href=#703 id=703 data-nosnippet>703</a>            }],
-<a href=#704 id=704 data-nosnippet>704</a>        };
-<a href=#705 id=705 data-nosnippet>705</a>        insert(tx.as_mut(), PKeyPolicy::Generate, course, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>new)
-<a href=#706 id=706 data-nosnippet>706</a>            .<span class="kw">await
-<a href=#707 id=707 data-nosnippet>707</a>            </span>.unwrap();
-<a href=#708 id=708 data-nosnippet>708</a>
-<a href=#709 id=709 data-nosnippet>709</a>        <span class="kw">let </span><span class="kw-2">mut </span>ps = get_proposals_for_course(tx.as_mut(), course, <span class="bool-val">true</span>, Pagination::default())
-<a href=#710 id=710 data-nosnippet>710</a>            .<span class="kw">await
-<a href=#711 id=711 data-nosnippet>711</a>            </span>.unwrap();
-<a href=#712 id=712 data-nosnippet>712</a>        <span class="kw">let </span><span class="kw-2">mut </span>p = ps.pop().unwrap();
-<a href=#713 id=713 data-nosnippet>713</a>        <span class="kw">let </span>b = p.block_proposals.pop().unwrap();
-<a href=#714 id=714 data-nosnippet>714</a>        <span class="kw">match </span>b {
-<a href=#715 id=715 data-nosnippet>715</a>            BlockProposal::EditedBlockStillExists(b) =&gt; {
-<a href=#716 id=716 data-nosnippet>716</a>                <span class="macro">assert_eq!</span>(b.accept_preview.unwrap(), <span class="string">"Content with a typo in it."</span>);
-<a href=#717 id=717 data-nosnippet>717</a>                <span class="macro">assert_eq!</span>(b.status, ProposalStatus::Pending);
-<a href=#718 id=718 data-nosnippet>718</a>
-<a href=#719 id=719 data-nosnippet>719</a>                process_proposal(
-<a href=#720 id=720 data-nosnippet>720</a>                    tx.as_mut(),
-<a href=#721 id=721 data-nosnippet>721</a>                    page,
-<a href=#722 id=722 data-nosnippet>722</a>                    p.id,
-<a href=#723 id=723 data-nosnippet>723</a>                    <span class="macro">vec!</span>[BlockProposalInfo {
-<a href=#724 id=724 data-nosnippet>724</a>                        id: b.id,
-<a href=#725 id=725 data-nosnippet>725</a>                        action: BlockProposalAction::Reject,
-<a href=#726 id=726 data-nosnippet>726</a>                    }],
-<a href=#727 id=727 data-nosnippet>727</a>                    user,
-<a href=#728 id=728 data-nosnippet>728</a>                    |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#729 id=729 data-nosnippet>729</a>                    |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
-<a href=#730 id=730 data-nosnippet>730</a>                )
-<a href=#731 id=731 data-nosnippet>731</a>                .<span class="kw">await
-<a href=#732 id=732 data-nosnippet>732</a>                </span>.unwrap();
-<a href=#733 id=733 data-nosnippet>733</a>
-<a href=#734 id=734 data-nosnippet>734</a>                <span class="kw">let </span><span class="kw-2">mut </span>ps =
-<a href=#735 id=735 data-nosnippet>735</a>                    get_proposals_for_course(tx.as_mut(), course, <span class="bool-val">false</span>, Pagination::default())
-<a href=#736 id=736 data-nosnippet>736</a>                        .<span class="kw">await
-<a href=#737 id=737 data-nosnippet>737</a>                        </span>.unwrap();
-<a href=#738 id=738 data-nosnippet>738</a>                <span class="kw">let _ </span>= ps.pop().unwrap();
-<a href=#739 id=739 data-nosnippet>739</a>
-<a href=#740 id=740 data-nosnippet>740</a>                assert_content(tx.as_mut(), page, <span class="string">"Content with a tpo in it."</span>).<span class="kw">await</span>;
-<a href=#741 id=741 data-nosnippet>741</a>            }
-<a href=#742 id=742 data-nosnippet>742</a>            BlockProposal::EditedBlockNoLongerExists(_o) =&gt; <span class="macro">panic!</span>(<span class="string">"Wrong block proposal"</span>),
-<a href=#743 id=743 data-nosnippet>743</a>        };
-<a href=#744 id=744 data-nosnippet>744</a>    }
-<a href=#745 id=745 data-nosnippet>745</a>}
+<a href=#624 id=624 data-nosnippet>624</a>    <span class="kw">async fn </span>init_content(
+<a href=#625 id=625 data-nosnippet>625</a>        conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#626 id=626 data-nosnippet>626</a>        chapter: Uuid,
+<a href=#627 id=627 data-nosnippet>627</a>        page: Uuid,
+<a href=#628 id=628 data-nosnippet>628</a>        user: Uuid,
+<a href=#629 id=629 data-nosnippet>629</a>        content: <span class="kw-2">&amp;</span>str,
+<a href=#630 id=630 data-nosnippet>630</a>    ) -&gt; Uuid {
+<a href=#631 id=631 data-nosnippet>631</a>        <span class="kw">let </span>client_id = Uuid::new_v4();
+<a href=#632 id=632 data-nosnippet>632</a>        <span class="kw">let </span>new_content: Vec&lt;GutenbergBlock&gt; = <span class="macro">vec!</span>[GutenbergBlock {
+<a href=#633 id=633 data-nosnippet>633</a>            client_id,
+<a href=#634 id=634 data-nosnippet>634</a>            name: <span class="string">"core/paragraph"</span>.to_string(),
+<a href=#635 id=635 data-nosnippet>635</a>            is_valid: <span class="bool-val">true</span>,
+<a href=#636 id=636 data-nosnippet>636</a>            attributes: <span class="macro">attributes!</span> {
+<a href=#637 id=637 data-nosnippet>637</a>                <span class="string">"content"</span>: content
+<a href=#638 id=638 data-nosnippet>638</a>            },
+<a href=#639 id=639 data-nosnippet>639</a>            inner_blocks: <span class="macro">vec!</span>[],
+<a href=#640 id=640 data-nosnippet>640</a>        }];
+<a href=#641 id=641 data-nosnippet>641</a>        <span class="kw">let </span>cms_page_update = CmsPageUpdate {
+<a href=#642 id=642 data-nosnippet>642</a>            content: new_content,
+<a href=#643 id=643 data-nosnippet>643</a>            url_path: <span class="string">""</span>.to_string(),
+<a href=#644 id=644 data-nosnippet>644</a>            title: <span class="string">""</span>.to_string(),
+<a href=#645 id=645 data-nosnippet>645</a>            chapter_id: <span class="prelude-val">Some</span>(chapter),
+<a href=#646 id=646 data-nosnippet>646</a>            exercises: <span class="macro">vec!</span>[],
+<a href=#647 id=647 data-nosnippet>647</a>            exercise_slides: <span class="macro">vec!</span>[],
+<a href=#648 id=648 data-nosnippet>648</a>            exercise_tasks: <span class="macro">vec!</span>[],
+<a href=#649 id=649 data-nosnippet>649</a>            hidden: <span class="bool-val">false</span>,
+<a href=#650 id=650 data-nosnippet>650</a>        };
+<a href=#651 id=651 data-nosnippet>651</a>        <span class="kw">crate</span>::pages::update_page(
+<a href=#652 id=652 data-nosnippet>652</a>            conn,
+<a href=#653 id=653 data-nosnippet>653</a>            PageUpdateArgs {
+<a href=#654 id=654 data-nosnippet>654</a>                page_id: page,
+<a href=#655 id=655 data-nosnippet>655</a>                author: <span class="kw">crate</span>::entity_history::HistoryAuthor::user(user),
+<a href=#656 id=656 data-nosnippet>656</a>                cms_page_update,
+<a href=#657 id=657 data-nosnippet>657</a>                retain_ids: <span class="bool-val">true</span>,
+<a href=#658 id=658 data-nosnippet>658</a>                history_change_reason: HistoryChangeReason::PageSaved,
+<a href=#659 id=659 data-nosnippet>659</a>                is_exam_page: <span class="bool-val">false</span>,
+<a href=#660 id=660 data-nosnippet>660</a>            },
+<a href=#661 id=661 data-nosnippet>661</a>            |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#662 id=662 data-nosnippet>662</a>            |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#663 id=663 data-nosnippet>663</a>        )
+<a href=#664 id=664 data-nosnippet>664</a>        .<span class="kw">await
+<a href=#665 id=665 data-nosnippet>665</a>        </span>.unwrap();
+<a href=#666 id=666 data-nosnippet>666</a>        client_id
+<a href=#667 id=667 data-nosnippet>667</a>    }
+<a href=#668 id=668 data-nosnippet>668</a>
+<a href=#669 id=669 data-nosnippet>669</a>    <span class="kw">async fn </span>assert_content(conn: <span class="kw-2">&amp;mut </span>PgConnection, page_id: Uuid, expected: <span class="kw-2">&amp;</span>str) {
+<a href=#670 id=670 data-nosnippet>670</a>        <span class="kw">let </span>page = <span class="kw">crate</span>::pages::get_page(conn, page_id).<span class="kw">await</span>.unwrap();
+<a href=#671 id=671 data-nosnippet>671</a>        <span class="kw">let </span><span class="kw-2">mut </span>new_content: Vec&lt;GutenbergBlock&gt; = serde_json::from_value(page.content).unwrap();
+<a href=#672 id=672 data-nosnippet>672</a>        <span class="kw">let </span>block = new_content.pop().unwrap();
+<a href=#673 id=673 data-nosnippet>673</a>        <span class="kw">let </span>content = block.attributes.get(<span class="string">"content"</span>).unwrap().as_str().unwrap();
+<a href=#674 id=674 data-nosnippet>674</a>        <span class="macro">assert_eq!</span>(content, expected);
+<a href=#675 id=675 data-nosnippet>675</a>    }
+<a href=#676 id=676 data-nosnippet>676</a>
+<a href=#677 id=677 data-nosnippet>677</a>    <span class="attr">#[tokio::test]
+<a href=#678 id=678 data-nosnippet>678</a>    </span><span class="kw">async fn </span>typo_fix() {
+<a href=#679 id=679 data-nosnippet>679</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, :chapter, :page);
+<a href=#680 id=680 data-nosnippet>680</a>        <span class="kw">let </span>block_id = init_content(
+<a href=#681 id=681 data-nosnippet>681</a>            tx.as_mut(),
+<a href=#682 id=682 data-nosnippet>682</a>            chapter,
+<a href=#683 id=683 data-nosnippet>683</a>            page,
+<a href=#684 id=684 data-nosnippet>684</a>            user,
+<a href=#685 id=685 data-nosnippet>685</a>            <span class="string">"Content with a tpo in it."</span>,
+<a href=#686 id=686 data-nosnippet>686</a>        )
+<a href=#687 id=687 data-nosnippet>687</a>        .<span class="kw">await</span>;
+<a href=#688 id=688 data-nosnippet>688</a>
+<a href=#689 id=689 data-nosnippet>689</a>        <span class="kw">let </span>new = NewProposedPageEdits {
+<a href=#690 id=690 data-nosnippet>690</a>            page_id: page,
+<a href=#691 id=691 data-nosnippet>691</a>            block_edits: <span class="macro">vec!</span>[NewProposedBlockEdit {
+<a href=#692 id=692 data-nosnippet>692</a>                block_id,
+<a href=#693 id=693 data-nosnippet>693</a>                block_attribute: <span class="string">"content"</span>.to_string(),
+<a href=#694 id=694 data-nosnippet>694</a>                original_text: <span class="string">"Content with a tpo in it."</span>.to_string(),
+<a href=#695 id=695 data-nosnippet>695</a>                changed_text: <span class="string">"Content with a typo in it."</span>.to_string(),
+<a href=#696 id=696 data-nosnippet>696</a>            }],
+<a href=#697 id=697 data-nosnippet>697</a>        };
+<a href=#698 id=698 data-nosnippet>698</a>        insert(tx.as_mut(), PKeyPolicy::Generate, course, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>new)
+<a href=#699 id=699 data-nosnippet>699</a>            .<span class="kw">await
+<a href=#700 id=700 data-nosnippet>700</a>            </span>.unwrap();
+<a href=#701 id=701 data-nosnippet>701</a>        <span class="kw">let </span><span class="kw-2">mut </span>ps = get_proposals_for_course(tx.as_mut(), course, <span class="bool-val">true</span>, Pagination::default())
+<a href=#702 id=702 data-nosnippet>702</a>            .<span class="kw">await
+<a href=#703 id=703 data-nosnippet>703</a>            </span>.unwrap();
+<a href=#704 id=704 data-nosnippet>704</a>        <span class="kw">let </span><span class="kw-2">mut </span>p = ps.pop().unwrap();
+<a href=#705 id=705 data-nosnippet>705</a>        <span class="kw">let </span>b = p.block_proposals.pop().unwrap();
+<a href=#706 id=706 data-nosnippet>706</a>        <span class="kw">match </span>b {
+<a href=#707 id=707 data-nosnippet>707</a>            BlockProposal::EditedBlockStillExists(b) =&gt; {
+<a href=#708 id=708 data-nosnippet>708</a>                <span class="macro">assert_eq!</span>(b.accept_preview.unwrap(), <span class="string">"Content with a typo in it."</span>);
+<a href=#709 id=709 data-nosnippet>709</a>                process_proposal(
+<a href=#710 id=710 data-nosnippet>710</a>                    tx.as_mut(),
+<a href=#711 id=711 data-nosnippet>711</a>                    page,
+<a href=#712 id=712 data-nosnippet>712</a>                    p.id,
+<a href=#713 id=713 data-nosnippet>713</a>                    <span class="macro">vec!</span>[BlockProposalInfo {
+<a href=#714 id=714 data-nosnippet>714</a>                        id: b.id,
+<a href=#715 id=715 data-nosnippet>715</a>                        action: BlockProposalAction::Accept(
+<a href=#716 id=716 data-nosnippet>716</a>                            <span class="string">"Content with a typo in it."</span>.to_string(),
+<a href=#717 id=717 data-nosnippet>717</a>                        ),
+<a href=#718 id=718 data-nosnippet>718</a>                    }],
+<a href=#719 id=719 data-nosnippet>719</a>                    user,
+<a href=#720 id=720 data-nosnippet>720</a>                    |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#721 id=721 data-nosnippet>721</a>                    |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#722 id=722 data-nosnippet>722</a>                )
+<a href=#723 id=723 data-nosnippet>723</a>                .<span class="kw">await
+<a href=#724 id=724 data-nosnippet>724</a>                </span>.unwrap();
+<a href=#725 id=725 data-nosnippet>725</a>
+<a href=#726 id=726 data-nosnippet>726</a>                <span class="kw">let </span><span class="kw-2">mut </span>ps =
+<a href=#727 id=727 data-nosnippet>727</a>                    get_proposals_for_course(tx.as_mut(), course, <span class="bool-val">false</span>, Pagination::default())
+<a href=#728 id=728 data-nosnippet>728</a>                        .<span class="kw">await
+<a href=#729 id=729 data-nosnippet>729</a>                        </span>.unwrap();
+<a href=#730 id=730 data-nosnippet>730</a>                <span class="kw">let _ </span>= ps.pop().unwrap();
+<a href=#731 id=731 data-nosnippet>731</a>
+<a href=#732 id=732 data-nosnippet>732</a>                assert_content(tx.as_mut(), page, <span class="string">"Content with a typo in it."</span>).<span class="kw">await</span>;
+<a href=#733 id=733 data-nosnippet>733</a>            }
+<a href=#734 id=734 data-nosnippet>734</a>            BlockProposal::EditedBlockNoLongerExists(_o) =&gt; <span class="macro">panic!</span>(<span class="string">"Wrong block proposal"</span>),
+<a href=#735 id=735 data-nosnippet>735</a>        };
+<a href=#736 id=736 data-nosnippet>736</a>    }
+<a href=#737 id=737 data-nosnippet>737</a>
+<a href=#738 id=738 data-nosnippet>738</a>    <span class="attr">#[tokio::test]
+<a href=#739 id=739 data-nosnippet>739</a>    </span><span class="kw">async fn </span>rejection() {
+<a href=#740 id=740 data-nosnippet>740</a>        <span class="macro">insert_data!</span>(:tx, :user, :org, :course, instance: _instance, :course_module, :chapter, :page);
+<a href=#741 id=741 data-nosnippet>741</a>        <span class="kw">let </span>block_id = init_content(
+<a href=#742 id=742 data-nosnippet>742</a>            tx.as_mut(),
+<a href=#743 id=743 data-nosnippet>743</a>            chapter,
+<a href=#744 id=744 data-nosnippet>744</a>            page,
+<a href=#745 id=745 data-nosnippet>745</a>            user,
+<a href=#746 id=746 data-nosnippet>746</a>            <span class="string">"Content with a tpo in it."</span>,
+<a href=#747 id=747 data-nosnippet>747</a>        )
+<a href=#748 id=748 data-nosnippet>748</a>        .<span class="kw">await</span>;
+<a href=#749 id=749 data-nosnippet>749</a>        <span class="kw">let </span>new = NewProposedPageEdits {
+<a href=#750 id=750 data-nosnippet>750</a>            page_id: page,
+<a href=#751 id=751 data-nosnippet>751</a>            block_edits: <span class="macro">vec!</span>[NewProposedBlockEdit {
+<a href=#752 id=752 data-nosnippet>752</a>                block_id,
+<a href=#753 id=753 data-nosnippet>753</a>                block_attribute: <span class="string">"content"</span>.to_string(),
+<a href=#754 id=754 data-nosnippet>754</a>                original_text: <span class="string">"Content with a tpo in it."</span>.to_string(),
+<a href=#755 id=755 data-nosnippet>755</a>                changed_text: <span class="string">"Content with a typo in it."</span>.to_string(),
+<a href=#756 id=756 data-nosnippet>756</a>            }],
+<a href=#757 id=757 data-nosnippet>757</a>        };
+<a href=#758 id=758 data-nosnippet>758</a>        insert(tx.as_mut(), PKeyPolicy::Generate, course, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>new)
+<a href=#759 id=759 data-nosnippet>759</a>            .<span class="kw">await
+<a href=#760 id=760 data-nosnippet>760</a>            </span>.unwrap();
+<a href=#761 id=761 data-nosnippet>761</a>
+<a href=#762 id=762 data-nosnippet>762</a>        <span class="kw">let </span><span class="kw-2">mut </span>ps = get_proposals_for_course(tx.as_mut(), course, <span class="bool-val">true</span>, Pagination::default())
+<a href=#763 id=763 data-nosnippet>763</a>            .<span class="kw">await
+<a href=#764 id=764 data-nosnippet>764</a>            </span>.unwrap();
+<a href=#765 id=765 data-nosnippet>765</a>        <span class="kw">let </span><span class="kw-2">mut </span>p = ps.pop().unwrap();
+<a href=#766 id=766 data-nosnippet>766</a>        <span class="kw">let </span>b = p.block_proposals.pop().unwrap();
+<a href=#767 id=767 data-nosnippet>767</a>        <span class="kw">match </span>b {
+<a href=#768 id=768 data-nosnippet>768</a>            BlockProposal::EditedBlockStillExists(b) =&gt; {
+<a href=#769 id=769 data-nosnippet>769</a>                <span class="macro">assert_eq!</span>(b.accept_preview.unwrap(), <span class="string">"Content with a typo in it."</span>);
+<a href=#770 id=770 data-nosnippet>770</a>                <span class="macro">assert_eq!</span>(b.status, ProposalStatus::Pending);
+<a href=#771 id=771 data-nosnippet>771</a>
+<a href=#772 id=772 data-nosnippet>772</a>                process_proposal(
+<a href=#773 id=773 data-nosnippet>773</a>                    tx.as_mut(),
+<a href=#774 id=774 data-nosnippet>774</a>                    page,
+<a href=#775 id=775 data-nosnippet>775</a>                    p.id,
+<a href=#776 id=776 data-nosnippet>776</a>                    <span class="macro">vec!</span>[BlockProposalInfo {
+<a href=#777 id=777 data-nosnippet>777</a>                        id: b.id,
+<a href=#778 id=778 data-nosnippet>778</a>                        action: BlockProposalAction::Reject,
+<a href=#779 id=779 data-nosnippet>779</a>                    }],
+<a href=#780 id=780 data-nosnippet>780</a>                    user,
+<a href=#781 id=781 data-nosnippet>781</a>                    |<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#782 id=782 data-nosnippet>782</a>                    |<span class="kw">_</span>| <span class="macro">unimplemented!</span>(),
+<a href=#783 id=783 data-nosnippet>783</a>                )
+<a href=#784 id=784 data-nosnippet>784</a>                .<span class="kw">await
+<a href=#785 id=785 data-nosnippet>785</a>                </span>.unwrap();
+<a href=#786 id=786 data-nosnippet>786</a>
+<a href=#787 id=787 data-nosnippet>787</a>                <span class="kw">let </span><span class="kw-2">mut </span>ps =
+<a href=#788 id=788 data-nosnippet>788</a>                    get_proposals_for_course(tx.as_mut(), course, <span class="bool-val">false</span>, Pagination::default())
+<a href=#789 id=789 data-nosnippet>789</a>                        .<span class="kw">await
+<a href=#790 id=790 data-nosnippet>790</a>                        </span>.unwrap();
+<a href=#791 id=791 data-nosnippet>791</a>                <span class="kw">let _ </span>= ps.pop().unwrap();
+<a href=#792 id=792 data-nosnippet>792</a>
+<a href=#793 id=793 data-nosnippet>793</a>                assert_content(tx.as_mut(), page, <span class="string">"Content with a tpo in it."</span>).<span class="kw">await</span>;
+<a href=#794 id=794 data-nosnippet>794</a>            }
+<a href=#795 id=795 data-nosnippet>795</a>            BlockProposal::EditedBlockNoLongerExists(_o) =&gt; <span class="macro">panic!</span>(<span class="string">"Wrong block proposal"</span>),
+<a href=#796 id=796 data-nosnippet>796</a>        };
+<a href=#797 id=797 data-nosnippet>797</a>    }
+<a href=#798 id=798 data-nosnippet>798</a>}
 </code></pre></div></section></main></body></html>

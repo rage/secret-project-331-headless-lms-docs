@@ -902,48 +902,49 @@
 <a href=#902 id=902 data-nosnippet>902</a>            issued_token_type: TokenType::Bearer,
 <a href=#903 id=903 data-nosnippet>903</a>            dpop_jkt: <span class="prelude-val">None</span>,
 <a href=#904 id=904 data-nosnippet>904</a>            token_hmac_key: <span class="kw-2">&amp;</span>key,
-<a href=#905 id=905 data-nosnippet>905</a>        };
-<a href=#906 id=906 data-nosnippet>906</a>        <span class="kw">let </span>result = process_token_grant(
-<a href=#907 id=907 data-nosnippet>907</a>            tx.as_mut(),
-<a href=#908 id=908 data-nosnippet>908</a>            <span class="kw-2">&amp;</span>Cache::new(<span class="string">"redis://127.0.0.1:1"</span>).expect(<span class="string">"cache"</span>),
-<a href=#909 id=909 data-nosnippet>909</a>            request,
-<a href=#910 id=910 data-nosnippet>910</a>        )
-<a href=#911 id=911 data-nosnippet>911</a>        .<span class="kw">await
-<a href=#912 id=912 data-nosnippet>912</a>        </span>.expect(<span class="string">"device grant must succeed without a PKCE verifier despite require_pkce=true"</span>);
-<a href=#913 id=913 data-nosnippet>913</a>        <span class="macro">assert_eq!</span>(result.user_id, user);
-<a href=#914 id=914 data-nosnippet>914</a>        <span class="macro">assert_eq!</span>(result.scopes, <span class="macro">vec!</span>[<span class="string">"exercise-services"</span>.to_string()]);
-<a href=#915 id=915 data-nosnippet>915</a>
-<a href=#916 id=916 data-nosnippet>916</a>        tx.rollback().<span class="kw">await</span>;
-<a href=#917 id=917 data-nosnippet>917</a>    }
-<a href=#918 id=918 data-nosnippet>918</a>
-<a href=#919 id=919 data-nosnippet>919</a>    <span class="attr">#[actix_web::test]
-<a href=#920 id=920 data-nosnippet>920</a>    </span><span class="kw">async fn </span>deny_marks_denied_and_is_not_found_afterwards() {
-<a href=#921 id=921 data-nosnippet>921</a>        <span class="macro">insert_data!</span>(:tx, :user);
-<a href=#922 id=922 data-nosnippet>922</a>        <span class="kw">let _ </span>= user;
-<a href=#923 id=923 data-nosnippet>923</a>        <span class="kw">let </span>client = insert_client(
-<a href=#924 id=924 data-nosnippet>924</a>            tx.as_mut(),
-<a href=#925 id=925 data-nosnippet>925</a>            <span class="kw-2">&amp;</span>[GrantTypeName::DeviceCode],
-<a href=#926 id=926 data-nosnippet>926</a>            <span class="kw-2">&amp;</span>[<span class="string">"exercise-services"</span>.to_string()],
-<a href=#927 id=927 data-nosnippet>927</a>        )
-<a href=#928 id=928 data-nosnippet>928</a>        .<span class="kw">await</span>;
-<a href=#929 id=929 data-nosnippet>929</a>        <span class="kw">let </span>res = create_device_authorization(
-<a href=#930 id=930 data-nosnippet>930</a>            tx.as_mut(),
-<a href=#931 id=931 data-nosnippet>931</a>            <span class="kw-2">&amp;</span>form(<span class="kw-2">&amp;</span>client.client_id, <span class="prelude-val">None</span>),
-<a href=#932 id=932 data-nosnippet>932</a>            <span class="kw-2">&amp;</span>hmac_key(),
-<a href=#933 id=933 data-nosnippet>933</a>            BASE_URL,
-<a href=#934 id=934 data-nosnippet>934</a>        )
-<a href=#935 id=935 data-nosnippet>935</a>        .<span class="kw">await
-<a href=#936 id=936 data-nosnippet>936</a>        </span>.unwrap();
-<a href=#937 id=937 data-nosnippet>937</a>
-<a href=#938 id=938 data-nosnippet>938</a>        deny_device(tx.as_mut(), <span class="kw-2">&amp;</span>res.user_code)
-<a href=#939 id=939 data-nosnippet>939</a>            .<span class="kw">await
-<a href=#940 id=940 data-nosnippet>940</a>            </span>.expect(<span class="string">"deny should succeed"</span>);
-<a href=#941 id=941 data-nosnippet>941</a>
-<a href=#942 id=942 data-nosnippet>942</a>        <span class="comment">// No longer pending -&gt; lookup for the verification page is not found.
-<a href=#943 id=943 data-nosnippet>943</a>        </span><span class="kw">let </span>err = load_device_verification_info(tx.as_mut(), <span class="kw-2">&amp;</span>res.user_code)
-<a href=#944 id=944 data-nosnippet>944</a>            .<span class="kw">await
-<a href=#945 id=945 data-nosnippet>945</a>            </span>.expect_err(<span class="string">"denied code is not pending"</span>);
-<a href=#946 id=946 data-nosnippet>946</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(err.error_type(), ControllerErrorType::NotFound));
-<a href=#947 id=947 data-nosnippet>947</a>    }
-<a href=#948 id=948 data-nosnippet>948</a>}
+<a href=#905 id=905 data-nosnippet>905</a>            resource: <span class="prelude-val">None</span>,
+<a href=#906 id=906 data-nosnippet>906</a>        };
+<a href=#907 id=907 data-nosnippet>907</a>        <span class="kw">let </span>result = process_token_grant(
+<a href=#908 id=908 data-nosnippet>908</a>            tx.as_mut(),
+<a href=#909 id=909 data-nosnippet>909</a>            <span class="kw-2">&amp;</span>Cache::new(<span class="string">"redis://127.0.0.1:1"</span>).expect(<span class="string">"cache"</span>),
+<a href=#910 id=910 data-nosnippet>910</a>            request,
+<a href=#911 id=911 data-nosnippet>911</a>        )
+<a href=#912 id=912 data-nosnippet>912</a>        .<span class="kw">await
+<a href=#913 id=913 data-nosnippet>913</a>        </span>.expect(<span class="string">"device grant must succeed without a PKCE verifier despite require_pkce=true"</span>);
+<a href=#914 id=914 data-nosnippet>914</a>        <span class="macro">assert_eq!</span>(result.user_id, user);
+<a href=#915 id=915 data-nosnippet>915</a>        <span class="macro">assert_eq!</span>(result.scopes, <span class="macro">vec!</span>[<span class="string">"exercise-services"</span>.to_string()]);
+<a href=#916 id=916 data-nosnippet>916</a>
+<a href=#917 id=917 data-nosnippet>917</a>        tx.rollback().<span class="kw">await</span>;
+<a href=#918 id=918 data-nosnippet>918</a>    }
+<a href=#919 id=919 data-nosnippet>919</a>
+<a href=#920 id=920 data-nosnippet>920</a>    <span class="attr">#[actix_web::test]
+<a href=#921 id=921 data-nosnippet>921</a>    </span><span class="kw">async fn </span>deny_marks_denied_and_is_not_found_afterwards() {
+<a href=#922 id=922 data-nosnippet>922</a>        <span class="macro">insert_data!</span>(:tx, :user);
+<a href=#923 id=923 data-nosnippet>923</a>        <span class="kw">let _ </span>= user;
+<a href=#924 id=924 data-nosnippet>924</a>        <span class="kw">let </span>client = insert_client(
+<a href=#925 id=925 data-nosnippet>925</a>            tx.as_mut(),
+<a href=#926 id=926 data-nosnippet>926</a>            <span class="kw-2">&amp;</span>[GrantTypeName::DeviceCode],
+<a href=#927 id=927 data-nosnippet>927</a>            <span class="kw-2">&amp;</span>[<span class="string">"exercise-services"</span>.to_string()],
+<a href=#928 id=928 data-nosnippet>928</a>        )
+<a href=#929 id=929 data-nosnippet>929</a>        .<span class="kw">await</span>;
+<a href=#930 id=930 data-nosnippet>930</a>        <span class="kw">let </span>res = create_device_authorization(
+<a href=#931 id=931 data-nosnippet>931</a>            tx.as_mut(),
+<a href=#932 id=932 data-nosnippet>932</a>            <span class="kw-2">&amp;</span>form(<span class="kw-2">&amp;</span>client.client_id, <span class="prelude-val">None</span>),
+<a href=#933 id=933 data-nosnippet>933</a>            <span class="kw-2">&amp;</span>hmac_key(),
+<a href=#934 id=934 data-nosnippet>934</a>            BASE_URL,
+<a href=#935 id=935 data-nosnippet>935</a>        )
+<a href=#936 id=936 data-nosnippet>936</a>        .<span class="kw">await
+<a href=#937 id=937 data-nosnippet>937</a>        </span>.unwrap();
+<a href=#938 id=938 data-nosnippet>938</a>
+<a href=#939 id=939 data-nosnippet>939</a>        deny_device(tx.as_mut(), <span class="kw-2">&amp;</span>res.user_code)
+<a href=#940 id=940 data-nosnippet>940</a>            .<span class="kw">await
+<a href=#941 id=941 data-nosnippet>941</a>            </span>.expect(<span class="string">"deny should succeed"</span>);
+<a href=#942 id=942 data-nosnippet>942</a>
+<a href=#943 id=943 data-nosnippet>943</a>        <span class="comment">// No longer pending -&gt; lookup for the verification page is not found.
+<a href=#944 id=944 data-nosnippet>944</a>        </span><span class="kw">let </span>err = load_device_verification_info(tx.as_mut(), <span class="kw-2">&amp;</span>res.user_code)
+<a href=#945 id=945 data-nosnippet>945</a>            .<span class="kw">await
+<a href=#946 id=946 data-nosnippet>946</a>            </span>.expect_err(<span class="string">"denied code is not pending"</span>);
+<a href=#947 id=947 data-nosnippet>947</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(err.error_type(), ControllerErrorType::NotFound));
+<a href=#948 id=948 data-nosnippet>948</a>    }
+<a href=#949 id=949 data-nosnippet>949</a>}
 </code></pre></div></section></main></body></html>

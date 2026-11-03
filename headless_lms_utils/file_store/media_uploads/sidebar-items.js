@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_SIZE_LIMIT_BYTES","SIZE_LIMITS_BYTES"],"enum":["MediaKind","MediaOwner"],"fn":["media_path","size_limit_bytes","stored_file_name"]};

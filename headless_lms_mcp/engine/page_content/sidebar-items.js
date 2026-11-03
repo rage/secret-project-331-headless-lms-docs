@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_BLOCK_DEPTH","NOT_WRITABLE_BLOCKS"],"fn":["apply","check_creatable","exercise_must_stay_top_level","exercise_read_only","referenced_pages","resolve_label_path","text_content"],"mod":["address","pointer","replace_list"],"struct":["BlockPageMove","Editor","PageContentResult"]};

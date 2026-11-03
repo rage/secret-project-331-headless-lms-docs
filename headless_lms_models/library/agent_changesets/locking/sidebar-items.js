@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DiscardOutcome","DiscardRejection","LockRejection"],"fn":["discard","discard_entities","lock_open_changeset"],"struct":["ChangedSinceReview"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CourseParts","ExerciseEditError","ExerciseReviewConfig","PublishBlocker","ReviewConfigKind","StagedEntity"],"fn":["load_live_course","load_view","review_instructions_for_storage"],"mod":["blockers","records","state","view"],"struct":["CourseState","CourseView","ExerciseDeadline","ExerciseRecord","ExerciseTaskRecord","PageRecord","StateChanges"]};

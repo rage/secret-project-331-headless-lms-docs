@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["load_exercise_records","load_view"],"struct":["CourseView"]};

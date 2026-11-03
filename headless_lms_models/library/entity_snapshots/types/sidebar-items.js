@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EntitySnapshot"],"fn":["exercise_bundles","json_digest"],"macro":["match_snapshot","with_snapshot_type"],"struct":["ChapterSnapshot","CourseAudienceSnapshot","CourseDefaultReviewConfigSnapshot","CourseSettingsSnapshot","ExerciseBundle","GlossaryTermSnapshot","ModuleSnapshot","PageSnapshot","ReferenceSnapshot"]};

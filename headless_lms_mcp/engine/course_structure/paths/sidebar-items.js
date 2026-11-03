@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["assign_paths","chapter_page_segment","find_links_to_old_paths","is_chapter_segment","last_segment","normalize_segment","normalize_top_level_path","path_changes","title_segment"],"struct":["LinkToOldPath","PathRequests","PlannedPath"]};

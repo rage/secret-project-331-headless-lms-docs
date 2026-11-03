@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["create_new_chapter","create_new_chapter_with_content","create_new_course"],"struct":["CreateNewCourseFixedIds"]};
+window.SIDEBAR_ITEMS = {"constant":["FRONT_PAGE_ABOUT_PLACEHOLDER","FRONT_PAGE_SUBTITLE_PLACEHOLDER","FRONT_PAGE_TITLE_PLACEHOLDER","TEMPLATE_PLACEHOLDER_TEXTS"],"fn":["create_new_chapter","create_new_chapter_with_content","create_new_course","default_course_front_page_content"],"struct":["ChapterFrontPage","CreateNewCourseFixedIds"]};

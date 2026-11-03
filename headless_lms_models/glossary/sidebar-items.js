@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["delete","delete_term_by_id_and_course_id","fetch_for_course","get_term_by_id","insert","update","update_term_by_id_and_course_id"],"struct":["GlossaryTerm","Term","TermUpdate"]};
+window.SIDEBAR_ITEMS = {"fn":["delete","delete_term_by_id_and_course_id","fetch_for_course","get_by_ids","get_term_by_id","insert","update","update_term_by_id_and_course_id","upsert_from_snapshot"],"struct":["GlossaryTerm","Term","TermUpdate"]};

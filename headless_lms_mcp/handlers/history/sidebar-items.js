@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_HISTORY_LIMIT","MAX_HISTORY_LIMIT"],"fn":["call_json","changes_settings"],"struct":["GetHistory","RevertChange"]};

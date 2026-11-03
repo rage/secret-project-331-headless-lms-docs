@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["authorize_course","connection","deleted_in_staged_changes","editable_courses","load_page_facts","open_course","open_course_parts","page_in_course","staged_page_document","state_of"]};

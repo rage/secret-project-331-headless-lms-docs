@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CONFIRMATION_KEY"],"enum":["McpScope","ToolOutcome"],"fn":["off_worker"],"mod":["args","catalog","error","handler","schema"],"struct":["ConfirmationRequest","McpPrincipal","RequestContext","RetryState","ToolResult"]};

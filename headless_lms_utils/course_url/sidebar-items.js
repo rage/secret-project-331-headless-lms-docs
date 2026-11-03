@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["build_course_url","build_courses_base_url"]};
+window.SIDEBAR_ITEMS = {"enum":["CourseUrlError"],"fn":["build_course_url","build_courses_base_url","course_page_url","parse_course_page_url"],"struct":["CoursePageRef"]};

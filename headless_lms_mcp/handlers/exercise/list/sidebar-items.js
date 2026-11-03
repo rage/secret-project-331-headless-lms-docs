@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_LIMIT","MAX_LIMIT"],"enum":["ReviewSource"],"fn":["page_snapshots","pages_in_scope","review_source"],"struct":["ListExercises","ListedExercise","ListedPage"]};

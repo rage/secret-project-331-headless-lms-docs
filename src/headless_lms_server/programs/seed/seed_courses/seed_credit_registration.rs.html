@@ -597,7 +597,7 @@
 <a href=#597 id=597 data-nosnippet>597</a>    .seed(conn, app_config, <span class="kw-2">&amp;</span>cx)
 <a href=#598 id=598 data-nosnippet>598</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#599 id=599 data-nosnippet>599</a>
-<a href=#600 id=600 data-nosnippet>600</a>    course_modules::update_certification_enabled(conn, module.id, <span class="bool-val">true</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#600 id=600 data-nosnippet>600</a>    course_modules::update_certification_enabled(conn, module.id, <span class="bool-val">true</span>, teacher_user_id).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#601 id=601 data-nosnippet>601</a>    open_university_registration_links::upsert(conn, CRS_DETOUR_101, <span class="string">"https://www.example.com"</span>)
 <a href=#602 id=602 data-nosnippet>602</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#603 id=603 data-nosnippet>603</a>    <span class="kw">for </span>enrolled_student <span class="kw">in </span>[student, failed_save_student] {

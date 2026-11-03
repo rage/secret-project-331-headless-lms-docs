@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CHAPTER_FIELDS","COUNT_FIELDS","DERIVED_FIELDS","MODULE_FIELDS","PAGE_FIELDS"],"fn":["check_field","field_error","is_hex_color","not_nullable","optional_color","optional_date","required_text","unknown_field"]};

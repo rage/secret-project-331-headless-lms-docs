@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["authenticate","protected_resource_metadata","protected_resource_metadata_url","unauthorized"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["RENDERED_KEYS"],"enum":["Entity","EntityRef","Kind","ListRef"],"fn":["entity_ids","parse_structure_path"],"struct":["CourseStructure","Loc","StructureChapter","StructureModule","StructurePage","StructurePath"]};

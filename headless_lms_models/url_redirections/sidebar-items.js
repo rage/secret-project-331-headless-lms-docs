@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["upsert"]};
+window.SIDEBAR_ITEMS = {"fn":["upsert"],"struct":["CreatedRedirect"]};

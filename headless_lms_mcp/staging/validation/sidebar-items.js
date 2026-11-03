@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ValidatedList"],"fn":["block_error","blocks_by_id","changeset_block_names","collect_validation_targets","replace_roots","top_level_pages_hold_no_chapter_blocks","unchanged_blocks","validate_changed_blocks","write_back_normalised"],"struct":["BlockFinding","PageToValidate","ValidatedBlocks"]};

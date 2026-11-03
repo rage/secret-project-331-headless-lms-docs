@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","authorize_own_changeset","create_preview_link","discard_changeset","get_changeset","get_changeset_counts","get_changesets","publish_changeset"],"struct":["AgentChangesetsQuery","AgentPreviewLink","MainFrontendAgentChangesetsApiDoc","ReviewedRevisionRequest"]};

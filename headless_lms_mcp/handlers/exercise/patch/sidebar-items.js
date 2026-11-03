@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["deadline_warnings","parse_deadline","review_count","settings_dropped_for_course_default"],"struct":["ExerciseSummary","PatchExercise"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["InstructionsList"],"fn":["apply_documents","changed_lists","checked_name","lists_of_pages","parse_blocks","review_list","text_documents"],"static":["MARKUP"],"struct":["ExerciseTextParts","InstructionsLocation"]};

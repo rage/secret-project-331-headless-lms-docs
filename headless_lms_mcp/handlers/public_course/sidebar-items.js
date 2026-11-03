@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["REFERENCE_NOTICE"],"fn":["add_shown_tasks","block_size","blocks_exercise_ids","exercise_block_ids","invalid","listed_page","normalize_path","open_public_course","outline","outline_chapter","page","parse_target","take_within"],"struct":["ReadPublicCourse","Reading","Target"]};

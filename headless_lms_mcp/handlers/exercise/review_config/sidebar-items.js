@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["check_review_config","dropped_settings","refused"],"struct":["DroppedReviewSettings"]};

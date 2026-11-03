@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["collapse_whitespace","is_inside_character_reference","is_inside_tag","is_word_char","open_tags_at","plain_text","preview","serialized_len","whole_word_matches"],"static":["WHITESPACE_TO_COLLAPSE"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ReadBack"],"fn":["check_read_back","pair_pages","pairing_refused","read_back_options","resolve_read_back"],"struct":["CreatedStructure","CreatedSummary","GlossarySummary","PageContentSummary","PatchCourseSettings","PatchCourseStructure","PatchGlossaryAndReferences","PatchPageContent","StructureSummary","TemplateBlock"]};

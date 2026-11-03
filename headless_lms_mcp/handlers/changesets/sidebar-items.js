@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["RECENT_CLOSED_CHANGESETS"],"fn":["check_pages_ready","discard_rejected","discard_some","explained","insert_links","live_page","not_open_result","own_changeset","summary_json"],"struct":["DiscardChangeset","GetPreviewLink","ListChangesets","PreviewLink","PublishChangeset"]};

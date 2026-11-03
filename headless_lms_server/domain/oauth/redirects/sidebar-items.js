@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["build_authorize_qs","build_consent_redirect","build_login_redirect","pct_encode","redirect_with_code"]};
+window.SIDEBAR_ITEMS = {"fn":["append_iss","build_authorize_qs","build_consent_redirect","build_login_redirect","error_redirect_url","is_loopback_host","pct_encode","redirect_uri_matches","redirect_with_code"]};

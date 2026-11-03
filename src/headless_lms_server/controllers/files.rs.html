@@ -606,7 +606,7 @@
 <a href=#606 id=606 data-nosnippet>606</a>    /// the tests send is the path a browser sends.
 <a href=#607 id=607 data-nosnippet>607</a>    </span><span class="macro">macro_rules!</span> files_app {
 <a href=#608 id=608 data-nosnippet>608</a>        () =&gt; {{
-<a href=#609 id=609 data-nosnippet>609</a>            <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>test_database_url()).<span class="kw">await</span>.expect(<span class="string">"pool"</span>);
+<a href=#609 id=609 data-nosnippet>609</a>            <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>dev_database_url()).<span class="kw">await</span>.expect(<span class="string">"pool"</span>);
 <a href=#610 id=610 data-nosnippet>610</a>            <span class="kw">let </span>file_store: Arc&lt;<span class="kw">dyn </span>FileStore&gt; = Arc::new(temp_file_store());
 <a href=#611 id=611 data-nosnippet>611</a>            test::init_service(
 <a href=#612 id=612 data-nosnippet>612</a>                App::new()
@@ -923,7 +923,7 @@
 <a href=#923 id=923 data-nosnippet>923</a>
 <a href=#924 id=924 data-nosnippet>924</a>    <span class="macro">macro_rules!</span> claimed_files_app {
 <a href=#925 id=925 data-nosnippet>925</a>        (<span class="macro-nonterminal">$file_store</span>:expr) =&gt; {{
-<a href=#926 id=926 data-nosnippet>926</a>            <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>test_database_url()).<span class="kw">await</span>.expect(<span class="string">"pool"</span>);
+<a href=#926 id=926 data-nosnippet>926</a>            <span class="kw">let </span>pool = PgPool::connect(<span class="kw-2">&amp;</span>dev_database_url()).<span class="kw">await</span>.expect(<span class="string">"pool"</span>);
 <a href=#927 id=927 data-nosnippet>927</a>            test::init_service(
 <a href=#928 id=928 data-nosnippet>928</a>                App::new()
 <a href=#929 id=929 data-nosnippet>929</a>                    .app_data(web::Data::new(pool))

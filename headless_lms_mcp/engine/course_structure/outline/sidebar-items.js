@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["BRIEF_MAX_LINES"],"fn":["outline","page_sites","place","surviving_order"],"struct":["OutlineCounts","PageSite","StructureOutline"]};

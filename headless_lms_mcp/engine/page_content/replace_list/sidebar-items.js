@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["BLOCK_FIELDS","NEW_BLOCK_KEYS"],"enum":["ListEntry"],"fn":["block_attributes","block_name","check_block_keys","check_list_entries","collect_references","collect_required_children","parse_inner_blocks","parse_list_entries","parse_list_entry","parse_new_block","parse_new_entry"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["engine_documents","pages_in_scope","stage_changed","texts_in_scope"],"struct":["FindReplace","FindReplaceSummary","StructuralReplace","StructuralReplaceSummary"]};

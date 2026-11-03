@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ApplicationType","TokenEndpointAuthMethod"],"struct":["NewClientParams","OAuthClient"]};
+window.SIDEBAR_ITEMS = {"enum":["ApplicationType","TokenEndpointAuthMethod"],"struct":["MetadataDocumentClient","NewClientParams","OAuthClient"]};

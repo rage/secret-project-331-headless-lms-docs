@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["BASE64_PREFIX","BASE64_SUFFIX","METHOD_HEADER","NAME_HEADER","PARAM_HEADER_PREFIX","PROTOCOL_VERSION_HEADER"],"fn":["decode","primitive","validate"],"struct":["RequestHeaders"]};

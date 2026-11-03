@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PointerWrite"],"fn":["pointer_remove","pointer_write","with_parent"]};

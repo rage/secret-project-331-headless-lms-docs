@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExercisePart"],"fn":["call_index","group_ops","in_call","part_list","part_prefix","prefix_paths","split_exercise_path"],"struct":["PartOps"]};

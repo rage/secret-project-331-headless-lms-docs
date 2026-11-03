@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BlockPart","BlockPath","ItemRef"],"fn":["escape_segment","is_course_root","parse_block_path","parse_item_ref","parse_uuid","split_path","split_segment","unescape_segment"]};

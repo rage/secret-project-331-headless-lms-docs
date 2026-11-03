@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CourseParts","StagedEntity"],"fn":["changed_by_id","load_live_course","put_by_id"],"macro":["listed_in_state"],"struct":["CourseState","StateChanges"],"trait":["InCourseState"]};

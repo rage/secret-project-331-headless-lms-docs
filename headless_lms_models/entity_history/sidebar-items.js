@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EntityHistoryChangeReason"],"fn":["get_by_id","insert","latest_version","record_current","record_current_many","record_deleted","record_saved","save_recording"],"struct":["EntityHistoryEntry","EntityVersion","HistoryAuthor"]};

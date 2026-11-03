@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AuthorizedClientInfo","OAuthUserClientScopes"]};
+window.SIDEBAR_ITEMS = {"struct":["OAuthGrant","OAuthUserClientScopes"]};

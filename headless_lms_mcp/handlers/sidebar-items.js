@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["registry"],"mod":["bulk","changesets","exercise","guide","history","patches","public_course","reads","uploads"]};

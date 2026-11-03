@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["REVIEW_INSTRUCTIONS"],"fn":["missing_exercise","open_course_with_exercise"],"mod":["get","list","patch","paths","review_config","specs"],"struct":["ExerciseDeadline"]};

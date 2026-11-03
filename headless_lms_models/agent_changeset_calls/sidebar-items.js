@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_by_id","get_history","get_latest_by_entity","get_summaries_by_changeset_id","insert"],"struct":["AgentChangesetCall","AgentChangesetCallSummary","CallActor","CallHistoryEntity","CallHistoryEntry","EntityChange","NewAgentChangesetCall","NewEntityChange"]};

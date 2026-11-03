@@ -2,7 +2,7 @@
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>headless_lms_utils::document_schema_processor::{
 <a href=#3 id=3 data-nosnippet>3</a>    GutenbergBlock, contains_blocks_not_allowed_in_top_level_pages,
 <a href=#4 id=4 data-nosnippet>4</a>};
-<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>headless_lms_utils::strings::strip_html_tags;
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>headless_lms_utils::strings::{slugify, strip_html_tags};
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>url::Url;
 <a href=#7 id=7 data-nosnippet>7</a>
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>std::collections::HashSet;
@@ -119,48 +119,27 @@
 <a href=#119 id=119 data-nosnippet>119</a>    <span class="prelude-val">None
 <a href=#120 id=120 data-nosnippet>120</a></span>}
 <a href=#121 id=121 data-nosnippet>121</a>
-<a href=#122 id=122 data-nosnippet>122</a><span class="doccomment">/// Generate a URL-safe slug from a title.
-<a href=#123 id=123 data-nosnippet>123</a>///
-<a href=#124 id=124 data-nosnippet>124</a>/// Lowercases, keeps alphanumeric characters, and collapses every run of other characters
-<a href=#125 id=125 data-nosnippet>125</a>/// (whitespace and punctuation alike) into a single `-`, with no leading or trailing separator.
-<a href=#126 id=126 data-nosnippet>126</a></span><span class="kw">fn </span>slugify(text: <span class="kw-2">&amp;</span>str) -&gt; String {
-<a href=#127 id=127 data-nosnippet>127</a>    <span class="kw">let </span><span class="kw-2">mut </span>slug = String::with_capacity(text.len());
-<a href=#128 id=128 data-nosnippet>128</a>    <span class="kw">let </span><span class="kw-2">mut </span>pending_separator = <span class="bool-val">false</span>;
-<a href=#129 id=129 data-nosnippet>129</a>    <span class="kw">for </span>c <span class="kw">in </span>text.to_lowercase().chars() {
-<a href=#130 id=130 data-nosnippet>130</a>        <span class="kw">if </span>c.is_alphanumeric() {
-<a href=#131 id=131 data-nosnippet>131</a>            <span class="kw">if </span>pending_separator &amp;&amp; !slug.is_empty() {
-<a href=#132 id=132 data-nosnippet>132</a>                slug.push(<span class="string">'-'</span>);
-<a href=#133 id=133 data-nosnippet>133</a>            }
-<a href=#134 id=134 data-nosnippet>134</a>            pending_separator = <span class="bool-val">false</span>;
-<a href=#135 id=135 data-nosnippet>135</a>            slug.push(c);
-<a href=#136 id=136 data-nosnippet>136</a>        } <span class="kw">else </span>{
-<a href=#137 id=137 data-nosnippet>137</a>            pending_separator = <span class="bool-val">true</span>;
-<a href=#138 id=138 data-nosnippet>138</a>        }
-<a href=#139 id=139 data-nosnippet>139</a>    }
-<a href=#140 id=140 data-nosnippet>140</a>    slug
-<a href=#141 id=141 data-nosnippet>141</a>}
-<a href=#142 id=142 data-nosnippet>142</a>
-<a href=#143 id=143 data-nosnippet>143</a><span class="doccomment">/// Appends a numeric suffix to `base_path` until it no longer collides with an existing
-<a href=#144 id=144 data-nosnippet>144</a>/// (non-deleted) page in the course, so deriving slugs from duplicate or empty titles cannot
-<a href=#145 id=145 data-nosnippet>145</a>/// hit the unique `(course_id, url_path)` constraint and abort the migration.
-<a href=#146 id=146 data-nosnippet>146</a></span><span class="kw">async fn </span>ensure_unique_url_path(
-<a href=#147 id=147 data-nosnippet>147</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#148 id=148 data-nosnippet>148</a>    course_id: Uuid,
-<a href=#149 id=149 data-nosnippet>149</a>    base_path: <span class="kw-2">&amp;</span>str,
-<a href=#150 id=150 data-nosnippet>150</a>) -&gt; ModelResult&lt;String&gt; {
-<a href=#151 id=151 data-nosnippet>151</a>    <span class="kw">let </span>existing: HashSet&lt;String&gt; =
-<a href=#152 id=152 data-nosnippet>152</a>        <span class="kw">crate</span>::pages::get_all_by_course_id_and_visibility(conn, course_id, PageVisibility::Any)
-<a href=#153 id=153 data-nosnippet>153</a>            .<span class="kw">await</span><span class="question-mark">?
-<a href=#154 id=154 data-nosnippet>154</a>            </span>.into_iter()
-<a href=#155 id=155 data-nosnippet>155</a>            .map(|p| p.url_path)
-<a href=#156 id=156 data-nosnippet>156</a>            .collect();
-<a href=#157 id=157 data-nosnippet>157</a>
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">let </span><span class="kw-2">mut </span>candidate = base_path.to_string();
-<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">let </span><span class="kw-2">mut </span>counter = <span class="number">2</span>;
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">while </span>existing.contains(<span class="kw-2">&amp;</span>normalize_url_path_for_storage(<span class="kw-2">&amp;</span>candidate)) {
-<a href=#161 id=161 data-nosnippet>161</a>        candidate = <span class="macro">format!</span>(<span class="string">"{}-{}"</span>, base_path, counter);
-<a href=#162 id=162 data-nosnippet>162</a>        counter += <span class="number">1</span>;
-<a href=#163 id=163 data-nosnippet>163</a>    }
-<a href=#164 id=164 data-nosnippet>164</a>    <span class="prelude-val">Ok</span>(candidate)
-<a href=#165 id=165 data-nosnippet>165</a>}
+<a href=#122 id=122 data-nosnippet>122</a><span class="doccomment">/// Appends a numeric suffix to `base_path` until it no longer collides with an existing
+<a href=#123 id=123 data-nosnippet>123</a>/// (non-deleted) page in the course, so deriving slugs from duplicate or empty titles cannot
+<a href=#124 id=124 data-nosnippet>124</a>/// hit the unique `(course_id, url_path)` constraint and abort the migration.
+<a href=#125 id=125 data-nosnippet>125</a></span><span class="kw">async fn </span>ensure_unique_url_path(
+<a href=#126 id=126 data-nosnippet>126</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#127 id=127 data-nosnippet>127</a>    course_id: Uuid,
+<a href=#128 id=128 data-nosnippet>128</a>    base_path: <span class="kw-2">&amp;</span>str,
+<a href=#129 id=129 data-nosnippet>129</a>) -&gt; ModelResult&lt;String&gt; {
+<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">let </span>existing: HashSet&lt;String&gt; =
+<a href=#131 id=131 data-nosnippet>131</a>        <span class="kw">crate</span>::pages::get_all_by_course_id_and_visibility(conn, course_id, PageVisibility::Any)
+<a href=#132 id=132 data-nosnippet>132</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#133 id=133 data-nosnippet>133</a>            </span>.into_iter()
+<a href=#134 id=134 data-nosnippet>134</a>            .map(|p| p.url_path)
+<a href=#135 id=135 data-nosnippet>135</a>            .collect();
+<a href=#136 id=136 data-nosnippet>136</a>
+<a href=#137 id=137 data-nosnippet>137</a>    <span class="kw">let </span><span class="kw-2">mut </span>candidate = base_path.to_string();
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">let </span><span class="kw-2">mut </span>counter = <span class="number">2</span>;
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">while </span>existing.contains(<span class="kw-2">&amp;</span>normalize_url_path_for_storage(<span class="kw-2">&amp;</span>candidate)) {
+<a href=#140 id=140 data-nosnippet>140</a>        candidate = <span class="macro">format!</span>(<span class="string">"{}-{}"</span>, base_path, counter);
+<a href=#141 id=141 data-nosnippet>141</a>        counter += <span class="number">1</span>;
+<a href=#142 id=142 data-nosnippet>142</a>    }
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="prelude-val">Ok</span>(candidate)
+<a href=#144 id=144 data-nosnippet>144</a>}
 </code></pre></div></section></main></body></html>

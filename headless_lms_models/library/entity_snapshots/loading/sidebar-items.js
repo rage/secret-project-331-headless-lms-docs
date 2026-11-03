@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["course_settings_of","load_course_default_review_config","load_live","load_live_many","load_page","load_pages"]};

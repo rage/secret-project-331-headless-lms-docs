@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Action"],"fn":["block_text","is_match","op_for","parse_action","structural_replace"],"struct":["StructuralAction","StructuralMatch","StructuralReplaceResult"]};

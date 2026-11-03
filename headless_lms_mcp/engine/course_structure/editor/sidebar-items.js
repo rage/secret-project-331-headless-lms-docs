@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Address"],"fn":["pinned_error","wrong_list"],"struct":["StructureEditor"],"type":["Anchor"]};

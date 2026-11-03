@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["McpScope"],"fn":["authenticate_mcp_access_token"],"struct":["McpPrincipal"]};

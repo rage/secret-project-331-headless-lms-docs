@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","approve_consent","deny_consent"],"struct":["MainFrontendOauthConsentApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","approve_consent","consent_client","deny_consent","get_consent_info"],"struct":["ConsentInfo","ConsentInfoQuery","ConsentScope"]};
