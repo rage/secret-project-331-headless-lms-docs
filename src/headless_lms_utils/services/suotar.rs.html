@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utils/src/services/suotar.rs`."><title>suotar.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="headless_lms_utils" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">headless_lms_utils/services/</div>suotar.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Client for Suotar, the University of Helsinki study registry.
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utils/src/services/suotar.rs`."><title>suotar.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-0c87338a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="headless_lms_utils" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.1 (58cf8f9c3 2026-10-13)" data-channel="1.99.1" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">headless_lms_utils/services/</div>suotar.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Client for Suotar, the University of Helsinki study registry.
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! Every endpoint is a batch. Per-item outcomes arrive as HTTP 200 and are read from each item's
 <a href=#4 id=4 data-nosnippet>4</a>//! `status` and `code`; only request-level failures are 4xx/5xx and `Err`. Items are matched back
@@ -22,7 +22,7 @@
 <a href=#22 id=22 data-nosnippet>22</a><span class="kw">use </span>serde::{Deserialize, Deserializer};
 <a href=#23 id=23 data-nosnippet>23</a><span class="kw">use </span>utoipa::ToSchema;
 <a href=#24 id=24 data-nosnippet>24</a>
-<a href=#25 id=25 data-nosnippet>25</a><span class="kw">use </span>crate::{prelude::<span class="kw-2">*</span>, secret_string::serialize_exposed};
+<a href=#25 id=25 data-nosnippet>25</a><span class="kw">use crate</span>::{prelude::<span class="kw-2">*</span>, secret_string::serialize_exposed};
 <a href=#26 id=26 data-nosnippet>26</a>
 <a href=#27 id=27 data-nosnippet>27</a><span class="doccomment">/// Under the ingress's 60 s, so an admin waiting on a call gets our answer rather than a 504.
 <a href=#28 id=28 data-nosnippet>28</a></span><span class="kw">pub const </span>INTERACTIVE_REQUEST_TIMEOUT: Duration = Duration::from_secs(<span class="number">50</span>);
@@ -123,7 +123,7 @@
 <a href=#123 id=123 data-nosnippet>123</a>
 <a href=#124 id=124 data-nosnippet>124</a><span class="doccomment">/// One marker type per [`SuotarEndpoint`], for [`SuotarClient::post`].
 <a href=#125 id=125 data-nosnippet>125</a></span><span class="kw">pub mod </span>endpoints {
-<a href=#126 id=126 data-nosnippet>126</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#126 id=126 data-nosnippet>126</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <a href=#127 id=127 data-nosnippet>127</a>
 <a href=#128 id=128 data-nosnippet>128</a>    <span class="macro">macro_rules!</span> batch_endpoint {
 <a href=#129 id=129 data-nosnippet>129</a>        (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$item</span>:ty, <span class="macro-nonterminal">$result</span>:ty) =&gt; {
@@ -452,7 +452,7 @@
 <a href=#452 id=452 data-nosnippet>452</a><span class="doccomment">/// Importer dates arrive as `YYYY-MM-DD` or as an instant (Sisu's UTC midnight), which means its
 <a href=#453 id=453 data-nosnippet>453</a>/// UTC date. Anything else reads as absent.
 <a href=#454 id=454 data-nosnippet>454</a></span><span class="kw">fn </span>lenient_date&lt;<span class="lifetime">'de</span>, D: Deserializer&lt;<span class="lifetime">'de</span>&gt;&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;NaiveDate&gt;, D::Error&gt; {
-<a href=#455 id=455 data-nosnippet>455</a>    <span class="kw">let </span>value = Option::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
+<a href=#455 id=455 data-nosnippet>455</a>    <span class="kw">let </span>value = <span class="prelude-ty">Option</span>::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
 <a href=#456 id=456 data-nosnippet>456</a>    <span class="prelude-val">Ok</span>(value
 <a href=#457 id=457 data-nosnippet>457</a>        .as_ref()
 <a href=#458 id=458 data-nosnippet>458</a>        .and_then(serde_json::Value::as_str)
@@ -471,7 +471,7 @@
 <a href=#471 id=471 data-nosnippet>471</a></span><span class="kw">fn </span>lenient&lt;<span class="lifetime">'de</span>, D: Deserializer&lt;<span class="lifetime">'de</span>&gt;, T: DeserializeOwned&gt;(
 <a href=#472 id=472 data-nosnippet>472</a>    deserializer: D,
 <a href=#473 id=473 data-nosnippet>473</a>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;T&gt;, D::Error&gt; {
-<a href=#474 id=474 data-nosnippet>474</a>    <span class="kw">let </span>value = Option::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
+<a href=#474 id=474 data-nosnippet>474</a>    <span class="kw">let </span>value = <span class="prelude-ty">Option</span>::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
 <a href=#475 id=475 data-nosnippet>475</a>    <span class="prelude-val">Ok</span>(value.and_then(|value| serde_json::from_value(value).ok()))
 <a href=#476 id=476 data-nosnippet>476</a>}
 <a href=#477 id=477 data-nosnippet>477</a>
@@ -480,7 +480,7 @@
 <a href=#480 id=480 data-nosnippet>480</a>/// silencing whatever check depends on it. Coerces either shape into a `String`; anything else reads
 <a href=#481 id=481 data-nosnippet>481</a>/// as absent.
 <a href=#482 id=482 data-nosnippet>482</a></span><span class="kw">fn </span>lenient_id&lt;<span class="lifetime">'de</span>, D: Deserializer&lt;<span class="lifetime">'de</span>&gt;&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;, D::Error&gt; {
-<a href=#483 id=483 data-nosnippet>483</a>    <span class="kw">let </span>value = Option::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
+<a href=#483 id=483 data-nosnippet>483</a>    <span class="kw">let </span>value = <span class="prelude-ty">Option</span>::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
 <a href=#484 id=484 data-nosnippet>484</a>    <span class="prelude-val">Ok</span>(value.and_then(|value| <span class="kw">match </span>value {
 <a href=#485 id=485 data-nosnippet>485</a>        serde_json::Value::String(text) =&gt; <span class="prelude-val">Some</span>(text),
 <a href=#486 id=486 data-nosnippet>486</a>        serde_json::Value::Number(number) =&gt; <span class="prelude-val">Some</span>(number.to_string()),
@@ -493,7 +493,7 @@
 <a href=#493 id=493 data-nosnippet>493</a></span><span class="kw">fn </span>lenient_instant&lt;<span class="lifetime">'de</span>, D: Deserializer&lt;<span class="lifetime">'de</span>&gt;&gt;(
 <a href=#494 id=494 data-nosnippet>494</a>    deserializer: D,
 <a href=#495 id=495 data-nosnippet>495</a>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;, D::Error&gt; {
-<a href=#496 id=496 data-nosnippet>496</a>    <span class="kw">let </span>value = Option::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
+<a href=#496 id=496 data-nosnippet>496</a>    <span class="kw">let </span>value = <span class="prelude-ty">Option</span>::&lt;serde_json::Value&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
 <a href=#497 id=497 data-nosnippet>497</a>    <span class="prelude-val">Ok</span>(value
 <a href=#498 id=498 data-nosnippet>498</a>        .as_ref()
 <a href=#499 id=499 data-nosnippet>499</a>        .and_then(serde_json::Value::as_str)
@@ -1338,7 +1338,7 @@
 <a href=#1338 id=1338 data-nosnippet>1338</a>
 <a href=#1339 id=1339 data-nosnippet>1339</a><span class="attr">#[cfg(test)]
 <a href=#1340 id=1340 data-nosnippet>1340</a></span><span class="kw">mod </span>tests {
-<a href=#1341 id=1341 data-nosnippet>1341</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#1341 id=1341 data-nosnippet>1341</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <a href=#1342 id=1342 data-nosnippet>1342</a>    <span class="kw">use </span>serde_json::json;
 <a href=#1343 id=1343 data-nosnippet>1343</a>
 <a href=#1344 id=1344 data-nosnippet>1344</a>    <span class="kw">fn </span>person_items(ids: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]) -&gt; Vec&lt;ResolvePersonRequestItem&gt; {

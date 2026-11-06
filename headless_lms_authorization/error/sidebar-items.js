@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AuthorizationErrorType"],"macro":["authorization_err"],"struct":["AuthorizationError"],"type":["AuthorizationResult"]};
+window.SIDEBAR_ITEMS = {"enum":["AuthorizationErrorType"],"macro":[["authorization_err",1]],"struct":["AuthorizationError"],"type":["AuthorizationResult"]};

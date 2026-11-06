@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["batch_endpoint"],"struct":["ImportAttainments","ListByCourse","ResolveEnrolments","ResolvePersons","ValidateCourseCodes","VerifyAttainments"]};
+window.SIDEBAR_ITEMS = {"macro":[["batch_endpoint",1]],"struct":["ImportAttainments","ListByCourse","ResolveEnrolments","ResolvePersons","ValidateCourseCodes","VerifyAttainments"]};
