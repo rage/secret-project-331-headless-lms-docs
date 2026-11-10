@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FALLBACK_LANGUAGE_CODE","MAX_COURSE_NAME_CHARS","MAX_SLUG_CHARS"],"fn":["create_course_from_plan","get_analysis_and_design","get_plan_ids_due_for_weekly_digest","get_weekly_digest","language_code_from_analysis","mark_weekly_digest_sent","truncated_slug","unique_course_slug","unique_segment"],"struct":["CourseFromPlanOptions","WeeklyDigest"]};

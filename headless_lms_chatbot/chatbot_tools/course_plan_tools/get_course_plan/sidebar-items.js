@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["workspace_json"],"struct":["CoursePlanSnapshot","CreatedCourse","GetCoursePlanArguments","MemberSnapshot","PlanOverview","SectionStatusSnapshot","StageSnapshot","TaskSnapshot"],"type":["GetCoursePlanTool"]};

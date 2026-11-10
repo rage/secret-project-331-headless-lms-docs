@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["TaskField"],"fn":["parse_bool"],"struct":["ProposeUpdateTaskArguments","ProposeUpdateTaskTool","RawArguments","RawChange","TaskFieldChange"]};

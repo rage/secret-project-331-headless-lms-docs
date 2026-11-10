@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","create_chatbot","delete_chatbot","edit_chatbot","get_all_chatbots","get_chatbot"],"struct":["MainFrontendChatbotsApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","create_chatbot","delete_chatbot","edit_chatbot","get_all_chatbots","get_chatbot","put_course_designer_assistant"],"struct":["MainFrontendChatbotsApiDoc","SetCourseDesignerAssistantRequest"]};

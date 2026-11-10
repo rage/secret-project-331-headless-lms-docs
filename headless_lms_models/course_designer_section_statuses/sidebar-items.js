@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_COMMENT_CHARS","MAX_SECTION_KEY_CHARS"],"enum":["CourseDesignerSectionStatus"],"fn":["get_for_plan","get_for_plans","upsert_for_user"],"struct":["CourseDesignerPlanSectionStatus"]};

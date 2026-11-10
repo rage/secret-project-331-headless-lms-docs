@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AnalysisCourseType","CourseDesignerStageWorkspace"],"fn":["parse_workspace_data","workspace_to_json"],"struct":["AnalysisWorkspaceV1"]};

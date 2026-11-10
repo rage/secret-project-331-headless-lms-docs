@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["LISTS_WITH_IDS"],"fn":["fill_ids","fill_nested","id_of","is_empty","keeps_proposed","normalized_title","resolve_field","same_content"]};

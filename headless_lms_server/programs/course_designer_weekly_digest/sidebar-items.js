@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ENGLISH_COPY","FINNISH_COPY"],"fn":["get_template_id","main","placeholders","send_plan_digest","send_weekly_digests"],"struct":["DigestCopy"]};

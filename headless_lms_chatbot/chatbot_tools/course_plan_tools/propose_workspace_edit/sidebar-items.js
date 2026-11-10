@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_CHANGES"],"fn":["from_value","parse_value_json","to_value"],"struct":["ProposeWorkspaceEditArguments","ProposeWorkspaceEditTool","RawArguments","RawChange","WorkspaceFieldChange"]};

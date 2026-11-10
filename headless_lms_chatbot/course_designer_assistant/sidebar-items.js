@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FALLBACK_INITIAL_MESSAGE","FALLBACK_PROMPT"],"fn":["get_or_create_assistant_configuration"]};
