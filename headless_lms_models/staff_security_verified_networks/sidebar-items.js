@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["COUNTRYLESS","VERIFIED","WIDENING_LIMIT"],"fn":["delete_all_for_user_except","delete_expired","get_candidates","record_verification","renew_if_expiring","widen_to_cover"],"struct":["NetworkCandidate","PrefixLen"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["IpToCountryMapper"]};
+window.SIDEBAR_ITEMS = {"constant":["NON_COUNTRY_CODES"],"struct":["IpToCountryMapper"]};

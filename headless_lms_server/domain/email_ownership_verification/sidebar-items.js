@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["FALLBACK_EMAIL_LANGUAGE","MAX_CODE_ATTEMPTS","MIN_RESEND_INTERVAL_MINUTES","PURPOSE"],"enum":["VerificationEmailOutcome"],"fn":["queue_verification_email","queue_verification_email_best_effort"]};
+window.SIDEBAR_ITEMS = {"constant":["FALLBACK_EMAIL_LANGUAGE","MAX_CODE_ATTEMPTS","MIN_RESEND_INTERVAL_MINUTES","PURPOSE"],"enum":["VerificationEmailOutcome"],"fn":["mail_new_code","queue_verification_email","queue_verification_email_best_effort","record_code_as_mailbox_proof"]};
