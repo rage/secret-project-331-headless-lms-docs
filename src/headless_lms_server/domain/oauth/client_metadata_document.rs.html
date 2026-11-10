@@ -291,43 +291,44 @@
 <a href=#291 id=291 data-nosnippet>291</a>    <span class="prelude-val">Ok</span>(())
 <a href=#292 id=292 data-nosnippet>292</a>}
 <a href=#293 id=293 data-nosnippet>293</a>
-<a href=#294 id=294 data-nosnippet>294</a><span class="kw">fn </span>is_public_address(ip: IpAddr) -&gt; bool {
-<a href=#295 id=295 data-nosnippet>295</a>    <span class="kw">match </span>ip {
-<a href=#296 id=296 data-nosnippet>296</a>        IpAddr::V4(ip) =&gt; is_public_ipv4(ip),
-<a href=#297 id=297 data-nosnippet>297</a>        IpAddr::V6(ip) =&gt; <span class="kw">match </span>ip.to_ipv4() {
-<a href=#298 id=298 data-nosnippet>298</a>            <span class="prelude-val">Some</span>(embedded) =&gt; is_public_ipv4(embedded),
-<a href=#299 id=299 data-nosnippet>299</a>            <span class="prelude-val">None </span>=&gt; is_public_ipv6(ip),
-<a href=#300 id=300 data-nosnippet>300</a>        },
-<a href=#301 id=301 data-nosnippet>301</a>    }
-<a href=#302 id=302 data-nosnippet>302</a>}
-<a href=#303 id=303 data-nosnippet>303</a>
-<a href=#304 id=304 data-nosnippet>304</a><span class="kw">fn </span>is_public_ipv4(ip: Ipv4Addr) -&gt; bool {
-<a href=#305 id=305 data-nosnippet>305</a>    <span class="kw">let </span>[a, b, ..] = ip.octets();
-<a href=#306 id=306 data-nosnippet>306</a>    !(ip.is_private()
-<a href=#307 id=307 data-nosnippet>307</a>        || ip.is_loopback()
-<a href=#308 id=308 data-nosnippet>308</a>        || ip.is_link_local()
-<a href=#309 id=309 data-nosnippet>309</a>        || ip.is_broadcast()
-<a href=#310 id=310 data-nosnippet>310</a>        || ip.is_documentation()
-<a href=#311 id=311 data-nosnippet>311</a>        || ip.is_unspecified()
-<a href=#312 id=312 data-nosnippet>312</a>        || ip.is_multicast()
-<a href=#313 id=313 data-nosnippet>313</a>        || a == <span class="number">0
-<a href=#314 id=314 data-nosnippet>314</a>        </span>|| (a == <span class="number">100 </span>&amp;&amp; (<span class="number">64</span>..<span class="number">128</span>).contains(<span class="kw-2">&amp;</span>b))
-<a href=#315 id=315 data-nosnippet>315</a>        || (a == <span class="number">192 </span>&amp;&amp; b == <span class="number">0</span>)
-<a href=#316 id=316 data-nosnippet>316</a>        || (a == <span class="number">198 </span>&amp;&amp; (<span class="number">18</span>..<span class="number">20</span>).contains(<span class="kw-2">&amp;</span>b))
-<a href=#317 id=317 data-nosnippet>317</a>        || a &gt;= <span class="number">240</span>)
-<a href=#318 id=318 data-nosnippet>318</a>}
-<a href=#319 id=319 data-nosnippet>319</a>
-<a href=#320 id=320 data-nosnippet>320</a><span class="kw">fn </span>is_public_ipv6(ip: Ipv6Addr) -&gt; bool {
-<a href=#321 id=321 data-nosnippet>321</a>    <span class="kw">let </span>[first, second, ..] = ip.segments();
-<a href=#322 id=322 data-nosnippet>322</a>    !(ip.is_loopback()
-<a href=#323 id=323 data-nosnippet>323</a>        || ip.is_unspecified()
-<a href=#324 id=324 data-nosnippet>324</a>        || ip.is_multicast()
-<a href=#325 id=325 data-nosnippet>325</a>        || (first &amp; <span class="number">0xfe00</span>) == <span class="number">0xfc00
-<a href=#326 id=326 data-nosnippet>326</a>        </span>|| (first &amp; <span class="number">0xffc0</span>) == <span class="number">0xfe80
-<a href=#327 id=327 data-nosnippet>327</a>        </span>|| first == <span class="number">0x2001 </span>&amp;&amp; second == <span class="number">0x0db8
-<a href=#328 id=328 data-nosnippet>328</a>        </span><span class="comment">// 6to4 and Teredo tunnel to IPv4 addresses that may be private.
-<a href=#329 id=329 data-nosnippet>329</a>        </span>|| first == <span class="number">0x2002
-<a href=#330 id=330 data-nosnippet>330</a>        </span>|| first == <span class="number">0x2001 </span>&amp;&amp; second == <span class="number">0
-<a href=#331 id=331 data-nosnippet>331</a>        </span>|| first == <span class="number">0x0064 </span>&amp;&amp; second == <span class="number">0xff9b</span>)
-<a href=#332 id=332 data-nosnippet>332</a>}
+<a href=#294 id=294 data-nosnippet>294</a><span class="doccomment">/// Whether the address is reachable on the public internet, not loopback, private or reserved.
+<a href=#295 id=295 data-nosnippet>295</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_public_address(ip: IpAddr) -&gt; bool {
+<a href=#296 id=296 data-nosnippet>296</a>    <span class="kw">match </span>ip {
+<a href=#297 id=297 data-nosnippet>297</a>        IpAddr::V4(ip) =&gt; is_public_ipv4(ip),
+<a href=#298 id=298 data-nosnippet>298</a>        IpAddr::V6(ip) =&gt; <span class="kw">match </span>ip.to_ipv4() {
+<a href=#299 id=299 data-nosnippet>299</a>            <span class="prelude-val">Some</span>(embedded) =&gt; is_public_ipv4(embedded),
+<a href=#300 id=300 data-nosnippet>300</a>            <span class="prelude-val">None </span>=&gt; is_public_ipv6(ip),
+<a href=#301 id=301 data-nosnippet>301</a>        },
+<a href=#302 id=302 data-nosnippet>302</a>    }
+<a href=#303 id=303 data-nosnippet>303</a>}
+<a href=#304 id=304 data-nosnippet>304</a>
+<a href=#305 id=305 data-nosnippet>305</a><span class="kw">fn </span>is_public_ipv4(ip: Ipv4Addr) -&gt; bool {
+<a href=#306 id=306 data-nosnippet>306</a>    <span class="kw">let </span>[a, b, ..] = ip.octets();
+<a href=#307 id=307 data-nosnippet>307</a>    !(ip.is_private()
+<a href=#308 id=308 data-nosnippet>308</a>        || ip.is_loopback()
+<a href=#309 id=309 data-nosnippet>309</a>        || ip.is_link_local()
+<a href=#310 id=310 data-nosnippet>310</a>        || ip.is_broadcast()
+<a href=#311 id=311 data-nosnippet>311</a>        || ip.is_documentation()
+<a href=#312 id=312 data-nosnippet>312</a>        || ip.is_unspecified()
+<a href=#313 id=313 data-nosnippet>313</a>        || ip.is_multicast()
+<a href=#314 id=314 data-nosnippet>314</a>        || a == <span class="number">0
+<a href=#315 id=315 data-nosnippet>315</a>        </span>|| (a == <span class="number">100 </span>&amp;&amp; (<span class="number">64</span>..<span class="number">128</span>).contains(<span class="kw-2">&amp;</span>b))
+<a href=#316 id=316 data-nosnippet>316</a>        || (a == <span class="number">192 </span>&amp;&amp; b == <span class="number">0</span>)
+<a href=#317 id=317 data-nosnippet>317</a>        || (a == <span class="number">198 </span>&amp;&amp; (<span class="number">18</span>..<span class="number">20</span>).contains(<span class="kw-2">&amp;</span>b))
+<a href=#318 id=318 data-nosnippet>318</a>        || a &gt;= <span class="number">240</span>)
+<a href=#319 id=319 data-nosnippet>319</a>}
+<a href=#320 id=320 data-nosnippet>320</a>
+<a href=#321 id=321 data-nosnippet>321</a><span class="kw">fn </span>is_public_ipv6(ip: Ipv6Addr) -&gt; bool {
+<a href=#322 id=322 data-nosnippet>322</a>    <span class="kw">let </span>[first, second, ..] = ip.segments();
+<a href=#323 id=323 data-nosnippet>323</a>    !(ip.is_loopback()
+<a href=#324 id=324 data-nosnippet>324</a>        || ip.is_unspecified()
+<a href=#325 id=325 data-nosnippet>325</a>        || ip.is_multicast()
+<a href=#326 id=326 data-nosnippet>326</a>        || (first &amp; <span class="number">0xfe00</span>) == <span class="number">0xfc00
+<a href=#327 id=327 data-nosnippet>327</a>        </span>|| (first &amp; <span class="number">0xffc0</span>) == <span class="number">0xfe80
+<a href=#328 id=328 data-nosnippet>328</a>        </span>|| first == <span class="number">0x2001 </span>&amp;&amp; second == <span class="number">0x0db8
+<a href=#329 id=329 data-nosnippet>329</a>        </span><span class="comment">// 6to4 and Teredo tunnel to IPv4 addresses that may be private.
+<a href=#330 id=330 data-nosnippet>330</a>        </span>|| first == <span class="number">0x2002
+<a href=#331 id=331 data-nosnippet>331</a>        </span>|| first == <span class="number">0x2001 </span>&amp;&amp; second == <span class="number">0
+<a href=#332 id=332 data-nosnippet>332</a>        </span>|| first == <span class="number">0x0064 </span>&amp;&amp; second == <span class="number">0xff9b</span>)
+<a href=#333 id=333 data-nosnippet>333</a>}
 </code></pre></div></section></main></body></html>

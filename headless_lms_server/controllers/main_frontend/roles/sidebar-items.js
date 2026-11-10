@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","authorize_role_management","fetch","fetch_pending","set","unset"],"struct":["MainFrontendRolesApiDoc","RoleQuery"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","authorize_role_management","fetch","fetch_pending","fetch_waiting_for_me","set","unset"],"struct":["MainFrontendRolesApiDoc","RoleQuery"]};

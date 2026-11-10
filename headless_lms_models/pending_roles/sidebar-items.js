@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_all"],"struct":["PendingRole"]};
+window.SIDEBAR_ITEMS = {"fn":["activate_for_user","count_waiting_for_user","delete","get_all","insert"],"struct":["DomainColumns","PendingRole"]};

@@ -1046,7 +1046,7 @@
 <a href=#1046 id=1046 data-nosnippet>1046</a>    first_name: <span class="kw-2">&amp;</span>str,
 <a href=#1047 id=1047 data-nosnippet>1047</a>    last_name: <span class="kw-2">&amp;</span>str,
 <a href=#1048 id=1048 data-nosnippet>1048</a>) -&gt; <span class="prelude-ty">Result</span>&lt;SeededStudent&gt; {
-<a href=#1049 id=1049 data-nosnippet>1049</a>    <span class="kw">let </span>user_id = users::insert(
+<a href=#1049 id=1049 data-nosnippet>1049</a>    <span class="kw">let </span>user_id = <span class="kw">crate</span>::programs::seed::seed_helpers::insert_user_with_verified_email(
 <a href=#1050 id=1050 data-nosnippet>1050</a>        conn,
 <a href=#1051 id=1051 data-nosnippet>1051</a>        PKeyPolicy::Fixed(user_id),
 <a href=#1052 id=1052 data-nosnippet>1052</a>        email,

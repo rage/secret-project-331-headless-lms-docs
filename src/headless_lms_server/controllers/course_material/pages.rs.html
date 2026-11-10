@@ -118,7 +118,7 @@
 <a href=#118 id=118 data-nosnippet>118</a>    auth: AuthUser,
 <a href=#119 id=119 data-nosnippet>119</a>) -&gt; ControllerResult&lt;web::Json&lt;Page&gt;&gt; {
 <a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#121 id=121 data-nosnippet>121</a>    <span class="kw">let </span>token = authorize(<span class="kw-2">&amp;mut </span>conn, Act::View, <span class="prelude-val">Some</span>(auth.id), Res::Exam(<span class="kw-2">*</span>exam_id)).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#121 id=121 data-nosnippet>121</a>    <span class="kw">let </span>token = <span class="kw">super</span>::exams::authorize_exam_content_access(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>exam_id, auth.id).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">let </span>page = models::pages::get_by_exam_id(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">*</span>exam_id).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">let </span>page = models::pages::filter_course_material_page(<span class="kw-2">&amp;mut </span>conn, <span class="prelude-val">Some</span>(auth.id), page).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#124 id=124 data-nosnippet>124</a>    token.authorized_ok(web::Json(page))

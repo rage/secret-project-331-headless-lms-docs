@@ -780,4 +780,25 @@
 <a href=#780 id=780 data-nosnippet>780</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#781 id=781 data-nosnippet>781</a>    <span class="prelude-val">Ok</span>(())
 <a href=#782 id=782 data-nosnippet>782</a>}
+<a href=#783 id=783 data-nosnippet>783</a>
+<a href=#784 id=784 data-nosnippet>784</a><span class="doccomment">/// Inserts a seeded user whose email counts as verified, as a real account's would once its owner
+<a href=#785 id=785 data-nosnippet>785</a>/// has confirmed it; roles granted by email only take effect for verified addresses.
+<a href=#786 id=786 data-nosnippet>786</a></span><span class="kw">pub async fn </span>insert_user_with_verified_email(
+<a href=#787 id=787 data-nosnippet>787</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#788 id=788 data-nosnippet>788</a>    pkey_policy: headless_lms_models::PKeyPolicy&lt;Uuid&gt;,
+<a href=#789 id=789 data-nosnippet>789</a>    email: <span class="kw-2">&amp;</span>str,
+<a href=#790 id=790 data-nosnippet>790</a>    first_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+<a href=#791 id=791 data-nosnippet>791</a>    last_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+<a href=#792 id=792 data-nosnippet>792</a>) -&gt; <span class="prelude-ty">Result</span>&lt;Uuid&gt; {
+<a href=#793 id=793 data-nosnippet>793</a>    <span class="kw">let </span>user_id =
+<a href=#794 id=794 data-nosnippet>794</a>        headless_lms_models::users::insert(conn, pkey_policy, email, first_name, last_name).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#795 id=795 data-nosnippet>795</a>    headless_lms_models::user_details::set_email_verified(
+<a href=#796 id=796 data-nosnippet>796</a>        conn,
+<a href=#797 id=797 data-nosnippet>797</a>        user_id,
+<a href=#798 id=798 data-nosnippet>798</a>        headless_lms_models::user_details::EmailVerificationMethod::EmailedCode,
+<a href=#799 id=799 data-nosnippet>799</a>        Utc::now(),
+<a href=#800 id=800 data-nosnippet>800</a>    )
+<a href=#801 id=801 data-nosnippet>801</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#802 id=802 data-nosnippet>802</a>    <span class="prelude-val">Ok</span>(user_id)
+<a href=#803 id=803 data-nosnippet>803</a>}
 </code></pre></div></section></main></body></html>
