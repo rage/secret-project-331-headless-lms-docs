@@ -59,12 +59,11 @@
 <a href=#59 id=59 data-nosnippet>59</a>        <span class="kw">crate</span>::library::credit_registration::enrolment_checks::shift_past_pause(
 <a href=#60 id=60 data-nosnippet>60</a>            <span class="kw-2">&amp;mut </span>tx,
 <a href=#61 id=61 data-nosnippet>61</a>            course_module_id,
-<a href=#62 id=62 data-nosnippet>62</a>            <span class="comment">// Whole seconds: Postgres intervals hold no nanoseconds, which the clock has.
-<a href=#63 id=63 data-nosnippet>63</a>            </span>chrono::TimeDelta::seconds((Utc::now() - paused_at).num_seconds()),
-<a href=#64 id=64 data-nosnippet>64</a>        )
-<a href=#65 id=65 data-nosnippet>65</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#66 id=66 data-nosnippet>66</a>    }
-<a href=#67 id=67 data-nosnippet>67</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#68 id=68 data-nosnippet>68</a>    <span class="prelude-val">Ok</span>(())
-<a href=#69 id=69 data-nosnippet>69</a>}
+<a href=#62 id=62 data-nosnippet>62</a>            paused_at,
+<a href=#63 id=63 data-nosnippet>63</a>        )
+<a href=#64 id=64 data-nosnippet>64</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#65 id=65 data-nosnippet>65</a>    }
+<a href=#66 id=66 data-nosnippet>66</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#67 id=67 data-nosnippet>67</a>    <span class="prelude-val">Ok</span>(())
+<a href=#68 id=68 data-nosnippet>68</a>}
 </code></pre></div></section></main></body></html>

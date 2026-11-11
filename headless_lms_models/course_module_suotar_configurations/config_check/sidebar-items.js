@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["count_modules_failing_config_check","get_config_facts_for_modules_with_course_code","get_module_ids_failing_config_check","record_config_check"],"struct":["SuotarConfigCheck","SuotarModuleConfigFacts"]};
+window.SIDEBAR_ITEMS = {"fn":["count_credit_units_failing_config_check","get_config_facts_for_modules_with_course_code","get_module_ids_failing_config_check","record_config_check"],"struct":["SuotarConfigCheck","SuotarModuleConfigFacts"]};

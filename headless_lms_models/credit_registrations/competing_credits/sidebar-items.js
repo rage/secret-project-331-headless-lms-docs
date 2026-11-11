@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_recorded_credits_for_same_module","lock_live_successes_for_same_module","prepare_unsent_duplicate"],"struct":["LiveSuccessForModule","RecordedCredit"]};
+window.SIDEBAR_ITEMS = {"fn":["get_recorded_credits_for_same_course_code","lock_live_successes_for_same_course_code","prepare_unsent_duplicate"],"struct":["LiveSuccessForCourseCode","RecordedCredit"]};

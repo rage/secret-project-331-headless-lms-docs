@@ -19,97 +19,122 @@
 <a href=#19 id=19 data-nosnippet>19</a><span class="kw">pub mod </span>main_frontend;
 <a href=#20 id=20 data-nosnippet>20</a><span class="kw">pub mod </span>mock_azure;
 <a href=#21 id=21 data-nosnippet>21</a><span class="kw">pub mod </span>mock_document_storage;
-<a href=#22 id=22 data-nosnippet>22</a><span class="kw">pub mod </span>mock_sisu;
-<a href=#23 id=23 data-nosnippet>23</a><span class="kw">pub mod </span>mock_suotar;
-<a href=#24 id=24 data-nosnippet>24</a><span class="kw">pub mod </span>other_domain_redirects;
-<a href=#25 id=25 data-nosnippet>25</a><span class="kw">pub mod </span>study_registry;
-<a href=#26 id=26 data-nosnippet>26</a><span class="kw">pub mod </span>tmc_server;
-<a href=#27 id=27 data-nosnippet>27</a><span class="kw">pub mod </span>well_known;
-<a href=#28 id=28 data-nosnippet>28</a><span class="kw">use </span><span class="kw">crate</span>::domain::error::{ControllerError, ControllerErrorType};
-<a href=#29 id=29 data-nosnippet>29</a><span class="kw">use </span><span class="kw">crate</span>::domain::rate_limit_middleware_builder::{RateLimit, RateLimitConfig, RateLimitKey};
-<a href=#30 id=30 data-nosnippet>30</a><span class="kw">use </span>actix_web::{
-<a href=#31 id=31 data-nosnippet>31</a>    HttpRequest, HttpResponse, ResponseError,
-<a href=#32 id=32 data-nosnippet>32</a>    web::{<span class="self">self</span>, ServiceConfig},
-<a href=#33 id=33 data-nosnippet>33</a>};
-<a href=#34 id=34 data-nosnippet>34</a><span class="kw">use </span>headless_lms_utils::prelude::<span class="kw-2">*</span>;
-<a href=#35 id=35 data-nosnippet>35</a><span class="kw">use </span>serde::{Deserialize, Serialize};
-<a href=#36 id=36 data-nosnippet>36</a><span class="kw">use </span>utoipa::ToSchema;
-<a href=#37 id=37 data-nosnippet>37</a>
-<a href=#38 id=38 data-nosnippet>38</a><span class="doccomment">/// Result of a image upload. Tells where the uploaded image can be retrieved from.
-<a href=#39 id=39 data-nosnippet>39</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#22 id=22 data-nosnippet>22</a><span class="kw">pub mod </span>mock_moocfi;
+<a href=#23 id=23 data-nosnippet>23</a><span class="kw">pub mod </span>mock_sisu;
+<a href=#24 id=24 data-nosnippet>24</a><span class="kw">pub mod </span>mock_suotar;
+<a href=#25 id=25 data-nosnippet>25</a><span class="kw">pub mod </span>moocfi;
+<a href=#26 id=26 data-nosnippet>26</a><span class="kw">pub mod </span>other_domain_redirects;
+<a href=#27 id=27 data-nosnippet>27</a><span class="kw">pub mod </span>study_registry;
+<a href=#28 id=28 data-nosnippet>28</a><span class="kw">pub mod </span>tmc_server;
+<a href=#29 id=29 data-nosnippet>29</a><span class="kw">pub mod </span>well_known;
+<a href=#30 id=30 data-nosnippet>30</a><span class="kw">use </span><span class="kw">crate</span>::domain::error::{ControllerError, ControllerErrorType};
+<a href=#31 id=31 data-nosnippet>31</a><span class="kw">use </span><span class="kw">crate</span>::domain::rate_limit_middleware_builder::{RateLimit, RateLimitConfig, RateLimitKey};
+<a href=#32 id=32 data-nosnippet>32</a><span class="kw">use </span>actix_web::dev::Service <span class="kw">as _</span>;
+<a href=#33 id=33 data-nosnippet>33</a><span class="kw">use </span>actix_web::{
+<a href=#34 id=34 data-nosnippet>34</a>    HttpRequest, HttpResponse, ResponseError,
+<a href=#35 id=35 data-nosnippet>35</a>    web::{<span class="self">self</span>, ServiceConfig},
+<a href=#36 id=36 data-nosnippet>36</a>};
+<a href=#37 id=37 data-nosnippet>37</a><span class="kw">use </span>headless_lms_utils::prelude::<span class="kw-2">*</span>;
+<a href=#38 id=38 data-nosnippet>38</a><span class="kw">use </span>serde::{Deserialize, Serialize};
+<a href=#39 id=39 data-nosnippet>39</a><span class="kw">use </span>utoipa::ToSchema;
 <a href=#40 id=40 data-nosnippet>40</a>
-<a href=#41 id=41 data-nosnippet>41</a></span><span class="kw">pub struct </span>UploadResult {
-<a href=#42 id=42 data-nosnippet>42</a>    <span class="kw">pub </span>url: String,
-<a href=#43 id=43 data-nosnippet>43</a>}
-<a href=#44 id=44 data-nosnippet>44</a>
-<a href=#45 id=45 data-nosnippet>45</a><span class="doccomment">/// Add controllers from all the submodules.
-<a href=#46 id=46 data-nosnippet>46</a></span><span class="kw">pub fn </span>configure_controllers(
-<a href=#47 id=47 data-nosnippet>47</a>    cfg: <span class="kw-2">&amp;mut </span>ServiceConfig,
-<a href=#48 id=48 data-nosnippet>48</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#49 id=49 data-nosnippet>49</a>) {
-<a href=#50 id=50 data-nosnippet>50</a>    cfg.service(web::scope(<span class="string">"/course-material"</span>).configure(course_material::_add_routes))
-<a href=#51 id=51 data-nosnippet>51</a>        .service(web::scope(<span class="string">"/cms"</span>).configure(cms::_add_routes))
-<a href=#52 id=52 data-nosnippet>52</a>        .service(web::scope(<span class="string">"/files"</span>).configure(files::_add_routes))
-<a href=#53 id=53 data-nosnippet>53</a>        .service(web::scope(<span class="string">"/main-frontend"</span>).configure(main_frontend::_add_routes))
-<a href=#54 id=54 data-nosnippet>54</a>        .service(web::scope(<span class="string">"/auth"</span>).configure(auth::_add_routes))
-<a href=#55 id=55 data-nosnippet>55</a>        .service(web::scope(<span class="string">"/errors"</span>).configure(errors::_add_routes))
-<a href=#56 id=56 data-nosnippet>56</a>        .service(web::scope(<span class="string">"/study-registry"</span>).configure(study_registry::_add_routes))
-<a href=#57 id=57 data-nosnippet>57</a>        .service(web::scope(<span class="string">"/exercise-services"</span>).configure(exercise_services::_add_routes))
-<a href=#58 id=58 data-nosnippet>58</a>        .service(
-<a href=#59 id=59 data-nosnippet>59</a>            web::scope(<span class="string">"/other-domain-redirects"</span>).configure(other_domain_redirects::_add_routes),
-<a href=#60 id=60 data-nosnippet>60</a>        )
-<a href=#61 id=61 data-nosnippet>61</a>        .service(web::scope(<span class="string">"/health"</span>).configure(health::_add_routes))
-<a href=#62 id=62 data-nosnippet>62</a>        .service(web::scope(<span class="string">"/tmc-server"</span>).configure(tmc_server::_add_routes))
-<a href=#63 id=63 data-nosnippet>63</a>        .service({
-<a href=#64 id=64 data-nosnippet>64</a>            <span class="kw">let </span>[per_grant, per_user] = mcp_rate_limits(app_conf.test_mode);
-<a href=#65 id=65 data-nosnippet>65</a>            <span class="comment">// Registered inside out: authentication runs first and gives the limits their key.
-<a href=#66 id=66 data-nosnippet>66</a>            </span>web::scope(<span class="string">"/mcp"</span>)
-<a href=#67 id=67 data-nosnippet>67</a>                .wrap(per_grant)
-<a href=#68 id=68 data-nosnippet>68</a>                .wrap(per_user)
-<a href=#69 id=69 data-nosnippet>69</a>                .wrap(actix_web::middleware::from_fn(
-<a href=#70 id=70 data-nosnippet>70</a>                    headless_lms_mcp::http::auth::authenticate,
-<a href=#71 id=71 data-nosnippet>71</a>                ))
-<a href=#72 id=72 data-nosnippet>72</a>                .configure(headless_lms_mcp::http::configure)
-<a href=#73 id=73 data-nosnippet>73</a>        })
-<a href=#74 id=74 data-nosnippet>74</a>        .default_service(web::to(not_found));
-<a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">if </span>app_conf.test_chatbot &amp;&amp; app_conf.test_mode {
-<a href=#76 id=76 data-nosnippet>76</a>        cfg.service(web::scope(<span class="string">"/mock-azure"</span>).configure(mock_azure::_add_routes))
-<a href=#77 id=77 data-nosnippet>77</a>            .service(
-<a href=#78 id=78 data-nosnippet>78</a>                web::scope(<span class="string">"/mock-document-storage"</span>).configure(mock_document_storage::_add_routes),
-<a href=#79 id=79 data-nosnippet>79</a>            );
-<a href=#80 id=80 data-nosnippet>80</a>    }
-<a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">if </span>app_conf.test_sisu &amp;&amp; app_conf.test_mode {
-<a href=#82 id=82 data-nosnippet>82</a>        cfg.service(web::scope(<span class="string">"/mock-sisu"</span>).configure(mock_sisu::_add_routes));
-<a href=#83 id=83 data-nosnippet>83</a>    }
-<a href=#84 id=84 data-nosnippet>84</a>    <span class="kw">if </span>app_conf.test_suotar &amp;&amp; app_conf.test_mode {
-<a href=#85 id=85 data-nosnippet>85</a>        cfg.service(mock_suotar::scope());
-<a href=#86 id=86 data-nosnippet>86</a>    }
-<a href=#87 id=87 data-nosnippet>87</a>}
-<a href=#88 id=88 data-nosnippet>88</a>
-<a href=#89 id=89 data-nosnippet>89</a><span class="doccomment">/// The MCP server's limits, per grant and per user. A user's grants together get twice what one
-<a href=#90 id=90 data-nosnippet>90</a>/// grant does, so one runaway agent cannot use up the quota of the user's other agent.
-<a href=#91 id=91 data-nosnippet>91</a></span><span class="kw">fn </span>mcp_rate_limits(test_mode: bool) -&gt; [RateLimit; <span class="number">2</span>] {
-<a href=#92 id=92 data-nosnippet>92</a>    <span class="kw">let </span>multiplier = <span class="kw">if </span>test_mode { <span class="number">100 </span>} <span class="kw">else </span>{ <span class="number">1 </span>};
-<a href=#93 id=93 data-nosnippet>93</a>    <span class="kw">let </span>limit = |per_minute: u64, per_hour: u64, key| {
-<a href=#94 id=94 data-nosnippet>94</a>        RateLimit::new(RateLimitConfig {
-<a href=#95 id=95 data-nosnippet>95</a>            per_minute: <span class="prelude-val">Some</span>(per_minute * multiplier),
-<a href=#96 id=96 data-nosnippet>96</a>            per_hour: <span class="prelude-val">Some</span>(per_hour * multiplier),
-<a href=#97 id=97 data-nosnippet>97</a>            ..Default::default()
-<a href=#98 id=98 data-nosnippet>98</a>        })
-<a href=#99 id=99 data-nosnippet>99</a>        .keyed_by(key)
-<a href=#100 id=100 data-nosnippet>100</a>    };
-<a href=#101 id=101 data-nosnippet>101</a>    [
-<a href=#102 id=102 data-nosnippet>102</a>        limit(<span class="number">120</span>, <span class="number">3000</span>, RateLimitKey::Grant),
-<a href=#103 id=103 data-nosnippet>103</a>        limit(<span class="number">240</span>, <span class="number">6000</span>, RateLimitKey::User),
-<a href=#104 id=104 data-nosnippet>104</a>    ]
-<a href=#105 id=105 data-nosnippet>105</a>}
-<a href=#106 id=106 data-nosnippet>106</a>
-<a href=#107 id=107 data-nosnippet>107</a><span class="kw">async fn </span>not_found(req: HttpRequest) -&gt; HttpResponse {
-<a href=#108 id=108 data-nosnippet>108</a>    ControllerError::new(
-<a href=#109 id=109 data-nosnippet>109</a>        ControllerErrorType::NotFound,
-<a href=#110 id=110 data-nosnippet>110</a>        <span class="macro">format!</span>(<span class="string">"No handler found for route '{}'"</span>, req.path()),
-<a href=#111 id=111 data-nosnippet>111</a>        <span class="prelude-val">None</span>,
-<a href=#112 id=112 data-nosnippet>112</a>    )
-<a href=#113 id=113 data-nosnippet>113</a>    .error_response()
-<a href=#114 id=114 data-nosnippet>114</a>}
+<a href=#41 id=41 data-nosnippet>41</a><span class="doccomment">/// Result of a image upload. Tells where the uploaded image can be retrieved from.
+<a href=#42 id=42 data-nosnippet>42</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
+<a href=#43 id=43 data-nosnippet>43</a>
+<a href=#44 id=44 data-nosnippet>44</a></span><span class="kw">pub struct </span>UploadResult {
+<a href=#45 id=45 data-nosnippet>45</a>    <span class="kw">pub </span>url: String,
+<a href=#46 id=46 data-nosnippet>46</a>}
+<a href=#47 id=47 data-nosnippet>47</a>
+<a href=#48 id=48 data-nosnippet>48</a><span class="doccomment">/// Add controllers from all the submodules.
+<a href=#49 id=49 data-nosnippet>49</a></span><span class="kw">pub fn </span>configure_controllers(
+<a href=#50 id=50 data-nosnippet>50</a>    cfg: <span class="kw-2">&amp;mut </span>ServiceConfig,
+<a href=#51 id=51 data-nosnippet>51</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#52 id=52 data-nosnippet>52</a>) {
+<a href=#53 id=53 data-nosnippet>53</a>    cfg.service(web::scope(<span class="string">"/course-material"</span>).configure(course_material::_add_routes))
+<a href=#54 id=54 data-nosnippet>54</a>        .service(web::scope(<span class="string">"/cms"</span>).configure(cms::_add_routes))
+<a href=#55 id=55 data-nosnippet>55</a>        .service(web::scope(<span class="string">"/files"</span>).configure(files::_add_routes))
+<a href=#56 id=56 data-nosnippet>56</a>        .service(web::scope(<span class="string">"/main-frontend"</span>).configure(main_frontend::_add_routes))
+<a href=#57 id=57 data-nosnippet>57</a>        .service(
+<a href=#58 id=58 data-nosnippet>58</a>            web::scope(<span class="string">"/auth"</span>)
+<a href=#59 id=59 data-nosnippet>59</a>                <span class="comment">// A mooc.fi sign-in left waiting must not outlive the session it was shown beside.
+<a href=#60 id=60 data-nosnippet>60</a>                </span>.wrap_fn(|request, service| {
+<a href=#61 id=61 data-nosnippet>61</a>                    <span class="kw">let </span>changes_session = auth::changes_session(request.path());
+<a href=#62 id=62 data-nosnippet>62</a>                    <span class="kw">let </span>response = service.call(request);
+<a href=#63 id=63 data-nosnippet>63</a>                    <span class="kw">async move </span>{
+<a href=#64 id=64 data-nosnippet>64</a>                        <span class="kw">let </span><span class="kw-2">mut </span>response = response.<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#65 id=65 data-nosnippet>65</a>                        <span class="kw">if </span>changes_session {
+<a href=#66 id=66 data-nosnippet>66</a>                            <span class="comment">// Only fails on a cookie that cannot be a header value.
+<a href=#67 id=67 data-nosnippet>67</a>                            </span><span class="kw">let _ </span>= response.response_mut().add_cookie(
+<a href=#68 id=68 data-nosnippet>68</a>                                <span class="kw-2">&amp;</span>main_frontend::moocfi_handoffs::continuation_cookie_removal(),
+<a href=#69 id=69 data-nosnippet>69</a>                            );
+<a href=#70 id=70 data-nosnippet>70</a>                        }
+<a href=#71 id=71 data-nosnippet>71</a>                        <span class="prelude-val">Ok</span>(response)
+<a href=#72 id=72 data-nosnippet>72</a>                    }
+<a href=#73 id=73 data-nosnippet>73</a>                })
+<a href=#74 id=74 data-nosnippet>74</a>                .configure(auth::_add_routes),
+<a href=#75 id=75 data-nosnippet>75</a>        )
+<a href=#76 id=76 data-nosnippet>76</a>        .service(web::scope(<span class="string">"/errors"</span>).configure(errors::_add_routes))
+<a href=#77 id=77 data-nosnippet>77</a>        .service(web::scope(<span class="string">"/study-registry"</span>).configure(study_registry::_add_routes))
+<a href=#78 id=78 data-nosnippet>78</a>        .service(web::scope(<span class="string">"/exercise-services"</span>).configure(exercise_services::_add_routes))
+<a href=#79 id=79 data-nosnippet>79</a>        .service(
+<a href=#80 id=80 data-nosnippet>80</a>            web::scope(<span class="string">"/other-domain-redirects"</span>).configure(other_domain_redirects::_add_routes),
+<a href=#81 id=81 data-nosnippet>81</a>        )
+<a href=#82 id=82 data-nosnippet>82</a>        .service(web::scope(<span class="string">"/health"</span>).configure(health::_add_routes))
+<a href=#83 id=83 data-nosnippet>83</a>        .service(web::scope(<span class="string">"/tmc-server"</span>).configure(tmc_server::_add_routes))
+<a href=#84 id=84 data-nosnippet>84</a>        .service(web::scope(<span class="string">"/moocfi"</span>).configure(moocfi::_add_routes))
+<a href=#85 id=85 data-nosnippet>85</a>        .service({
+<a href=#86 id=86 data-nosnippet>86</a>            <span class="kw">let </span>[per_grant, per_user] = mcp_rate_limits(app_conf.test_mode);
+<a href=#87 id=87 data-nosnippet>87</a>            <span class="comment">// Registered inside out: authentication runs first and gives the limits their key.
+<a href=#88 id=88 data-nosnippet>88</a>            </span>web::scope(<span class="string">"/mcp"</span>)
+<a href=#89 id=89 data-nosnippet>89</a>                .wrap(per_grant)
+<a href=#90 id=90 data-nosnippet>90</a>                .wrap(per_user)
+<a href=#91 id=91 data-nosnippet>91</a>                .wrap(actix_web::middleware::from_fn(
+<a href=#92 id=92 data-nosnippet>92</a>                    headless_lms_mcp::http::auth::authenticate,
+<a href=#93 id=93 data-nosnippet>93</a>                ))
+<a href=#94 id=94 data-nosnippet>94</a>                .configure(headless_lms_mcp::http::configure)
+<a href=#95 id=95 data-nosnippet>95</a>        })
+<a href=#96 id=96 data-nosnippet>96</a>        .default_service(web::to(not_found));
+<a href=#97 id=97 data-nosnippet>97</a>    <span class="kw">if </span>app_conf.test_chatbot &amp;&amp; app_conf.test_mode {
+<a href=#98 id=98 data-nosnippet>98</a>        cfg.service(web::scope(<span class="string">"/mock-azure"</span>).configure(mock_azure::_add_routes))
+<a href=#99 id=99 data-nosnippet>99</a>            .service(
+<a href=#100 id=100 data-nosnippet>100</a>                web::scope(<span class="string">"/mock-document-storage"</span>).configure(mock_document_storage::_add_routes),
+<a href=#101 id=101 data-nosnippet>101</a>            );
+<a href=#102 id=102 data-nosnippet>102</a>    }
+<a href=#103 id=103 data-nosnippet>103</a>    <span class="kw">if </span>app_conf.test_sisu &amp;&amp; app_conf.test_mode {
+<a href=#104 id=104 data-nosnippet>104</a>        cfg.service(web::scope(<span class="string">"/mock-sisu"</span>).configure(mock_sisu::_add_routes));
+<a href=#105 id=105 data-nosnippet>105</a>    }
+<a href=#106 id=106 data-nosnippet>106</a>    <span class="kw">if </span>app_conf.test_suotar &amp;&amp; app_conf.test_mode {
+<a href=#107 id=107 data-nosnippet>107</a>        cfg.service(mock_suotar::scope());
+<a href=#108 id=108 data-nosnippet>108</a>    }
+<a href=#109 id=109 data-nosnippet>109</a>    <span class="kw">if </span>app_conf.test_moocfi &amp;&amp; app_conf.test_mode {
+<a href=#110 id=110 data-nosnippet>110</a>        cfg.service(web::scope(<span class="string">"/mock-moocfi"</span>).configure(mock_moocfi::_add_routes));
+<a href=#111 id=111 data-nosnippet>111</a>    }
+<a href=#112 id=112 data-nosnippet>112</a>}
+<a href=#113 id=113 data-nosnippet>113</a>
+<a href=#114 id=114 data-nosnippet>114</a><span class="doccomment">/// The MCP server's limits, per grant and per user. A user's grants together get twice what one
+<a href=#115 id=115 data-nosnippet>115</a>/// grant does, so one runaway agent cannot use up the quota of the user's other agent.
+<a href=#116 id=116 data-nosnippet>116</a></span><span class="kw">fn </span>mcp_rate_limits(test_mode: bool) -&gt; [RateLimit; <span class="number">2</span>] {
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="kw">let </span>multiplier = <span class="kw">if </span>test_mode { <span class="number">100 </span>} <span class="kw">else </span>{ <span class="number">1 </span>};
+<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">let </span>limit = |per_minute: u64, per_hour: u64, key| {
+<a href=#119 id=119 data-nosnippet>119</a>        RateLimit::new(RateLimitConfig {
+<a href=#120 id=120 data-nosnippet>120</a>            per_minute: <span class="prelude-val">Some</span>(per_minute * multiplier),
+<a href=#121 id=121 data-nosnippet>121</a>            per_hour: <span class="prelude-val">Some</span>(per_hour * multiplier),
+<a href=#122 id=122 data-nosnippet>122</a>            ..Default::default()
+<a href=#123 id=123 data-nosnippet>123</a>        })
+<a href=#124 id=124 data-nosnippet>124</a>        .keyed_by(key)
+<a href=#125 id=125 data-nosnippet>125</a>    };
+<a href=#126 id=126 data-nosnippet>126</a>    [
+<a href=#127 id=127 data-nosnippet>127</a>        limit(<span class="number">120</span>, <span class="number">3000</span>, RateLimitKey::Grant),
+<a href=#128 id=128 data-nosnippet>128</a>        limit(<span class="number">240</span>, <span class="number">6000</span>, RateLimitKey::User),
+<a href=#129 id=129 data-nosnippet>129</a>    ]
+<a href=#130 id=130 data-nosnippet>130</a>}
+<a href=#131 id=131 data-nosnippet>131</a>
+<a href=#132 id=132 data-nosnippet>132</a><span class="kw">async fn </span>not_found(req: HttpRequest) -&gt; HttpResponse {
+<a href=#133 id=133 data-nosnippet>133</a>    ControllerError::new(
+<a href=#134 id=134 data-nosnippet>134</a>        ControllerErrorType::NotFound,
+<a href=#135 id=135 data-nosnippet>135</a>        <span class="macro">format!</span>(<span class="string">"No handler found for route '{}'"</span>, req.path()),
+<a href=#136 id=136 data-nosnippet>136</a>        <span class="prelude-val">None</span>,
+<a href=#137 id=137 data-nosnippet>137</a>    )
+<a href=#138 id=138 data-nosnippet>138</a>    .error_response()
+<a href=#139 id=139 data-nosnippet>139</a>}
 </code></pre></div></section></main></body></html>

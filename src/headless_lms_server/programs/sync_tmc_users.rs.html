@@ -155,30 +155,29 @@
 <a href=#155 id=155 data-nosnippet>155</a><span class="kw">pub async fn </span>fetch_recently_changed_user_details() -&gt; anyhow::Result&lt;TMCRecentChanges&gt; {
 <a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">let </span>access_token = ProgramConfig::required(<span class="string">"TMC_ACCESS_TOKEN"</span>)<span class="question-mark">?</span>;
 <a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">let </span>ratelimit_api_key = ProgramConfig::required(<span class="string">"RATELIMIT_PROTECTION_SAFE_API_KEY"</span>)<span class="question-mark">?</span>;
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">let </span>client = reqwest::Client::new();
-<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">let </span>res = client
-<a href=#160 id=160 data-nosnippet>160</a>        .get(URL)
-<a href=#161 id=161 data-nosnippet>161</a>        .header(<span class="string">"RATELIMIT-PROTECTION-SAFE-API-KEY"</span>, ratelimit_api_key)
-<a href=#162 id=162 data-nosnippet>162</a>        .header(reqwest::header::CONTENT_TYPE, <span class="string">"application/json"</span>)
-<a href=#163 id=163 data-nosnippet>163</a>        .header(reqwest::header::ACCEPT, <span class="string">"application/json"</span>)
-<a href=#164 id=164 data-nosnippet>164</a>        .bearer_auth(<span class="kw-2">&amp;</span>access_token)
-<a href=#165 id=165 data-nosnippet>165</a>        .send()
-<a href=#166 id=166 data-nosnippet>166</a>        .<span class="kw">await
-<a href=#167 id=167 data-nosnippet>167</a>        </span>.context(<span class="string">"Failed to send request to https://tmc.mooc.fi"</span>)<span class="question-mark">?</span>;
-<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">if </span>res.status().is_success() {
-<a href=#169 id=169 data-nosnippet>169</a>        <span class="kw">let </span>res: TMCRecentChanges = res.json().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#170 id=170 data-nosnippet>170</a>        <span class="macro">info!</span>(<span class="string">"Fetched {} changes"</span>, res.changes.len());
-<a href=#171 id=171 data-nosnippet>171</a>        <span class="prelude-val">Ok</span>(res)
-<a href=#172 id=172 data-nosnippet>172</a>    } <span class="kw">else </span>{
-<a href=#173 id=173 data-nosnippet>173</a>        <span class="kw">let </span>response_body = res.bytes().<span class="kw">await</span><span class="question-mark">?</span>.to_vec();
-<a href=#174 id=174 data-nosnippet>174</a>        <span class="kw">let </span>response_body_string = String::from_utf8_lossy(<span class="kw-2">&amp;</span>response_body);
-<a href=#175 id=175 data-nosnippet>175</a>        <span class="macro">error!</span>(
-<a href=#176 id=176 data-nosnippet>176</a>            <span class="question-mark">?</span>response_body_string,
-<a href=#177 id=177 data-nosnippet>177</a>            <span class="string">"Failed to fetch recently changed user details"</span>,
-<a href=#178 id=178 data-nosnippet>178</a>        );
-<a href=#179 id=179 data-nosnippet>179</a>        <span class="prelude-val">Err</span>(<span class="macro">anyhow::anyhow!</span>(
-<a href=#180 id=180 data-nosnippet>180</a>            <span class="string">"Failed to get recently changed user details from TMC"
-<a href=#181 id=181 data-nosnippet>181</a>        </span>))
-<a href=#182 id=182 data-nosnippet>182</a>    }
-<a href=#183 id=183 data-nosnippet>183</a>}
+<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">let </span>res = headless_lms_utils::http::REQWEST_CLIENT_WITHOUT_REDIRECTS
+<a href=#159 id=159 data-nosnippet>159</a>        .get(URL)
+<a href=#160 id=160 data-nosnippet>160</a>        .header(<span class="string">"RATELIMIT-PROTECTION-SAFE-API-KEY"</span>, ratelimit_api_key)
+<a href=#161 id=161 data-nosnippet>161</a>        .header(reqwest::header::CONTENT_TYPE, <span class="string">"application/json"</span>)
+<a href=#162 id=162 data-nosnippet>162</a>        .header(reqwest::header::ACCEPT, <span class="string">"application/json"</span>)
+<a href=#163 id=163 data-nosnippet>163</a>        .bearer_auth(<span class="kw-2">&amp;</span>access_token)
+<a href=#164 id=164 data-nosnippet>164</a>        .send()
+<a href=#165 id=165 data-nosnippet>165</a>        .<span class="kw">await
+<a href=#166 id=166 data-nosnippet>166</a>        </span>.context(<span class="string">"Failed to send request to https://tmc.mooc.fi"</span>)<span class="question-mark">?</span>;
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">if </span>res.status().is_success() {
+<a href=#168 id=168 data-nosnippet>168</a>        <span class="kw">let </span>res: TMCRecentChanges = res.json().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#169 id=169 data-nosnippet>169</a>        <span class="macro">info!</span>(<span class="string">"Fetched {} changes"</span>, res.changes.len());
+<a href=#170 id=170 data-nosnippet>170</a>        <span class="prelude-val">Ok</span>(res)
+<a href=#171 id=171 data-nosnippet>171</a>    } <span class="kw">else </span>{
+<a href=#172 id=172 data-nosnippet>172</a>        <span class="kw">let </span>response_body = res.bytes().<span class="kw">await</span><span class="question-mark">?</span>.to_vec();
+<a href=#173 id=173 data-nosnippet>173</a>        <span class="kw">let </span>response_body_string = String::from_utf8_lossy(<span class="kw-2">&amp;</span>response_body);
+<a href=#174 id=174 data-nosnippet>174</a>        <span class="macro">error!</span>(
+<a href=#175 id=175 data-nosnippet>175</a>            <span class="question-mark">?</span>response_body_string,
+<a href=#176 id=176 data-nosnippet>176</a>            <span class="string">"Failed to fetch recently changed user details"</span>,
+<a href=#177 id=177 data-nosnippet>177</a>        );
+<a href=#178 id=178 data-nosnippet>178</a>        <span class="prelude-val">Err</span>(<span class="macro">anyhow::anyhow!</span>(
+<a href=#179 id=179 data-nosnippet>179</a>            <span class="string">"Failed to get recently changed user details from TMC"
+<a href=#180 id=180 data-nosnippet>180</a>        </span>))
+<a href=#181 id=181 data-nosnippet>181</a>    }
+<a href=#182 id=182 data-nosnippet>182</a>}
 </code></pre></div></section></main></body></html>

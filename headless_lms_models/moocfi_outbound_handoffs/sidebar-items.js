@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MoocfiHandoffDestination","RedeemRefusal"],"fn":["get_student_id","insert","redeem"],"struct":["RedeemedMoocfiHandoff"]};

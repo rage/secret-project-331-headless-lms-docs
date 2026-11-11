@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ResendOutcome"],"fn":["ensure_resend_possible"]};
+window.SIDEBAR_ITEMS = {"enum":["ResendOutcome"],"fn":["ensure_resend_possible","resolve_linking_mail_source"]};

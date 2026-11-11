@@ -369,103 +369,108 @@
 <a href=#369 id=369 data-nosnippet>369</a>
 <a href=#370 id=370 data-nosnippet>370</a><span class="doccomment">/**
 <a href=#371 id=371 data-nosnippet>371</a>POST `/api/v0/main-frontend/user-details/update-user-info` - Updates the users information such as email, name, country and email communication consent
-<a href=#372 id=372 data-nosnippet>372</a>*/
-<a href=#373 id=373 data-nosnippet>373</a></span><span class="attr">#[instrument(skip(pool, app_conf, tmc_client))]
-<a href=#374 id=374 data-nosnippet>374</a>#[utoipa::path(
-<a href=#375 id=375 data-nosnippet>375</a>    post,
-<a href=#376 id=376 data-nosnippet>376</a>    path = <span class="string">"/update-user-info"</span>,
-<a href=#377 id=377 data-nosnippet>377</a>    operation_id = <span class="string">"updateUserInfo"</span>,
-<a href=#378 id=378 data-nosnippet>378</a>    tag = <span class="string">"user-details"</span>,
-<a href=#379 id=379 data-nosnippet>379</a>    request_body = UserInfoPayload,
-<a href=#380 id=380 data-nosnippet>380</a>    responses(
-<a href=#381 id=381 data-nosnippet>381</a>        (status = <span class="number">200</span>, description = <span class="string">"Updated user details"</span>, body = UserDetail)
-<a href=#382 id=382 data-nosnippet>382</a>    )
-<a href=#383 id=383 data-nosnippet>383</a>)]
-<a href=#384 id=384 data-nosnippet>384</a></span><span class="kw">pub async fn </span>update_user_info(
-<a href=#385 id=385 data-nosnippet>385</a>    user: AuthUser,
-<a href=#386 id=386 data-nosnippet>386</a>    pool: web::Data&lt;PgPool&gt;,
-<a href=#387 id=387 data-nosnippet>387</a>    payload: web::Json&lt;UserInfoPayload&gt;,
-<a href=#388 id=388 data-nosnippet>388</a>    tmc_client: web::Data&lt;TmcClient&gt;,
-<a href=#389 id=389 data-nosnippet>389</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
-<a href=#390 id=390 data-nosnippet>390</a>) -&gt; ControllerResult&lt;web::Json&lt;UserDetail&gt;&gt; {
-<a href=#391 id=391 data-nosnippet>391</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = pool.begin().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#392 id=392 data-nosnippet>392</a>
-<a href=#393 id=393 data-nosnippet>393</a>    <span class="kw">let </span>existing_user = models::user_details::get_user_details_by_user_id(<span class="kw-2">&amp;mut </span>tx, user.id)
-<a href=#394 id=394 data-nosnippet>394</a>        .<span class="kw">await
-<a href=#395 id=395 data-nosnippet>395</a>        </span>.context(<span class="string">"Failed to fetch existing user data"</span>)<span class="question-mark">?</span>;
+<a href=#372 id=372 data-nosnippet>372</a>
+<a href=#373 id=373 data-nosnippet>373</a>A new email reaches TMC only once it is verified, through
+<a href=#374 id=374 data-nosnippet>374</a>[`crate::controllers::main_frontend::email_verification::verify_email_ownership`], unless email
+<a href=#375 id=375 data-nosnippet>375</a>ownership verification is off.
+<a href=#376 id=376 data-nosnippet>376</a>*/
+<a href=#377 id=377 data-nosnippet>377</a></span><span class="attr">#[instrument(skip(pool, app_conf, tmc_client))]
+<a href=#378 id=378 data-nosnippet>378</a>#[utoipa::path(
+<a href=#379 id=379 data-nosnippet>379</a>    post,
+<a href=#380 id=380 data-nosnippet>380</a>    path = <span class="string">"/update-user-info"</span>,
+<a href=#381 id=381 data-nosnippet>381</a>    operation_id = <span class="string">"updateUserInfo"</span>,
+<a href=#382 id=382 data-nosnippet>382</a>    tag = <span class="string">"user-details"</span>,
+<a href=#383 id=383 data-nosnippet>383</a>    request_body = UserInfoPayload,
+<a href=#384 id=384 data-nosnippet>384</a>    responses(
+<a href=#385 id=385 data-nosnippet>385</a>        (status = <span class="number">200</span>, description = <span class="string">"Updated user details"</span>, body = UserDetail)
+<a href=#386 id=386 data-nosnippet>386</a>    )
+<a href=#387 id=387 data-nosnippet>387</a>)]
+<a href=#388 id=388 data-nosnippet>388</a></span><span class="kw">pub async fn </span>update_user_info(
+<a href=#389 id=389 data-nosnippet>389</a>    user: AuthUser,
+<a href=#390 id=390 data-nosnippet>390</a>    pool: web::Data&lt;PgPool&gt;,
+<a href=#391 id=391 data-nosnippet>391</a>    payload: web::Json&lt;UserInfoPayload&gt;,
+<a href=#392 id=392 data-nosnippet>392</a>    tmc_client: web::Data&lt;TmcClient&gt;,
+<a href=#393 id=393 data-nosnippet>393</a>    app_conf: web::Data&lt;ApplicationConfiguration&gt;,
+<a href=#394 id=394 data-nosnippet>394</a>) -&gt; ControllerResult&lt;web::Json&lt;UserDetail&gt;&gt; {
+<a href=#395 id=395 data-nosnippet>395</a>    <span class="kw">let </span><span class="kw-2">mut </span>tx = pool.begin().<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#396 id=396 data-nosnippet>396</a>
-<a href=#397 id=397 data-nosnippet>397</a>    <span class="kw">let </span>user = models::users::get_by_id(<span class="kw-2">&amp;mut </span>tx, user.id)
+<a href=#397 id=397 data-nosnippet>397</a>    <span class="kw">let </span>existing_user = models::user_details::get_user_details_by_user_id(<span class="kw-2">&amp;mut </span>tx, user.id)
 <a href=#398 id=398 data-nosnippet>398</a>        .<span class="kw">await
-<a href=#399 id=399 data-nosnippet>399</a>        </span>.context(<span class="string">"Failed to fetch user"</span>)<span class="question-mark">?</span>;
+<a href=#399 id=399 data-nosnippet>399</a>        </span>.context(<span class="string">"Failed to fetch existing user data"</span>)<span class="question-mark">?</span>;
 <a href=#400 id=400 data-nosnippet>400</a>
-<a href=#401 id=401 data-nosnippet>401</a>    <span class="kw">let </span>updated_user = models::user_details::update_user_info(
-<a href=#402 id=402 data-nosnippet>402</a>        <span class="kw-2">&amp;mut </span>tx,
-<a href=#403 id=403 data-nosnippet>403</a>        user.id,
-<a href=#404 id=404 data-nosnippet>404</a>        <span class="kw-2">&amp;</span>payload.email,
-<a href=#405 id=405 data-nosnippet>405</a>        <span class="kw-2">&amp;</span>payload.first_name,
-<a href=#406 id=406 data-nosnippet>406</a>        <span class="kw-2">&amp;</span>payload.last_name,
-<a href=#407 id=407 data-nosnippet>407</a>        <span class="kw-2">&amp;</span>payload.country,
-<a href=#408 id=408 data-nosnippet>408</a>        payload.email_communication_consent,
-<a href=#409 id=409 data-nosnippet>409</a>    )
-<a href=#410 id=410 data-nosnippet>410</a>    .<span class="kw">await
-<a href=#411 id=411 data-nosnippet>411</a>    </span>.context(<span class="string">"Failed to update database"</span>)<span class="question-mark">?</span>;
-<a href=#412 id=412 data-nosnippet>412</a>
-<a href=#413 id=413 data-nosnippet>413</a>    <span class="kw">let </span>email_changed = existing_user.email != payload.email;
-<a href=#414 id=414 data-nosnippet>414</a>    <span class="kw">let </span>first_name_changed = existing_user.first_name != <span class="prelude-val">Some</span>(payload.first_name.clone());
-<a href=#415 id=415 data-nosnippet>415</a>    <span class="kw">let </span>last_name_changed = existing_user.last_name != <span class="prelude-val">Some</span>(payload.last_name.clone());
+<a href=#401 id=401 data-nosnippet>401</a>    <span class="kw">let </span>user = models::users::get_by_id(<span class="kw-2">&amp;mut </span>tx, user.id)
+<a href=#402 id=402 data-nosnippet>402</a>        .<span class="kw">await
+<a href=#403 id=403 data-nosnippet>403</a>        </span>.context(<span class="string">"Failed to fetch user"</span>)<span class="question-mark">?</span>;
+<a href=#404 id=404 data-nosnippet>404</a>
+<a href=#405 id=405 data-nosnippet>405</a>    <span class="kw">let </span>updated_user = models::user_details::update_user_info(
+<a href=#406 id=406 data-nosnippet>406</a>        <span class="kw-2">&amp;mut </span>tx,
+<a href=#407 id=407 data-nosnippet>407</a>        user.id,
+<a href=#408 id=408 data-nosnippet>408</a>        <span class="kw-2">&amp;</span>payload.email,
+<a href=#409 id=409 data-nosnippet>409</a>        <span class="kw-2">&amp;</span>payload.first_name,
+<a href=#410 id=410 data-nosnippet>410</a>        <span class="kw-2">&amp;</span>payload.last_name,
+<a href=#411 id=411 data-nosnippet>411</a>        <span class="kw-2">&amp;</span>payload.country,
+<a href=#412 id=412 data-nosnippet>412</a>        payload.email_communication_consent,
+<a href=#413 id=413 data-nosnippet>413</a>    )
+<a href=#414 id=414 data-nosnippet>414</a>    .<span class="kw">await
+<a href=#415 id=415 data-nosnippet>415</a>    </span>.context(<span class="string">"Failed to update database"</span>)<span class="question-mark">?</span>;
 <a href=#416 id=416 data-nosnippet>416</a>
-<a href=#417 id=417 data-nosnippet>417</a>    <span class="kw">if </span>email_changed || first_name_changed || last_name_changed {
-<a href=#418 id=418 data-nosnippet>418</a>        controllers::auth::update_user_information_to_tmc(
-<a href=#419 id=419 data-nosnippet>419</a>            user.upstream_id,
-<a href=#420 id=420 data-nosnippet>420</a>            payload.first_name.clone(),
-<a href=#421 id=421 data-nosnippet>421</a>            payload.last_name.clone(),
-<a href=#422 id=422 data-nosnippet>422</a>            email_changed.then(|| payload.email.clone()),
-<a href=#423 id=423 data-nosnippet>423</a>            <span class="kw-2">&amp;</span>tmc_client,
-<a href=#424 id=424 data-nosnippet>424</a>            <span class="kw-2">&amp;</span>app_conf,
-<a href=#425 id=425 data-nosnippet>425</a>        )
-<a href=#426 id=426 data-nosnippet>426</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#427 id=427 data-nosnippet>427</a>    } <span class="kw">else </span>{
-<a href=#428 id=428 data-nosnippet>428</a>        <span class="macro">info!</span>(<span class="string">"User info unchanged, skipping update to TMC."</span>);
-<a href=#429 id=429 data-nosnippet>429</a>    }
-<a href=#430 id=430 data-nosnippet>430</a>
-<a href=#431 id=431 data-nosnippet>431</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#432 id=432 data-nosnippet>432</a>
-<a href=#433 id=433 data-nosnippet>433</a>    <span class="kw">if </span>email_changed {
-<a href=#434 id=434 data-nosnippet>434</a>        <span class="comment">// After the commit: a rolled-back edit must not mail a code for an address the account lacks.
-<a href=#435 id=435 data-nosnippet>435</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#436 id=436 data-nosnippet>436</a>        domain::email_ownership_verification::queue_verification_email_best_effort(
-<a href=#437 id=437 data-nosnippet>437</a>            <span class="kw-2">&amp;mut </span>conn,
-<a href=#438 id=438 data-nosnippet>438</a>            app_conf.enable_email_ownership_verification,
-<a href=#439 id=439 data-nosnippet>439</a>            user.id,
-<a href=#440 id=440 data-nosnippet>440</a>        )
-<a href=#441 id=441 data-nosnippet>441</a>        .<span class="kw">await</span>;
-<a href=#442 id=442 data-nosnippet>442</a>    }
-<a href=#443 id=443 data-nosnippet>443</a>
-<a href=#444 id=444 data-nosnippet>444</a>    <span class="kw">let </span>token = skip_authorize();
-<a href=#445 id=445 data-nosnippet>445</a>    token.authorized_ok(web::Json(updated_user))
-<a href=#446 id=446 data-nosnippet>446</a>}
-<a href=#447 id=447 data-nosnippet>447</a>
-<a href=#448 id=448 data-nosnippet>448</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
-<a href=#449 id=449 data-nosnippet>449</a>    cfg.route(<span class="string">"/search-exact"</span>, web::post().to(search_users_exact))
-<a href=#450 id=450 data-nosnippet>450</a>        .route(<span class="string">"/search-fuzzy"</span>, web::post().to(search_users_fuzzy))
-<a href=#451 id=451 data-nosnippet>451</a>        .route(
-<a href=#452 id=452 data-nosnippet>452</a>            <span class="string">"/{course_id}/user/{user_id}"</span>,
-<a href=#453 id=453 data-nosnippet>453</a>            web::get().to(get_user_details),
-<a href=#454 id=454 data-nosnippet>454</a>        )
-<a href=#455 id=455 data-nosnippet>455</a>        .route(
-<a href=#456 id=456 data-nosnippet>456</a>            <span class="string">"/user-by-courses"</span>,
-<a href=#457 id=457 data-nosnippet>457</a>            web::post().to(get_user_details_by_courses),
-<a href=#458 id=458 data-nosnippet>458</a>        )
-<a href=#459 id=459 data-nosnippet>459</a>        .route(<span class="string">"/users-ip-country"</span>, web::get().to(get_user_country_by_ip))
+<a href=#417 id=417 data-nosnippet>417</a>    <span class="kw">let </span>email_changed = existing_user.email != payload.email;
+<a href=#418 id=418 data-nosnippet>418</a>    <span class="kw">let </span>first_name_changed = existing_user.first_name != <span class="prelude-val">Some</span>(payload.first_name.clone());
+<a href=#419 id=419 data-nosnippet>419</a>    <span class="kw">let </span>last_name_changed = existing_user.last_name != <span class="prelude-val">Some</span>(payload.last_name.clone());
+<a href=#420 id=420 data-nosnippet>420</a>
+<a href=#421 id=421 data-nosnippet>421</a>    <span class="kw">if </span>email_changed || first_name_changed || last_name_changed {
+<a href=#422 id=422 data-nosnippet>422</a>        controllers::auth::update_user_information_to_tmc(
+<a href=#423 id=423 data-nosnippet>423</a>            user.upstream_id,
+<a href=#424 id=424 data-nosnippet>424</a>            payload.first_name.clone(),
+<a href=#425 id=425 data-nosnippet>425</a>            payload.last_name.clone(),
+<a href=#426 id=426 data-nosnippet>426</a>            (email_changed &amp;&amp; !app_conf.enable_email_ownership_verification)
+<a href=#427 id=427 data-nosnippet>427</a>                .then(|| payload.email.clone()),
+<a href=#428 id=428 data-nosnippet>428</a>            <span class="kw-2">&amp;</span>tmc_client,
+<a href=#429 id=429 data-nosnippet>429</a>            <span class="kw-2">&amp;</span>app_conf,
+<a href=#430 id=430 data-nosnippet>430</a>        )
+<a href=#431 id=431 data-nosnippet>431</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#432 id=432 data-nosnippet>432</a>    } <span class="kw">else </span>{
+<a href=#433 id=433 data-nosnippet>433</a>        <span class="macro">info!</span>(<span class="string">"User info unchanged, skipping update to TMC."</span>);
+<a href=#434 id=434 data-nosnippet>434</a>    }
+<a href=#435 id=435 data-nosnippet>435</a>
+<a href=#436 id=436 data-nosnippet>436</a>    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#437 id=437 data-nosnippet>437</a>
+<a href=#438 id=438 data-nosnippet>438</a>    <span class="kw">if </span>email_changed {
+<a href=#439 id=439 data-nosnippet>439</a>        <span class="comment">// After the commit: a rolled-back edit must not mail a code for an address the account lacks.
+<a href=#440 id=440 data-nosnippet>440</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#441 id=441 data-nosnippet>441</a>        domain::email_ownership_verification::queue_verification_email_best_effort(
+<a href=#442 id=442 data-nosnippet>442</a>            <span class="kw-2">&amp;mut </span>conn,
+<a href=#443 id=443 data-nosnippet>443</a>            app_conf.enable_email_ownership_verification,
+<a href=#444 id=444 data-nosnippet>444</a>            user.id,
+<a href=#445 id=445 data-nosnippet>445</a>        )
+<a href=#446 id=446 data-nosnippet>446</a>        .<span class="kw">await</span>;
+<a href=#447 id=447 data-nosnippet>447</a>    }
+<a href=#448 id=448 data-nosnippet>448</a>
+<a href=#449 id=449 data-nosnippet>449</a>    <span class="kw">let </span>token = skip_authorize();
+<a href=#450 id=450 data-nosnippet>450</a>    token.authorized_ok(web::Json(updated_user))
+<a href=#451 id=451 data-nosnippet>451</a>}
+<a href=#452 id=452 data-nosnippet>452</a>
+<a href=#453 id=453 data-nosnippet>453</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
+<a href=#454 id=454 data-nosnippet>454</a>    cfg.route(<span class="string">"/search-exact"</span>, web::post().to(search_users_exact))
+<a href=#455 id=455 data-nosnippet>455</a>        .route(<span class="string">"/search-fuzzy"</span>, web::post().to(search_users_fuzzy))
+<a href=#456 id=456 data-nosnippet>456</a>        .route(
+<a href=#457 id=457 data-nosnippet>457</a>            <span class="string">"/{course_id}/user/{user_id}"</span>,
+<a href=#458 id=458 data-nosnippet>458</a>            web::get().to(get_user_details),
+<a href=#459 id=459 data-nosnippet>459</a>        )
 <a href=#460 id=460 data-nosnippet>460</a>        .route(
-<a href=#461 id=461 data-nosnippet>461</a>            <span class="string">"/user-details-for-user"</span>,
-<a href=#462 id=462 data-nosnippet>462</a>            web::get().to(get_user_details_for_user),
+<a href=#461 id=461 data-nosnippet>461</a>            <span class="string">"/user-by-courses"</span>,
+<a href=#462 id=462 data-nosnippet>462</a>            web::post().to(get_user_details_by_courses),
 <a href=#463 id=463 data-nosnippet>463</a>        )
-<a href=#464 id=464 data-nosnippet>464</a>        .route(<span class="string">"/update-user-info"</span>, web::post().to(update_user_info))
+<a href=#464 id=464 data-nosnippet>464</a>        .route(<span class="string">"/users-ip-country"</span>, web::get().to(get_user_country_by_ip))
 <a href=#465 id=465 data-nosnippet>465</a>        .route(
-<a href=#466 id=466 data-nosnippet>466</a>            <span class="string">"/{course_id}/get-users-by-course-id"</span>,
-<a href=#467 id=467 data-nosnippet>467</a>            web::get().to(get_users_by_course_id),
+<a href=#466 id=466 data-nosnippet>466</a>            <span class="string">"/user-details-for-user"</span>,
+<a href=#467 id=467 data-nosnippet>467</a>            web::get().to(get_user_details_for_user),
 <a href=#468 id=468 data-nosnippet>468</a>        )
-<a href=#469 id=469 data-nosnippet>469</a>        .route(<span class="string">"/bulk-user-details"</span>, web::post().to(get_bulk_user_details));
-<a href=#470 id=470 data-nosnippet>470</a>}
+<a href=#469 id=469 data-nosnippet>469</a>        .route(<span class="string">"/update-user-info"</span>, web::post().to(update_user_info))
+<a href=#470 id=470 data-nosnippet>470</a>        .route(
+<a href=#471 id=471 data-nosnippet>471</a>            <span class="string">"/{course_id}/get-users-by-course-id"</span>,
+<a href=#472 id=472 data-nosnippet>472</a>            web::get().to(get_users_by_course_id),
+<a href=#473 id=473 data-nosnippet>473</a>        )
+<a href=#474 id=474 data-nosnippet>474</a>        .route(<span class="string">"/bulk-user-details"</span>, web::post().to(get_bulk_user_details));
+<a href=#475 id=475 data-nosnippet>475</a>}
 </code></pre></div></section></main></body></html>

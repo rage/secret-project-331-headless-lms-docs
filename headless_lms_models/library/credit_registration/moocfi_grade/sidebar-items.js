@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FAIL_WORDS","PASS_WORDS"],"fn":["parse_moocfi_grade"],"struct":["ParsedMoocfiGrade"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["REDACTED"],"fn":["scrub_text"],"static":["EMAIL_RE","STUDENT_NUMBER_RE"]};

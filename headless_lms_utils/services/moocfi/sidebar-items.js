@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_ERROR_BODY_CHARS","REQUEST_TIMEOUT"],"enum":["MoocfiError"],"struct":["CompletionRegistrationReport","DelegatedCompletion","DelegatedCompletionRegistration","DelegatedCourse","MoocfiClient","RegisterCompletionsRequest"]};

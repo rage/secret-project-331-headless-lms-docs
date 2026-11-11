@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["STUDENT_NOTIFICATION_LIMIT"],"enum":["CreditRegistrationNotificationKind"],"fn":["claim_unnotified","get_for_registrations","set_email_delivery_id"],"struct":["RegistrationNotificationEmail","StudentNotificationToQueue"]};
+window.SIDEBAR_ITEMS = {"constant":["STUDENT_NOTIFICATION_LIMIT"],"enum":["CreditRegistrationNotificationKind","RegistrationStatusPage"],"fn":["claim_unnotified","get_for_registrations","set_email_delivery_id"],"struct":["RegistrationNotificationEmail","StudentNotificationToQueue"]};

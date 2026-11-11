@@ -5,7 +5,7 @@ deserialized: an empty argument string is not valid JSON.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.from_db_and_arguments" class="method trait-impl"><a class="src rightside" href="../../../../src/headless_lms_chatbot/chatbot_tools/custom_tools/course_progress.rs.html#53-88">Source</a><a href="#method.from_db_and_arguments" class="anchor">§</a><h4 class="code-header">async fn <a href="../../trait.ChatbotTool.html#tymethod.from_db_and_arguments" class="fn">from_db_and_arguments</a>(
     conn: &amp;mut <a class="struct" href="../../../prelude/struct.PgConnection.html" title="struct headless_lms_chatbot::prelude::PgConnection">PgConnection</a>,
     _app_config: &amp;<a class="struct" href="../../../prelude/struct.ApplicationConfiguration.html" title="struct headless_lms_chatbot::prelude::ApplicationConfiguration">ApplicationConfiguration</a>,
-    _cache: &amp;<a class="struct" href="../../../../headless_lms_utils/cache/struct.Cache.html" title="struct headless_lms_utils::cache::Cache">Cache</a>,
+    _cache: &amp;Cache,
     _arguments: Self::<a class="associatedtype" href="../../trait.ChatbotTool.html#associatedtype.Arguments" title="type headless_lms_chatbot::chatbot_tools::ChatbotTool::Arguments">Arguments</a>,
     user_context: &amp;<a class="struct" href="../../../user_context/struct.ChatbotTurnContext.html" title="struct headless_lms_chatbot::user_context::ChatbotTurnContext">ChatbotTurnContext</a>,
 ) -&gt; <a class="type" href="../../../chatbot_error/type.ChatbotResult.html" title="type headless_lms_chatbot::chatbot_error::ChatbotResult">ChatbotResult</a>&lt;Self&gt;</h4></section></summary><div class="docblock"><p>Create a CourseProgressTool instance</p>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_pending","insert","take"],"struct":["NewContinuation","PendingContinuation"]};

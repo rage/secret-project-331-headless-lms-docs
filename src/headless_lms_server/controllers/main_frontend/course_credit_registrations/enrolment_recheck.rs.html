@@ -5,7 +5,7 @@
 <a href=#5 id=5 data-nosnippet>5</a>    NewCreditRegistrationAdminAction,
 <a href=#6 id=6 data-nosnippet>6</a>};
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>headless_lms_models::credit_registration_events::CreditRegistrationEventKind;
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>headless_lms_models::credit_registrations::CreditRegistrationState;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>headless_lms_models::credit_registrations::{CreditRegistrationState, SubjectId};
 <a href=#9 id=9 data-nosnippet>9</a>
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>headless_lms_models::library::credit_registration::enrolment_check_schedule::EnrolmentCheckSource;
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>headless_lms_models::library::credit_registration::enrolment_checks::CheckRequestOutcome;
@@ -67,7 +67,7 @@
 <a href=#67 id=67 data-nosnippet>67</a>        user.id,
 <a href=#68 id=68 data-nosnippet>68</a>        RecheckTarget {
 <a href=#69 id=69 data-nosnippet>69</a>            registration_id: id,
-<a href=#70 id=70 data-nosnippet>70</a>            course_module_completion_id: row.course_module_completion_id,
+<a href=#70 id=70 data-nosnippet>70</a>            subject: SubjectId::CourseModuleCompletion(row.course_module_completion_id),
 <a href=#71 id=71 data-nosnippet>71</a>        },
 <a href=#72 id=72 data-nosnippet>72</a>        EnrolmentCheckSource::TeacherRequest,
 <a href=#73 id=73 data-nosnippet>73</a>        CreditRegistrationEventKind::AdminAction,

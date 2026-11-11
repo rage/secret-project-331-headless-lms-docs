@@ -54,12 +54,22 @@
 <a href=#54 id=54 data-nosnippet>54</a>        .expect(<span class="string">"Failed to build Client"</span>)
 <a href=#55 id=55 data-nosnippet>55</a>});
 <a href=#56 id=56 data-nosnippet>56</a>
-<a href=#57 id=57 data-nosnippet>57</a><span class="doccomment">/// For responses whose body is consumed as a stream. Carries no total or read timeout, because both
-<a href=#58 id=58 data-nosnippet>58</a>/// would cut off a healthy but slow stream; callers must instead bound the header wait with
-<a href=#59 id=59 data-nosnippet>59</a>/// [`STREAM_RESPONSE_HEADERS_TIMEOUT`] and each chunk with [`STREAM_IDLE_TIMEOUT`].
-<a href=#60 id=60 data-nosnippet>60</a></span><span class="kw">pub static </span>REQWEST_STREAMING_CLIENT: Lazy&lt;reqwest::Client&gt; = Lazy::new(|| {
-<a href=#61 id=61 data-nosnippet>61</a>    base_client_builder()
-<a href=#62 id=62 data-nosnippet>62</a>        .build()
-<a href=#63 id=63 data-nosnippet>63</a>        .expect(<span class="string">"Failed to build streaming Client"</span>)
-<a href=#64 id=64 data-nosnippet>64</a>});
+<a href=#57 id=57 data-nosnippet>57</a><span class="doccomment">/// [`REQWEST_CLIENT`] that answers a redirect as the response itself. For calls carrying a credential
+<a href=#58 id=58 data-nosnippet>58</a>/// to mooc.fi or TMC, whose bearer tokens and secrets a followed redirect could take elsewhere.
+<a href=#59 id=59 data-nosnippet>59</a></span><span class="kw">pub static </span>REQWEST_CLIENT_WITHOUT_REDIRECTS: Lazy&lt;reqwest::Client&gt; = Lazy::new(|| {
+<a href=#60 id=60 data-nosnippet>60</a>    base_client_builder()
+<a href=#61 id=61 data-nosnippet>61</a>        .timeout(NON_STREAMING_REQUEST_TIMEOUT)
+<a href=#62 id=62 data-nosnippet>62</a>        .redirect(reqwest::redirect::Policy::none())
+<a href=#63 id=63 data-nosnippet>63</a>        .build()
+<a href=#64 id=64 data-nosnippet>64</a>        .expect(<span class="string">"Failed to build Client"</span>)
+<a href=#65 id=65 data-nosnippet>65</a>});
+<a href=#66 id=66 data-nosnippet>66</a>
+<a href=#67 id=67 data-nosnippet>67</a><span class="doccomment">/// For responses whose body is consumed as a stream. Carries no total or read timeout, because both
+<a href=#68 id=68 data-nosnippet>68</a>/// would cut off a healthy but slow stream; callers must instead bound the header wait with
+<a href=#69 id=69 data-nosnippet>69</a>/// [`STREAM_RESPONSE_HEADERS_TIMEOUT`] and each chunk with [`STREAM_IDLE_TIMEOUT`].
+<a href=#70 id=70 data-nosnippet>70</a></span><span class="kw">pub static </span>REQWEST_STREAMING_CLIENT: Lazy&lt;reqwest::Client&gt; = Lazy::new(|| {
+<a href=#71 id=71 data-nosnippet>71</a>    base_client_builder()
+<a href=#72 id=72 data-nosnippet>72</a>        .build()
+<a href=#73 id=73 data-nosnippet>73</a>        .expect(<span class="string">"Failed to build streaming Client"</span>)
+<a href=#74 id=74 data-nosnippet>74</a>});
 </code></pre></div></section></main></body></html>

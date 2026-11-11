@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["check_modules","distinct_course_codes","record_checks","run"]};
+window.SIDEBAR_ITEMS = {"fn":["check_modules","check_targets","distinct_course_codes","record_checks","record_target_checks","refresh_moocfi_course_details","run"]};

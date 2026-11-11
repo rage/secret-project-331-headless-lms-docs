@@ -7,7 +7,7 @@
 <a href=#7 id=7 data-nosnippet>7</a>};
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>headless_lms_models::{
 <a href=#9 id=9 data-nosnippet>9</a>    ModelResult, course_module_suotar_configurations, credit_registration_phase_state,
-<a href=#10 id=10 data-nosnippet>10</a>    credit_registration_roster_schedules,
+<a href=#10 id=10 data-nosnippet>10</a>    credit_registration_roster_schedules, external_credit_targets,
 <a href=#11 id=11 data-nosnippet>11</a>};
 <a href=#12 id=12 data-nosnippet>12</a><span class="kw">use </span>sqlx::PgConnection;
 <a href=#13 id=13 data-nosnippet>13</a>
@@ -60,24 +60,27 @@
 <a href=#60 id=60 data-nosnippet>60</a>                    CreditRegistrationPhase::EnrolmentDiscovery
 <a href=#61 id=61 data-nosnippet>61</a>                        | CreditRegistrationPhase::LinkEmails
 <a href=#62 id=62 data-nosnippet>62</a>                ),
-<a href=#63 id=63 data-nosnippet>63</a>            })
-<a href=#64 id=64 data-nosnippet>64</a>        })
-<a href=#65 id=65 data-nosnippet>65</a>        .collect();
-<a href=#66 id=66 data-nosnippet>66</a>    <span class="kw">let </span>failing_course_codes = credit_registration_roster_schedules::get_failing_codes(conn)
-<a href=#67 id=67 data-nosnippet>67</a>        .<span class="kw">await</span><span class="question-mark">?
-<a href=#68 id=68 data-nosnippet>68</a>        </span>.into_iter()
-<a href=#69 id=69 data-nosnippet>69</a>        .map(|code| code.course_code)
-<a href=#70 id=70 data-nosnippet>70</a>        .collect();
-<a href=#71 id=71 data-nosnippet>71</a>    <span class="kw">let </span>misconfigured_module_ids =
-<a href=#72 id=72 data-nosnippet>72</a>        course_module_suotar_configurations::get_module_ids_failing_config_check(conn).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#73 id=73 data-nosnippet>73</a>    <span class="prelude-val">Ok</span>(AttentionRules {
-<a href=#74 id=74 data-nosnippet>74</a>        thresholds: StuckThresholds::CURRENT,
-<a href=#75 id=75 data-nosnippet>75</a>        account_linking_since,
-<a href=#76 id=76 data-nosnippet>76</a>        blocking: BlockingProblems {
-<a href=#77 id=77 data-nosnippet>77</a>            stopped_phases,
-<a href=#78 id=78 data-nosnippet>78</a>            failing_course_codes,
-<a href=#79 id=79 data-nosnippet>79</a>            misconfigured_module_ids,
-<a href=#80 id=80 data-nosnippet>80</a>        },
-<a href=#81 id=81 data-nosnippet>81</a>    })
-<a href=#82 id=82 data-nosnippet>82</a>}
+<a href=#63 id=63 data-nosnippet>63</a>                reports_to_moocfi: phase == CreditRegistrationPhase::MoocfiReport,
+<a href=#64 id=64 data-nosnippet>64</a>            })
+<a href=#65 id=65 data-nosnippet>65</a>        })
+<a href=#66 id=66 data-nosnippet>66</a>        .collect();
+<a href=#67 id=67 data-nosnippet>67</a>    <span class="kw">let </span>failing_course_codes = credit_registration_roster_schedules::get_failing_codes(conn)
+<a href=#68 id=68 data-nosnippet>68</a>        .<span class="kw">await</span><span class="question-mark">?
+<a href=#69 id=69 data-nosnippet>69</a>        </span>.into_iter()
+<a href=#70 id=70 data-nosnippet>70</a>        .map(|code| code.course_code)
+<a href=#71 id=71 data-nosnippet>71</a>        .collect();
+<a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">let </span><span class="kw-2">mut </span>misconfigured_module_ids =
+<a href=#73 id=73 data-nosnippet>73</a>        course_module_suotar_configurations::get_module_ids_failing_config_check(conn).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#74 id=74 data-nosnippet>74</a>    misconfigured_module_ids
+<a href=#75 id=75 data-nosnippet>75</a>        .extend(external_credit_targets::get_ids_failing_config_check(conn).<span class="kw">await</span><span class="question-mark">?</span>);
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="prelude-val">Ok</span>(AttentionRules {
+<a href=#77 id=77 data-nosnippet>77</a>        thresholds: StuckThresholds::CURRENT,
+<a href=#78 id=78 data-nosnippet>78</a>        account_linking_since,
+<a href=#79 id=79 data-nosnippet>79</a>        blocking: BlockingProblems {
+<a href=#80 id=80 data-nosnippet>80</a>            stopped_phases,
+<a href=#81 id=81 data-nosnippet>81</a>            failing_course_codes,
+<a href=#82 id=82 data-nosnippet>82</a>            misconfigured_module_ids,
+<a href=#83 id=83 data-nosnippet>83</a>        },
+<a href=#84 id=84 data-nosnippet>84</a>    })
+<a href=#85 id=85 data-nosnippet>85</a>}
 </code></pre></div></section></main></body></html>

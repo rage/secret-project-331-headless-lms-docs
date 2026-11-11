@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","rate_limited","redeem_outbound_handoff","refusal"],"static":["PER_STUDENT_LIMITS"],"struct":["RedeemOutboundHandoffRequest","RedeemedOutboundHandoff"]};

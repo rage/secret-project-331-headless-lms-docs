@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["delete_all_by_user_id","get_by_completion_id","upsert"],"struct":["CompletionRegistrationCreditJustification"]};
+window.SIDEBAR_ITEMS = {"fn":["delete_all_by_user_id","get_by_completion_id","get_by_user_and_moocfi_completion_ids","upsert","upsert_for_moocfi_completion"],"struct":["CompletionRegistrationCreditJustification"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MOOCFI_REPORT_LEASE","MOOCFI_REPORT_LIMIT","MOOCFI_REPORT_OVERDUE_AFTER"],"fn":["claim_next_for_report","get_registration_report","mark_reported","record_report_failure"],"struct":["MoocfiRegistrationReport","MoocfiReportCandidate"]};

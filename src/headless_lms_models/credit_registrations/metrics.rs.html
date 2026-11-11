@@ -41,14 +41,14 @@
 <a href=#41 id=41 data-nosnippet>41</a>        <span class="string">r#"
 <a href=#42 id=42 data-nosnippet>42</a>SELECT COUNT(*) AS "count!"
 <a href=#43 id=43 data-nosnippet>43</a>FROM credit_registrations cr
-<a href=#44 id=44 data-nosnippet>44</a>  JOIN credit_registration_active_course_modules acm ON acm.course_module_id = cr.course_module_id
-<a href=#45 id=45 data-nosnippet>45</a>  JOIN course_module_completions cmc ON cmc.id = cr.course_module_completion_id
+<a href=#44 id=44 data-nosnippet>44</a>  JOIN credit_registration_active_units au ON au.credit_unit_id = cr.credit_unit_id
+<a href=#45 id=45 data-nosnippet>45</a>  JOIN credit_registration_subjects s ON s.subject_id = cr.subject_id
 <a href=#46 id=46 data-nosnippet>46</a>WHERE cr.state = 'no_usable_enrolment'
 <a href=#47 id=47 data-nosnippet>47</a>  AND cr.next_attempt_at &lt;= now()
 <a href=#48 id=48 data-nosnippet>48</a>  AND cr.superseded_by_id IS NULL
 <a href=#49 id=49 data-nosnippet>49</a>  AND cr.deleted_at IS NULL
 <a href=#50 id=50 data-nosnippet>50</a>  AND (
-<a href=#51 id=51 data-nosnippet>51</a>    cmc.register_credits_via_suotar
+<a href=#51 id=51 data-nosnippet>51</a>    s.is_on_pipeline
 <a href=#52 id=52 data-nosnippet>52</a>    OR cr.submitted_at IS NOT NULL
 <a href=#53 id=53 data-nosnippet>53</a>  )
 <a href=#54 id=54 data-nosnippet>54</a>  AND (
@@ -113,604 +113,632 @@
 <a href=#113 id=113 data-nosnippet>113</a>    <span class="kw">pub </span>email: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#114 id=114 data-nosnippet>114</a>    <span class="kw">pub </span>first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#115 id=115 data-nosnippet>115</a>    <span class="kw">pub </span>last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">pub </span>course_id: Uuid,
-<a href=#117 id=117 data-nosnippet>117</a>    <span class="kw">pub </span>course_name: String,
-<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">pub </span>course_module_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#119 id=119 data-nosnippet>119</a>    <span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">pub </span>completion_date: DateTime&lt;Utc&gt;,
-<a href=#121 id=121 data-nosnippet>121</a>    <span class="kw">pub </span>last_visited_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#122 id=122 data-nosnippet>122</a>    <span class="doccomment">/// The last "I have enrolled" press; `None` when the latest check request came from someone else.
-<a href=#123 id=123 data-nosnippet>123</a>    </span><span class="kw">pub </span>last_check_requested_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#124 id=124 data-nosnippet>124</a>    <span class="doccomment">/// The student's standing "I have enrolled" press, which is what makes them Pressed.
-<a href=#125 id=125 data-nosnippet>125</a>    </span><span class="kw">pub </span>pressed_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#126 id=126 data-nosnippet>126</a>}
-<a href=#127 id=127 data-nosnippet>127</a>
-<a href=#128 id=128 data-nosnippet>128</a><span class="doccomment">/// The rows behind [`PendingReasonCounts::student_number_count`] completed on or after `since`,
-<a href=#129 id=129 data-nosnippet>129</a>/// longest waiting first, with how many there are in all.
-<a href=#130 id=130 data-nosnippet>130</a></span><span class="kw">pub async fn </span>get_waiting_for_student_number(
-<a href=#131 id=131 data-nosnippet>131</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#132 id=132 data-nosnippet>132</a>    since: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#133 id=133 data-nosnippet>133</a>    limit: i64,
-<a href=#134 id=134 data-nosnippet>134</a>) -&gt; ModelResult&lt;(Vec&lt;WaitingForStudentNumber&gt;, i64)&gt; {
-<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query!</span>(
-<a href=#136 id=136 data-nosnippet>136</a>        <span class="string">r#"
-<a href=#137 id=137 data-nosnippet>137</a>SELECT cr.id AS credit_registration_id,
-<a href=#138 id=138 data-nosnippet>138</a>  cr.user_id,
-<a href=#139 id=139 data-nosnippet>139</a>  ud.email AS "email?",
-<a href=#140 id=140 data-nosnippet>140</a>  ud.first_name AS "first_name?",
-<a href=#141 id=141 data-nosnippet>141</a>  ud.last_name AS "last_name?",
-<a href=#142 id=142 data-nosnippet>142</a>  cr.course_id,
-<a href=#143 id=143 data-nosnippet>143</a>  c.name AS course_name,
-<a href=#144 id=144 data-nosnippet>144</a>  cm.name AS "course_module_name?",
-<a href=#145 id=145 data-nosnippet>145</a>  cm.uh_course_code AS "uh_course_code?",
-<a href=#146 id=146 data-nosnippet>146</a>  cmc.completion_date,
-<a href=#147 id=147 data-nosnippet>147</a>  sig.last_visited_at AS "last_visited_at?",
-<a href=#148 id=148 data-nosnippet>148</a>  CASE
-<a href=#149 id=149 data-nosnippet>149</a>    WHEN sig.check_request_source = 'student_request' THEN sig.last_check_requested_at
-<a href=#150 id=150 data-nosnippet>150</a>  END AS "last_check_requested_at?",
-<a href=#151 id=151 data-nosnippet>151</a>  route.enrolment_confirmed_at AS "pressed_at?",
-<a href=#152 id=152 data-nosnippet>152</a>  COUNT(*) OVER () AS "total!"
-<a href=#153 id=153 data-nosnippet>153</a>FROM credit_registrations cr
-<a href=#154 id=154 data-nosnippet>154</a>  JOIN credit_registration_preconditions p ON p.credit_registration_id = cr.id
-<a href=#155 id=155 data-nosnippet>155</a>  JOIN course_module_completions cmc ON cmc.id = cr.course_module_completion_id
-<a href=#156 id=156 data-nosnippet>156</a>  AND cmc.deleted_at IS NULL
-<a href=#157 id=157 data-nosnippet>157</a>  JOIN courses c ON c.id = cr.course_id
-<a href=#158 id=158 data-nosnippet>158</a>  AND c.deleted_at IS NULL
-<a href=#159 id=159 data-nosnippet>159</a>  JOIN course_modules cm ON cm.id = cr.course_module_id
-<a href=#160 id=160 data-nosnippet>160</a>  AND cm.deleted_at IS NULL
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">pub </span>course_or_target_id: Uuid,
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="doccomment">/// The course's name, or "mooc.fi: " and the target's name.
+<a href=#118 id=118 data-nosnippet>118</a>    </span><span class="kw">pub </span>course_name: String,
+<a href=#119 id=119 data-nosnippet>119</a>    <span class="kw">pub </span>course_module_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#121 id=121 data-nosnippet>121</a>    <span class="kw">pub </span>completion_date: DateTime&lt;Utc&gt;,
+<a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">pub </span>last_visited_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#123 id=123 data-nosnippet>123</a>    <span class="doccomment">/// The last "I have enrolled" press; `None` when the latest check request came from someone else.
+<a href=#124 id=124 data-nosnippet>124</a>    </span><span class="kw">pub </span>last_check_requested_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="doccomment">/// The student's standing "I have enrolled" press, which is what makes them Pressed.
+<a href=#126 id=126 data-nosnippet>126</a>    </span><span class="kw">pub </span>pressed_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#127 id=127 data-nosnippet>127</a>}
+<a href=#128 id=128 data-nosnippet>128</a>
+<a href=#129 id=129 data-nosnippet>129</a><span class="doccomment">/// The rows behind [`PendingReasonCounts::student_number_count`] completed on or after `since`,
+<a href=#130 id=130 data-nosnippet>130</a>/// longest waiting first, with how many there are in all.
+<a href=#131 id=131 data-nosnippet>131</a></span><span class="kw">pub async fn </span>get_waiting_for_student_number(
+<a href=#132 id=132 data-nosnippet>132</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#133 id=133 data-nosnippet>133</a>    since: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#134 id=134 data-nosnippet>134</a>    limit: i64,
+<a href=#135 id=135 data-nosnippet>135</a>) -&gt; ModelResult&lt;(Vec&lt;WaitingForStudentNumber&gt;, i64)&gt; {
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query!</span>(
+<a href=#137 id=137 data-nosnippet>137</a>        <span class="string">r#"
+<a href=#138 id=138 data-nosnippet>138</a>SELECT cr.id AS credit_registration_id,
+<a href=#139 id=139 data-nosnippet>139</a>  cr.user_id,
+<a href=#140 id=140 data-nosnippet>140</a>  ud.email AS "email?",
+<a href=#141 id=141 data-nosnippet>141</a>  ud.first_name AS "first_name?",
+<a href=#142 id=142 data-nosnippet>142</a>  ud.last_name AS "last_name?",
+<a href=#143 id=143 data-nosnippet>143</a>  COALESCE(cr.course_id, cr.external_credit_target_id) AS "course_or_target_id!",
+<a href=#144 id=144 data-nosnippet>144</a>  COALESCE(c.name, 'mooc.fi: ' || t.name) AS "course_name!",
+<a href=#145 id=145 data-nosnippet>145</a>  cm.name AS "course_module_name?",
+<a href=#146 id=146 data-nosnippet>146</a>  subj.uh_course_code AS "uh_course_code?",
+<a href=#147 id=147 data-nosnippet>147</a>  subj.completion_date AS "completion_date!",
+<a href=#148 id=148 data-nosnippet>148</a>  sig.last_visited_at AS "last_visited_at?",
+<a href=#149 id=149 data-nosnippet>149</a>  CASE
+<a href=#150 id=150 data-nosnippet>150</a>    WHEN sig.check_request_source = 'student_request' THEN sig.last_check_requested_at
+<a href=#151 id=151 data-nosnippet>151</a>  END AS "last_check_requested_at?",
+<a href=#152 id=152 data-nosnippet>152</a>  route.enrolment_confirmed_at AS "pressed_at?",
+<a href=#153 id=153 data-nosnippet>153</a>  COUNT(*) OVER () AS "total!"
+<a href=#154 id=154 data-nosnippet>154</a>FROM credit_registrations cr
+<a href=#155 id=155 data-nosnippet>155</a>  JOIN credit_registration_preconditions p ON p.credit_registration_id = cr.id
+<a href=#156 id=156 data-nosnippet>156</a>  JOIN credit_registration_subjects subj ON subj.subject_id = cr.subject_id
+<a href=#157 id=157 data-nosnippet>157</a>  AND NOT subj.is_withdrawn
+<a href=#158 id=158 data-nosnippet>158</a>  LEFT JOIN courses c ON c.id = cr.course_id
+<a href=#159 id=159 data-nosnippet>159</a>  LEFT JOIN course_modules cm ON cm.id = cr.course_module_id
+<a href=#160 id=160 data-nosnippet>160</a>  LEFT JOIN external_credit_targets t ON t.id = cr.external_credit_target_id
 <a href=#161 id=161 data-nosnippet>161</a>  LEFT JOIN user_details ud ON ud.user_id = cr.user_id
-<a href=#162 id=162 data-nosnippet>162</a>  LEFT JOIN credit_registration_enrolment_check_signals sig ON sig.course_module_completion_id = cr.course_module_completion_id
-<a href=#163 id=163 data-nosnippet>163</a>  AND sig.deleted_at IS NULL
-<a href=#164 id=164 data-nosnippet>164</a>  LEFT JOIN credit_registration_enrolment_routes route ON route.course_module_completion_id = cr.course_module_completion_id
-<a href=#165 id=165 data-nosnippet>165</a>  AND route.deleted_at IS NULL
-<a href=#166 id=166 data-nosnippet>166</a>WHERE cr.state = 'pending'
-<a href=#167 id=167 data-nosnippet>167</a>  AND cr.superseded_by_id IS NULL
-<a href=#168 id=168 data-nosnippet>168</a>  AND cr.deleted_at IS NULL
-<a href=#169 id=169 data-nosnippet>169</a>  AND p.completion_eligible
-<a href=#170 id=170 data-nosnippet>170</a>  AND NOT p.has_verified_student_number
-<a href=#171 id=171 data-nosnippet>171</a>  AND ($1::timestamptz IS NULL OR cmc.completion_date &gt;= $1)
-<a href=#172 id=172 data-nosnippet>172</a>ORDER BY cmc.completion_date,
-<a href=#173 id=173 data-nosnippet>173</a>  cr.id
-<a href=#174 id=174 data-nosnippet>174</a>LIMIT $2
-<a href=#175 id=175 data-nosnippet>175</a>        "#</span>,
-<a href=#176 id=176 data-nosnippet>176</a>        since,
-<a href=#177 id=177 data-nosnippet>177</a>        limit,
-<a href=#178 id=178 data-nosnippet>178</a>    )
-<a href=#179 id=179 data-nosnippet>179</a>    .fetch_all(conn)
-<a href=#180 id=180 data-nosnippet>180</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#181 id=181 data-nosnippet>181</a>    <span class="kw">let </span>total = rows.first().map_or(<span class="number">0</span>, |row| row.total);
-<a href=#182 id=182 data-nosnippet>182</a>    <span class="prelude-val">Ok</span>((
-<a href=#183 id=183 data-nosnippet>183</a>        rows.into_iter()
-<a href=#184 id=184 data-nosnippet>184</a>            .map(|row| WaitingForStudentNumber {
-<a href=#185 id=185 data-nosnippet>185</a>                credit_registration_id: row.credit_registration_id,
-<a href=#186 id=186 data-nosnippet>186</a>                user_id: row.user_id,
-<a href=#187 id=187 data-nosnippet>187</a>                email: row.email,
-<a href=#188 id=188 data-nosnippet>188</a>                first_name: row.first_name,
-<a href=#189 id=189 data-nosnippet>189</a>                last_name: row.last_name,
-<a href=#190 id=190 data-nosnippet>190</a>                course_id: row.course_id,
-<a href=#191 id=191 data-nosnippet>191</a>                course_name: row.course_name,
-<a href=#192 id=192 data-nosnippet>192</a>                course_module_name: row.course_module_name,
-<a href=#193 id=193 data-nosnippet>193</a>                uh_course_code: row.uh_course_code,
-<a href=#194 id=194 data-nosnippet>194</a>                completion_date: row.completion_date,
-<a href=#195 id=195 data-nosnippet>195</a>                last_visited_at: row.last_visited_at,
-<a href=#196 id=196 data-nosnippet>196</a>                last_check_requested_at: row.last_check_requested_at,
-<a href=#197 id=197 data-nosnippet>197</a>                pressed_at: row.pressed_at,
-<a href=#198 id=198 data-nosnippet>198</a>            })
-<a href=#199 id=199 data-nosnippet>199</a>            .collect(),
-<a href=#200 id=200 data-nosnippet>200</a>        total,
-<a href=#201 id=201 data-nosnippet>201</a>    ))
-<a href=#202 id=202 data-nosnippet>202</a>}
-<a href=#203 id=203 data-nosnippet>203</a>
-<a href=#204 id=204 data-nosnippet>204</a><span class="doccomment">/// A student waiting for a student number who pressed "I have enrolled", with what has happened on
-<a href=#205 id=205 data-nosnippet>205</a>/// their course code since.
-<a href=#206 id=206 data-nosnippet>206</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#207 id=207 data-nosnippet>207</a></span><span class="kw">pub struct </span>WaitingPresser {
-<a href=#208 id=208 data-nosnippet>208</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
-<a href=#209 id=209 data-nosnippet>209</a>    <span class="kw">pub </span>user_id: Uuid,
-<a href=#210 id=210 data-nosnippet>210</a>    <span class="kw">pub </span>email: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#211 id=211 data-nosnippet>211</a>    <span class="kw">pub </span>first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#212 id=212 data-nosnippet>212</a>    <span class="kw">pub </span>last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#213 id=213 data-nosnippet>213</a>    <span class="kw">pub </span>course_id: Uuid,
-<a href=#214 id=214 data-nosnippet>214</a>    <span class="kw">pub </span>course_name: String,
-<a href=#215 id=215 data-nosnippet>215</a>    <span class="kw">pub </span>course_module_id: Uuid,
-<a href=#216 id=216 data-nosnippet>216</a>    <span class="kw">pub </span>course_module_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#217 id=217 data-nosnippet>217</a>    <span class="doccomment">/// The module's code now, trimmed.
-<a href=#218 id=218 data-nosnippet>218</a>    </span><span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#219 id=219 data-nosnippet>219</a>    <span class="kw">pub </span>completion_date: DateTime&lt;Utc&gt;,
-<a href=#220 id=220 data-nosnippet>220</a>    <span class="kw">pub </span>pressed_at: DateTime&lt;Utc&gt;,
-<a href=#221 id=221 data-nosnippet>221</a>    <span class="kw">pub </span>enrolment_route: CreditRegistrationEnrolmentRoute,
-<a href=#222 id=222 data-nosnippet>222</a>    <span class="doccomment">/// Linking emails claimed on any course sharing the code since the press. Not attributable to
-<a href=#223 id=223 data-nosnippet>223</a>    /// this student: an email is tied to an account only once its link is used.
-<a href=#224 id=224 data-nosnippet>224</a>    </span><span class="kw">pub </span>linking_emails_on_code_since_press: i64,
-<a href=#225 id=225 data-nosnippet>225</a>    <span class="kw">pub </span>last_linking_email_on_code_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#226 id=226 data-nosnippet>226</a>}
-<a href=#227 id=227 data-nosnippet>227</a>
-<a href=#228 id=228 data-nosnippet>228</a><span class="doccomment">/// Students waiting for a student number who pressed "I have enrolled" and completed on or after
-<a href=#229 id=229 data-nosnippet>229</a>/// `since`, longest waiting first. `credit_registration_id` narrows to one row.
-<a href=#230 id=230 data-nosnippet>230</a></span><span class="kw">pub async fn </span>get_waiting_pressers(
-<a href=#231 id=231 data-nosnippet>231</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#232 id=232 data-nosnippet>232</a>    since: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#233 id=233 data-nosnippet>233</a>    credit_registration_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
-<a href=#234 id=234 data-nosnippet>234</a>) -&gt; ModelResult&lt;Vec&lt;WaitingPresser&gt;&gt; {
-<a href=#235 id=235 data-nosnippet>235</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#236 id=236 data-nosnippet>236</a>        WaitingPresser,
-<a href=#237 id=237 data-nosnippet>237</a>        <span class="string">r#"
-<a href=#238 id=238 data-nosnippet>238</a>SELECT cr.id AS credit_registration_id,
-<a href=#239 id=239 data-nosnippet>239</a>  cr.user_id,
-<a href=#240 id=240 data-nosnippet>240</a>  ud.email AS "email?",
-<a href=#241 id=241 data-nosnippet>241</a>  ud.first_name AS "first_name?",
-<a href=#242 id=242 data-nosnippet>242</a>  ud.last_name AS "last_name?",
-<a href=#243 id=243 data-nosnippet>243</a>  cr.course_id,
-<a href=#244 id=244 data-nosnippet>244</a>  c.name AS course_name,
-<a href=#245 id=245 data-nosnippet>245</a>  cr.course_module_id,
-<a href=#246 id=246 data-nosnippet>246</a>  cm.name AS "course_module_name?",
-<a href=#247 id=247 data-nosnippet>247</a>  NULLIF(TRIM(cm.uh_course_code), '') AS "uh_course_code?",
-<a href=#248 id=248 data-nosnippet>248</a>  cmc.completion_date,
-<a href=#249 id=249 data-nosnippet>249</a>  route.enrolment_confirmed_at AS "pressed_at!",
-<a href=#250 id=250 data-nosnippet>250</a>  route.route AS "enrolment_route: CreditRegistrationEnrolmentRoute",
-<a href=#251 id=251 data-nosnippet>251</a>  emails.count AS "linking_emails_on_code_since_press!",
-<a href=#252 id=252 data-nosnippet>252</a>  emails.last_at AS "last_linking_email_on_code_at?"
-<a href=#253 id=253 data-nosnippet>253</a>FROM credit_registrations cr
-<a href=#254 id=254 data-nosnippet>254</a>  JOIN credit_registration_preconditions p ON p.credit_registration_id = cr.id
-<a href=#255 id=255 data-nosnippet>255</a>  JOIN course_module_completions cmc ON cmc.id = cr.course_module_completion_id
-<a href=#256 id=256 data-nosnippet>256</a>  AND cmc.deleted_at IS NULL
-<a href=#257 id=257 data-nosnippet>257</a>  JOIN courses c ON c.id = cr.course_id
-<a href=#258 id=258 data-nosnippet>258</a>  AND c.deleted_at IS NULL
-<a href=#259 id=259 data-nosnippet>259</a>  JOIN course_modules cm ON cm.id = cr.course_module_id
-<a href=#260 id=260 data-nosnippet>260</a>  AND cm.deleted_at IS NULL
-<a href=#261 id=261 data-nosnippet>261</a>  JOIN credit_registration_enrolment_routes route ON route.course_module_completion_id = cr.course_module_completion_id
-<a href=#262 id=262 data-nosnippet>262</a>  AND route.deleted_at IS NULL
-<a href=#263 id=263 data-nosnippet>263</a>  AND route.enrolment_confirmed_at IS NOT NULL
-<a href=#264 id=264 data-nosnippet>264</a>  LEFT JOIN user_details ud ON ud.user_id = cr.user_id
-<a href=#265 id=265 data-nosnippet>265</a>  CROSS JOIN LATERAL (
-<a href=#266 id=266 data-nosnippet>266</a>    SELECT COUNT(*) AS count,
-<a href=#267 id=267 data-nosnippet>267</a>      MAX(e.sent_at) AS last_at
-<a href=#268 id=268 data-nosnippet>268</a>    FROM credit_registration_account_linking_emails e
-<a href=#269 id=269 data-nosnippet>269</a>      JOIN course_modules code_module ON code_module.course_id = e.course_id
-<a href=#270 id=270 data-nosnippet>270</a>      AND code_module.deleted_at IS NULL
-<a href=#271 id=271 data-nosnippet>271</a>    WHERE TRIM(code_module.uh_course_code) = TRIM(cm.uh_course_code)
-<a href=#272 id=272 data-nosnippet>272</a>      AND e.sent_at &gt;= route.enrolment_confirmed_at
-<a href=#273 id=273 data-nosnippet>273</a>      AND e.deleted_at IS NULL
-<a href=#274 id=274 data-nosnippet>274</a>  ) emails
-<a href=#275 id=275 data-nosnippet>275</a>WHERE cr.state = 'pending'
-<a href=#276 id=276 data-nosnippet>276</a>  AND cr.superseded_by_id IS NULL
-<a href=#277 id=277 data-nosnippet>277</a>  AND cr.deleted_at IS NULL
-<a href=#278 id=278 data-nosnippet>278</a>  AND p.completion_eligible
-<a href=#279 id=279 data-nosnippet>279</a>  AND NOT p.has_verified_student_number
-<a href=#280 id=280 data-nosnippet>280</a>  AND ($1::timestamptz IS NULL OR cmc.completion_date &gt;= $1)
-<a href=#281 id=281 data-nosnippet>281</a>  AND ($2::uuid IS NULL OR cr.id = $2)
-<a href=#282 id=282 data-nosnippet>282</a>ORDER BY route.enrolment_confirmed_at,
-<a href=#283 id=283 data-nosnippet>283</a>  cr.id
-<a href=#284 id=284 data-nosnippet>284</a>        "#</span>,
-<a href=#285 id=285 data-nosnippet>285</a>        since,
-<a href=#286 id=286 data-nosnippet>286</a>        credit_registration_id,
-<a href=#287 id=287 data-nosnippet>287</a>    )
-<a href=#288 id=288 data-nosnippet>288</a>    .fetch_all(conn)
-<a href=#289 id=289 data-nosnippet>289</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#290 id=290 data-nosnippet>290</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#291 id=291 data-nosnippet>291</a>}
-<a href=#292 id=292 data-nosnippet>292</a>
-<a href=#293 id=293 data-nosnippet>293</a><span class="doccomment">/// Live rows carrying an error code, split by whether the pipeline is still working on them.
-<a href=#294 id=294 data-nosnippet>294</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#295 id=295 data-nosnippet>295</a></span><span class="kw">pub struct </span>CreditRegistrationErrorCodeCount {
-<a href=#296 id=296 data-nosnippet>296</a>    <span class="kw">pub </span>error_code: CreditRegistrationErrorCode,
-<a href=#297 id=297 data-nosnippet>297</a>    <span class="doccomment">/// Every live row carrying the code: what the Registrations list filtered by it shows.
-<a href=#298 id=298 data-nosnippet>298</a>    </span><span class="kw">pub </span>live_count: i64,
-<a href=#299 id=299 data-nosnippet>299</a>    <span class="kw">pub </span>in_flight_count: i64,
-<a href=#300 id=300 data-nosnippet>300</a>    <span class="kw">pub </span>terminal_failure_count: i64,
-<a href=#301 id=301 data-nosnippet>301</a>}
-<a href=#302 id=302 data-nosnippet>302</a>
-<a href=#303 id=303 data-nosnippet>303</a><span class="doccomment">/// The error-code breakdown the Overview shows.
-<a href=#304 id=304 data-nosnippet>304</a></span><span class="kw">pub async fn </span>count_by_error_code(
-<a href=#305 id=305 data-nosnippet>305</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#306 id=306 data-nosnippet>306</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistrationErrorCodeCount&gt;&gt; {
-<a href=#307 id=307 data-nosnippet>307</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query!</span>(
-<a href=#308 id=308 data-nosnippet>308</a>        <span class="string">r#"
-<a href=#309 id=309 data-nosnippet>309</a>SELECT error_code AS "error_code!",
-<a href=#310 id=310 data-nosnippet>310</a>  COUNT(*) AS "live_count!",
-<a href=#311 id=311 data-nosnippet>311</a>  COUNT(*) FILTER (WHERE terminal_at IS NULL) AS "in_flight_count!",
-<a href=#312 id=312 data-nosnippet>312</a>  COUNT(*) FILTER (
-<a href=#313 id=313 data-nosnippet>313</a>    WHERE state = ANY($1::credit_registration_state [])
-<a href=#314 id=314 data-nosnippet>314</a>  ) AS "terminal_failure_count!"
-<a href=#315 id=315 data-nosnippet>315</a>FROM credit_registrations
-<a href=#316 id=316 data-nosnippet>316</a>WHERE error_code IS NOT NULL
-<a href=#317 id=317 data-nosnippet>317</a>  AND superseded_by_id IS NULL
-<a href=#318 id=318 data-nosnippet>318</a>  AND deleted_at IS NULL
-<a href=#319 id=319 data-nosnippet>319</a>GROUP BY error_code
-<a href=#320 id=320 data-nosnippet>320</a>ORDER BY COUNT(*) DESC
-<a href=#321 id=321 data-nosnippet>321</a>        "#</span>,
-<a href=#322 id=322 data-nosnippet>322</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::HARD_FAILURE_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#323 id=323 data-nosnippet>323</a>    )
-<a href=#324 id=324 data-nosnippet>324</a>    .fetch_all(conn)
-<a href=#325 id=325 data-nosnippet>325</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#326 id=326 data-nosnippet>326</a>    <span class="prelude-val">Ok</span>(rows
-<a href=#327 id=327 data-nosnippet>327</a>        .into_iter()
-<a href=#328 id=328 data-nosnippet>328</a>        .map(|row| CreditRegistrationErrorCodeCount {
-<a href=#329 id=329 data-nosnippet>329</a>            error_code: row.error_code,
-<a href=#330 id=330 data-nosnippet>330</a>            live_count: row.live_count,
-<a href=#331 id=331 data-nosnippet>331</a>            in_flight_count: row.in_flight_count,
-<a href=#332 id=332 data-nosnippet>332</a>            terminal_failure_count: row.terminal_failure_count,
-<a href=#333 id=333 data-nosnippet>333</a>        })
-<a href=#334 id=334 data-nosnippet>334</a>        .collect())
-<a href=#335 id=335 data-nosnippet>335</a>}
-<a href=#336 id=336 data-nosnippet>336</a>
-<a href=#337 id=337 data-nosnippet>337</a><span class="doccomment">/// The row that has been waiting longest for the pipeline to do something with it.
-<a href=#338 id=338 data-nosnippet>338</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#339 id=339 data-nosnippet>339</a></span><span class="kw">pub struct </span>OldestNonTerminalRegistration {
-<a href=#340 id=340 data-nosnippet>340</a>    <span class="kw">pub </span>id: Uuid,
-<a href=#341 id=341 data-nosnippet>341</a>    <span class="kw">pub </span>state: CreditRegistrationState,
-<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">pub </span>state_changed_at: DateTime&lt;Utc&gt;,
-<a href=#343 id=343 data-nosnippet>343</a>}
-<a href=#344 id=344 data-nosnippet>344</a>
-<a href=#345 id=345 data-nosnippet>345</a><span class="kw">pub async fn </span>get_oldest_non_terminal(
-<a href=#346 id=346 data-nosnippet>346</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#347 id=347 data-nosnippet>347</a>) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;OldestNonTerminalRegistration&gt;&gt; {
-<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query_as!</span>(
-<a href=#349 id=349 data-nosnippet>349</a>        OldestNonTerminalRegistration,
-<a href=#350 id=350 data-nosnippet>350</a>        <span class="string">r#"
-<a href=#351 id=351 data-nosnippet>351</a>SELECT id,
-<a href=#352 id=352 data-nosnippet>352</a>  state,
-<a href=#353 id=353 data-nosnippet>353</a>  state_changed_at
-<a href=#354 id=354 data-nosnippet>354</a>FROM credit_registrations
-<a href=#355 id=355 data-nosnippet>355</a>WHERE terminal_at IS NULL
-<a href=#356 id=356 data-nosnippet>356</a>  AND superseded_by_id IS NULL
-<a href=#357 id=357 data-nosnippet>357</a>  AND deleted_at IS NULL
-<a href=#358 id=358 data-nosnippet>358</a>ORDER BY state_changed_at
-<a href=#359 id=359 data-nosnippet>359</a>LIMIT 1
-<a href=#360 id=360 data-nosnippet>360</a>        "#</span>,
-<a href=#361 id=361 data-nosnippet>361</a>    )
-<a href=#362 id=362 data-nosnippet>362</a>    .fetch_optional(conn)
-<a href=#363 id=363 data-nosnippet>363</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#364 id=364 data-nosnippet>364</a>    <span class="prelude-val">Ok</span>(row)
-<a href=#365 id=365 data-nosnippet>365</a>}
-<a href=#366 id=366 data-nosnippet>366</a>
-<a href=#367 id=367 data-nosnippet>367</a><span class="doccomment">/// One day of terminal outcomes, for the throughput series.
-<a href=#368 id=368 data-nosnippet>368</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#369 id=369 data-nosnippet>369</a></span><span class="kw">pub struct </span>CreditRegistrationThroughputDay {
-<a href=#370 id=370 data-nosnippet>370</a>    <span class="kw">pub </span>day: DateTime&lt;Utc&gt;,
-<a href=#371 id=371 data-nosnippet>371</a>    <span class="kw">pub </span>registered_count: i64,
-<a href=#372 id=372 data-nosnippet>372</a>    <span class="kw">pub </span>other_success_count: i64,
-<a href=#373 id=373 data-nosnippet>373</a>    <span class="kw">pub </span>failed_count: i64,
-<a href=#374 id=374 data-nosnippet>374</a>}
-<a href=#375 id=375 data-nosnippet>375</a>
-<a href=#376 id=376 data-nosnippet>376</a><span class="doccomment">/// Daily terminal outcomes over the window. Withdrawn rows are in no column: they are neither a
-<a href=#377 id=377 data-nosnippet>377</a>/// success nor a failure.
-<a href=#378 id=378 data-nosnippet>378</a></span><span class="kw">pub async fn </span>get_throughput_by_day(
-<a href=#379 id=379 data-nosnippet>379</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#380 id=380 data-nosnippet>380</a>    since: DateTime&lt;Utc&gt;,
-<a href=#381 id=381 data-nosnippet>381</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistrationThroughputDay&gt;&gt; {
-<a href=#382 id=382 data-nosnippet>382</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
-<a href=#383 id=383 data-nosnippet>383</a>        CreditRegistrationThroughputDay,
-<a href=#384 id=384 data-nosnippet>384</a>        <span class="string">r#"
-<a href=#385 id=385 data-nosnippet>385</a>SELECT DATE_TRUNC('day', terminal_at) AS "day!",
-<a href=#386 id=386 data-nosnippet>386</a>  COUNT(*) FILTER (WHERE state = 'registered') AS "registered_count!",
-<a href=#387 id=387 data-nosnippet>387</a>  COUNT(*) FILTER (
-<a href=#388 id=388 data-nosnippet>388</a>    WHERE state = ANY($2::credit_registration_state [])
-<a href=#389 id=389 data-nosnippet>389</a>  ) AS "other_success_count!",
-<a href=#390 id=390 data-nosnippet>390</a>  COUNT(*) FILTER (WHERE state = 'failed_permanent') AS "failed_count!"
-<a href=#391 id=391 data-nosnippet>391</a>FROM credit_registrations
-<a href=#392 id=392 data-nosnippet>392</a>WHERE terminal_at &gt;= $1
-<a href=#393 id=393 data-nosnippet>393</a>  AND superseded_by_id IS NULL
-<a href=#394 id=394 data-nosnippet>394</a>  AND deleted_at IS NULL
-<a href=#395 id=395 data-nosnippet>395</a>GROUP BY 1
-<a href=#396 id=396 data-nosnippet>396</a>ORDER BY 1
-<a href=#397 id=397 data-nosnippet>397</a>        "#</span>,
-<a href=#398 id=398 data-nosnippet>398</a>        since,
-<a href=#399 id=399 data-nosnippet>399</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::OTHER_SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#400 id=400 data-nosnippet>400</a>    )
-<a href=#401 id=401 data-nosnippet>401</a>    .fetch_all(conn)
-<a href=#402 id=402 data-nosnippet>402</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#403 id=403 data-nosnippet>403</a>    <span class="prelude-val">Ok</span>(rows)
-<a href=#404 id=404 data-nosnippet>404</a>}
-<a href=#405 id=405 data-nosnippet>405</a>
-<a href=#406 id=406 data-nosnippet>406</a><span class="doccomment">/// What the pipeline finished in a window.
-<a href=#407 id=407 data-nosnippet>407</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, Default)]
-<a href=#408 id=408 data-nosnippet>408</a></span><span class="kw">pub struct </span>TerminalOutcomeTotals {
-<a href=#409 id=409 data-nosnippet>409</a>    <span class="doccomment">/// `registered`, `duplicate` and `not_improved`.
-<a href=#410 id=410 data-nosnippet>410</a>    </span><span class="kw">pub </span>success_count: i64,
-<a href=#411 id=411 data-nosnippet>411</a>    <span class="doccomment">/// The subset we put in the registry ourselves.
-<a href=#412 id=412 data-nosnippet>412</a>    </span><span class="kw">pub </span>registered_count: i64,
-<a href=#413 id=413 data-nosnippet>413</a>    <span class="kw">pub </span>failed_permanent_count: i64,
-<a href=#414 id=414 data-nosnippet>414</a>    <span class="kw">pub </span>cancelled_count: i64,
-<a href=#415 id=415 data-nosnippet>415</a>    <span class="doccomment">/// The denominator of the success rate.
-<a href=#416 id=416 data-nosnippet>416</a>    </span><span class="kw">pub </span>total_count: i64,
-<a href=#417 id=417 data-nosnippet>417</a>}
-<a href=#418 id=418 data-nosnippet>418</a>
-<a href=#419 id=419 data-nosnippet>419</a><span class="kw">pub async fn </span>count_terminal_outcomes_since(
-<a href=#420 id=420 data-nosnippet>420</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#421 id=421 data-nosnippet>421</a>    since: DateTime&lt;Utc&gt;,
-<a href=#422 id=422 data-nosnippet>422</a>) -&gt; ModelResult&lt;TerminalOutcomeTotals&gt; {
-<a href=#423 id=423 data-nosnippet>423</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#424 id=424 data-nosnippet>424</a>        TerminalOutcomeTotals,
-<a href=#425 id=425 data-nosnippet>425</a>        <span class="string">r#"
-<a href=#426 id=426 data-nosnippet>426</a>SELECT COUNT(*) FILTER (
-<a href=#427 id=427 data-nosnippet>427</a>    WHERE state = ANY($2::credit_registration_state [])
-<a href=#428 id=428 data-nosnippet>428</a>  ) AS "success_count!",
-<a href=#429 id=429 data-nosnippet>429</a>  COUNT(*) FILTER (WHERE state = 'registered') AS "registered_count!",
-<a href=#430 id=430 data-nosnippet>430</a>  COUNT(*) FILTER (WHERE state = 'failed_permanent') AS "failed_permanent_count!",
-<a href=#431 id=431 data-nosnippet>431</a>  COUNT(*) FILTER (WHERE state = 'cancelled') AS "cancelled_count!",
-<a href=#432 id=432 data-nosnippet>432</a>  COUNT(*) AS "total_count!"
-<a href=#433 id=433 data-nosnippet>433</a>FROM credit_registrations
-<a href=#434 id=434 data-nosnippet>434</a>WHERE terminal_at &gt;= $1
-<a href=#435 id=435 data-nosnippet>435</a>  AND superseded_by_id IS NULL
-<a href=#436 id=436 data-nosnippet>436</a>  AND deleted_at IS NULL
-<a href=#437 id=437 data-nosnippet>437</a>        "#</span>,
-<a href=#438 id=438 data-nosnippet>438</a>        since,
-<a href=#439 id=439 data-nosnippet>439</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#440 id=440 data-nosnippet>440</a>    )
-<a href=#441 id=441 data-nosnippet>441</a>    .fetch_one(conn)
-<a href=#442 id=442 data-nosnippet>442</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#443 id=443 data-nosnippet>443</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#444 id=444 data-nosnippet>444</a>}
-<a href=#445 id=445 data-nosnippet>445</a>
-<a href=#446 id=446 data-nosnippet>446</a><span class="doccomment">/// Live rows that entered one state within the window. `misregistered` is not terminal, so
-<a href=#447 id=447 data-nosnippet>447</a>/// `terminal_at` cannot answer this.
-<a href=#448 id=448 data-nosnippet>448</a></span><span class="kw">pub async fn </span>count_entered_state_since(
-<a href=#449 id=449 data-nosnippet>449</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#450 id=450 data-nosnippet>450</a>    state: CreditRegistrationState,
-<a href=#451 id=451 data-nosnippet>451</a>    since: DateTime&lt;Utc&gt;,
-<a href=#452 id=452 data-nosnippet>452</a>) -&gt; ModelResult&lt;i64&gt; {
-<a href=#453 id=453 data-nosnippet>453</a>    <span class="kw">let </span>count = <span class="macro">sqlx::query_scalar!</span>(
-<a href=#454 id=454 data-nosnippet>454</a>        <span class="string">r#"
-<a href=#455 id=455 data-nosnippet>455</a>SELECT COUNT(*) AS "count!"
-<a href=#456 id=456 data-nosnippet>456</a>FROM credit_registrations
-<a href=#457 id=457 data-nosnippet>457</a>WHERE state = $1
-<a href=#458 id=458 data-nosnippet>458</a>  AND state_changed_at &gt;= $2
-<a href=#459 id=459 data-nosnippet>459</a>  AND superseded_by_id IS NULL
-<a href=#460 id=460 data-nosnippet>460</a>  AND deleted_at IS NULL
-<a href=#461 id=461 data-nosnippet>461</a>        "#</span>,
-<a href=#462 id=462 data-nosnippet>462</a>        state <span class="kw">as </span>CreditRegistrationState,
-<a href=#463 id=463 data-nosnippet>463</a>        since,
-<a href=#464 id=464 data-nosnippet>464</a>    )
-<a href=#465 id=465 data-nosnippet>465</a>    .fetch_one(conn)
-<a href=#466 id=466 data-nosnippet>466</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#467 id=467 data-nosnippet>467</a>    <span class="prelude-val">Ok</span>(count)
-<a href=#468 id=468 data-nosnippet>468</a>}
-<a href=#469 id=469 data-nosnippet>469</a>
-<a href=#470 id=470 data-nosnippet>470</a><span class="doccomment">/// How long registration took, in seconds, for rows that reached `registered` in a window.
-<a href=#471 id=471 data-nosnippet>471</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#472 id=472 data-nosnippet>472</a></span><span class="kw">pub struct </span>RegistrationLatency {
-<a href=#473 id=473 data-nosnippet>473</a>    <span class="kw">pub </span>registered_count: i64,
-<a href=#474 id=474 data-nosnippet>474</a>    <span class="doccomment">/// `terminal_at - created_at`: the student's wait, most of which is theirs to end.
-<a href=#475 id=475 data-nosnippet>475</a>    </span><span class="kw">pub </span>p50_end_to_end_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#476 id=476 data-nosnippet>476</a>    <span class="kw">pub </span>p95_end_to_end_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#477 id=477 data-nosnippet>477</a>    <span class="doccomment">/// `registered_at - submitted_at`: how long the study registry took, which is the number to
-<a href=#478 id=478 data-nosnippet>478</a>    /// quote at them.
-<a href=#479 id=479 data-nosnippet>479</a>    </span><span class="kw">pub </span>p50_confirmation_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#480 id=480 data-nosnippet>480</a>    <span class="kw">pub </span>p95_confirmation_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#481 id=481 data-nosnippet>481</a>}
-<a href=#482 id=482 data-nosnippet>482</a>
-<a href=#483 id=483 data-nosnippet>483</a><span class="kw">pub async fn </span>get_registration_latency_between(
-<a href=#484 id=484 data-nosnippet>484</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#485 id=485 data-nosnippet>485</a>    from: DateTime&lt;Utc&gt;,
-<a href=#486 id=486 data-nosnippet>486</a>    to: DateTime&lt;Utc&gt;,
-<a href=#487 id=487 data-nosnippet>487</a>) -&gt; ModelResult&lt;RegistrationLatency&gt; {
-<a href=#488 id=488 data-nosnippet>488</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#489 id=489 data-nosnippet>489</a>        RegistrationLatency,
-<a href=#490 id=490 data-nosnippet>490</a>        <span class="string">r#"
-<a href=#491 id=491 data-nosnippet>491</a>SELECT COUNT(*) AS "registered_count!",
-<a href=#492 id=492 data-nosnippet>492</a>  CEIL(
-<a href=#493 id=493 data-nosnippet>493</a>    EXTRACT(
-<a href=#494 id=494 data-nosnippet>494</a>      EPOCH
-<a href=#495 id=495 data-nosnippet>495</a>      FROM PERCENTILE_DISC(0.5) WITHIN GROUP (
-<a href=#496 id=496 data-nosnippet>496</a>          ORDER BY terminal_at - created_at
-<a href=#497 id=497 data-nosnippet>497</a>        )
-<a href=#498 id=498 data-nosnippet>498</a>    )
-<a href=#499 id=499 data-nosnippet>499</a>  )::bigint AS "p50_end_to_end_secs",
-<a href=#500 id=500 data-nosnippet>500</a>  CEIL(
-<a href=#501 id=501 data-nosnippet>501</a>    EXTRACT(
-<a href=#502 id=502 data-nosnippet>502</a>      EPOCH
-<a href=#503 id=503 data-nosnippet>503</a>      FROM PERCENTILE_DISC(0.95) WITHIN GROUP (
-<a href=#504 id=504 data-nosnippet>504</a>          ORDER BY terminal_at - created_at
-<a href=#505 id=505 data-nosnippet>505</a>        )
-<a href=#506 id=506 data-nosnippet>506</a>    )
-<a href=#507 id=507 data-nosnippet>507</a>  )::bigint AS "p95_end_to_end_secs",
-<a href=#508 id=508 data-nosnippet>508</a>  CEIL(
-<a href=#509 id=509 data-nosnippet>509</a>    EXTRACT(
-<a href=#510 id=510 data-nosnippet>510</a>      EPOCH
-<a href=#511 id=511 data-nosnippet>511</a>      FROM PERCENTILE_DISC(0.5) WITHIN GROUP (
-<a href=#512 id=512 data-nosnippet>512</a>          ORDER BY registered_at - submitted_at
-<a href=#513 id=513 data-nosnippet>513</a>        )
-<a href=#514 id=514 data-nosnippet>514</a>    )
-<a href=#515 id=515 data-nosnippet>515</a>  )::bigint AS "p50_confirmation_secs",
-<a href=#516 id=516 data-nosnippet>516</a>  CEIL(
-<a href=#517 id=517 data-nosnippet>517</a>    EXTRACT(
-<a href=#518 id=518 data-nosnippet>518</a>      EPOCH
-<a href=#519 id=519 data-nosnippet>519</a>      FROM PERCENTILE_DISC(0.95) WITHIN GROUP (
-<a href=#520 id=520 data-nosnippet>520</a>          ORDER BY registered_at - submitted_at
-<a href=#521 id=521 data-nosnippet>521</a>        )
-<a href=#522 id=522 data-nosnippet>522</a>    )
-<a href=#523 id=523 data-nosnippet>523</a>  )::bigint AS "p95_confirmation_secs"
-<a href=#524 id=524 data-nosnippet>524</a>FROM credit_registrations
-<a href=#525 id=525 data-nosnippet>525</a>WHERE state = 'registered'
-<a href=#526 id=526 data-nosnippet>526</a>  AND terminal_at &gt;= $1
-<a href=#527 id=527 data-nosnippet>527</a>  AND terminal_at &lt; $2
-<a href=#528 id=528 data-nosnippet>528</a>  AND superseded_by_id IS NULL
-<a href=#529 id=529 data-nosnippet>529</a>  AND deleted_at IS NULL
-<a href=#530 id=530 data-nosnippet>530</a>        "#</span>,
-<a href=#531 id=531 data-nosnippet>531</a>        from,
-<a href=#532 id=532 data-nosnippet>532</a>        to,
-<a href=#533 id=533 data-nosnippet>533</a>    )
-<a href=#534 id=534 data-nosnippet>534</a>    .fetch_one(conn)
-<a href=#535 id=535 data-nosnippet>535</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#536 id=536 data-nosnippet>536</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#537 id=537 data-nosnippet>537</a>}
-<a href=#538 id=538 data-nosnippet>538</a>
-<a href=#539 id=539 data-nosnippet>539</a><span class="doccomment">/// Live volumes per course module, for the Courses tab's one row per module.
-<a href=#540 id=540 data-nosnippet>540</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#541 id=541 data-nosnippet>541</a></span><span class="kw">pub struct </span>ModuleRegistrationTotals {
-<a href=#542 id=542 data-nosnippet>542</a>    <span class="kw">pub </span>course_module_id: Uuid,
-<a href=#543 id=543 data-nosnippet>543</a>    <span class="kw">pub </span>total_count: i64,
-<a href=#544 id=544 data-nosnippet>544</a>    <span class="kw">pub </span>success_count: i64,
-<a href=#545 id=545 data-nosnippet>545</a>    <span class="doccomment">/// Of `success_count`, the ones we registered.
-<a href=#546 id=546 data-nosnippet>546</a>    </span><span class="kw">pub </span>registered_count: i64,
-<a href=#547 id=547 data-nosnippet>547</a>    <span class="doccomment">/// Of `success_count`, the ones Sisu already held: duplicate or not improved.
-<a href=#548 id=548 data-nosnippet>548</a>    </span><span class="kw">pub </span>already_in_sisu_count: i64,
-<a href=#549 id=549 data-nosnippet>549</a>    <span class="kw">pub </span>in_flight_count: i64,
-<a href=#550 id=550 data-nosnippet>550</a>    <span class="kw">pub </span>failed_count: i64,
-<a href=#551 id=551 data-nosnippet>551</a>    <span class="kw">pub </span>last_registered_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#552 id=552 data-nosnippet>552</a>    <span class="doccomment">/// The code most of the module's failing rows carry, which is usually the whole diagnosis.
-<a href=#553 id=553 data-nosnippet>553</a>    </span><span class="kw">pub </span>top_error_code: <span class="prelude-ty">Option</span>&lt;CreditRegistrationErrorCode&gt;,
-<a href=#554 id=554 data-nosnippet>554</a>}
-<a href=#555 id=555 data-nosnippet>555</a>
-<a href=#556 id=556 data-nosnippet>556</a><span class="doccomment">/// `failed_count` is `failed_permanent` and `misregistered` only, so the columns do not add up to
-<a href=#557 id=557 data-nosnippet>557</a>/// the total by design.
-<a href=#558 id=558 data-nosnippet>558</a></span><span class="kw">pub async fn </span>count_by_module(
-<a href=#559 id=559 data-nosnippet>559</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#560 id=560 data-nosnippet>560</a>) -&gt; ModelResult&lt;Vec&lt;ModuleRegistrationTotals&gt;&gt; {
-<a href=#561 id=561 data-nosnippet>561</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#562 id=562 data-nosnippet>562</a>        ModuleRegistrationTotals,
-<a href=#563 id=563 data-nosnippet>563</a>        <span class="string">r#"
-<a href=#564 id=564 data-nosnippet>564</a>SELECT cr.course_module_id,
-<a href=#565 id=565 data-nosnippet>565</a>  COUNT(*) AS "total_count!",
-<a href=#566 id=566 data-nosnippet>566</a>  COUNT(*) FILTER (
-<a href=#567 id=567 data-nosnippet>567</a>    WHERE cr.state = ANY($1::credit_registration_state [])
-<a href=#568 id=568 data-nosnippet>568</a>  ) AS "success_count!",
-<a href=#569 id=569 data-nosnippet>569</a>  COUNT(*) FILTER (WHERE cr.state = 'registered') AS "registered_count!",
-<a href=#570 id=570 data-nosnippet>570</a>  COUNT(*) FILTER (
-<a href=#571 id=571 data-nosnippet>571</a>    WHERE cr.state = ANY($3::credit_registration_state [])
-<a href=#572 id=572 data-nosnippet>572</a>  ) AS "already_in_sisu_count!",
-<a href=#573 id=573 data-nosnippet>573</a>  COUNT(*) FILTER (WHERE cr.terminal_at IS NULL) AS "in_flight_count!",
-<a href=#574 id=574 data-nosnippet>574</a>  COUNT(*) FILTER (
-<a href=#575 id=575 data-nosnippet>575</a>    WHERE cr.state = ANY($2::credit_registration_state [])
-<a href=#576 id=576 data-nosnippet>576</a>  ) AS "failed_count!",
-<a href=#577 id=577 data-nosnippet>577</a>  MAX(cr.registered_at) AS "last_registered_at",
-<a href=#578 id=578 data-nosnippet>578</a>  (
-<a href=#579 id=579 data-nosnippet>579</a>    SELECT inner_cr.error_code
-<a href=#580 id=580 data-nosnippet>580</a>    FROM credit_registrations inner_cr
-<a href=#581 id=581 data-nosnippet>581</a>    WHERE inner_cr.course_module_id = cr.course_module_id
-<a href=#582 id=582 data-nosnippet>582</a>      AND inner_cr.error_code IS NOT NULL
-<a href=#583 id=583 data-nosnippet>583</a>      AND inner_cr.superseded_by_id IS NULL
-<a href=#584 id=584 data-nosnippet>584</a>      AND inner_cr.deleted_at IS NULL
-<a href=#585 id=585 data-nosnippet>585</a>    GROUP BY inner_cr.error_code
-<a href=#586 id=586 data-nosnippet>586</a>    ORDER BY COUNT(*) DESC,
-<a href=#587 id=587 data-nosnippet>587</a>      inner_cr.error_code
-<a href=#588 id=588 data-nosnippet>588</a>    LIMIT 1
-<a href=#589 id=589 data-nosnippet>589</a>  ) AS "top_error_code?: CreditRegistrationErrorCode"
-<a href=#590 id=590 data-nosnippet>590</a>FROM credit_registrations cr
-<a href=#591 id=591 data-nosnippet>591</a>WHERE superseded_by_id IS NULL
-<a href=#592 id=592 data-nosnippet>592</a>  AND deleted_at IS NULL
-<a href=#593 id=593 data-nosnippet>593</a>GROUP BY cr.course_module_id
-<a href=#594 id=594 data-nosnippet>594</a>        "#</span>,
-<a href=#595 id=595 data-nosnippet>595</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#596 id=596 data-nosnippet>596</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::HARD_FAILURE_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#597 id=597 data-nosnippet>597</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::OTHER_SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#598 id=598 data-nosnippet>598</a>    )
-<a href=#599 id=599 data-nosnippet>599</a>    .fetch_all(conn)
-<a href=#600 id=600 data-nosnippet>600</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#601 id=601 data-nosnippet>601</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#602 id=602 data-nosnippet>602</a>}
-<a href=#603 id=603 data-nosnippet>603</a>
-<a href=#604 id=604 data-nosnippet>604</a><span class="doccomment">/// How long a row may sit in one state before it counts as stuck. Seconds, per state.
-<a href=#605 id=605 data-nosnippet>605</a>///
-<a href=#606 id=606 data-nosnippet>606</a>/// Also the wire payload the health endpoint reports as thresholds: field names are the
-<a href=#607 id=607 data-nosnippet>607</a>/// `stuck_*_secs` keys the frontend reads, so do not rename without updating it.
-<a href=#608 id=608 data-nosnippet>608</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, ToSchema)]
-<a href=#609 id=609 data-nosnippet>609</a></span><span class="kw">pub struct </span>StuckThresholds {
-<a href=#610 id=610 data-nosnippet>610</a>    <span class="kw">pub </span>stuck_ready_to_submit_secs: i64,
-<a href=#611 id=611 data-nosnippet>611</a>    <span class="kw">pub </span>stuck_submitting_secs: i64,
-<a href=#612 id=612 data-nosnippet>612</a>    <span class="kw">pub </span>stuck_awaiting_verification_secs: i64,
-<a href=#613 id=613 data-nosnippet>613</a>    <span class="kw">pub </span>stuck_failed_retryable_secs: i64,
-<a href=#614 id=614 data-nosnippet>614</a>}
-<a href=#615 id=615 data-nosnippet>615</a>
-<a href=#616 id=616 data-nosnippet>616</a><span class="doccomment">/// The longest `submissionPending` asks verify to wait before polling again.
-<a href=#617 id=617 data-nosnippet>617</a></span><span class="kw">const </span>SUOTAR_PENDING_WAIT: TimeDelta = TimeDelta::days(<span class="number">1</span>);
-<a href=#618 id=618 data-nosnippet>618</a>
-<a href=#619 id=619 data-nosnippet>619</a><span class="kw">impl </span>StuckThresholds {
-<a href=#620 id=620 data-nosnippet>620</a>    <span class="doccomment">/// The thresholds every detector and alert uses.
-<a href=#621 id=621 data-nosnippet>621</a>    </span><span class="kw">pub const </span>CURRENT: <span class="self">Self </span>= <span class="self">Self </span>{
-<a href=#622 id=622 data-nosnippet>622</a>        stuck_ready_to_submit_secs: <span class="number">2 </span>* <span class="number">60 </span>* <span class="number">60</span>,
-<a href=#623 id=623 data-nosnippet>623</a>        stuck_submitting_secs: <span class="number">90 </span>* <span class="number">60</span>,
-<a href=#624 id=624 data-nosnippet>624</a>        stuck_awaiting_verification_secs: SUOTAR_PENDING_WAIT.num_seconds() + <span class="number">2 </span>* <span class="number">60 </span>* <span class="number">60</span>,
-<a href=#625 id=625 data-nosnippet>625</a>        stuck_failed_retryable_secs: <span class="number">3 </span>* <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60</span>,
-<a href=#626 id=626 data-nosnippet>626</a>    };
-<a href=#627 id=627 data-nosnippet>627</a>
-<a href=#628 id=628 data-nosnippet>628</a>    <span class="doccomment">/// The threshold for `state`, or `None` for a state that waits on a student or a person.
-<a href=#629 id=629 data-nosnippet>629</a>    </span><span class="kw">pub fn </span>seconds_for(<span class="kw-2">&amp;</span><span class="self">self</span>, state: CreditRegistrationState) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt; {
-<a href=#630 id=630 data-nosnippet>630</a>        <span class="kw">let </span>(states, seconds) = <span class="self">self</span>.state_seconds_arrays();
-<a href=#631 id=631 data-nosnippet>631</a>        states
-<a href=#632 id=632 data-nosnippet>632</a>            .iter()
-<a href=#633 id=633 data-nosnippet>633</a>            .position(|candidate| <span class="kw-2">*</span>candidate == state)
-<a href=#634 id=634 data-nosnippet>634</a>            .map(|index| seconds[index] <span class="kw">as </span>i64)
-<a href=#635 id=635 data-nosnippet>635</a>    }
-<a href=#636 id=636 data-nosnippet>636</a>
-<a href=#637 id=637 data-nosnippet>637</a>    <span class="doccomment">/// The four states this covers, paired with their threshold in seconds, for a query to `UNNEST`
-<a href=#638 id=638 data-nosnippet>638</a>    /// into a state -&gt; threshold lookup.
-<a href=#639 id=639 data-nosnippet>639</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>state_seconds_arrays(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ([CreditRegistrationState; <span class="number">4</span>], [f64; <span class="number">4</span>]) {
-<a href=#640 id=640 data-nosnippet>640</a>        (
-<a href=#641 id=641 data-nosnippet>641</a>            [
-<a href=#642 id=642 data-nosnippet>642</a>                CreditRegistrationState::ReadyToSubmit,
-<a href=#643 id=643 data-nosnippet>643</a>                CreditRegistrationState::Submitting,
-<a href=#644 id=644 data-nosnippet>644</a>                CreditRegistrationState::AwaitingVerification,
-<a href=#645 id=645 data-nosnippet>645</a>                CreditRegistrationState::FailedRetryable,
-<a href=#646 id=646 data-nosnippet>646</a>            ],
-<a href=#647 id=647 data-nosnippet>647</a>            [
-<a href=#648 id=648 data-nosnippet>648</a>                <span class="self">self</span>.stuck_ready_to_submit_secs <span class="kw">as </span>f64,
-<a href=#649 id=649 data-nosnippet>649</a>                <span class="self">self</span>.stuck_submitting_secs <span class="kw">as </span>f64,
-<a href=#650 id=650 data-nosnippet>650</a>                <span class="self">self</span>.stuck_awaiting_verification_secs <span class="kw">as </span>f64,
-<a href=#651 id=651 data-nosnippet>651</a>                <span class="self">self</span>.stuck_failed_retryable_secs <span class="kw">as </span>f64,
-<a href=#652 id=652 data-nosnippet>652</a>            ],
-<a href=#653 id=653 data-nosnippet>653</a>        )
-<a href=#654 id=654 data-nosnippet>654</a>    }
-<a href=#655 id=655 data-nosnippet>655</a>}
-<a href=#656 id=656 data-nosnippet>656</a>
-<a href=#657 id=657 data-nosnippet>657</a><span class="kw">const _</span>: () = <span class="macro">assert!</span>(
-<a href=#658 id=658 data-nosnippet>658</a>    StuckThresholds::CURRENT.stuck_failed_retryable_secs
-<a href=#659 id=659 data-nosnippet>659</a>        &lt; <span class="kw">crate</span>::library::credit_registration::backoff::SUBMIT_MAX_RETRY_AGE.num_seconds(),
-<a href=#660 id=660 data-nosnippet>660</a>    <span class="string">"a row must be considered stuck before backoff gives up retrying it"
-<a href=#661 id=661 data-nosnippet>661</a></span>);
-<a href=#662 id=662 data-nosnippet>662</a><span class="kw">const _</span>: () = <span class="macro">assert!</span>(
-<a href=#663 id=663 data-nosnippet>663</a>    StuckThresholds::CURRENT.stuck_submitting_secs
-<a href=#664 id=664 data-nosnippet>664</a>        &gt; <span class="kw">crate</span>::library::credit_registration::backoff::SUBMITTING_RECOVERY_GRACE.num_seconds(),
-<a href=#665 id=665 data-nosnippet>665</a>    <span class="string">"the stuck threshold must outlast the grace period that lets a submit recover on its own"
-<a href=#666 id=666 data-nosnippet>666</a></span>);
-<a href=#667 id=667 data-nosnippet>667</a>
-<a href=#668 id=668 data-nosnippet>668</a><span class="attr">#[derive(Debug, Clone, PartialEq)]
-<a href=#669 id=669 data-nosnippet>669</a></span><span class="kw">pub struct </span>StuckRegistrationCount {
-<a href=#670 id=670 data-nosnippet>670</a>    <span class="kw">pub </span>state: CreditRegistrationState,
-<a href=#671 id=671 data-nosnippet>671</a>    <span class="kw">pub </span>count: i64,
-<a href=#672 id=672 data-nosnippet>672</a>    <span class="doccomment">/// Over three times the threshold, which is what makes the alert critical.
-<a href=#673 id=673 data-nosnippet>673</a>    </span><span class="kw">pub </span>severely_stuck_count: i64,
-<a href=#674 id=674 data-nosnippet>674</a>    <span class="kw">pub </span>oldest_state_changed_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
-<a href=#675 id=675 data-nosnippet>675</a>}
-<a href=#676 id=676 data-nosnippet>676</a>
-<a href=#677 id=677 data-nosnippet>677</a><span class="doccomment">/// Rows past their state's threshold, per state, for the stuck-registrations alert. Counted
-<a href=#678 id=678 data-nosnippet>678</a>/// whatever their Needs attention standing: a dismissal or another reason does not unstick a row.
-<a href=#679 id=679 data-nosnippet>679</a></span><span class="kw">pub fn </span>count_stuck_in_state(
-<a href=#680 id=680 data-nosnippet>680</a>    rows: <span class="kw-2">&amp;</span>[AttentionRegistration],
-<a href=#681 id=681 data-nosnippet>681</a>    thresholds: <span class="kw-2">&amp;</span>StuckThresholds,
-<a href=#682 id=682 data-nosnippet>682</a>    now: DateTime&lt;Utc&gt;,
-<a href=#683 id=683 data-nosnippet>683</a>) -&gt; Vec&lt;StuckRegistrationCount&gt; {
-<a href=#684 id=684 data-nosnippet>684</a>    <span class="kw">let </span><span class="kw-2">mut </span>by_state: HashMap&lt;CreditRegistrationState, StuckRegistrationCount&gt; = HashMap::new();
-<a href=#685 id=685 data-nosnippet>685</a>    <span class="kw">for </span>row <span class="kw">in </span>rows
-<a href=#686 id=686 data-nosnippet>686</a>        .iter()
-<a href=#687 id=687 data-nosnippet>687</a>        .filter(|row| row.reasons.contains(<span class="kw-2">&amp;</span>AttentionReason::StuckInState))
-<a href=#688 id=688 data-nosnippet>688</a>    {
-<a href=#689 id=689 data-nosnippet>689</a>        <span class="kw">let </span>severe = thresholds
-<a href=#690 id=690 data-nosnippet>690</a>            .seconds_for(row.state)
-<a href=#691 id=691 data-nosnippet>691</a>            .is_some_and(|secs| (now - row.state_changed_at).num_seconds() &gt; secs * <span class="number">3</span>);
-<a href=#692 id=692 data-nosnippet>692</a>        <span class="kw">let </span>count = by_state.entry(row.state).or_insert(StuckRegistrationCount {
-<a href=#693 id=693 data-nosnippet>693</a>            state: row.state,
-<a href=#694 id=694 data-nosnippet>694</a>            count: <span class="number">0</span>,
-<a href=#695 id=695 data-nosnippet>695</a>            severely_stuck_count: <span class="number">0</span>,
-<a href=#696 id=696 data-nosnippet>696</a>            oldest_state_changed_at: <span class="prelude-val">None</span>,
-<a href=#697 id=697 data-nosnippet>697</a>        });
-<a href=#698 id=698 data-nosnippet>698</a>        count.count += <span class="number">1</span>;
-<a href=#699 id=699 data-nosnippet>699</a>        count.severely_stuck_count += i64::from(severe);
-<a href=#700 id=700 data-nosnippet>700</a>        count.oldest_state_changed_at = <span class="prelude-val">Some</span>(
-<a href=#701 id=701 data-nosnippet>701</a>            count
-<a href=#702 id=702 data-nosnippet>702</a>                .oldest_state_changed_at
-<a href=#703 id=703 data-nosnippet>703</a>                .map_or(row.state_changed_at, |oldest| {
-<a href=#704 id=704 data-nosnippet>704</a>                    oldest.min(row.state_changed_at)
-<a href=#705 id=705 data-nosnippet>705</a>                }),
-<a href=#706 id=706 data-nosnippet>706</a>        );
-<a href=#707 id=707 data-nosnippet>707</a>    }
-<a href=#708 id=708 data-nosnippet>708</a>    <span class="kw">let </span><span class="kw-2">mut </span>counts: Vec&lt;StuckRegistrationCount&gt; = by_state.into_values().collect();
-<a href=#709 id=709 data-nosnippet>709</a>    counts.sort_by_key(|count| {
-<a href=#710 id=710 data-nosnippet>710</a>        CreditRegistrationState::ALL
-<a href=#711 id=711 data-nosnippet>711</a>            .iter()
-<a href=#712 id=712 data-nosnippet>712</a>            .position(|state| <span class="kw-2">*</span>state == count.state)
-<a href=#713 id=713 data-nosnippet>713</a>    });
-<a href=#714 id=714 data-nosnippet>714</a>    counts
-<a href=#715 id=715 data-nosnippet>715</a>}
+<a href=#162 id=162 data-nosnippet>162</a>  LEFT JOIN credit_registration_enrolment_check_signals sig ON COALESCE(
+<a href=#163 id=163 data-nosnippet>163</a>    sig.course_module_completion_id,
+<a href=#164 id=164 data-nosnippet>164</a>    sig.external_completion_id
+<a href=#165 id=165 data-nosnippet>165</a>  ) = cr.subject_id
+<a href=#166 id=166 data-nosnippet>166</a>  AND sig.deleted_at IS NULL
+<a href=#167 id=167 data-nosnippet>167</a>  LEFT JOIN credit_registration_enrolment_routes route ON COALESCE(
+<a href=#168 id=168 data-nosnippet>168</a>    route.course_module_completion_id,
+<a href=#169 id=169 data-nosnippet>169</a>    route.external_completion_id
+<a href=#170 id=170 data-nosnippet>170</a>  ) = cr.subject_id
+<a href=#171 id=171 data-nosnippet>171</a>  AND route.deleted_at IS NULL
+<a href=#172 id=172 data-nosnippet>172</a>WHERE cr.state = 'pending'
+<a href=#173 id=173 data-nosnippet>173</a>  AND cr.superseded_by_id IS NULL
+<a href=#174 id=174 data-nosnippet>174</a>  AND cr.deleted_at IS NULL
+<a href=#175 id=175 data-nosnippet>175</a>  AND c.deleted_at IS NULL
+<a href=#176 id=176 data-nosnippet>176</a>  AND cm.deleted_at IS NULL
+<a href=#177 id=177 data-nosnippet>177</a>  AND t.deleted_at IS NULL
+<a href=#178 id=178 data-nosnippet>178</a>  AND p.completion_eligible
+<a href=#179 id=179 data-nosnippet>179</a>  AND NOT p.has_verified_student_number
+<a href=#180 id=180 data-nosnippet>180</a>  AND ($1::timestamptz IS NULL OR subj.completion_date &gt;= $1)
+<a href=#181 id=181 data-nosnippet>181</a>ORDER BY subj.completion_date,
+<a href=#182 id=182 data-nosnippet>182</a>  cr.id
+<a href=#183 id=183 data-nosnippet>183</a>LIMIT $2
+<a href=#184 id=184 data-nosnippet>184</a>        "#</span>,
+<a href=#185 id=185 data-nosnippet>185</a>        since,
+<a href=#186 id=186 data-nosnippet>186</a>        limit,
+<a href=#187 id=187 data-nosnippet>187</a>    )
+<a href=#188 id=188 data-nosnippet>188</a>    .fetch_all(conn)
+<a href=#189 id=189 data-nosnippet>189</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#190 id=190 data-nosnippet>190</a>    <span class="kw">let </span>total = rows.first().map_or(<span class="number">0</span>, |row| row.total);
+<a href=#191 id=191 data-nosnippet>191</a>    <span class="prelude-val">Ok</span>((
+<a href=#192 id=192 data-nosnippet>192</a>        rows.into_iter()
+<a href=#193 id=193 data-nosnippet>193</a>            .map(|row| WaitingForStudentNumber {
+<a href=#194 id=194 data-nosnippet>194</a>                credit_registration_id: row.credit_registration_id,
+<a href=#195 id=195 data-nosnippet>195</a>                user_id: row.user_id,
+<a href=#196 id=196 data-nosnippet>196</a>                email: row.email,
+<a href=#197 id=197 data-nosnippet>197</a>                first_name: row.first_name,
+<a href=#198 id=198 data-nosnippet>198</a>                last_name: row.last_name,
+<a href=#199 id=199 data-nosnippet>199</a>                course_or_target_id: row.course_or_target_id,
+<a href=#200 id=200 data-nosnippet>200</a>                course_name: row.course_name,
+<a href=#201 id=201 data-nosnippet>201</a>                course_module_name: row.course_module_name,
+<a href=#202 id=202 data-nosnippet>202</a>                uh_course_code: row.uh_course_code,
+<a href=#203 id=203 data-nosnippet>203</a>                completion_date: row.completion_date,
+<a href=#204 id=204 data-nosnippet>204</a>                last_visited_at: row.last_visited_at,
+<a href=#205 id=205 data-nosnippet>205</a>                last_check_requested_at: row.last_check_requested_at,
+<a href=#206 id=206 data-nosnippet>206</a>                pressed_at: row.pressed_at,
+<a href=#207 id=207 data-nosnippet>207</a>            })
+<a href=#208 id=208 data-nosnippet>208</a>            .collect(),
+<a href=#209 id=209 data-nosnippet>209</a>        total,
+<a href=#210 id=210 data-nosnippet>210</a>    ))
+<a href=#211 id=211 data-nosnippet>211</a>}
+<a href=#212 id=212 data-nosnippet>212</a>
+<a href=#213 id=213 data-nosnippet>213</a><span class="doccomment">/// A student waiting for a student number who pressed "I have enrolled", with what has happened on
+<a href=#214 id=214 data-nosnippet>214</a>/// their course code since.
+<a href=#215 id=215 data-nosnippet>215</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#216 id=216 data-nosnippet>216</a></span><span class="kw">pub struct </span>WaitingPresser {
+<a href=#217 id=217 data-nosnippet>217</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
+<a href=#218 id=218 data-nosnippet>218</a>    <span class="kw">pub </span>user_id: Uuid,
+<a href=#219 id=219 data-nosnippet>219</a>    <span class="kw">pub </span>email: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#220 id=220 data-nosnippet>220</a>    <span class="kw">pub </span>first_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#221 id=221 data-nosnippet>221</a>    <span class="kw">pub </span>last_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#222 id=222 data-nosnippet>222</a>    <span class="kw">pub </span>course_or_target_id: Uuid,
+<a href=#223 id=223 data-nosnippet>223</a>    <span class="doccomment">/// The course's name, or "mooc.fi: " and the target's name.
+<a href=#224 id=224 data-nosnippet>224</a>    </span><span class="kw">pub </span>course_name: String,
+<a href=#225 id=225 data-nosnippet>225</a>    <span class="doccomment">/// `None` on a mooc.fi row.
+<a href=#226 id=226 data-nosnippet>226</a>    </span><span class="kw">pub </span>course_module_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#227 id=227 data-nosnippet>227</a>    <span class="kw">pub </span>course_module_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#228 id=228 data-nosnippet>228</a>    <span class="doccomment">/// The module's or target's code now, trimmed.
+<a href=#229 id=229 data-nosnippet>229</a>    </span><span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#230 id=230 data-nosnippet>230</a>    <span class="kw">pub </span>completion_date: DateTime&lt;Utc&gt;,
+<a href=#231 id=231 data-nosnippet>231</a>    <span class="kw">pub </span>pressed_at: DateTime&lt;Utc&gt;,
+<a href=#232 id=232 data-nosnippet>232</a>    <span class="kw">pub </span>enrolment_route: CreditRegistrationEnrolmentRoute,
+<a href=#233 id=233 data-nosnippet>233</a>    <span class="doccomment">/// Linking emails claimed on any course or mooc.fi target sharing the code since the press. Not
+<a href=#234 id=234 data-nosnippet>234</a>    /// attributable to this student: an email is tied to an account only once its link is used.
+<a href=#235 id=235 data-nosnippet>235</a>    </span><span class="kw">pub </span>linking_emails_on_code_since_press: i64,
+<a href=#236 id=236 data-nosnippet>236</a>    <span class="kw">pub </span>last_linking_email_on_code_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#237 id=237 data-nosnippet>237</a>}
+<a href=#238 id=238 data-nosnippet>238</a>
+<a href=#239 id=239 data-nosnippet>239</a><span class="doccomment">/// Students waiting for a student number who pressed "I have enrolled" and completed on or after
+<a href=#240 id=240 data-nosnippet>240</a>/// `since`, longest waiting first. `credit_registration_id` narrows to one row.
+<a href=#241 id=241 data-nosnippet>241</a></span><span class="kw">pub async fn </span>get_waiting_pressers(
+<a href=#242 id=242 data-nosnippet>242</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#243 id=243 data-nosnippet>243</a>    since: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#244 id=244 data-nosnippet>244</a>    credit_registration_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
+<a href=#245 id=245 data-nosnippet>245</a>) -&gt; ModelResult&lt;Vec&lt;WaitingPresser&gt;&gt; {
+<a href=#246 id=246 data-nosnippet>246</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#247 id=247 data-nosnippet>247</a>        WaitingPresser,
+<a href=#248 id=248 data-nosnippet>248</a>        <span class="string">r#"
+<a href=#249 id=249 data-nosnippet>249</a>SELECT cr.id AS credit_registration_id,
+<a href=#250 id=250 data-nosnippet>250</a>  cr.user_id,
+<a href=#251 id=251 data-nosnippet>251</a>  ud.email AS "email?",
+<a href=#252 id=252 data-nosnippet>252</a>  ud.first_name AS "first_name?",
+<a href=#253 id=253 data-nosnippet>253</a>  ud.last_name AS "last_name?",
+<a href=#254 id=254 data-nosnippet>254</a>  COALESCE(cr.course_id, cr.external_credit_target_id) AS "course_or_target_id!",
+<a href=#255 id=255 data-nosnippet>255</a>  COALESCE(c.name, 'mooc.fi: ' || t.name) AS "course_name!",
+<a href=#256 id=256 data-nosnippet>256</a>  cr.course_module_id,
+<a href=#257 id=257 data-nosnippet>257</a>  cm.name AS "course_module_name?",
+<a href=#258 id=258 data-nosnippet>258</a>  NULLIF(TRIM(subj.uh_course_code), '') AS "uh_course_code?",
+<a href=#259 id=259 data-nosnippet>259</a>  subj.completion_date AS "completion_date!",
+<a href=#260 id=260 data-nosnippet>260</a>  route.enrolment_confirmed_at AS "pressed_at!",
+<a href=#261 id=261 data-nosnippet>261</a>  route.route AS "enrolment_route: CreditRegistrationEnrolmentRoute",
+<a href=#262 id=262 data-nosnippet>262</a>  emails.count AS "linking_emails_on_code_since_press!",
+<a href=#263 id=263 data-nosnippet>263</a>  emails.last_at AS "last_linking_email_on_code_at?"
+<a href=#264 id=264 data-nosnippet>264</a>FROM credit_registrations cr
+<a href=#265 id=265 data-nosnippet>265</a>  JOIN credit_registration_preconditions p ON p.credit_registration_id = cr.id
+<a href=#266 id=266 data-nosnippet>266</a>  JOIN credit_registration_subjects subj ON subj.subject_id = cr.subject_id
+<a href=#267 id=267 data-nosnippet>267</a>  AND NOT subj.is_withdrawn
+<a href=#268 id=268 data-nosnippet>268</a>  LEFT JOIN courses c ON c.id = cr.course_id
+<a href=#269 id=269 data-nosnippet>269</a>  LEFT JOIN course_modules cm ON cm.id = cr.course_module_id
+<a href=#270 id=270 data-nosnippet>270</a>  LEFT JOIN external_credit_targets t ON t.id = cr.external_credit_target_id
+<a href=#271 id=271 data-nosnippet>271</a>  JOIN credit_registration_enrolment_routes route ON COALESCE(
+<a href=#272 id=272 data-nosnippet>272</a>    route.course_module_completion_id,
+<a href=#273 id=273 data-nosnippet>273</a>    route.external_completion_id
+<a href=#274 id=274 data-nosnippet>274</a>  ) = cr.subject_id
+<a href=#275 id=275 data-nosnippet>275</a>  AND route.deleted_at IS NULL
+<a href=#276 id=276 data-nosnippet>276</a>  AND route.enrolment_confirmed_at IS NOT NULL
+<a href=#277 id=277 data-nosnippet>277</a>  LEFT JOIN user_details ud ON ud.user_id = cr.user_id
+<a href=#278 id=278 data-nosnippet>278</a>  CROSS JOIN LATERAL (
+<a href=#279 id=279 data-nosnippet>279</a>    SELECT COUNT(*) AS count,
+<a href=#280 id=280 data-nosnippet>280</a>      MAX(e.sent_at) AS last_at
+<a href=#281 id=281 data-nosnippet>281</a>    FROM credit_registration_account_linking_emails e
+<a href=#282 id=282 data-nosnippet>282</a>    WHERE e.sent_at &gt;= route.enrolment_confirmed_at
+<a href=#283 id=283 data-nosnippet>283</a>      AND e.deleted_at IS NULL
+<a href=#284 id=284 data-nosnippet>284</a>      AND (
+<a href=#285 id=285 data-nosnippet>285</a>        EXISTS (
+<a href=#286 id=286 data-nosnippet>286</a>          SELECT 1
+<a href=#287 id=287 data-nosnippet>287</a>          FROM course_modules code_module
+<a href=#288 id=288 data-nosnippet>288</a>          WHERE code_module.course_id = e.course_id
+<a href=#289 id=289 data-nosnippet>289</a>            AND code_module.deleted_at IS NULL
+<a href=#290 id=290 data-nosnippet>290</a>            AND TRIM(code_module.uh_course_code) = TRIM(subj.uh_course_code)
+<a href=#291 id=291 data-nosnippet>291</a>        )
+<a href=#292 id=292 data-nosnippet>292</a>        OR EXISTS (
+<a href=#293 id=293 data-nosnippet>293</a>          SELECT 1
+<a href=#294 id=294 data-nosnippet>294</a>          FROM external_credit_targets code_target
+<a href=#295 id=295 data-nosnippet>295</a>          WHERE code_target.id = e.external_credit_target_id
+<a href=#296 id=296 data-nosnippet>296</a>            AND TRIM(code_target.uh_course_code) = TRIM(subj.uh_course_code)
+<a href=#297 id=297 data-nosnippet>297</a>        )
+<a href=#298 id=298 data-nosnippet>298</a>      )
+<a href=#299 id=299 data-nosnippet>299</a>  ) emails
+<a href=#300 id=300 data-nosnippet>300</a>WHERE cr.state = 'pending'
+<a href=#301 id=301 data-nosnippet>301</a>  AND cr.superseded_by_id IS NULL
+<a href=#302 id=302 data-nosnippet>302</a>  AND cr.deleted_at IS NULL
+<a href=#303 id=303 data-nosnippet>303</a>  AND c.deleted_at IS NULL
+<a href=#304 id=304 data-nosnippet>304</a>  AND cm.deleted_at IS NULL
+<a href=#305 id=305 data-nosnippet>305</a>  AND t.deleted_at IS NULL
+<a href=#306 id=306 data-nosnippet>306</a>  AND p.completion_eligible
+<a href=#307 id=307 data-nosnippet>307</a>  AND NOT p.has_verified_student_number
+<a href=#308 id=308 data-nosnippet>308</a>  AND ($1::timestamptz IS NULL OR subj.completion_date &gt;= $1)
+<a href=#309 id=309 data-nosnippet>309</a>  AND ($2::uuid IS NULL OR cr.id = $2)
+<a href=#310 id=310 data-nosnippet>310</a>ORDER BY route.enrolment_confirmed_at,
+<a href=#311 id=311 data-nosnippet>311</a>  cr.id
+<a href=#312 id=312 data-nosnippet>312</a>        "#</span>,
+<a href=#313 id=313 data-nosnippet>313</a>        since,
+<a href=#314 id=314 data-nosnippet>314</a>        credit_registration_id,
+<a href=#315 id=315 data-nosnippet>315</a>    )
+<a href=#316 id=316 data-nosnippet>316</a>    .fetch_all(conn)
+<a href=#317 id=317 data-nosnippet>317</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#318 id=318 data-nosnippet>318</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#319 id=319 data-nosnippet>319</a>}
+<a href=#320 id=320 data-nosnippet>320</a>
+<a href=#321 id=321 data-nosnippet>321</a><span class="doccomment">/// Live rows carrying an error code, split by whether the pipeline is still working on them.
+<a href=#322 id=322 data-nosnippet>322</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#323 id=323 data-nosnippet>323</a></span><span class="kw">pub struct </span>CreditRegistrationErrorCodeCount {
+<a href=#324 id=324 data-nosnippet>324</a>    <span class="kw">pub </span>error_code: CreditRegistrationErrorCode,
+<a href=#325 id=325 data-nosnippet>325</a>    <span class="doccomment">/// Every live row carrying the code: what the Registrations list filtered by it shows.
+<a href=#326 id=326 data-nosnippet>326</a>    </span><span class="kw">pub </span>live_count: i64,
+<a href=#327 id=327 data-nosnippet>327</a>    <span class="kw">pub </span>in_flight_count: i64,
+<a href=#328 id=328 data-nosnippet>328</a>    <span class="kw">pub </span>terminal_failure_count: i64,
+<a href=#329 id=329 data-nosnippet>329</a>}
+<a href=#330 id=330 data-nosnippet>330</a>
+<a href=#331 id=331 data-nosnippet>331</a><span class="doccomment">/// The error-code breakdown the Overview shows.
+<a href=#332 id=332 data-nosnippet>332</a></span><span class="kw">pub async fn </span>count_by_error_code(
+<a href=#333 id=333 data-nosnippet>333</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#334 id=334 data-nosnippet>334</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistrationErrorCodeCount&gt;&gt; {
+<a href=#335 id=335 data-nosnippet>335</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query!</span>(
+<a href=#336 id=336 data-nosnippet>336</a>        <span class="string">r#"
+<a href=#337 id=337 data-nosnippet>337</a>SELECT error_code AS "error_code!",
+<a href=#338 id=338 data-nosnippet>338</a>  COUNT(*) AS "live_count!",
+<a href=#339 id=339 data-nosnippet>339</a>  COUNT(*) FILTER (WHERE terminal_at IS NULL) AS "in_flight_count!",
+<a href=#340 id=340 data-nosnippet>340</a>  COUNT(*) FILTER (
+<a href=#341 id=341 data-nosnippet>341</a>    WHERE state = ANY($1::credit_registration_state [])
+<a href=#342 id=342 data-nosnippet>342</a>  ) AS "terminal_failure_count!"
+<a href=#343 id=343 data-nosnippet>343</a>FROM credit_registrations
+<a href=#344 id=344 data-nosnippet>344</a>WHERE error_code IS NOT NULL
+<a href=#345 id=345 data-nosnippet>345</a>  AND superseded_by_id IS NULL
+<a href=#346 id=346 data-nosnippet>346</a>  AND deleted_at IS NULL
+<a href=#347 id=347 data-nosnippet>347</a>GROUP BY error_code
+<a href=#348 id=348 data-nosnippet>348</a>ORDER BY COUNT(*) DESC
+<a href=#349 id=349 data-nosnippet>349</a>        "#</span>,
+<a href=#350 id=350 data-nosnippet>350</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::HARD_FAILURE_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#351 id=351 data-nosnippet>351</a>    )
+<a href=#352 id=352 data-nosnippet>352</a>    .fetch_all(conn)
+<a href=#353 id=353 data-nosnippet>353</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#354 id=354 data-nosnippet>354</a>    <span class="prelude-val">Ok</span>(rows
+<a href=#355 id=355 data-nosnippet>355</a>        .into_iter()
+<a href=#356 id=356 data-nosnippet>356</a>        .map(|row| CreditRegistrationErrorCodeCount {
+<a href=#357 id=357 data-nosnippet>357</a>            error_code: row.error_code,
+<a href=#358 id=358 data-nosnippet>358</a>            live_count: row.live_count,
+<a href=#359 id=359 data-nosnippet>359</a>            in_flight_count: row.in_flight_count,
+<a href=#360 id=360 data-nosnippet>360</a>            terminal_failure_count: row.terminal_failure_count,
+<a href=#361 id=361 data-nosnippet>361</a>        })
+<a href=#362 id=362 data-nosnippet>362</a>        .collect())
+<a href=#363 id=363 data-nosnippet>363</a>}
+<a href=#364 id=364 data-nosnippet>364</a>
+<a href=#365 id=365 data-nosnippet>365</a><span class="doccomment">/// The row that has been waiting longest for the pipeline to do something with it.
+<a href=#366 id=366 data-nosnippet>366</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#367 id=367 data-nosnippet>367</a></span><span class="kw">pub struct </span>OldestNonTerminalRegistration {
+<a href=#368 id=368 data-nosnippet>368</a>    <span class="kw">pub </span>id: Uuid,
+<a href=#369 id=369 data-nosnippet>369</a>    <span class="kw">pub </span>state: CreditRegistrationState,
+<a href=#370 id=370 data-nosnippet>370</a>    <span class="kw">pub </span>state_changed_at: DateTime&lt;Utc&gt;,
+<a href=#371 id=371 data-nosnippet>371</a>}
+<a href=#372 id=372 data-nosnippet>372</a>
+<a href=#373 id=373 data-nosnippet>373</a><span class="kw">pub async fn </span>get_oldest_non_terminal(
+<a href=#374 id=374 data-nosnippet>374</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#375 id=375 data-nosnippet>375</a>) -&gt; ModelResult&lt;<span class="prelude-ty">Option</span>&lt;OldestNonTerminalRegistration&gt;&gt; {
+<a href=#376 id=376 data-nosnippet>376</a>    <span class="kw">let </span>row = <span class="macro">sqlx::query_as!</span>(
+<a href=#377 id=377 data-nosnippet>377</a>        OldestNonTerminalRegistration,
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="string">r#"
+<a href=#379 id=379 data-nosnippet>379</a>SELECT id,
+<a href=#380 id=380 data-nosnippet>380</a>  state,
+<a href=#381 id=381 data-nosnippet>381</a>  state_changed_at
+<a href=#382 id=382 data-nosnippet>382</a>FROM credit_registrations
+<a href=#383 id=383 data-nosnippet>383</a>WHERE terminal_at IS NULL
+<a href=#384 id=384 data-nosnippet>384</a>  AND superseded_by_id IS NULL
+<a href=#385 id=385 data-nosnippet>385</a>  AND deleted_at IS NULL
+<a href=#386 id=386 data-nosnippet>386</a>ORDER BY state_changed_at
+<a href=#387 id=387 data-nosnippet>387</a>LIMIT 1
+<a href=#388 id=388 data-nosnippet>388</a>        "#</span>,
+<a href=#389 id=389 data-nosnippet>389</a>    )
+<a href=#390 id=390 data-nosnippet>390</a>    .fetch_optional(conn)
+<a href=#391 id=391 data-nosnippet>391</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#392 id=392 data-nosnippet>392</a>    <span class="prelude-val">Ok</span>(row)
+<a href=#393 id=393 data-nosnippet>393</a>}
+<a href=#394 id=394 data-nosnippet>394</a>
+<a href=#395 id=395 data-nosnippet>395</a><span class="doccomment">/// One day of terminal outcomes, for the throughput series.
+<a href=#396 id=396 data-nosnippet>396</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#397 id=397 data-nosnippet>397</a></span><span class="kw">pub struct </span>CreditRegistrationThroughputDay {
+<a href=#398 id=398 data-nosnippet>398</a>    <span class="kw">pub </span>day: DateTime&lt;Utc&gt;,
+<a href=#399 id=399 data-nosnippet>399</a>    <span class="kw">pub </span>registered_count: i64,
+<a href=#400 id=400 data-nosnippet>400</a>    <span class="kw">pub </span>other_success_count: i64,
+<a href=#401 id=401 data-nosnippet>401</a>    <span class="kw">pub </span>failed_count: i64,
+<a href=#402 id=402 data-nosnippet>402</a>}
+<a href=#403 id=403 data-nosnippet>403</a>
+<a href=#404 id=404 data-nosnippet>404</a><span class="doccomment">/// Daily terminal outcomes over the window. Withdrawn rows are in no column: they are neither a
+<a href=#405 id=405 data-nosnippet>405</a>/// success nor a failure.
+<a href=#406 id=406 data-nosnippet>406</a></span><span class="kw">pub async fn </span>get_throughput_by_day(
+<a href=#407 id=407 data-nosnippet>407</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#408 id=408 data-nosnippet>408</a>    since: DateTime&lt;Utc&gt;,
+<a href=#409 id=409 data-nosnippet>409</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistrationThroughputDay&gt;&gt; {
+<a href=#410 id=410 data-nosnippet>410</a>    <span class="kw">let </span>rows = <span class="macro">sqlx::query_as!</span>(
+<a href=#411 id=411 data-nosnippet>411</a>        CreditRegistrationThroughputDay,
+<a href=#412 id=412 data-nosnippet>412</a>        <span class="string">r#"
+<a href=#413 id=413 data-nosnippet>413</a>SELECT DATE_TRUNC('day', terminal_at) AS "day!",
+<a href=#414 id=414 data-nosnippet>414</a>  COUNT(*) FILTER (WHERE state = 'registered') AS "registered_count!",
+<a href=#415 id=415 data-nosnippet>415</a>  COUNT(*) FILTER (
+<a href=#416 id=416 data-nosnippet>416</a>    WHERE state = ANY($2::credit_registration_state [])
+<a href=#417 id=417 data-nosnippet>417</a>  ) AS "other_success_count!",
+<a href=#418 id=418 data-nosnippet>418</a>  COUNT(*) FILTER (WHERE state = 'failed_permanent') AS "failed_count!"
+<a href=#419 id=419 data-nosnippet>419</a>FROM credit_registrations
+<a href=#420 id=420 data-nosnippet>420</a>WHERE terminal_at &gt;= $1
+<a href=#421 id=421 data-nosnippet>421</a>  AND superseded_by_id IS NULL
+<a href=#422 id=422 data-nosnippet>422</a>  AND deleted_at IS NULL
+<a href=#423 id=423 data-nosnippet>423</a>GROUP BY 1
+<a href=#424 id=424 data-nosnippet>424</a>ORDER BY 1
+<a href=#425 id=425 data-nosnippet>425</a>        "#</span>,
+<a href=#426 id=426 data-nosnippet>426</a>        since,
+<a href=#427 id=427 data-nosnippet>427</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::OTHER_SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#428 id=428 data-nosnippet>428</a>    )
+<a href=#429 id=429 data-nosnippet>429</a>    .fetch_all(conn)
+<a href=#430 id=430 data-nosnippet>430</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#431 id=431 data-nosnippet>431</a>    <span class="prelude-val">Ok</span>(rows)
+<a href=#432 id=432 data-nosnippet>432</a>}
+<a href=#433 id=433 data-nosnippet>433</a>
+<a href=#434 id=434 data-nosnippet>434</a><span class="doccomment">/// What the pipeline finished in a window.
+<a href=#435 id=435 data-nosnippet>435</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, Default)]
+<a href=#436 id=436 data-nosnippet>436</a></span><span class="kw">pub struct </span>TerminalOutcomeTotals {
+<a href=#437 id=437 data-nosnippet>437</a>    <span class="doccomment">/// `registered`, `duplicate` and `not_improved`.
+<a href=#438 id=438 data-nosnippet>438</a>    </span><span class="kw">pub </span>success_count: i64,
+<a href=#439 id=439 data-nosnippet>439</a>    <span class="doccomment">/// The subset we put in the registry ourselves.
+<a href=#440 id=440 data-nosnippet>440</a>    </span><span class="kw">pub </span>registered_count: i64,
+<a href=#441 id=441 data-nosnippet>441</a>    <span class="kw">pub </span>failed_permanent_count: i64,
+<a href=#442 id=442 data-nosnippet>442</a>    <span class="kw">pub </span>cancelled_count: i64,
+<a href=#443 id=443 data-nosnippet>443</a>    <span class="doccomment">/// The denominator of the success rate.
+<a href=#444 id=444 data-nosnippet>444</a>    </span><span class="kw">pub </span>total_count: i64,
+<a href=#445 id=445 data-nosnippet>445</a>}
+<a href=#446 id=446 data-nosnippet>446</a>
+<a href=#447 id=447 data-nosnippet>447</a><span class="kw">pub async fn </span>count_terminal_outcomes_since(
+<a href=#448 id=448 data-nosnippet>448</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#449 id=449 data-nosnippet>449</a>    since: DateTime&lt;Utc&gt;,
+<a href=#450 id=450 data-nosnippet>450</a>) -&gt; ModelResult&lt;TerminalOutcomeTotals&gt; {
+<a href=#451 id=451 data-nosnippet>451</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#452 id=452 data-nosnippet>452</a>        TerminalOutcomeTotals,
+<a href=#453 id=453 data-nosnippet>453</a>        <span class="string">r#"
+<a href=#454 id=454 data-nosnippet>454</a>SELECT COUNT(*) FILTER (
+<a href=#455 id=455 data-nosnippet>455</a>    WHERE state = ANY($2::credit_registration_state [])
+<a href=#456 id=456 data-nosnippet>456</a>  ) AS "success_count!",
+<a href=#457 id=457 data-nosnippet>457</a>  COUNT(*) FILTER (WHERE state = 'registered') AS "registered_count!",
+<a href=#458 id=458 data-nosnippet>458</a>  COUNT(*) FILTER (WHERE state = 'failed_permanent') AS "failed_permanent_count!",
+<a href=#459 id=459 data-nosnippet>459</a>  COUNT(*) FILTER (WHERE state = 'cancelled') AS "cancelled_count!",
+<a href=#460 id=460 data-nosnippet>460</a>  COUNT(*) AS "total_count!"
+<a href=#461 id=461 data-nosnippet>461</a>FROM credit_registrations
+<a href=#462 id=462 data-nosnippet>462</a>WHERE terminal_at &gt;= $1
+<a href=#463 id=463 data-nosnippet>463</a>  AND superseded_by_id IS NULL
+<a href=#464 id=464 data-nosnippet>464</a>  AND deleted_at IS NULL
+<a href=#465 id=465 data-nosnippet>465</a>        "#</span>,
+<a href=#466 id=466 data-nosnippet>466</a>        since,
+<a href=#467 id=467 data-nosnippet>467</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#468 id=468 data-nosnippet>468</a>    )
+<a href=#469 id=469 data-nosnippet>469</a>    .fetch_one(conn)
+<a href=#470 id=470 data-nosnippet>470</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#471 id=471 data-nosnippet>471</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#472 id=472 data-nosnippet>472</a>}
+<a href=#473 id=473 data-nosnippet>473</a>
+<a href=#474 id=474 data-nosnippet>474</a><span class="doccomment">/// Live rows that entered one state within the window. `misregistered` is not terminal, so
+<a href=#475 id=475 data-nosnippet>475</a>/// `terminal_at` cannot answer this.
+<a href=#476 id=476 data-nosnippet>476</a></span><span class="kw">pub async fn </span>count_entered_state_since(
+<a href=#477 id=477 data-nosnippet>477</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#478 id=478 data-nosnippet>478</a>    state: CreditRegistrationState,
+<a href=#479 id=479 data-nosnippet>479</a>    since: DateTime&lt;Utc&gt;,
+<a href=#480 id=480 data-nosnippet>480</a>) -&gt; ModelResult&lt;i64&gt; {
+<a href=#481 id=481 data-nosnippet>481</a>    <span class="kw">let </span>count = <span class="macro">sqlx::query_scalar!</span>(
+<a href=#482 id=482 data-nosnippet>482</a>        <span class="string">r#"
+<a href=#483 id=483 data-nosnippet>483</a>SELECT COUNT(*) AS "count!"
+<a href=#484 id=484 data-nosnippet>484</a>FROM credit_registrations
+<a href=#485 id=485 data-nosnippet>485</a>WHERE state = $1
+<a href=#486 id=486 data-nosnippet>486</a>  AND state_changed_at &gt;= $2
+<a href=#487 id=487 data-nosnippet>487</a>  AND superseded_by_id IS NULL
+<a href=#488 id=488 data-nosnippet>488</a>  AND deleted_at IS NULL
+<a href=#489 id=489 data-nosnippet>489</a>        "#</span>,
+<a href=#490 id=490 data-nosnippet>490</a>        state <span class="kw">as </span>CreditRegistrationState,
+<a href=#491 id=491 data-nosnippet>491</a>        since,
+<a href=#492 id=492 data-nosnippet>492</a>    )
+<a href=#493 id=493 data-nosnippet>493</a>    .fetch_one(conn)
+<a href=#494 id=494 data-nosnippet>494</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#495 id=495 data-nosnippet>495</a>    <span class="prelude-val">Ok</span>(count)
+<a href=#496 id=496 data-nosnippet>496</a>}
+<a href=#497 id=497 data-nosnippet>497</a>
+<a href=#498 id=498 data-nosnippet>498</a><span class="doccomment">/// How long registration took, in seconds, for rows that reached `registered` in a window.
+<a href=#499 id=499 data-nosnippet>499</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#500 id=500 data-nosnippet>500</a></span><span class="kw">pub struct </span>RegistrationLatency {
+<a href=#501 id=501 data-nosnippet>501</a>    <span class="kw">pub </span>registered_count: i64,
+<a href=#502 id=502 data-nosnippet>502</a>    <span class="doccomment">/// `terminal_at - created_at`: the student's wait, most of which is theirs to end.
+<a href=#503 id=503 data-nosnippet>503</a>    </span><span class="kw">pub </span>p50_end_to_end_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#504 id=504 data-nosnippet>504</a>    <span class="kw">pub </span>p95_end_to_end_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#505 id=505 data-nosnippet>505</a>    <span class="doccomment">/// `registered_at - submitted_at`: how long the study registry took, which is the number to
+<a href=#506 id=506 data-nosnippet>506</a>    /// quote at them.
+<a href=#507 id=507 data-nosnippet>507</a>    </span><span class="kw">pub </span>p50_confirmation_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#508 id=508 data-nosnippet>508</a>    <span class="kw">pub </span>p95_confirmation_secs: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#509 id=509 data-nosnippet>509</a>}
+<a href=#510 id=510 data-nosnippet>510</a>
+<a href=#511 id=511 data-nosnippet>511</a><span class="kw">pub async fn </span>get_registration_latency_between(
+<a href=#512 id=512 data-nosnippet>512</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#513 id=513 data-nosnippet>513</a>    from: DateTime&lt;Utc&gt;,
+<a href=#514 id=514 data-nosnippet>514</a>    to: DateTime&lt;Utc&gt;,
+<a href=#515 id=515 data-nosnippet>515</a>) -&gt; ModelResult&lt;RegistrationLatency&gt; {
+<a href=#516 id=516 data-nosnippet>516</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#517 id=517 data-nosnippet>517</a>        RegistrationLatency,
+<a href=#518 id=518 data-nosnippet>518</a>        <span class="string">r#"
+<a href=#519 id=519 data-nosnippet>519</a>SELECT COUNT(*) AS "registered_count!",
+<a href=#520 id=520 data-nosnippet>520</a>  CEIL(
+<a href=#521 id=521 data-nosnippet>521</a>    EXTRACT(
+<a href=#522 id=522 data-nosnippet>522</a>      EPOCH
+<a href=#523 id=523 data-nosnippet>523</a>      FROM PERCENTILE_DISC(0.5) WITHIN GROUP (
+<a href=#524 id=524 data-nosnippet>524</a>          ORDER BY terminal_at - created_at
+<a href=#525 id=525 data-nosnippet>525</a>        )
+<a href=#526 id=526 data-nosnippet>526</a>    )
+<a href=#527 id=527 data-nosnippet>527</a>  )::bigint AS "p50_end_to_end_secs",
+<a href=#528 id=528 data-nosnippet>528</a>  CEIL(
+<a href=#529 id=529 data-nosnippet>529</a>    EXTRACT(
+<a href=#530 id=530 data-nosnippet>530</a>      EPOCH
+<a href=#531 id=531 data-nosnippet>531</a>      FROM PERCENTILE_DISC(0.95) WITHIN GROUP (
+<a href=#532 id=532 data-nosnippet>532</a>          ORDER BY terminal_at - created_at
+<a href=#533 id=533 data-nosnippet>533</a>        )
+<a href=#534 id=534 data-nosnippet>534</a>    )
+<a href=#535 id=535 data-nosnippet>535</a>  )::bigint AS "p95_end_to_end_secs",
+<a href=#536 id=536 data-nosnippet>536</a>  CEIL(
+<a href=#537 id=537 data-nosnippet>537</a>    EXTRACT(
+<a href=#538 id=538 data-nosnippet>538</a>      EPOCH
+<a href=#539 id=539 data-nosnippet>539</a>      FROM PERCENTILE_DISC(0.5) WITHIN GROUP (
+<a href=#540 id=540 data-nosnippet>540</a>          ORDER BY registered_at - submitted_at
+<a href=#541 id=541 data-nosnippet>541</a>        )
+<a href=#542 id=542 data-nosnippet>542</a>    )
+<a href=#543 id=543 data-nosnippet>543</a>  )::bigint AS "p50_confirmation_secs",
+<a href=#544 id=544 data-nosnippet>544</a>  CEIL(
+<a href=#545 id=545 data-nosnippet>545</a>    EXTRACT(
+<a href=#546 id=546 data-nosnippet>546</a>      EPOCH
+<a href=#547 id=547 data-nosnippet>547</a>      FROM PERCENTILE_DISC(0.95) WITHIN GROUP (
+<a href=#548 id=548 data-nosnippet>548</a>          ORDER BY registered_at - submitted_at
+<a href=#549 id=549 data-nosnippet>549</a>        )
+<a href=#550 id=550 data-nosnippet>550</a>    )
+<a href=#551 id=551 data-nosnippet>551</a>  )::bigint AS "p95_confirmation_secs"
+<a href=#552 id=552 data-nosnippet>552</a>FROM credit_registrations
+<a href=#553 id=553 data-nosnippet>553</a>WHERE state = 'registered'
+<a href=#554 id=554 data-nosnippet>554</a>  AND terminal_at &gt;= $1
+<a href=#555 id=555 data-nosnippet>555</a>  AND terminal_at &lt; $2
+<a href=#556 id=556 data-nosnippet>556</a>  AND superseded_by_id IS NULL
+<a href=#557 id=557 data-nosnippet>557</a>  AND deleted_at IS NULL
+<a href=#558 id=558 data-nosnippet>558</a>        "#</span>,
+<a href=#559 id=559 data-nosnippet>559</a>        from,
+<a href=#560 id=560 data-nosnippet>560</a>        to,
+<a href=#561 id=561 data-nosnippet>561</a>    )
+<a href=#562 id=562 data-nosnippet>562</a>    .fetch_one(conn)
+<a href=#563 id=563 data-nosnippet>563</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#564 id=564 data-nosnippet>564</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#565 id=565 data-nosnippet>565</a>}
+<a href=#566 id=566 data-nosnippet>566</a>
+<a href=#567 id=567 data-nosnippet>567</a><span class="doccomment">/// Live volumes per module or mooc.fi target, for the Courses tab's one row per unit.
+<a href=#568 id=568 data-nosnippet>568</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, Default)]
+<a href=#569 id=569 data-nosnippet>569</a></span><span class="kw">pub struct </span>CreditUnitRegistrationTotals {
+<a href=#570 id=570 data-nosnippet>570</a>    <span class="kw">pub </span>credit_unit_id: Uuid,
+<a href=#571 id=571 data-nosnippet>571</a>    <span class="kw">pub </span>total_count: i64,
+<a href=#572 id=572 data-nosnippet>572</a>    <span class="kw">pub </span>success_count: i64,
+<a href=#573 id=573 data-nosnippet>573</a>    <span class="doccomment">/// Of `success_count`, the ones we registered.
+<a href=#574 id=574 data-nosnippet>574</a>    </span><span class="kw">pub </span>registered_count: i64,
+<a href=#575 id=575 data-nosnippet>575</a>    <span class="doccomment">/// Of `success_count`, the ones Sisu already held: duplicate or not improved.
+<a href=#576 id=576 data-nosnippet>576</a>    </span><span class="kw">pub </span>already_in_sisu_count: i64,
+<a href=#577 id=577 data-nosnippet>577</a>    <span class="kw">pub </span>in_flight_count: i64,
+<a href=#578 id=578 data-nosnippet>578</a>    <span class="kw">pub </span>failed_count: i64,
+<a href=#579 id=579 data-nosnippet>579</a>    <span class="kw">pub </span>last_registered_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#580 id=580 data-nosnippet>580</a>    <span class="doccomment">/// The code most of the unit's failing rows carry, which is usually the whole diagnosis.
+<a href=#581 id=581 data-nosnippet>581</a>    </span><span class="kw">pub </span>top_error_code: <span class="prelude-ty">Option</span>&lt;CreditRegistrationErrorCode&gt;,
+<a href=#582 id=582 data-nosnippet>582</a>}
+<a href=#583 id=583 data-nosnippet>583</a>
+<a href=#584 id=584 data-nosnippet>584</a><span class="doccomment">/// `failed_count` is `failed_permanent` and `misregistered` only, so the columns do not add up to
+<a href=#585 id=585 data-nosnippet>585</a>/// the total by design.
+<a href=#586 id=586 data-nosnippet>586</a></span><span class="kw">pub async fn </span>count_by_credit_unit(
+<a href=#587 id=587 data-nosnippet>587</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#588 id=588 data-nosnippet>588</a>) -&gt; ModelResult&lt;Vec&lt;CreditUnitRegistrationTotals&gt;&gt; {
+<a href=#589 id=589 data-nosnippet>589</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#590 id=590 data-nosnippet>590</a>        CreditUnitRegistrationTotals,
+<a href=#591 id=591 data-nosnippet>591</a>        <span class="string">r#"
+<a href=#592 id=592 data-nosnippet>592</a>SELECT cr.credit_unit_id,
+<a href=#593 id=593 data-nosnippet>593</a>  COUNT(*) AS "total_count!",
+<a href=#594 id=594 data-nosnippet>594</a>  COUNT(*) FILTER (
+<a href=#595 id=595 data-nosnippet>595</a>    WHERE cr.state = ANY($1::credit_registration_state [])
+<a href=#596 id=596 data-nosnippet>596</a>  ) AS "success_count!",
+<a href=#597 id=597 data-nosnippet>597</a>  COUNT(*) FILTER (WHERE cr.state = 'registered') AS "registered_count!",
+<a href=#598 id=598 data-nosnippet>598</a>  COUNT(*) FILTER (
+<a href=#599 id=599 data-nosnippet>599</a>    WHERE cr.state = ANY($3::credit_registration_state [])
+<a href=#600 id=600 data-nosnippet>600</a>  ) AS "already_in_sisu_count!",
+<a href=#601 id=601 data-nosnippet>601</a>  COUNT(*) FILTER (WHERE cr.terminal_at IS NULL) AS "in_flight_count!",
+<a href=#602 id=602 data-nosnippet>602</a>  COUNT(*) FILTER (
+<a href=#603 id=603 data-nosnippet>603</a>    WHERE cr.state = ANY($2::credit_registration_state [])
+<a href=#604 id=604 data-nosnippet>604</a>  ) AS "failed_count!",
+<a href=#605 id=605 data-nosnippet>605</a>  MAX(cr.registered_at) AS "last_registered_at",
+<a href=#606 id=606 data-nosnippet>606</a>  (
+<a href=#607 id=607 data-nosnippet>607</a>    SELECT inner_cr.error_code
+<a href=#608 id=608 data-nosnippet>608</a>    FROM credit_registrations inner_cr
+<a href=#609 id=609 data-nosnippet>609</a>    WHERE inner_cr.credit_unit_id = cr.credit_unit_id
+<a href=#610 id=610 data-nosnippet>610</a>      AND inner_cr.error_code IS NOT NULL
+<a href=#611 id=611 data-nosnippet>611</a>      AND inner_cr.superseded_by_id IS NULL
+<a href=#612 id=612 data-nosnippet>612</a>      AND inner_cr.deleted_at IS NULL
+<a href=#613 id=613 data-nosnippet>613</a>    GROUP BY inner_cr.error_code
+<a href=#614 id=614 data-nosnippet>614</a>    ORDER BY COUNT(*) DESC,
+<a href=#615 id=615 data-nosnippet>615</a>      inner_cr.error_code
+<a href=#616 id=616 data-nosnippet>616</a>    LIMIT 1
+<a href=#617 id=617 data-nosnippet>617</a>  ) AS "top_error_code?: CreditRegistrationErrorCode"
+<a href=#618 id=618 data-nosnippet>618</a>FROM credit_registrations cr
+<a href=#619 id=619 data-nosnippet>619</a>WHERE superseded_by_id IS NULL
+<a href=#620 id=620 data-nosnippet>620</a>  AND deleted_at IS NULL
+<a href=#621 id=621 data-nosnippet>621</a>GROUP BY cr.credit_unit_id
+<a href=#622 id=622 data-nosnippet>622</a>        "#</span>,
+<a href=#623 id=623 data-nosnippet>623</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#624 id=624 data-nosnippet>624</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::HARD_FAILURE_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#625 id=625 data-nosnippet>625</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::OTHER_SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#626 id=626 data-nosnippet>626</a>    )
+<a href=#627 id=627 data-nosnippet>627</a>    .fetch_all(conn)
+<a href=#628 id=628 data-nosnippet>628</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#629 id=629 data-nosnippet>629</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#630 id=630 data-nosnippet>630</a>}
+<a href=#631 id=631 data-nosnippet>631</a>
+<a href=#632 id=632 data-nosnippet>632</a><span class="doccomment">/// How long a row may sit in one state before it counts as stuck. Seconds, per state.
+<a href=#633 id=633 data-nosnippet>633</a>///
+<a href=#634 id=634 data-nosnippet>634</a>/// Also the wire payload the health endpoint reports as thresholds: field names are the
+<a href=#635 id=635 data-nosnippet>635</a>/// `stuck_*_secs` keys the frontend reads, so do not rename without updating it.
+<a href=#636 id=636 data-nosnippet>636</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, ToSchema)]
+<a href=#637 id=637 data-nosnippet>637</a></span><span class="kw">pub struct </span>StuckThresholds {
+<a href=#638 id=638 data-nosnippet>638</a>    <span class="kw">pub </span>stuck_ready_to_submit_secs: i64,
+<a href=#639 id=639 data-nosnippet>639</a>    <span class="kw">pub </span>stuck_submitting_secs: i64,
+<a href=#640 id=640 data-nosnippet>640</a>    <span class="kw">pub </span>stuck_awaiting_verification_secs: i64,
+<a href=#641 id=641 data-nosnippet>641</a>    <span class="kw">pub </span>stuck_failed_retryable_secs: i64,
+<a href=#642 id=642 data-nosnippet>642</a>}
+<a href=#643 id=643 data-nosnippet>643</a>
+<a href=#644 id=644 data-nosnippet>644</a><span class="doccomment">/// The longest `submissionPending` asks verify to wait before polling again.
+<a href=#645 id=645 data-nosnippet>645</a></span><span class="kw">const </span>SUOTAR_PENDING_WAIT: TimeDelta = TimeDelta::days(<span class="number">1</span>);
+<a href=#646 id=646 data-nosnippet>646</a>
+<a href=#647 id=647 data-nosnippet>647</a><span class="kw">impl </span>StuckThresholds {
+<a href=#648 id=648 data-nosnippet>648</a>    <span class="doccomment">/// The thresholds every detector and alert uses.
+<a href=#649 id=649 data-nosnippet>649</a>    </span><span class="kw">pub const </span>CURRENT: <span class="self">Self </span>= <span class="self">Self </span>{
+<a href=#650 id=650 data-nosnippet>650</a>        stuck_ready_to_submit_secs: <span class="number">2 </span>* <span class="number">60 </span>* <span class="number">60</span>,
+<a href=#651 id=651 data-nosnippet>651</a>        stuck_submitting_secs: <span class="number">90 </span>* <span class="number">60</span>,
+<a href=#652 id=652 data-nosnippet>652</a>        stuck_awaiting_verification_secs: SUOTAR_PENDING_WAIT.num_seconds() + <span class="number">2 </span>* <span class="number">60 </span>* <span class="number">60</span>,
+<a href=#653 id=653 data-nosnippet>653</a>        stuck_failed_retryable_secs: <span class="number">3 </span>* <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60</span>,
+<a href=#654 id=654 data-nosnippet>654</a>    };
+<a href=#655 id=655 data-nosnippet>655</a>
+<a href=#656 id=656 data-nosnippet>656</a>    <span class="doccomment">/// The threshold for `state`, or `None` for a state that waits on a student or a person.
+<a href=#657 id=657 data-nosnippet>657</a>    </span><span class="kw">pub fn </span>seconds_for(<span class="kw-2">&amp;</span><span class="self">self</span>, state: CreditRegistrationState) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt; {
+<a href=#658 id=658 data-nosnippet>658</a>        <span class="kw">let </span>(states, seconds) = <span class="self">self</span>.state_seconds_arrays();
+<a href=#659 id=659 data-nosnippet>659</a>        states
+<a href=#660 id=660 data-nosnippet>660</a>            .iter()
+<a href=#661 id=661 data-nosnippet>661</a>            .position(|candidate| <span class="kw-2">*</span>candidate == state)
+<a href=#662 id=662 data-nosnippet>662</a>            .map(|index| seconds[index] <span class="kw">as </span>i64)
+<a href=#663 id=663 data-nosnippet>663</a>    }
+<a href=#664 id=664 data-nosnippet>664</a>
+<a href=#665 id=665 data-nosnippet>665</a>    <span class="doccomment">/// The four states this covers, paired with their threshold in seconds, for a query to `UNNEST`
+<a href=#666 id=666 data-nosnippet>666</a>    /// into a state -&gt; threshold lookup.
+<a href=#667 id=667 data-nosnippet>667</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>state_seconds_arrays(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ([CreditRegistrationState; <span class="number">4</span>], [f64; <span class="number">4</span>]) {
+<a href=#668 id=668 data-nosnippet>668</a>        (
+<a href=#669 id=669 data-nosnippet>669</a>            [
+<a href=#670 id=670 data-nosnippet>670</a>                CreditRegistrationState::ReadyToSubmit,
+<a href=#671 id=671 data-nosnippet>671</a>                CreditRegistrationState::Submitting,
+<a href=#672 id=672 data-nosnippet>672</a>                CreditRegistrationState::AwaitingVerification,
+<a href=#673 id=673 data-nosnippet>673</a>                CreditRegistrationState::FailedRetryable,
+<a href=#674 id=674 data-nosnippet>674</a>            ],
+<a href=#675 id=675 data-nosnippet>675</a>            [
+<a href=#676 id=676 data-nosnippet>676</a>                <span class="self">self</span>.stuck_ready_to_submit_secs <span class="kw">as </span>f64,
+<a href=#677 id=677 data-nosnippet>677</a>                <span class="self">self</span>.stuck_submitting_secs <span class="kw">as </span>f64,
+<a href=#678 id=678 data-nosnippet>678</a>                <span class="self">self</span>.stuck_awaiting_verification_secs <span class="kw">as </span>f64,
+<a href=#679 id=679 data-nosnippet>679</a>                <span class="self">self</span>.stuck_failed_retryable_secs <span class="kw">as </span>f64,
+<a href=#680 id=680 data-nosnippet>680</a>            ],
+<a href=#681 id=681 data-nosnippet>681</a>        )
+<a href=#682 id=682 data-nosnippet>682</a>    }
+<a href=#683 id=683 data-nosnippet>683</a>}
+<a href=#684 id=684 data-nosnippet>684</a>
+<a href=#685 id=685 data-nosnippet>685</a><span class="kw">const _</span>: () = <span class="macro">assert!</span>(
+<a href=#686 id=686 data-nosnippet>686</a>    StuckThresholds::CURRENT.stuck_failed_retryable_secs
+<a href=#687 id=687 data-nosnippet>687</a>        &lt; <span class="kw">crate</span>::library::credit_registration::backoff::SUBMIT_MAX_RETRY_AGE.num_seconds(),
+<a href=#688 id=688 data-nosnippet>688</a>    <span class="string">"a row must be considered stuck before backoff gives up retrying it"
+<a href=#689 id=689 data-nosnippet>689</a></span>);
+<a href=#690 id=690 data-nosnippet>690</a><span class="kw">const _</span>: () = <span class="macro">assert!</span>(
+<a href=#691 id=691 data-nosnippet>691</a>    StuckThresholds::CURRENT.stuck_submitting_secs
+<a href=#692 id=692 data-nosnippet>692</a>        &gt; <span class="kw">crate</span>::library::credit_registration::backoff::SUBMITTING_RECOVERY_GRACE.num_seconds(),
+<a href=#693 id=693 data-nosnippet>693</a>    <span class="string">"the stuck threshold must outlast the grace period that lets a submit recover on its own"
+<a href=#694 id=694 data-nosnippet>694</a></span>);
+<a href=#695 id=695 data-nosnippet>695</a>
+<a href=#696 id=696 data-nosnippet>696</a><span class="attr">#[derive(Debug, Clone, PartialEq)]
+<a href=#697 id=697 data-nosnippet>697</a></span><span class="kw">pub struct </span>StuckRegistrationCount {
+<a href=#698 id=698 data-nosnippet>698</a>    <span class="kw">pub </span>state: CreditRegistrationState,
+<a href=#699 id=699 data-nosnippet>699</a>    <span class="kw">pub </span>count: i64,
+<a href=#700 id=700 data-nosnippet>700</a>    <span class="doccomment">/// Over three times the threshold, which is what makes the alert critical.
+<a href=#701 id=701 data-nosnippet>701</a>    </span><span class="kw">pub </span>severely_stuck_count: i64,
+<a href=#702 id=702 data-nosnippet>702</a>    <span class="kw">pub </span>oldest_state_changed_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
+<a href=#703 id=703 data-nosnippet>703</a>}
+<a href=#704 id=704 data-nosnippet>704</a>
+<a href=#705 id=705 data-nosnippet>705</a><span class="doccomment">/// Rows past their state's threshold, per state, for the stuck-registrations alert. Counted
+<a href=#706 id=706 data-nosnippet>706</a>/// whatever their Needs attention standing: a dismissal or another reason does not unstick a row.
+<a href=#707 id=707 data-nosnippet>707</a></span><span class="kw">pub fn </span>count_stuck_in_state(
+<a href=#708 id=708 data-nosnippet>708</a>    rows: <span class="kw-2">&amp;</span>[AttentionRegistration],
+<a href=#709 id=709 data-nosnippet>709</a>    thresholds: <span class="kw-2">&amp;</span>StuckThresholds,
+<a href=#710 id=710 data-nosnippet>710</a>    now: DateTime&lt;Utc&gt;,
+<a href=#711 id=711 data-nosnippet>711</a>) -&gt; Vec&lt;StuckRegistrationCount&gt; {
+<a href=#712 id=712 data-nosnippet>712</a>    <span class="kw">let </span><span class="kw-2">mut </span>by_state: HashMap&lt;CreditRegistrationState, StuckRegistrationCount&gt; = HashMap::new();
+<a href=#713 id=713 data-nosnippet>713</a>    <span class="kw">for </span>row <span class="kw">in </span>rows
+<a href=#714 id=714 data-nosnippet>714</a>        .iter()
+<a href=#715 id=715 data-nosnippet>715</a>        .filter(|row| row.reasons.contains(<span class="kw-2">&amp;</span>AttentionReason::StuckInState))
+<a href=#716 id=716 data-nosnippet>716</a>    {
+<a href=#717 id=717 data-nosnippet>717</a>        <span class="kw">let </span>severe = thresholds
+<a href=#718 id=718 data-nosnippet>718</a>            .seconds_for(row.state)
+<a href=#719 id=719 data-nosnippet>719</a>            .is_some_and(|secs| (now - row.state_changed_at).num_seconds() &gt; secs * <span class="number">3</span>);
+<a href=#720 id=720 data-nosnippet>720</a>        <span class="kw">let </span>count = by_state.entry(row.state).or_insert(StuckRegistrationCount {
+<a href=#721 id=721 data-nosnippet>721</a>            state: row.state,
+<a href=#722 id=722 data-nosnippet>722</a>            count: <span class="number">0</span>,
+<a href=#723 id=723 data-nosnippet>723</a>            severely_stuck_count: <span class="number">0</span>,
+<a href=#724 id=724 data-nosnippet>724</a>            oldest_state_changed_at: <span class="prelude-val">None</span>,
+<a href=#725 id=725 data-nosnippet>725</a>        });
+<a href=#726 id=726 data-nosnippet>726</a>        count.count += <span class="number">1</span>;
+<a href=#727 id=727 data-nosnippet>727</a>        count.severely_stuck_count += i64::from(severe);
+<a href=#728 id=728 data-nosnippet>728</a>        count.oldest_state_changed_at = <span class="prelude-val">Some</span>(
+<a href=#729 id=729 data-nosnippet>729</a>            count
+<a href=#730 id=730 data-nosnippet>730</a>                .oldest_state_changed_at
+<a href=#731 id=731 data-nosnippet>731</a>                .map_or(row.state_changed_at, |oldest| {
+<a href=#732 id=732 data-nosnippet>732</a>                    oldest.min(row.state_changed_at)
+<a href=#733 id=733 data-nosnippet>733</a>                }),
+<a href=#734 id=734 data-nosnippet>734</a>        );
+<a href=#735 id=735 data-nosnippet>735</a>    }
+<a href=#736 id=736 data-nosnippet>736</a>    <span class="kw">let </span><span class="kw-2">mut </span>counts: Vec&lt;StuckRegistrationCount&gt; = by_state.into_values().collect();
+<a href=#737 id=737 data-nosnippet>737</a>    counts.sort_by_key(|count| {
+<a href=#738 id=738 data-nosnippet>738</a>        CreditRegistrationState::ALL
+<a href=#739 id=739 data-nosnippet>739</a>            .iter()
+<a href=#740 id=740 data-nosnippet>740</a>            .position(|state| <span class="kw-2">*</span>state == count.state)
+<a href=#741 id=741 data-nosnippet>741</a>    });
+<a href=#742 id=742 data-nosnippet>742</a>    counts
+<a href=#743 id=743 data-nosnippet>743</a>}
 </code></pre></div></section></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","is_authorized","is_over_global_cap","with_retry_after"],"mod":["credit_registration_handoffs","outbound_handoffs"],"static":["GLOBAL_LIMITS"]};
