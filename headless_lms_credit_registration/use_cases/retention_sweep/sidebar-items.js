@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["OUTCOME_SWEEP_LIMIT","SWEEP_LIMIT"],"fn":["run"]};
+window.SIDEBAR_ITEMS = {"constant":["MAX_REDACTION_BATCHES","OUTCOME_SWEEP_LIMIT","SWEEP_LIMIT"],"fn":["run"]};

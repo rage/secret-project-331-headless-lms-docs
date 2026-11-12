@@ -149,8 +149,8 @@
 <a href=#149 id=149 data-nosnippet>149</a>    </span><span class="kw">pub </span>message: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#150 id=150 data-nosnippet>150</a>    <span class="kw">pub </span>actor_user_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
 <a href=#151 id=151 data-nosnippet>151</a>    <span class="kw">pub </span>suotar_api_call_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
-<a href=#152 id=152 data-nosnippet>152</a>    <span class="doccomment">/// The `{request, response}` pair, scrubbed at write time: names, student numbers and email
-<a href=#153 id=153 data-nosnippet>153</a>    /// addresses read `[redacted]` while their keys survive. The values we sent are on the row.
+<a href=#152 id=152 data-nosnippet>152</a>    <span class="doccomment">/// The `{request, response}` pair for this row's item. Once older than the call log's 90-day
+<a href=#153 id=153 data-nosnippet>153</a>    /// window, names, student numbers and email addresses in it read `[redacted]`.
 <a href=#154 id=154 data-nosnippet>154</a>    </span><span class="kw">pub </span>details: <span class="prelude-ty">Option</span>&lt;serde_json::Value&gt;,
 <a href=#155 id=155 data-nosnippet>155</a>    <span class="doccomment">/// The requestItemId the row went out under in the call behind this event.
 <a href=#156 id=156 data-nosnippet>156</a>    </span><span class="kw">pub </span>request_item_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
