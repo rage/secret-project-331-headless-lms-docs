@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["RevertPlan"],"fn":["plan_revert"]};
+window.SIDEBAR_ITEMS = {"enum":["RevertPlan"],"fn":["plan_revert","pre_completion_settings_digest"]};

@@ -6,7 +6,7 @@
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>headless_lms_models::{
 <a href=#7 id=7 data-nosnippet>7</a>    PKeyPolicy, course_exams,
 <a href=#8 id=8 data-nosnippet>8</a>    course_instances::{<span class="self">self</span>, NewCourseInstance},
-<a href=#9 id=9 data-nosnippet>9</a>    course_modules::{<span class="self">self</span>, AutomaticCompletionRequirements, CompletionPolicy},
+<a href=#9 id=9 data-nosnippet>9</a>    course_modules::{<span class="self">self</span>, CompletionPolicy, CompletionRequirements, ExamRequirement},
 <a href=#10 id=10 data-nosnippet>10</a>    courses::{<span class="self">self</span>, NewCourse},
 <a href=#11 id=11 data-nosnippet>11</a>    library::{
 <a href=#12 id=12 data-nosnippet>12</a>        <span class="self">self</span>,
@@ -326,15 +326,15 @@
 <a href=#326 id=326 data-nosnippet>326</a>    <span class="comment">// configure automatic completions
 <a href=#327 id=327 data-nosnippet>327</a>    </span><span class="kw">let </span>automatic_default_module =
 <a href=#328 id=328 data-nosnippet>328</a>        course_modules::get_default_by_course_id(<span class="kw-2">&amp;mut </span>conn, automatic_completions_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#329 id=329 data-nosnippet>329</a>    <span class="kw">let </span>automatic_default_module = course_modules::update_automatic_completion_status(
+<a href=#329 id=329 data-nosnippet>329</a>    <span class="kw">let </span>automatic_default_module = course_modules::update_completion_policy(
 <a href=#330 id=330 data-nosnippet>330</a>        <span class="kw-2">&amp;mut </span>conn,
 <a href=#331 id=331 data-nosnippet>331</a>        automatic_default_module.id,
-<a href=#332 id=332 data-nosnippet>332</a>        <span class="kw-2">&amp;</span>CompletionPolicy::Automatic(AutomaticCompletionRequirements {
+<a href=#332 id=332 data-nosnippet>332</a>        <span class="kw-2">&amp;</span>CompletionPolicy::ByRequirements(CompletionRequirements {
 <a href=#333 id=333 data-nosnippet>333</a>            course_module_id: automatic_default_module.id,
 <a href=#334 id=334 data-nosnippet>334</a>            number_of_exercises_attempted_treshold: <span class="prelude-val">Some</span>(<span class="number">1</span>),
 <a href=#335 id=335 data-nosnippet>335</a>            number_of_points_treshold: <span class="prelude-val">Some</span>(<span class="number">1</span>),
-<a href=#336 id=336 data-nosnippet>336</a>            requires_exam: <span class="bool-val">false</span>,
-<a href=#337 id=337 data-nosnippet>337</a>        }),
+<a href=#336 id=336 data-nosnippet>336</a>        }),
+<a href=#337 id=337 data-nosnippet>337</a>        ExamRequirement::None,
 <a href=#338 id=338 data-nosnippet>338</a>    )
 <a href=#339 id=339 data-nosnippet>339</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#340 id=340 data-nosnippet>340</a>    course_modules::update_uh_course_code(
@@ -345,15 +345,15 @@
 <a href=#345 id=345 data-nosnippet>345</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#346 id=346 data-nosnippet>346</a>    <span class="kw">let </span>automatic_with_exam_default_module =
 <a href=#347 id=347 data-nosnippet>347</a>        course_modules::get_default_by_course_id(<span class="kw-2">&amp;mut </span>conn, automatic_course_with_exam_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">let </span>automatic_with_exam_default_module = course_modules::update_automatic_completion_status(
+<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">let </span>automatic_with_exam_default_module = course_modules::update_completion_policy(
 <a href=#349 id=349 data-nosnippet>349</a>        <span class="kw-2">&amp;mut </span>conn,
 <a href=#350 id=350 data-nosnippet>350</a>        automatic_with_exam_default_module.id,
-<a href=#351 id=351 data-nosnippet>351</a>        <span class="kw-2">&amp;</span>CompletionPolicy::Automatic(AutomaticCompletionRequirements {
+<a href=#351 id=351 data-nosnippet>351</a>        <span class="kw-2">&amp;</span>CompletionPolicy::ByExam(CompletionRequirements {
 <a href=#352 id=352 data-nosnippet>352</a>            course_module_id: automatic_with_exam_default_module.id,
 <a href=#353 id=353 data-nosnippet>353</a>            number_of_exercises_attempted_treshold: <span class="prelude-val">Some</span>(<span class="number">1</span>),
 <a href=#354 id=354 data-nosnippet>354</a>            number_of_points_treshold: <span class="prelude-val">Some</span>(<span class="number">1</span>),
-<a href=#355 id=355 data-nosnippet>355</a>            requires_exam: <span class="bool-val">true</span>,
-<a href=#356 id=356 data-nosnippet>356</a>        }),
+<a href=#355 id=355 data-nosnippet>355</a>        }),
+<a href=#356 id=356 data-nosnippet>356</a>        ExamRequirement::Platform,
 <a href=#357 id=357 data-nosnippet>357</a>    )
 <a href=#358 id=358 data-nosnippet>358</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#359 id=359 data-nosnippet>359</a>    course_modules::update_uh_course_code(
@@ -390,15 +390,15 @@
 <a href=#390 id=390 data-nosnippet>390</a>    <span class="comment">// configure certification
 <a href=#391 id=391 data-nosnippet>391</a>    </span><span class="kw">let </span>certificates_default_module =
 <a href=#392 id=392 data-nosnippet>392</a>        course_modules::get_default_by_course_id(<span class="kw-2">&amp;mut </span>conn, certificates_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#393 id=393 data-nosnippet>393</a>    course_modules::update_automatic_completion_status(
+<a href=#393 id=393 data-nosnippet>393</a>    course_modules::update_completion_policy(
 <a href=#394 id=394 data-nosnippet>394</a>        <span class="kw-2">&amp;mut </span>conn,
 <a href=#395 id=395 data-nosnippet>395</a>        certificates_default_module.id,
-<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw-2">&amp;</span>CompletionPolicy::Automatic(AutomaticCompletionRequirements {
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw-2">&amp;</span>CompletionPolicy::ByRequirements(CompletionRequirements {
 <a href=#397 id=397 data-nosnippet>397</a>            course_module_id: certificates_default_module.id,
 <a href=#398 id=398 data-nosnippet>398</a>            number_of_exercises_attempted_treshold: <span class="prelude-val">Some</span>(<span class="number">1</span>),
 <a href=#399 id=399 data-nosnippet>399</a>            number_of_points_treshold: <span class="prelude-val">Some</span>(<span class="number">1</span>),
-<a href=#400 id=400 data-nosnippet>400</a>            requires_exam: <span class="bool-val">false</span>,
-<a href=#401 id=401 data-nosnippet>401</a>        }),
+<a href=#400 id=400 data-nosnippet>400</a>        }),
+<a href=#401 id=401 data-nosnippet>401</a>        ExamRequirement::None,
 <a href=#402 id=402 data-nosnippet>402</a>    )
 <a href=#403 id=403 data-nosnippet>403</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#404 id=404 data-nosnippet>404</a>    course_modules::update_certification_enabled(

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_completion_overview"],"struct":["CourseCompletionOverview","CourseExamsOverview","CourseModuleCompletionOverview","MainFrontendCourseCompletionOverviewApiDoc"]};

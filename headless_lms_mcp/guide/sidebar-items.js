@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["CITATIONS_AND_GLOSSARY","COURSE_STRUCTURE","EDITING","EXERCISES","PREVIEWS_AND_CHECKS","PUBLISHING_AND_RISK","RICH_TEXT"],"enum":["GuideTopic"],"fn":["answer","block_guide","blocks_guide","index","topics_guide"]};
+window.SIDEBAR_ITEMS = {"constant":["CITATIONS_AND_GLOSSARY","COURSE_SETTINGS","COURSE_STRUCTURE","EDITING","EXERCISES","PREVIEWS_AND_CHECKS","PUBLISHING_AND_RISK","RICH_TEXT"],"enum":["GuideTopic"],"fn":["answer","block_guide","blocks_guide","index","topics_guide"]};

@@ -42,7 +42,7 @@
 <a href=#42 id=42 data-nosnippet>42</a>  AND c.deleted_at IS NULL
 <a href=#43 id=43 data-nosnippet>43</a>WHERE cm.deleted_at IS NULL
 <a href=#44 id=44 data-nosnippet>44</a>  AND TRIM(cm.uh_course_code) &lt;&gt; ''
-<a href=#45 id=45 data-nosnippet>45</a>  AND cm.completions_can_be_registered_to_sisu
+<a href=#45 id=45 data-nosnippet>45</a>  AND cm.credit_registration_route = 'platform'
 <a href=#46 id=46 data-nosnippet>46</a>  AND ($1::uuid IS NULL OR cm.course_id = $1)
 <a href=#47 id=47 data-nosnippet>47</a>ORDER BY cm.course_id,
 <a href=#48 id=48 data-nosnippet>48</a>  cm.order_number
@@ -81,7 +81,7 @@
 <a href=#81 id=81 data-nosnippet>81</a>FROM course_module_suotar_configurations conf
 <a href=#82 id=82 data-nosnippet>82</a>  JOIN course_modules cm ON cm.id = conf.course_module_id AND cm.deleted_at IS NULL
 <a href=#83 id=83 data-nosnippet>83</a>WHERE TRIM(cm.uh_course_code) &lt;&gt; ''
-<a href=#84 id=84 data-nosnippet>84</a>  AND cm.completions_can_be_registered_to_sisu
+<a href=#84 id=84 data-nosnippet>84</a>  AND cm.credit_registration_route = 'platform'
 <a href=#85 id=85 data-nosnippet>85</a>  AND conf.deleted_at IS NULL
 <a href=#86 id=86 data-nosnippet>86</a>  AND conf.config_checked_at IS NOT NULL
 <a href=#87 id=87 data-nosnippet>87</a>  AND conf.config_check_message IS NOT NULL

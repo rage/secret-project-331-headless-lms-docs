@@ -116,103 +116,105 @@
 <a href=#116 id=116 data-nosnippet>116</a>            name: module.name,
 <a href=#117 id=117 data-nosnippet>117</a>            order_number: module.order_number,
 <a href=#118 id=118 data-nosnippet>118</a>            completion_policy: module.completion_policy,
-<a href=#119 id=119 data-nosnippet>119</a>            certification_enabled: module.certification_enabled,
-<a href=#120 id=120 data-nosnippet>120</a>            uh_course_code: module.uh_course_code,
-<a href=#121 id=121 data-nosnippet>121</a>            ects_credits: module.ects_credits,
-<a href=#122 id=122 data-nosnippet>122</a>            completion_registration_link_override: module.completion_registration_link_override,
-<a href=#123 id=123 data-nosnippet>123</a>            completions_can_be_registered_to_sisu: module.completions_can_be_registered_to_sisu,
-<a href=#124 id=124 data-nosnippet>124</a>        }
-<a href=#125 id=125 data-nosnippet>125</a>    }
-<a href=#126 id=126 data-nosnippet>126</a>}
-<a href=#127 id=127 data-nosnippet>127</a>
-<a href=#128 id=128 data-nosnippet>128</a><span class="kw">impl </span>From&lt;<span class="kw">crate</span>::chapters::DatabaseChapter&gt; <span class="kw">for </span>ChapterSnapshot {
-<a href=#129 id=129 data-nosnippet>129</a>    <span class="kw">fn </span>from(chapter: <span class="kw">crate</span>::chapters::DatabaseChapter) -&gt; <span class="self">Self </span>{
-<a href=#130 id=130 data-nosnippet>130</a>        <span class="self">Self </span>{
-<a href=#131 id=131 data-nosnippet>131</a>            id: chapter.id,
-<a href=#132 id=132 data-nosnippet>132</a>            course_id: chapter.course_id,
-<a href=#133 id=133 data-nosnippet>133</a>            course_module_id: chapter.course_module_id,
-<a href=#134 id=134 data-nosnippet>134</a>            name: chapter.name,
-<a href=#135 id=135 data-nosnippet>135</a>            color: chapter.color,
-<a href=#136 id=136 data-nosnippet>136</a>            chapter_number: chapter.chapter_number,
-<a href=#137 id=137 data-nosnippet>137</a>            front_page_id: chapter.front_page_id,
-<a href=#138 id=138 data-nosnippet>138</a>            opens_at: chapter.opens_at,
-<a href=#139 id=139 data-nosnippet>139</a>            deadline: chapter.deadline,
-<a href=#140 id=140 data-nosnippet>140</a>            chapter_image_path: chapter.chapter_image_path,
-<a href=#141 id=141 data-nosnippet>141</a>        }
-<a href=#142 id=142 data-nosnippet>142</a>    }
-<a href=#143 id=143 data-nosnippet>143</a>}
-<a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a><span class="doccomment">/// The settings of a fetched course; only its audiences are read.
-<a href=#146 id=146 data-nosnippet>146</a></span><span class="kw">pub async fn </span>course_settings_of(
-<a href=#147 id=147 data-nosnippet>147</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#148 id=148 data-nosnippet>148</a>    course: <span class="kw-2">&amp;</span><span class="kw">crate</span>::courses::Course,
-<a href=#149 id=149 data-nosnippet>149</a>) -&gt; ModelResult&lt;CourseSettingsSnapshot&gt; {
-<a href=#150 id=150 data-nosnippet>150</a>    <span class="kw">let </span><span class="kw-2">mut </span>audiences: Vec&lt;CourseAudienceSnapshot&gt; =
-<a href=#151 id=151 data-nosnippet>151</a>        <span class="kw">crate</span>::course_audiences::get_edit_course_audiences_by_course_id(conn, course.id)
-<a href=#152 id=152 data-nosnippet>152</a>            .<span class="kw">await</span><span class="question-mark">?
-<a href=#153 id=153 data-nosnippet>153</a>            </span>.into_iter()
-<a href=#154 id=154 data-nosnippet>154</a>            .map(|audience| CourseAudienceSnapshot {
-<a href=#155 id=155 data-nosnippet>155</a>                id: audience.id,
-<a href=#156 id=156 data-nosnippet>156</a>                audience: audience.audience,
-<a href=#157 id=157 data-nosnippet>157</a>            })
-<a href=#158 id=158 data-nosnippet>158</a>            .collect();
-<a href=#159 id=159 data-nosnippet>159</a>    audiences.sort_by_key(|audience| audience.id);
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="prelude-val">Ok</span>(CourseSettingsSnapshot {
-<a href=#161 id=161 data-nosnippet>161</a>        course_id: course.id,
-<a href=#162 id=162 data-nosnippet>162</a>        name: course.name.clone(),
-<a href=#163 id=163 data-nosnippet>163</a>        description: course.description.clone(),
-<a href=#164 id=164 data-nosnippet>164</a>        is_draft: course.is_draft,
-<a href=#165 id=165 data-nosnippet>165</a>        is_test_mode: course.is_test_mode,
-<a href=#166 id=166 data-nosnippet>166</a>        is_unlisted: course.is_unlisted,
-<a href=#167 id=167 data-nosnippet>167</a>        can_add_chatbot: course.can_add_chatbot,
-<a href=#168 id=168 data-nosnippet>168</a>        is_joinable_by_code_only: course.is_joinable_by_code_only,
-<a href=#169 id=169 data-nosnippet>169</a>        ask_marketing_consent: course.ask_marketing_consent,
-<a href=#170 id=170 data-nosnippet>170</a>        flagged_answers_threshold: course.flagged_answers_threshold,
-<a href=#171 id=171 data-nosnippet>171</a>        flagged_answers_skip_manual_review_and_allow_retry: course
-<a href=#172 id=172 data-nosnippet>172</a>            .flagged_answers_skip_manual_review_and_allow_retry,
-<a href=#173 id=173 data-nosnippet>173</a>        closed_at: course.closed_at,
-<a href=#174 id=174 data-nosnippet>174</a>        closed_additional_message: course.closed_additional_message.clone(),
-<a href=#175 id=175 data-nosnippet>175</a>        closed_course_successor_id: course.closed_course_successor_id,
-<a href=#176 id=176 data-nosnippet>176</a>        chapter_locking_enabled: course.chapter_locking_enabled,
-<a href=#177 id=177 data-nosnippet>177</a>        ai_policy: course.ai_policy,
-<a href=#178 id=178 data-nosnippet>178</a>        course_material_ai_instructions: course.course_material_ai_instructions,
-<a href=#179 id=179 data-nosnippet>179</a>        base_module_completion_requires_n_submodule_completions: course
-<a href=#180 id=180 data-nosnippet>180</a>            .base_module_completion_requires_n_submodule_completions,
-<a href=#181 id=181 data-nosnippet>181</a>        audiences,
-<a href=#182 id=182 data-nosnippet>182</a>    })
-<a href=#183 id=183 data-nosnippet>183</a>}
-<a href=#184 id=184 data-nosnippet>184</a>
-<a href=#185 id=185 data-nosnippet>185</a><span class="kw">impl </span>From&lt;<span class="kw">crate</span>::glossary::Term&gt; <span class="kw">for </span>GlossaryTermSnapshot {
-<a href=#186 id=186 data-nosnippet>186</a>    <span class="kw">fn </span>from(term: <span class="kw">crate</span>::glossary::Term) -&gt; <span class="self">Self </span>{
-<a href=#187 id=187 data-nosnippet>187</a>        <span class="self">Self </span>{
-<a href=#188 id=188 data-nosnippet>188</a>            id: term.id,
-<a href=#189 id=189 data-nosnippet>189</a>            course_id: term.course_id,
-<a href=#190 id=190 data-nosnippet>190</a>            term: term.term,
-<a href=#191 id=191 data-nosnippet>191</a>            definition: term.definition,
-<a href=#192 id=192 data-nosnippet>192</a>        }
-<a href=#193 id=193 data-nosnippet>193</a>    }
-<a href=#194 id=194 data-nosnippet>194</a>}
-<a href=#195 id=195 data-nosnippet>195</a>
-<a href=#196 id=196 data-nosnippet>196</a><span class="kw">impl </span>From&lt;<span class="kw">crate</span>::material_references::MaterialReference&gt; <span class="kw">for </span>ReferenceSnapshot {
-<a href=#197 id=197 data-nosnippet>197</a>    <span class="kw">fn </span>from(reference: <span class="kw">crate</span>::material_references::MaterialReference) -&gt; <span class="self">Self </span>{
-<a href=#198 id=198 data-nosnippet>198</a>        <span class="self">Self </span>{
-<a href=#199 id=199 data-nosnippet>199</a>            id: reference.id,
-<a href=#200 id=200 data-nosnippet>200</a>            course_id: reference.course_id,
-<a href=#201 id=201 data-nosnippet>201</a>            citation_key: reference.citation_key,
-<a href=#202 id=202 data-nosnippet>202</a>            reference: reference.reference,
-<a href=#203 id=203 data-nosnippet>203</a>        }
-<a href=#204 id=204 data-nosnippet>204</a>    }
-<a href=#205 id=205 data-nosnippet>205</a>}
-<a href=#206 id=206 data-nosnippet>206</a>
-<a href=#207 id=207 data-nosnippet>207</a><span class="kw">impl </span>From&lt;<span class="kw">crate</span>::peer_or_self_review_configs::PeerOrSelfReviewConfig&gt;
-<a href=#208 id=208 data-nosnippet>208</a>    <span class="kw">for </span>CourseDefaultReviewConfigSnapshot
-<a href=#209 id=209 data-nosnippet>209</a>{
-<a href=#210 id=210 data-nosnippet>210</a>    <span class="kw">fn </span>from(config: <span class="kw">crate</span>::peer_or_self_review_configs::PeerOrSelfReviewConfig) -&gt; <span class="self">Self </span>{
-<a href=#211 id=211 data-nosnippet>211</a>        <span class="self">Self </span>{
-<a href=#212 id=212 data-nosnippet>212</a>            id: config.id,
-<a href=#213 id=213 data-nosnippet>213</a>            course_id: config.course_id,
-<a href=#214 id=214 data-nosnippet>214</a>            review_instructions: config.review_instructions,
-<a href=#215 id=215 data-nosnippet>215</a>        }
-<a href=#216 id=216 data-nosnippet>216</a>    }
-<a href=#217 id=217 data-nosnippet>217</a>}
+<a href=#119 id=119 data-nosnippet>119</a>            exam_requirement: module.exam_requirement,
+<a href=#120 id=120 data-nosnippet>120</a>            exam_location_description: module.exam_location_description,
+<a href=#121 id=121 data-nosnippet>121</a>            certification_enabled: module.certification_enabled,
+<a href=#122 id=122 data-nosnippet>122</a>            uh_course_code: module.uh_course_code,
+<a href=#123 id=123 data-nosnippet>123</a>            ects_credits: module.ects_credits,
+<a href=#124 id=124 data-nosnippet>124</a>            completion_registration_link_override: module.completion_registration_link_override,
+<a href=#125 id=125 data-nosnippet>125</a>            credit_registration_route: module.credit_registration_route,
+<a href=#126 id=126 data-nosnippet>126</a>        }
+<a href=#127 id=127 data-nosnippet>127</a>    }
+<a href=#128 id=128 data-nosnippet>128</a>}
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a><span class="kw">impl </span>From&lt;<span class="kw">crate</span>::chapters::DatabaseChapter&gt; <span class="kw">for </span>ChapterSnapshot {
+<a href=#131 id=131 data-nosnippet>131</a>    <span class="kw">fn </span>from(chapter: <span class="kw">crate</span>::chapters::DatabaseChapter) -&gt; <span class="self">Self </span>{
+<a href=#132 id=132 data-nosnippet>132</a>        <span class="self">Self </span>{
+<a href=#133 id=133 data-nosnippet>133</a>            id: chapter.id,
+<a href=#134 id=134 data-nosnippet>134</a>            course_id: chapter.course_id,
+<a href=#135 id=135 data-nosnippet>135</a>            course_module_id: chapter.course_module_id,
+<a href=#136 id=136 data-nosnippet>136</a>            name: chapter.name,
+<a href=#137 id=137 data-nosnippet>137</a>            color: chapter.color,
+<a href=#138 id=138 data-nosnippet>138</a>            chapter_number: chapter.chapter_number,
+<a href=#139 id=139 data-nosnippet>139</a>            front_page_id: chapter.front_page_id,
+<a href=#140 id=140 data-nosnippet>140</a>            opens_at: chapter.opens_at,
+<a href=#141 id=141 data-nosnippet>141</a>            deadline: chapter.deadline,
+<a href=#142 id=142 data-nosnippet>142</a>            chapter_image_path: chapter.chapter_image_path,
+<a href=#143 id=143 data-nosnippet>143</a>        }
+<a href=#144 id=144 data-nosnippet>144</a>    }
+<a href=#145 id=145 data-nosnippet>145</a>}
+<a href=#146 id=146 data-nosnippet>146</a>
+<a href=#147 id=147 data-nosnippet>147</a><span class="doccomment">/// The settings of a fetched course; only its audiences are read.
+<a href=#148 id=148 data-nosnippet>148</a></span><span class="kw">pub async fn </span>course_settings_of(
+<a href=#149 id=149 data-nosnippet>149</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#150 id=150 data-nosnippet>150</a>    course: <span class="kw-2">&amp;</span><span class="kw">crate</span>::courses::Course,
+<a href=#151 id=151 data-nosnippet>151</a>) -&gt; ModelResult&lt;CourseSettingsSnapshot&gt; {
+<a href=#152 id=152 data-nosnippet>152</a>    <span class="kw">let </span><span class="kw-2">mut </span>audiences: Vec&lt;CourseAudienceSnapshot&gt; =
+<a href=#153 id=153 data-nosnippet>153</a>        <span class="kw">crate</span>::course_audiences::get_edit_course_audiences_by_course_id(conn, course.id)
+<a href=#154 id=154 data-nosnippet>154</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#155 id=155 data-nosnippet>155</a>            </span>.into_iter()
+<a href=#156 id=156 data-nosnippet>156</a>            .map(|audience| CourseAudienceSnapshot {
+<a href=#157 id=157 data-nosnippet>157</a>                id: audience.id,
+<a href=#158 id=158 data-nosnippet>158</a>                audience: audience.audience,
+<a href=#159 id=159 data-nosnippet>159</a>            })
+<a href=#160 id=160 data-nosnippet>160</a>            .collect();
+<a href=#161 id=161 data-nosnippet>161</a>    audiences.sort_by_key(|audience| audience.id);
+<a href=#162 id=162 data-nosnippet>162</a>    <span class="prelude-val">Ok</span>(CourseSettingsSnapshot {
+<a href=#163 id=163 data-nosnippet>163</a>        course_id: course.id,
+<a href=#164 id=164 data-nosnippet>164</a>        name: course.name.clone(),
+<a href=#165 id=165 data-nosnippet>165</a>        description: course.description.clone(),
+<a href=#166 id=166 data-nosnippet>166</a>        is_draft: course.is_draft,
+<a href=#167 id=167 data-nosnippet>167</a>        is_test_mode: course.is_test_mode,
+<a href=#168 id=168 data-nosnippet>168</a>        is_unlisted: course.is_unlisted,
+<a href=#169 id=169 data-nosnippet>169</a>        can_add_chatbot: course.can_add_chatbot,
+<a href=#170 id=170 data-nosnippet>170</a>        is_joinable_by_code_only: course.is_joinable_by_code_only,
+<a href=#171 id=171 data-nosnippet>171</a>        ask_marketing_consent: course.ask_marketing_consent,
+<a href=#172 id=172 data-nosnippet>172</a>        flagged_answers_threshold: course.flagged_answers_threshold,
+<a href=#173 id=173 data-nosnippet>173</a>        flagged_answers_skip_manual_review_and_allow_retry: course
+<a href=#174 id=174 data-nosnippet>174</a>            .flagged_answers_skip_manual_review_and_allow_retry,
+<a href=#175 id=175 data-nosnippet>175</a>        closed_at: course.closed_at,
+<a href=#176 id=176 data-nosnippet>176</a>        closed_additional_message: course.closed_additional_message.clone(),
+<a href=#177 id=177 data-nosnippet>177</a>        closed_course_successor_id: course.closed_course_successor_id,
+<a href=#178 id=178 data-nosnippet>178</a>        chapter_locking_enabled: course.chapter_locking_enabled,
+<a href=#179 id=179 data-nosnippet>179</a>        ai_policy: course.ai_policy,
+<a href=#180 id=180 data-nosnippet>180</a>        course_material_ai_instructions: course.course_material_ai_instructions,
+<a href=#181 id=181 data-nosnippet>181</a>        base_module_completion_requires_n_submodule_completions: course
+<a href=#182 id=182 data-nosnippet>182</a>            .base_module_completion_requires_n_submodule_completions,
+<a href=#183 id=183 data-nosnippet>183</a>        audiences,
+<a href=#184 id=184 data-nosnippet>184</a>    })
+<a href=#185 id=185 data-nosnippet>185</a>}
+<a href=#186 id=186 data-nosnippet>186</a>
+<a href=#187 id=187 data-nosnippet>187</a><span class="kw">impl </span>From&lt;<span class="kw">crate</span>::glossary::Term&gt; <span class="kw">for </span>GlossaryTermSnapshot {
+<a href=#188 id=188 data-nosnippet>188</a>    <span class="kw">fn </span>from(term: <span class="kw">crate</span>::glossary::Term) -&gt; <span class="self">Self </span>{
+<a href=#189 id=189 data-nosnippet>189</a>        <span class="self">Self </span>{
+<a href=#190 id=190 data-nosnippet>190</a>            id: term.id,
+<a href=#191 id=191 data-nosnippet>191</a>            course_id: term.course_id,
+<a href=#192 id=192 data-nosnippet>192</a>            term: term.term,
+<a href=#193 id=193 data-nosnippet>193</a>            definition: term.definition,
+<a href=#194 id=194 data-nosnippet>194</a>        }
+<a href=#195 id=195 data-nosnippet>195</a>    }
+<a href=#196 id=196 data-nosnippet>196</a>}
+<a href=#197 id=197 data-nosnippet>197</a>
+<a href=#198 id=198 data-nosnippet>198</a><span class="kw">impl </span>From&lt;<span class="kw">crate</span>::material_references::MaterialReference&gt; <span class="kw">for </span>ReferenceSnapshot {
+<a href=#199 id=199 data-nosnippet>199</a>    <span class="kw">fn </span>from(reference: <span class="kw">crate</span>::material_references::MaterialReference) -&gt; <span class="self">Self </span>{
+<a href=#200 id=200 data-nosnippet>200</a>        <span class="self">Self </span>{
+<a href=#201 id=201 data-nosnippet>201</a>            id: reference.id,
+<a href=#202 id=202 data-nosnippet>202</a>            course_id: reference.course_id,
+<a href=#203 id=203 data-nosnippet>203</a>            citation_key: reference.citation_key,
+<a href=#204 id=204 data-nosnippet>204</a>            reference: reference.reference,
+<a href=#205 id=205 data-nosnippet>205</a>        }
+<a href=#206 id=206 data-nosnippet>206</a>    }
+<a href=#207 id=207 data-nosnippet>207</a>}
+<a href=#208 id=208 data-nosnippet>208</a>
+<a href=#209 id=209 data-nosnippet>209</a><span class="kw">impl </span>From&lt;<span class="kw">crate</span>::peer_or_self_review_configs::PeerOrSelfReviewConfig&gt;
+<a href=#210 id=210 data-nosnippet>210</a>    <span class="kw">for </span>CourseDefaultReviewConfigSnapshot
+<a href=#211 id=211 data-nosnippet>211</a>{
+<a href=#212 id=212 data-nosnippet>212</a>    <span class="kw">fn </span>from(config: <span class="kw">crate</span>::peer_or_self_review_configs::PeerOrSelfReviewConfig) -&gt; <span class="self">Self </span>{
+<a href=#213 id=213 data-nosnippet>213</a>        <span class="self">Self </span>{
+<a href=#214 id=214 data-nosnippet>214</a>            id: config.id,
+<a href=#215 id=215 data-nosnippet>215</a>            course_id: config.course_id,
+<a href=#216 id=216 data-nosnippet>216</a>            review_instructions: config.review_instructions,
+<a href=#217 id=217 data-nosnippet>217</a>        }
+<a href=#218 id=218 data-nosnippet>218</a>    }
+<a href=#219 id=219 data-nosnippet>219</a>}
 </code></pre></div></section></main></body></html>

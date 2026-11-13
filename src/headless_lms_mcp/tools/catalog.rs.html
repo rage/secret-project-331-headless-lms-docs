@@ -177,7 +177,7 @@
 <a href=#177 id=177 data-nosnippet>177</a>    define(
 <a href=#178 id=178 data-nosnippet>178</a>        handler,
 <a href=#179 id=179 data-nosnippet>179</a>        <span class="string">"get_course_settings"</span>,
-<a href=#180 id=180 data-nosnippet>180</a>        <span class="string">"Reads course settings (name, description, listing, chapter locking, AI policy, audiences, module completion requirement) and each module's completion policy and certificates. Publishing and closing switches are shown but read-only. default_peer_review is the course default peer review config (counts, threshold, strategy, questions; read-only) or null; get_exercise reads its instructions."</span>,
+<a href=#180 id=180 data-nosnippet>180</a>        <span class="string">"Reads course settings (name, description, listing, chapter locking, AI policy, audiences, module completion requirement) and each module's exam, completion method, credits and certificates. Publishing and closing switches are shown but read-only. default_peer_review is the course default peer review config (counts, threshold, strategy, questions; read-only) or null; get_exercise reads its instructions."</span>,
 <a href=#181 id=181 data-nosnippet>181</a>        read(<span class="string">"Read course settings"</span>),
 <a href=#182 id=182 data-nosnippet>182</a>        McpScope::MaterialRead,
 <a href=#183 id=183 data-nosnippet>183</a>    )
@@ -269,7 +269,7 @@
 <a href=#269 id=269 data-nosnippet>269</a>        handler,
 <a href=#270 id=270 data-nosnippet>270</a>        PatchTarget::CourseSettings.tool_name(),
 <a href=#271 id=271 data-nosnippet>271</a>        <span class="macro">concat!</span>(
-<a href=#272 id=272 data-nosnippet>272</a>            <span class="string">"Edits settings: replace /course/&lt;field&gt; (name, description, is_unlisted, chapter_locking_enabled, ai_policy, base_module_completion_requires_n_submodule_completions), add to /course/audiences (value {\"name\"}), remove /&lt;audience id&gt;, replace /&lt;module id&gt;/completion_policy or one of its fields (note the spelling \"treshold\"), /&lt;module id&gt;/certification_enabled. "</span>,
+<a href=#272 id=272 data-nosnippet>272</a>            <span class="string">"Edits settings: replace /course/&lt;field&gt; (name, description, is_unlisted, chapter_locking_enabled, ai_policy, base_module_completion_requires_n_submodule_completions), add to /course/audiences (value {\"name\"}), remove /&lt;audience id&gt;, replace /&lt;module id&gt;/&lt;setting&gt; (exam_requirement, exam_location_description, completion_method, points_threshold, exercises_attempted_threshold, credit_registration_route, uh_course_code, ects_credits, registration_link, certification_enabled; guide topic course-settings explains them). "</span>,
 <a href=#273 id=273 data-nosnippet>273</a>            <span class="string">"Draft, test-mode and closing switches are read-only for agents. Module names are edited with patch_course_structure."</span>,
 <a href=#274 id=274 data-nosnippet>274</a>            <span class="macro">staging_note!</span>()
 <a href=#275 id=275 data-nosnippet>275</a>        ),
