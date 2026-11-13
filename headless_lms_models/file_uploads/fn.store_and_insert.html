@@ -2,7 +2,7 @@
     db: impl Acquire&lt;'c, Database = <a class="struct" href="../re_exports/struct.Postgres.html" title="struct headless_lms_models::re_exports::Postgres">Postgres</a>&gt;,
     file_store: &amp;dyn <a class="trait" href="../prelude/trait.FileStore.html" title="trait headless_lms_models::prelude::FileStore">FileStore</a>,
     upload: <a class="struct" href="struct.NewUpload.html" title="struct headless_lms_models::file_uploads::NewUpload">NewUpload</a>&lt;'_&gt;,
-    contents: <a class="type" href="../../headless_lms_utils/file_store/type.GenericPayload.html" title="type headless_lms_utils::file_store::GenericPayload">GenericPayload</a>,
+    contents: GenericPayload,
 ) -&gt; <a class="type" href="../error/type.ModelResult.html" title="type headless_lms_models::error::ModelResult">ModelResult</a>&lt;<a class="struct" href="../re_exports/struct.Uuid.html" title="struct headless_lms_models::re_exports::Uuid">Uuid</a>&gt;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Stores an upload at its path, then records it like <a href="fn.insert.html" title="fn headless_lms_models::file_uploads::insert"><code>insert</code></a> on a connection taken from <code>db</code>
 only then, so none is held during the upload. Deletes the stored file again if the row can’t be
 written.</p>

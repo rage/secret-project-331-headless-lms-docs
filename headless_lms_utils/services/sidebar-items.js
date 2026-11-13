@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["moocfi","sisu","suotar","tmc"]};
+window.SIDEBAR_ITEMS = {"mod":["moocfi","moocfi_graphql","sisu","suotar","tmc"]};

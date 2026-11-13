@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MOOCFI_GRAPHQL_URL","USER_COURSE_PROGRESS_QUERY"],"fn":["get_user_course_progress","parse_user_course_progress"],"struct":["Completion","Course","GraphQlError","GraphQlResponse","MoocfiCourseProgress","MoocfiUser","ResponseData","UserCourseProgress"]};
