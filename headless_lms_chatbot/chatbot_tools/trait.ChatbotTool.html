@@ -9,7 +9,7 @@
 <span class="item-spacer"></span>    fn <a href="#tymethod.from_db_and_arguments" class="fn">from_db_and_arguments</a>(
         conn: &amp;mut <a class="struct" href="../prelude/struct.PgConnection.html" title="struct headless_lms_chatbot::prelude::PgConnection">PgConnection</a>,
         app_config: &amp;<a class="struct" href="../prelude/struct.ApplicationConfiguration.html" title="struct headless_lms_chatbot::prelude::ApplicationConfiguration">ApplicationConfiguration</a>,
-        cache: &amp;Cache,
+        cache: &amp;<a class="struct" href="../../headless_lms_utils/cache/struct.Cache.html" title="struct headless_lms_utils::cache::Cache">Cache</a>,
         arguments: Self::<a class="associatedtype" href="trait.ChatbotTool.html#associatedtype.Arguments" title="type headless_lms_chatbot::chatbot_tools::ChatbotTool::Arguments">Arguments</a>,
         user_context: &amp;<a class="struct" href="../user_context/struct.ChatbotTurnContext.html" title="struct headless_lms_chatbot::user_context::ChatbotTurnContext">ChatbotTurnContext</a>,
     ) -&gt; impl <a class="trait" href="../prelude/futures/prelude/trait.Future.html" title="trait headless_lms_chatbot::prelude::futures::prelude::Future">Future</a>&lt;Output = <a class="type" href="../chatbot_error/type.ChatbotResult.html" title="type headless_lms_chatbot::chatbot_error::ChatbotResult">ChatbotResult</a>&lt;Self&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.99.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a>
@@ -32,7 +32,7 @@ chatbot’s own course.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="tymethod.from_db_and_arguments" class="method"><a class="src rightside" href="../../src/headless_lms_chatbot/chatbot_tools/mod.rs.html#109-117">Source</a><h4 class="code-header">fn <a href="#tymethod.from_db_and_arguments" class="fn">from_db_and_arguments</a>(
     conn: &amp;mut <a class="struct" href="../prelude/struct.PgConnection.html" title="struct headless_lms_chatbot::prelude::PgConnection">PgConnection</a>,
     app_config: &amp;<a class="struct" href="../prelude/struct.ApplicationConfiguration.html" title="struct headless_lms_chatbot::prelude::ApplicationConfiguration">ApplicationConfiguration</a>,
-    cache: &amp;Cache,
+    cache: &amp;<a class="struct" href="../../headless_lms_utils/cache/struct.Cache.html" title="struct headless_lms_utils::cache::Cache">Cache</a>,
     arguments: Self::<a class="associatedtype" href="trait.ChatbotTool.html#associatedtype.Arguments" title="type headless_lms_chatbot::chatbot_tools::ChatbotTool::Arguments">Arguments</a>,
     user_context: &amp;<a class="struct" href="../user_context/struct.ChatbotTurnContext.html" title="struct headless_lms_chatbot::user_context::ChatbotTurnContext">ChatbotTurnContext</a>,
 ) -&gt; impl <a class="trait" href="../prelude/futures/prelude/trait.Future.html" title="trait headless_lms_chatbot::prelude::futures::prelude::Future">Future</a>&lt;Output = <a class="type" href="../chatbot_error/type.ChatbotResult.html" title="type headless_lms_chatbot::chatbot_error::ChatbotResult">ChatbotResult</a>&lt;Self&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.99.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a><div class="where">where
