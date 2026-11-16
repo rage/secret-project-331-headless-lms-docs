@@ -1111,7 +1111,7 @@
 <a href=#1111 id=1111 data-nosnippet>1111</a>        }
 <a href=#1112 id=1112 data-nosnippet>1112</a>        <span class="prelude-val">Some</span>(LinkingMailSource::ExternalCreditTarget(target_id)) =&gt; {
 <a href=#1113 id=1113 data-nosnippet>1113</a>            <span class="kw">let </span>target = models::external_credit_targets::get_by_id(conn, target_id).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#1114 id=1114 data-nosnippet>1114</a>            <span class="macro">format!</span>(<span class="string">"mooc.fi: {}"</span>, target.name)
+<a href=#1114 id=1114 data-nosnippet>1114</a>            target.display_name()
 <a href=#1115 id=1115 data-nosnippet>1115</a>        }
 <a href=#1116 id=1116 data-nosnippet>1116</a>        <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
 <a href=#1117 id=1117 data-nosnippet>1117</a>    };
