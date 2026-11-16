@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["share_submission"]};
+window.SIDEBAR_ITEMS = {"fn":["share_snapshot","share_submission"]};

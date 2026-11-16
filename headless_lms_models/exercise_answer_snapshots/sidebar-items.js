@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SnapshotPurpose"],"fn":["backdate","delete_backups_beyond","get_by_id","get_by_user_and_exercise","get_files","get_shared_view_task","insert","try_get_by_id"],"struct":["ExerciseAnswerSnapshot","NewExerciseAnswerSnapshot","SnapshotFile"]};

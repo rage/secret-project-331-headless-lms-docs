@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["GoogleCloudFileStore"]};
+window.SIDEBAR_ITEMS = {"fn":["is_not_found"],"struct":["GoogleCloudFileStore"]};
