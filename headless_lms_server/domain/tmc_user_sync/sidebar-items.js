@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["copy_profile_to_tmc"]};

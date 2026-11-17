@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["VerificationChange"],"struct":["EditUserAccountArguments","EditUserAccountTool","RawArguments"]};
+window.SIDEBAR_ITEMS = {"enum":["VerificationChange"],"fn":["tmc_email_sync"],"struct":["EditUserAccountArguments","EditUserAccountTool","RawArguments"]};
