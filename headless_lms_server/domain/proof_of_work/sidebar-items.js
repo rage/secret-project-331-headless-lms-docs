@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ALGORITHM","CHALLENGE_LIFETIME_MINUTES","COUNTER_RANGE","EXPIRED_CLEANUP_PROBABILITY","TEST_MODE_COUNTER_RANGE"],"enum":["ChallengePurpose"],"fn":["create_challenge","create_challenge_blocking","decode","delete_expired_occasionally","key_signature_secret","refusal","verified_challenge","verify_and_spend"],"struct":["ChallengeContext"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FALLBACK_DAILY_ALLOWANCE","KEPT_DAYS","OLD_COUNTS_CLEANUP_PROBABILITY"],"fn":["daily_allowance","delete_old_counts_occasionally","may_mail_user","try_consume_for_user"],"static":["DAILY_ALLOWANCE"]};
