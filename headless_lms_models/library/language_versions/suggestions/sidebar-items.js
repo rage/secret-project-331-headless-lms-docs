@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MAX_COPY_DEPTH"],"fn":["get_copy_lineage","index_by_lineage","lookup_all","match_exercises","match_pages","suggest_links","suggest_page_counterparts"],"struct":["CopyLineage","Match"]};
+window.SIDEBAR_ITEMS = {"constant":["MAX_COPY_DEPTH"],"fn":["apply_ai_picks","get_copy_lineage","index_by_lineage","lookup_all","match_exercises","match_pages","picked_ids","suggest_links","suggest_page_counterparts"],"struct":["CopyLineage","Match"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["EXERCISE_EXCERPT_CHARS","MAX_EXCERPT_CHARS_PER_TASK","MAX_SOURCE_TEXT_CHARS","PAGE_EXCERPT_CHARS"],"fn":["add_picks","ai_matching_tasks","excerpt","fill_excerpts","is_fixed"],"struct":["AiKnownPair","AiMatchingAnswer","AiMatchingItem","AiMatchingTask","AiPick","AiPicks","DroppedPicks"],"type":["AiPicksByCourse"]};
