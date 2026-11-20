@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["create_counterpart","get_exercise_counterparts","get_language_version_page","link_copied_exercises","make_room","target_has_page_in_group","unique_url_path"],"struct":["CopiedExercise"]};

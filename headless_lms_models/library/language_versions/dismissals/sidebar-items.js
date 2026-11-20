@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["delete","get_by_course_language_group_id","upsert"]};

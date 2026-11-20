@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["LANGUAGE_VERSION_SETS"],"fn":["chapter_id","example_exercise","insert_page","insert_user","new_copy","seed_language_version_set","seed_language_version_sets","swap_page_order"],"struct":["LanguageVersionSet","NewSeedPage"]};

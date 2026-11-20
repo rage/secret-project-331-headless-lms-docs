@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["first_free_suffixed","invalid_request"],"mod":["counterpart","counterpart_index","detection","dismissals","join_candidates","linking","membership","operation_logs","snapshot","structure","suggestions","types"]};

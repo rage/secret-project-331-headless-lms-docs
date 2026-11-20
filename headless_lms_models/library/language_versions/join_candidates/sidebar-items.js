@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CANDIDATE_LIMIT","SIMILAR_NAME_THRESHOLD"],"fn":["get_join_candidates","is_likely_language_version"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["build_row","build_structure"]};

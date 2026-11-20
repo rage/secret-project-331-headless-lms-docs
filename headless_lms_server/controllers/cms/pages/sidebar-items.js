@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_exercises_with_submissions","get_page","get_page_info","get_page_navigation","get_pending_agent_changes","update_page"],"struct":["CmsPagesApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_course_id_of_page","get_exercises_with_submissions","get_language_versions_of_page","get_page","get_page_info","get_page_language_versions","get_page_navigation","get_pending_agent_changes","link_page_counterpart","linked_counterparts","live_pages","update_page"],"struct":["CmsPagesApiDoc"]};

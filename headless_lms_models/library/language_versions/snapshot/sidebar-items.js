@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["StudentCounts"],"fn":["get_chapters","get_courses","get_exercises","get_foreign_courses","get_pages","load","load_with_candidates"],"struct":["ForeignCourse","LanguageGroupSnapshot","SnapshotExercise","SnapshotPage"]};
