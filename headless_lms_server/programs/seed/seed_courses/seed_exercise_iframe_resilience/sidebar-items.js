@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MANY_EXERCISES_COUNT","MULTI_TASK_EXERCISE_TASK_COUNT"],"fn":["options","seed_exercise_iframe_resilience_course"]};
