@@ -1190,71 +1190,75 @@
 <a href=#1190 id=1190 data-nosnippet>1190</a>
 <a href=#1191 id=1191 data-nosnippet>1191</a><span class="kw">pub fn </span>_add_routes(cfg: <span class="kw-2">&amp;mut </span>ServiceConfig) {
 <a href=#1192 id=1192 data-nosnippet>1192</a>    cfg.route(
-<a href=#1193 id=1193 data-nosnippet>1193</a>        <span class="string">"/user-research-form-question-answers"</span>,
-<a href=#1194 id=1194 data-nosnippet>1194</a>        web::get().to(get_all_research_form_answers_with_user_id),
+<a href=#1193 id=1193 data-nosnippet>1193</a>        <span class="string">"/send-reset-password-email"</span>,
+<a href=#1194 id=1194 data-nosnippet>1194</a>        web::post().to(domain::removed_routes::log_removed_route_request),
 <a href=#1195 id=1195 data-nosnippet>1195</a>    )
-<a href=#1196 id=1196 data-nosnippet>1196</a>    .route(<span class="string">"/my-courses"</span>, web::get().to(get_my_courses))
-<a href=#1197 id=1197 data-nosnippet>1197</a>    .route(<span class="string">"/my-studies"</span>, web::get().to(get_my_studies))
-<a href=#1198 id=1198 data-nosnippet>1198</a>    .route(<span class="string">"/my-certificates"</span>, web::get().to(get_my_certificates))
-<a href=#1199 id=1199 data-nosnippet>1199</a>    .service(
-<a href=#1200 id=1200 data-nosnippet>1200</a>        web::resource(<span class="string">"/my-progress-by-platform"</span>)
-<a href=#1201 id=1201 data-nosnippet>1201</a>            .wrap(old_version_upstream_rate_limit())
-<a href=#1202 id=1202 data-nosnippet>1202</a>            .route(web::get().to(get_my_progress_by_platform)),
-<a href=#1203 id=1203 data-nosnippet>1203</a>    )
-<a href=#1204 id=1204 data-nosnippet>1204</a>    .service(
-<a href=#1205 id=1205 data-nosnippet>1205</a>        web::resource(<span class="string">"/my-old-version-progress"</span>)
-<a href=#1206 id=1206 data-nosnippet>1206</a>            .wrap(old_version_upstream_rate_limit())
-<a href=#1207 id=1207 data-nosnippet>1207</a>            .route(web::get().to(get_my_old_version_progress)),
-<a href=#1208 id=1208 data-nosnippet>1208</a>    )
-<a href=#1209 id=1209 data-nosnippet>1209</a>    .route(
-<a href=#1210 id=1210 data-nosnippet>1210</a>        <span class="string">"/my-courses/{course_id}/hide"</span>,
-<a href=#1211 id=1211 data-nosnippet>1211</a>        web::post().to(hide_course_from_my_courses),
+<a href=#1196 id=1196 data-nosnippet>1196</a>    .route(
+<a href=#1197 id=1197 data-nosnippet>1197</a>        <span class="string">"/user-research-form-question-answers"</span>,
+<a href=#1198 id=1198 data-nosnippet>1198</a>        web::get().to(get_all_research_form_answers_with_user_id),
+<a href=#1199 id=1199 data-nosnippet>1199</a>    )
+<a href=#1200 id=1200 data-nosnippet>1200</a>    .route(<span class="string">"/my-courses"</span>, web::get().to(get_my_courses))
+<a href=#1201 id=1201 data-nosnippet>1201</a>    .route(<span class="string">"/my-studies"</span>, web::get().to(get_my_studies))
+<a href=#1202 id=1202 data-nosnippet>1202</a>    .route(<span class="string">"/my-certificates"</span>, web::get().to(get_my_certificates))
+<a href=#1203 id=1203 data-nosnippet>1203</a>    .service(
+<a href=#1204 id=1204 data-nosnippet>1204</a>        web::resource(<span class="string">"/my-progress-by-platform"</span>)
+<a href=#1205 id=1205 data-nosnippet>1205</a>            .wrap(old_version_upstream_rate_limit())
+<a href=#1206 id=1206 data-nosnippet>1206</a>            .route(web::get().to(get_my_progress_by_platform)),
+<a href=#1207 id=1207 data-nosnippet>1207</a>    )
+<a href=#1208 id=1208 data-nosnippet>1208</a>    .service(
+<a href=#1209 id=1209 data-nosnippet>1209</a>        web::resource(<span class="string">"/my-old-version-progress"</span>)
+<a href=#1210 id=1210 data-nosnippet>1210</a>            .wrap(old_version_upstream_rate_limit())
+<a href=#1211 id=1211 data-nosnippet>1211</a>            .route(web::get().to(get_my_old_version_progress)),
 <a href=#1212 id=1212 data-nosnippet>1212</a>    )
 <a href=#1213 id=1213 data-nosnippet>1213</a>    .route(
-<a href=#1214 id=1214 data-nosnippet>1214</a>        <span class="string">"/my-courses/{course_id}/unhide"</span>,
-<a href=#1215 id=1215 data-nosnippet>1215</a>        web::post().to(unhide_course_from_my_courses),
+<a href=#1214 id=1214 data-nosnippet>1214</a>        <span class="string">"/my-courses/{course_id}/hide"</span>,
+<a href=#1215 id=1215 data-nosnippet>1215</a>        web::post().to(hide_course_from_my_courses),
 <a href=#1216 id=1216 data-nosnippet>1216</a>    )
 <a href=#1217 id=1217 data-nosnippet>1217</a>    .route(
-<a href=#1218 id=1218 data-nosnippet>1218</a>        <span class="string">"/get-user-research-consent"</span>,
-<a href=#1219 id=1219 data-nosnippet>1219</a>        web::get().to(get_research_consent_by_user_id),
+<a href=#1218 id=1218 data-nosnippet>1218</a>        <span class="string">"/my-courses/{course_id}/unhide"</span>,
+<a href=#1219 id=1219 data-nosnippet>1219</a>        web::post().to(unhide_course_from_my_courses),
 <a href=#1220 id=1220 data-nosnippet>1220</a>    )
 <a href=#1221 id=1221 data-nosnippet>1221</a>    .route(
-<a href=#1222 id=1222 data-nosnippet>1222</a>        <span class="string">"/user-research-consents"</span>,
-<a href=#1223 id=1223 data-nosnippet>1223</a>        web::post().to(post_user_consents),
+<a href=#1222 id=1222 data-nosnippet>1222</a>        <span class="string">"/get-user-research-consent"</span>,
+<a href=#1223 id=1223 data-nosnippet>1223</a>        web::get().to(get_research_consent_by_user_id),
 <a href=#1224 id=1224 data-nosnippet>1224</a>    )
-<a href=#1225 id=1225 data-nosnippet>1225</a>    .service(
-<a href=#1226 id=1226 data-nosnippet>1226</a>        web::resource(<span class="string">"/request-password-reset"</span>)
-<a href=#1227 id=1227 data-nosnippet>1227</a>            .wrap(RateLimit::new(RateLimitConfig {
-<a href=#1228 id=1228 data-nosnippet>1228</a>                per_minute: <span class="prelude-val">Some</span>(<span class="number">10</span>),
-<a href=#1229 id=1229 data-nosnippet>1229</a>                per_hour: <span class="prelude-val">Some</span>(<span class="number">50</span>),
-<a href=#1230 id=1230 data-nosnippet>1230</a>                per_day: <span class="prelude-val">Some</span>(<span class="number">200</span>),
-<a href=#1231 id=1231 data-nosnippet>1231</a>                ..Default::default()
-<a href=#1232 id=1232 data-nosnippet>1232</a>            }))
-<a href=#1233 id=1233 data-nosnippet>1233</a>            .route(web::post().to(send_reset_password_email)),
-<a href=#1234 id=1234 data-nosnippet>1234</a>    )
-<a href=#1235 id=1235 data-nosnippet>1235</a>    .route(<span class="string">"/{user_id}"</span>, web::get().to(get_user))
-<a href=#1236 id=1236 data-nosnippet>1236</a>    .route(
-<a href=#1237 id=1237 data-nosnippet>1237</a>        <span class="string">"/{user_id}/course-enrollments"</span>,
-<a href=#1238 id=1238 data-nosnippet>1238</a>        web::get().to(get_course_enrollments_for_user),
-<a href=#1239 id=1239 data-nosnippet>1239</a>    )
+<a href=#1225 id=1225 data-nosnippet>1225</a>    .route(
+<a href=#1226 id=1226 data-nosnippet>1226</a>        <span class="string">"/user-research-consents"</span>,
+<a href=#1227 id=1227 data-nosnippet>1227</a>        web::post().to(post_user_consents),
+<a href=#1228 id=1228 data-nosnippet>1228</a>    )
+<a href=#1229 id=1229 data-nosnippet>1229</a>    .service(
+<a href=#1230 id=1230 data-nosnippet>1230</a>        web::resource(<span class="string">"/request-password-reset"</span>)
+<a href=#1231 id=1231 data-nosnippet>1231</a>            .wrap(RateLimit::new(RateLimitConfig {
+<a href=#1232 id=1232 data-nosnippet>1232</a>                per_minute: <span class="prelude-val">Some</span>(<span class="number">10</span>),
+<a href=#1233 id=1233 data-nosnippet>1233</a>                per_hour: <span class="prelude-val">Some</span>(<span class="number">50</span>),
+<a href=#1234 id=1234 data-nosnippet>1234</a>                per_day: <span class="prelude-val">Some</span>(<span class="number">200</span>),
+<a href=#1235 id=1235 data-nosnippet>1235</a>                ..Default::default()
+<a href=#1236 id=1236 data-nosnippet>1236</a>            }))
+<a href=#1237 id=1237 data-nosnippet>1237</a>            .route(web::post().to(send_reset_password_email)),
+<a href=#1238 id=1238 data-nosnippet>1238</a>    )
+<a href=#1239 id=1239 data-nosnippet>1239</a>    .route(<span class="string">"/{user_id}"</span>, web::get().to(get_user))
 <a href=#1240 id=1240 data-nosnippet>1240</a>    .route(
-<a href=#1241 id=1241 data-nosnippet>1241</a>        <span class="string">"/{user_id}/user-reset-exercise-logs"</span>,
-<a href=#1242 id=1242 data-nosnippet>1242</a>        web::get().to(get_user_reset_exercise_logs),
+<a href=#1241 id=1241 data-nosnippet>1241</a>        <span class="string">"/{user_id}/course-enrollments"</span>,
+<a href=#1242 id=1242 data-nosnippet>1242</a>        web::get().to(get_course_enrollments_for_user),
 <a href=#1243 id=1243 data-nosnippet>1243</a>    )
 <a href=#1244 id=1244 data-nosnippet>1244</a>    .route(
-<a href=#1245 id=1245 data-nosnippet>1245</a>        <span class="string">"/{user_id}/courses/{course_id}/submission-times"</span>,
-<a href=#1246 id=1246 data-nosnippet>1246</a>        web::get().to(get_user_course_submission_times),
+<a href=#1245 id=1245 data-nosnippet>1245</a>        <span class="string">"/{user_id}/user-reset-exercise-logs"</span>,
+<a href=#1246 id=1246 data-nosnippet>1246</a>        web::get().to(get_user_reset_exercise_logs),
 <a href=#1247 id=1247 data-nosnippet>1247</a>    )
 <a href=#1248 id=1248 data-nosnippet>1248</a>    .route(
-<a href=#1249 id=1249 data-nosnippet>1249</a>        <span class="string">"/{user_id}/suspected-cheaters"</span>,
-<a href=#1250 id=1250 data-nosnippet>1250</a>        web::get().to(get_user_suspected_cheaters),
+<a href=#1249 id=1249 data-nosnippet>1249</a>        <span class="string">"/{user_id}/courses/{course_id}/submission-times"</span>,
+<a href=#1250 id=1250 data-nosnippet>1250</a>        web::get().to(get_user_course_submission_times),
 <a href=#1251 id=1251 data-nosnippet>1251</a>    )
-<a href=#1252 id=1252 data-nosnippet>1252</a>    .route(<span class="string">"/{user_id}/roles"</span>, web::get().to(get_user_roles))
-<a href=#1253 id=1253 data-nosnippet>1253</a>    .route(
-<a href=#1254 id=1254 data-nosnippet>1254</a>        <span class="string">"/reset-password-token-status"</span>,
-<a href=#1255 id=1255 data-nosnippet>1255</a>        web::post().to(reset_password_token_status),
-<a href=#1256 id=1256 data-nosnippet>1256</a>    )
-<a href=#1257 id=1257 data-nosnippet>1257</a>    .route(<span class="string">"/reset-password"</span>, web::post().to(reset_user_password))
-<a href=#1258 id=1258 data-nosnippet>1258</a>    .route(<span class="string">"/change-password"</span>, web::post().to(change_user_password));
-<a href=#1259 id=1259 data-nosnippet>1259</a>}
+<a href=#1252 id=1252 data-nosnippet>1252</a>    .route(
+<a href=#1253 id=1253 data-nosnippet>1253</a>        <span class="string">"/{user_id}/suspected-cheaters"</span>,
+<a href=#1254 id=1254 data-nosnippet>1254</a>        web::get().to(get_user_suspected_cheaters),
+<a href=#1255 id=1255 data-nosnippet>1255</a>    )
+<a href=#1256 id=1256 data-nosnippet>1256</a>    .route(<span class="string">"/{user_id}/roles"</span>, web::get().to(get_user_roles))
+<a href=#1257 id=1257 data-nosnippet>1257</a>    .route(
+<a href=#1258 id=1258 data-nosnippet>1258</a>        <span class="string">"/reset-password-token-status"</span>,
+<a href=#1259 id=1259 data-nosnippet>1259</a>        web::post().to(reset_password_token_status),
+<a href=#1260 id=1260 data-nosnippet>1260</a>    )
+<a href=#1261 id=1261 data-nosnippet>1261</a>    .route(<span class="string">"/reset-password"</span>, web::post().to(reset_user_password))
+<a href=#1262 id=1262 data-nosnippet>1262</a>    .route(<span class="string">"/change-password"</span>, web::post().to(change_user_password));
+<a href=#1263 id=1263 data-nosnippet>1263</a>}
 </code></pre></div></section></main></body></html>

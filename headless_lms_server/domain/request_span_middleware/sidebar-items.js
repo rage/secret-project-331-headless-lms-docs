@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["RequestSpan","RequestSpanMiddleware"]};
+window.SIDEBAR_ITEMS = {"fn":["client_ip"],"struct":["RequestSpan","RequestSpanMiddleware"]};
