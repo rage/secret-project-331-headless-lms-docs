@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_by_id","insert","insert_for_snapshot","list_by_creator","revoke","revoke_all_for_submission_or_snapshot","revoke_snapshot_shares_for_reset","shared_among"],"struct":["ExerciseSlideSubmissionShare","SharedSubmissionInfo"]};
+window.SIDEBAR_ITEMS = {"fn":["get_by_id","insert","insert_for_snapshot","list_by_creator","list_for_exercise","revoke","revoke_all_for_submission_or_snapshot","revoke_snapshot_shares_for_reset","shared_among"],"struct":["ExerciseAnswerShare","ExerciseSlideSubmissionShare","SharedSubmissionInfo"]};

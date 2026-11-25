@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_for_course"],"struct":["CmsRepositoryExercisesApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","get_for_course","get_for_exam"],"struct":["CmsRepositoryExercisesApiDoc"]};

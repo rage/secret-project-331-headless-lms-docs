@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","delete","get_for_course","get_for_exam","new","update"],"struct":["MainFrontendExerciseRepositoriesApiDoc","NewExerciseRepository"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","authorize_repository_edit","delete","get_for_course","get_for_exam","new","sync","update","validate_url_and_branch"],"struct":["MainFrontendExerciseRepositoriesApiDoc","NewExerciseRepository"]};

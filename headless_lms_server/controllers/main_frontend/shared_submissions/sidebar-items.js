@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["_add_routes","exercise_page_url","get_shared_submission_info","list_own_shares","revoke_share","revoke_shares_of_submission"],"struct":["MainFrontendSharedSubmissionsApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["_add_routes","authorize_share_view","exercise_page_url","get_shared_submission_info","has_passed","list_own_shares","revoke_share","revoke_shares_of_submission"],"struct":["MainFrontendSharedSubmissionsApiDoc"]};

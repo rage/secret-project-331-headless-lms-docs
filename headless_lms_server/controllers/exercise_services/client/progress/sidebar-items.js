@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["derive_exercise_progress","exercise_progress","get_course_progress","has_received_full_points","is_being_graded","is_in_peer_or_self_review","pending_teacher_review","teacher_review","to_api_reviewing_stage"],"struct":["TryCounts"]};

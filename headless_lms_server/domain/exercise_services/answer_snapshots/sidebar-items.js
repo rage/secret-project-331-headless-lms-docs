@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MAX_BACKUPS_PER_USER_AND_EXERCISE","PASTES_PER_HOUR","PASTES_PER_MINUTE"],"fn":["store_snapshot"],"static":["PASTE_LIMITS"],"struct":["SnapshotAnswer"]};
+window.SIDEBAR_ITEMS = {"constant":["MAX_BACKUPS_PER_USER_AND_EXERCISE","MAX_PASTES_PER_USER_AND_EXERCISE","PASTES_PER_HOUR","PASTES_PER_MINUTE"],"fn":["store_snapshot"],"static":["PASTE_LIMITS"],"struct":["SnapshotAnswer"]};

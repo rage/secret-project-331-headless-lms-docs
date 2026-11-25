@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["answerable_exam","answerable_exam_or_not_found","exam_exercise_slide","get_exam_exercises","get_exams"]};
