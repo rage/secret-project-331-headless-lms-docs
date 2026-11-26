@@ -98,52 +98,53 @@
 <a href=#98 id=98 data-nosnippet>98</a>    AND linked.deleted_at IS NULL
 <a href=#99 id=99 data-nosnippet>99</a>    AND TRIM(COALESCE(linked.uh_course_code, '')) &lt;&gt; ''
 <a href=#100 id=100 data-nosnippet>100</a>  UNION
-<a href=#101 id=101 data-nosnippet>101</a>  SELECT TRIM(target.uh_course_code)
-<a href=#102 id=102 data-nosnippet>102</a>  FROM external_credit_targets target
-<a href=#103 id=103 data-nosnippet>103</a>  WHERE target.id = $4
-<a href=#104 id=104 data-nosnippet>104</a>)
-<a href=#105 id=105 data-nosnippet>105</a>INSERT INTO credit_registration_enrolment_check_signals (
-<a href=#106 id=106 data-nosnippet>106</a>    course_module_completion_id,
-<a href=#107 id=107 data-nosnippet>107</a>    external_completion_id,
-<a href=#108 id=108 data-nosnippet>108</a>    last_check_requested_at,
-<a href=#109 id=109 data-nosnippet>109</a>    check_request_ladder_anchor_at,
-<a href=#110 id=110 data-nosnippet>110</a>    check_request_source
-<a href=#111 id=111 data-nosnippet>111</a>  )
-<a href=#112 id=112 data-nosnippet>112</a>SELECT s.course_module_completion_id,
-<a href=#113 id=113 data-nosnippet>113</a>  s.external_completion_id,
-<a href=#114 id=114 data-nosnippet>114</a>  now(),
+<a href=#101 id=101 data-nosnippet>101</a>  SELECT TRIM(code.uh_course_code)
+<a href=#102 id=102 data-nosnippet>102</a>  FROM external_credit_target_codes code
+<a href=#103 id=103 data-nosnippet>103</a>  WHERE code.external_credit_target_id = $4
+<a href=#104 id=104 data-nosnippet>104</a>    AND code.deleted_at IS NULL
+<a href=#105 id=105 data-nosnippet>105</a>)
+<a href=#106 id=106 data-nosnippet>106</a>INSERT INTO credit_registration_enrolment_check_signals (
+<a href=#107 id=107 data-nosnippet>107</a>    course_module_completion_id,
+<a href=#108 id=108 data-nosnippet>108</a>    external_completion_id,
+<a href=#109 id=109 data-nosnippet>109</a>    last_check_requested_at,
+<a href=#110 id=110 data-nosnippet>110</a>    check_request_ladder_anchor_at,
+<a href=#111 id=111 data-nosnippet>111</a>    check_request_source
+<a href=#112 id=112 data-nosnippet>112</a>  )
+<a href=#113 id=113 data-nosnippet>113</a>SELECT s.course_module_completion_id,
+<a href=#114 id=114 data-nosnippet>114</a>  s.external_completion_id,
 <a href=#115 id=115 data-nosnippet>115</a>  now(),
-<a href=#116 id=116 data-nosnippet>116</a>  'account_link'
-<a href=#117 id=117 data-nosnippet>117</a>FROM credit_registration_subjects s
-<a href=#118 id=118 data-nosnippet>118</a>WHERE s.user_id = $1
-<a href=#119 id=119 data-nosnippet>119</a>  AND s.is_on_pipeline
-<a href=#120 id=120 data-nosnippet>120</a>  AND NOT s.is_withdrawn
-<a href=#121 id=121 data-nosnippet>121</a>  AND (
-<a href=#122 id=122 data-nosnippet>122</a>    s.course_id = $2
-<a href=#123 id=123 data-nosnippet>123</a>    OR TRIM(s.uh_course_code) IN (
-<a href=#124 id=124 data-nosnippet>124</a>      SELECT course_code
-<a href=#125 id=125 data-nosnippet>125</a>      FROM codes
-<a href=#126 id=126 data-nosnippet>126</a>    )
-<a href=#127 id=127 data-nosnippet>127</a>  ) ON CONFLICT (
-<a href=#128 id=128 data-nosnippet>128</a>    (COALESCE(course_module_completion_id, external_completion_id)),
-<a href=#129 id=129 data-nosnippet>129</a>    deleted_at
-<a href=#130 id=130 data-nosnippet>130</a>  ) DO
-<a href=#131 id=131 data-nosnippet>131</a>UPDATE
-<a href=#132 id=132 data-nosnippet>132</a>SET last_check_requested_at = now(),
-<a href=#133 id=133 data-nosnippet>133</a>  check_request_ladder_anchor_at = restarted_ladder_anchor(
-<a href=#134 id=134 data-nosnippet>134</a>    credit_registration_enrolment_check_signals.check_request_ladder_anchor_at,
-<a href=#135 id=135 data-nosnippet>135</a>    $3::bigint * INTERVAL '1 second'
-<a href=#136 id=136 data-nosnippet>136</a>  ),
-<a href=#137 id=137 data-nosnippet>137</a>  check_request_source = EXCLUDED.check_request_source
-<a href=#138 id=138 data-nosnippet>138</a>RETURNING COALESCE(course_module_completion_id, external_completion_id) AS "subject_id!"
-<a href=#139 id=139 data-nosnippet>139</a>        "#</span>,
-<a href=#140 id=140 data-nosnippet>140</a>        user_id,
-<a href=#141 id=141 data-nosnippet>141</a>        source.course_id(),
-<a href=#142 id=142 data-nosnippet>142</a>        CHECK_REQUEST_RESTART_WINDOW.num_seconds(),
-<a href=#143 id=143 data-nosnippet>143</a>        source.external_credit_target_id(),
-<a href=#144 id=144 data-nosnippet>144</a>    )
-<a href=#145 id=145 data-nosnippet>145</a>    .fetch_all(conn)
-<a href=#146 id=146 data-nosnippet>146</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#147 id=147 data-nosnippet>147</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#148 id=148 data-nosnippet>148</a>}
+<a href=#116 id=116 data-nosnippet>116</a>  now(),
+<a href=#117 id=117 data-nosnippet>117</a>  'account_link'
+<a href=#118 id=118 data-nosnippet>118</a>FROM credit_registration_subjects s
+<a href=#119 id=119 data-nosnippet>119</a>WHERE s.user_id = $1
+<a href=#120 id=120 data-nosnippet>120</a>  AND s.is_on_pipeline
+<a href=#121 id=121 data-nosnippet>121</a>  AND NOT s.is_withdrawn
+<a href=#122 id=122 data-nosnippet>122</a>  AND (
+<a href=#123 id=123 data-nosnippet>123</a>    s.course_id = $2
+<a href=#124 id=124 data-nosnippet>124</a>    OR TRIM(s.uh_course_code) IN (
+<a href=#125 id=125 data-nosnippet>125</a>      SELECT course_code
+<a href=#126 id=126 data-nosnippet>126</a>      FROM codes
+<a href=#127 id=127 data-nosnippet>127</a>    )
+<a href=#128 id=128 data-nosnippet>128</a>  ) ON CONFLICT (
+<a href=#129 id=129 data-nosnippet>129</a>    (COALESCE(course_module_completion_id, external_completion_id)),
+<a href=#130 id=130 data-nosnippet>130</a>    deleted_at
+<a href=#131 id=131 data-nosnippet>131</a>  ) DO
+<a href=#132 id=132 data-nosnippet>132</a>UPDATE
+<a href=#133 id=133 data-nosnippet>133</a>SET last_check_requested_at = now(),
+<a href=#134 id=134 data-nosnippet>134</a>  check_request_ladder_anchor_at = restarted_ladder_anchor(
+<a href=#135 id=135 data-nosnippet>135</a>    credit_registration_enrolment_check_signals.check_request_ladder_anchor_at,
+<a href=#136 id=136 data-nosnippet>136</a>    $3::bigint * INTERVAL '1 second'
+<a href=#137 id=137 data-nosnippet>137</a>  ),
+<a href=#138 id=138 data-nosnippet>138</a>  check_request_source = EXCLUDED.check_request_source
+<a href=#139 id=139 data-nosnippet>139</a>RETURNING COALESCE(course_module_completion_id, external_completion_id) AS "subject_id!"
+<a href=#140 id=140 data-nosnippet>140</a>        "#</span>,
+<a href=#141 id=141 data-nosnippet>141</a>        user_id,
+<a href=#142 id=142 data-nosnippet>142</a>        source.course_id(),
+<a href=#143 id=143 data-nosnippet>143</a>        CHECK_REQUEST_RESTART_WINDOW.num_seconds(),
+<a href=#144 id=144 data-nosnippet>144</a>        source.external_credit_target_id(),
+<a href=#145 id=145 data-nosnippet>145</a>    )
+<a href=#146 id=146 data-nosnippet>146</a>    .fetch_all(conn)
+<a href=#147 id=147 data-nosnippet>147</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#149 id=149 data-nosnippet>149</a>}
 </code></pre></div></section></main></body></html>

@@ -111,10 +111,10 @@
 <a href=#111 id=111 data-nosnippet>111</a>    <span class="kw">pub </span>count: i64,
 <a href=#112 id=112 data-nosnippet>112</a>}
 <a href=#113 id=113 data-nosnippet>113</a>
-<a href=#114 id=114 data-nosnippet>114</a><span class="doccomment">/// A module or mooc.fi target on a course code, which shares the code's enrolment list.
+<a href=#114 id=114 data-nosnippet>114</a><span class="doccomment">/// A module or mooc.fi code on a course code, which shares the code's enrolment list.
 <a href=#115 id=115 data-nosnippet>115</a></span><span class="attr">#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
 <a href=#116 id=116 data-nosnippet>116</a></span><span class="kw">pub struct </span>AccountLinkingCodeModule {
-<a href=#117 id=117 data-nosnippet>117</a>    <span class="doccomment">/// The module's or target's id.
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="doccomment">/// The module's or mooc.fi code's id.
 <a href=#118 id=118 data-nosnippet>118</a>    </span><span class="kw">pub </span>credit_unit_id: Uuid,
 <a href=#119 id=119 data-nosnippet>119</a>    <span class="doccomment">/// The module's course; `None` for a mooc.fi target.
 <a href=#120 id=120 data-nosnippet>120</a>    </span><span class="kw">pub </span>course_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
@@ -1340,7 +1340,7 @@
 <a href=#1340 id=1340 data-nosnippet>1340</a>    params((<span class="string">"course_or_target_id" </span>= Uuid, Path, description = <span class="string">"Course or mooc.fi target id"</span>)),
 <a href=#1341 id=1341 data-nosnippet>1341</a>    responses(
 <a href=#1342 id=1342 data-nosnippet>1342</a>        (status = <span class="number">200</span>, description = <span class="string">"The people on the enrolment lists"</span>, body = AdminCourseEnrolees),
-<a href=#1343 id=1343 data-nosnippet>1343</a>        (status = <span class="number">400</span>, description = <span class="string">"No active module or mooc.fi target with a course code"</span>),
+<a href=#1343 id=1343 data-nosnippet>1343</a>        (status = <span class="number">400</span>, description = <span class="string">"No active module or mooc.fi code with a course code"</span>),
 <a href=#1344 id=1344 data-nosnippet>1344</a>        (status = <span class="number">404</span>, description = <span class="string">"No such course or mooc.fi target"</span>)
 <a href=#1345 id=1345 data-nosnippet>1345</a>    )
 <a href=#1346 id=1346 data-nosnippet>1346</a>)]

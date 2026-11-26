@@ -14,8 +14,8 @@
 <a href=#14 id=14 data-nosnippet>14</a>    <span class="kw">pub </span>deleted_at: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;,
 <a href=#15 id=15 data-nosnippet>15</a>    <span class="doccomment">/// `None` on an answer about a mooc.fi completion.
 <a href=#16 id=16 data-nosnippet>16</a>    </span><span class="kw">pub </span>course_module_completion_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
-<a href=#17 id=17 data-nosnippet>17</a>    <span class="doccomment">/// mooc.fi's own completion id, stable across the `external_completions` rows a tier change
-<a href=#18 id=18 data-nosnippet>18</a>    /// replaces. `None` on an answer about a course module completion.
+<a href=#17 id=17 data-nosnippet>17</a>    <span class="doccomment">/// mooc.fi's own completion id, shared by its `external_completions` rows, one per code. `None`
+<a href=#18 id=18 data-nosnippet>18</a>    /// on an answer about a course module completion.
 <a href=#19 id=19 data-nosnippet>19</a>    </span><span class="kw">pub </span>moocfi_completion_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
 <a href=#20 id=20 data-nosnippet>20</a>    <span class="kw">pub </span>user_id: Uuid,
 <a href=#21 id=21 data-nosnippet>21</a>    <span class="kw">pub </span>justification: String,

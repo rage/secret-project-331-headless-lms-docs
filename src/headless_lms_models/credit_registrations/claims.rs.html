@@ -171,273 +171,279 @@
 <a href=#171 id=171 data-nosnippet>171</a>/// course code claimed together only the first comes back; the other stays claimable where it is.
 <a href=#172 id=172 data-nosnippet>172</a>///
 <a href=#173 id=173 data-nosnippet>173</a>/// A mooc.fi row is claimed only while its completion is live and was read from mooc.fi within
-<a href=#174 id=174 data-nosnippet>174</a>/// [`MOOCFI_IMPORT_MAX_CHECK_AGE`]; a stale one waits where it is for the next re-check.
-<a href=#175 id=175 data-nosnippet>175</a></span><span class="kw">pub async fn </span>claim_due_for_import(
-<a href=#176 id=176 data-nosnippet>176</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#177 id=177 data-nosnippet>177</a>    scope: <span class="kw-2">&amp;</span>RegistrationScope,
-<a href=#178 id=178 data-nosnippet>178</a>    limit: i64,
-<a href=#179 id=179 data-nosnippet>179</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistration&gt;&gt; {
-<a href=#180 id=180 data-nosnippet>180</a>    <span class="kw">let </span>claimed = claim(
-<a href=#181 id=181 data-nosnippet>181</a>        conn,
-<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw-2">&amp;</span>[CreditRegistrationState::CheckingEnrolment],
-<a href=#183 id=183 data-nosnippet>183</a>        scope,
-<a href=#184 id=184 data-nosnippet>184</a>        limit,
-<a href=#185 id=185 data-nosnippet>185</a>        ClaimKind::Import,
-<a href=#186 id=186 data-nosnippet>186</a>    )
-<a href=#187 id=187 data-nosnippet>187</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#188 id=188 data-nosnippet>188</a>    <span class="prelude-val">Ok</span>(first_per(
-<a href=#189 id=189 data-nosnippet>189</a>        claimed,
-<a href=#190 id=190 data-nosnippet>190</a>        |row| {
-<a href=#191 id=191 data-nosnippet>191</a>            (
-<a href=#192 id=192 data-nosnippet>192</a>                row.student_number
-<a href=#193 id=193 data-nosnippet>193</a>                    .as_ref()
-<a href=#194 id=194 data-nosnippet>194</a>                    .map(|number| number.expose_secret().to_string()),
-<a href=#195 id=195 data-nosnippet>195</a>                row.uh_course_code.clone(),
-<a href=#196 id=196 data-nosnippet>196</a>            )
-<a href=#197 id=197 data-nosnippet>197</a>        },
-<a href=#198 id=198 data-nosnippet>198</a>        <span class="string">"another attempt for the same student and course code"</span>,
-<a href=#199 id=199 data-nosnippet>199</a>    ))
-<a href=#200 id=200 data-nosnippet>200</a>}
-<a href=#201 id=201 data-nosnippet>201</a>
-<a href=#202 id=202 data-nosnippet>202</a><span class="doccomment">/// The first of the claimed rows per `key`. The claim query holds back a row whose twin is already
-<a href=#203 id=203 data-nosnippet>203</a>/// in flight, but cannot see a twin claimed alongside it; the rows dropped here keep their lock
-<a href=#204 id=204 data-nosnippet>204</a>/// until the claim's transaction ends, and are claimable where they are after it.
-<a href=#205 id=205 data-nosnippet>205</a></span><span class="kw">fn </span>first_per&lt;K: Eq + std::hash::Hash&gt;(
-<a href=#206 id=206 data-nosnippet>206</a>    claimed: Vec&lt;CreditRegistration&gt;,
-<a href=#207 id=207 data-nosnippet>207</a>    key: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;</span>CreditRegistration) -&gt; K,
-<a href=#208 id=208 data-nosnippet>208</a>    twin: <span class="kw-2">&amp;</span>str,
-<a href=#209 id=209 data-nosnippet>209</a>) -&gt; Vec&lt;CreditRegistration&gt; {
-<a href=#210 id=210 data-nosnippet>210</a>    <span class="kw">let </span><span class="kw-2">mut </span>seen = std::collections::HashSet::new();
-<a href=#211 id=211 data-nosnippet>211</a>    claimed
-<a href=#212 id=212 data-nosnippet>212</a>        .into_iter()
-<a href=#213 id=213 data-nosnippet>213</a>        .filter(|row| {
-<a href=#214 id=214 data-nosnippet>214</a>            <span class="kw">let </span>is_first = seen.insert(key(row));
-<a href=#215 id=215 data-nosnippet>215</a>            <span class="kw">if </span>!is_first {
-<a href=#216 id=216 data-nosnippet>216</a>                <span class="macro">debug!</span>(
-<a href=#217 id=217 data-nosnippet>217</a>                    credit_registration_id = %row.id,
-<a href=#218 id=218 data-nosnippet>218</a>                    <span class="string">"Leaving row claimable: {twin} is already in this claim"
-<a href=#219 id=219 data-nosnippet>219</a>                </span>);
-<a href=#220 id=220 data-nosnippet>220</a>            }
-<a href=#221 id=221 data-nosnippet>221</a>            is_first
-<a href=#222 id=222 data-nosnippet>222</a>        })
-<a href=#223 id=223 data-nosnippet>223</a>        .collect()
-<a href=#224 id=224 data-nosnippet>224</a>}
-<a href=#225 id=225 data-nosnippet>225</a>
-<a href=#226 id=226 data-nosnippet>226</a><span class="doccomment">/// The states verify polls from. Withdrawal moves a row out of all of them, which is what stops the
-<a href=#227 id=227 data-nosnippet>227</a>/// polling without any query having to know about withdrawal.
-<a href=#228 id=228 data-nosnippet>228</a></span><span class="kw">const </span>VERIFY_STATES: [CreditRegistrationState; <span class="number">3</span>] = [
-<a href=#229 id=229 data-nosnippet>229</a>    CreditRegistrationState::AwaitingVerification,
-<a href=#230 id=230 data-nosnippet>230</a>    CreditRegistrationState::PartiallyRegistered,
-<a href=#231 id=231 data-nosnippet>231</a>    CreditRegistrationState::SubmissionUncertain,
-<a href=#232 id=232 data-nosnippet>232</a>];
-<a href=#233 id=233 data-nosnippet>233</a>
-<a href=#234 id=234 data-nosnippet>234</a><span class="doccomment">/// Which of verify's flows a claim is for.
-<a href=#235 id=235 data-nosnippet>235</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-<a href=#236 id=236 data-nosnippet>236</a></span><span class="kw">pub enum </span>VerifyFlow {
-<a href=#237 id=237 data-nosnippet>237</a>    <span class="doccomment">/// Rows with a submitted attainment to poll by, and `awaiting_verification` rows stuck without
-<a href=#238 id=238 data-nosnippet>238</a>    /// one.
-<a href=#239 id=239 data-nosnippet>239</a>    </span>Poll,
-<a href=#240 id=240 data-nosnippet>240</a>    <span class="doccomment">/// `submission_uncertain` rows with no submitted attainment id, looked up through
-<a href=#241 id=241 data-nosnippet>241</a>    /// resolve-enrolments instead.
-<a href=#242 id=242 data-nosnippet>242</a>    </span>UncertainRecovery,
-<a href=#243 id=243 data-nosnippet>243</a>}
-<a href=#244 id=244 data-nosnippet>244</a>
-<a href=#245 id=245 data-nosnippet>245</a><span class="doccomment">/// Claims rows for one of verify's flows. Each flow is claimed on its own, so that rows one flow
-<a href=#246 id=246 data-nosnippet>246</a>/// has no allowance to send cannot fill the other's claim.
-<a href=#247 id=247 data-nosnippet>247</a></span><span class="kw">pub async fn </span>claim_due_for_verify(
-<a href=#248 id=248 data-nosnippet>248</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#249 id=249 data-nosnippet>249</a>    flow: VerifyFlow,
-<a href=#250 id=250 data-nosnippet>250</a>    scope: <span class="kw-2">&amp;</span>RegistrationScope,
-<a href=#251 id=251 data-nosnippet>251</a>    limit: i64,
-<a href=#252 id=252 data-nosnippet>252</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistration&gt;&gt; {
-<a href=#253 id=253 data-nosnippet>253</a>    claim(conn, <span class="kw-2">&amp;</span>VERIFY_STATES, scope, limit, ClaimKind::Verify(flow)).<span class="kw">await
-<a href=#254 id=254 data-nosnippet>254</a></span>}
-<a href=#255 id=255 data-nosnippet>255</a>
-<a href=#256 id=256 data-nosnippet>256</a><span class="doccomment">/// Which caller a claim is for, which decides the rows that hold a row back and the order.
-<a href=#257 id=257 data-nosnippet>257</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-<a href=#258 id=258 data-nosnippet>258</a></span><span class="kw">enum </span>ClaimKind {
-<a href=#259 id=259 data-nosnippet>259</a>    <span class="doccomment">/// See [`claim_due_for_verify`].
-<a href=#260 id=260 data-nosnippet>260</a>    </span>Verify(VerifyFlow),
-<a href=#261 id=261 data-nosnippet>261</a>    <span class="doccomment">/// See [`claim_due_for_person_lookup`].
-<a href=#262 id=262 data-nosnippet>262</a>    </span>PersonLookup,
-<a href=#263 id=263 data-nosnippet>263</a>    <span class="doccomment">/// See [`claim_due_for_resolve`].
-<a href=#264 id=264 data-nosnippet>264</a>    </span>Resolve,
-<a href=#265 id=265 data-nosnippet>265</a>    <span class="doccomment">/// See [`claim_due_for_import`].
-<a href=#266 id=266 data-nosnippet>266</a>    </span>Import,
-<a href=#267 id=267 data-nosnippet>267</a>}
-<a href=#268 id=268 data-nosnippet>268</a>
-<a href=#269 id=269 data-nosnippet>269</a><span class="doccomment">/// Shares its eligibility filters with
-<a href=#270 id=270 data-nosnippet>270</a>/// [`count_due_enrolment_checks`](super::count_due_enrolment_checks) and
-<a href=#271 id=271 data-nosnippet>271</a>/// [`pull_forward_batched_checks`](crate::library::credit_registration::enrolment_checks::pull_forward_batched_checks);
-<a href=#272 id=272 data-nosnippet>272</a>/// change all three together.
-<a href=#273 id=273 data-nosnippet>273</a></span><span class="kw">async fn </span>claim(
-<a href=#274 id=274 data-nosnippet>274</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
-<a href=#275 id=275 data-nosnippet>275</a>    states: <span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#276 id=276 data-nosnippet>276</a>    scope: <span class="kw-2">&amp;</span>RegistrationScope,
-<a href=#277 id=277 data-nosnippet>277</a>    limit: i64,
-<a href=#278 id=278 data-nosnippet>278</a>    kind: ClaimKind,
-<a href=#279 id=279 data-nosnippet>279</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistration&gt;&gt; {
-<a href=#280 id=280 data-nosnippet>280</a>    <span class="kw">let </span>ignores_test_holds = !scope.is_unscoped();
-<a href=#281 id=281 data-nosnippet>281</a>    <span class="kw">let </span>excludes_twins_in_flight = kind == ClaimKind::Import;
-<a href=#282 id=282 data-nosnippet>282</a>    <span class="kw">let </span>waits_behind_other_attempts = kind == ClaimKind::Resolve;
-<a href=#283 id=283 data-nosnippet>283</a>    <span class="kw">let </span>orders_by_check_group = <span class="macro">matches!</span>(kind, ClaimKind::PersonLookup | ClaimKind::Resolve);
-<a href=#284 id=284 data-nosnippet>284</a>    <span class="comment">// `Some(true)` claims only uncertain rows without a submitted attainment, `Some(false)` every
-<a href=#285 id=285 data-nosnippet>285</a>    // other verify row.
-<a href=#286 id=286 data-nosnippet>286</a>    </span><span class="kw">let </span>only_uncertain_without_attainment_id = <span class="kw">match </span>kind {
-<a href=#287 id=287 data-nosnippet>287</a>        ClaimKind::Verify(flow) =&gt; <span class="prelude-val">Some</span>(flow == VerifyFlow::UncertainRecovery),
-<a href=#288 id=288 data-nosnippet>288</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#289 id=289 data-nosnippet>289</a>    };
-<a href=#290 id=290 data-nosnippet>290</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
-<a href=#291 id=291 data-nosnippet>291</a>        CreditRegistration,
-<a href=#292 id=292 data-nosnippet>292</a>        <span class="string">r#"
-<a href=#293 id=293 data-nosnippet>293</a>WITH due AS (
-<a href=#294 id=294 data-nosnippet>294</a>  SELECT cr.id
-<a href=#295 id=295 data-nosnippet>295</a>  FROM credit_registrations cr
-<a href=#296 id=296 data-nosnippet>296</a>    JOIN credit_registration_active_units au ON au.credit_unit_id = cr.credit_unit_id
-<a href=#297 id=297 data-nosnippet>297</a>    JOIN credit_registration_subjects s ON s.subject_id = cr.subject_id
-<a href=#298 id=298 data-nosnippet>298</a>  WHERE cr.deleted_at IS NULL
-<a href=#299 id=299 data-nosnippet>299</a>    AND cr.superseded_by_id IS NULL
-<a href=#300 id=300 data-nosnippet>300</a>    -- A completion opted out by hand is the pull path's again; only a row already sent carries on.
-<a href=#301 id=301 data-nosnippet>301</a>    AND (
-<a href=#302 id=302 data-nosnippet>302</a>      s.is_on_pipeline
-<a href=#303 id=303 data-nosnippet>303</a>      OR cr.submitted_at IS NOT NULL
-<a href=#304 id=304 data-nosnippet>304</a>    )
-<a href=#305 id=305 data-nosnippet>305</a>    AND cr.state = ANY($1::credit_registration_state [])
-<a href=#306 id=306 data-nosnippet>306</a>    AND cr.next_attempt_at &lt;= now()
-<a href=#307 id=307 data-nosnippet>307</a>    AND (
-<a href=#308 id=308 data-nosnippet>308</a>      cr.enrolment_check_claimed_until IS NULL
-<a href=#309 id=309 data-nosnippet>309</a>      OR cr.enrolment_check_claimed_until &lt;= now()
-<a href=#310 id=310 data-nosnippet>310</a>    )
-<a href=#311 id=311 data-nosnippet>311</a>    AND ($3::uuid IS NULL OR cr.course_id = $3)
-<a href=#312 id=312 data-nosnippet>312</a>    AND ($13::uuid IS NULL OR cr.external_credit_target_id = $13)
-<a href=#313 id=313 data-nosnippet>313</a>    AND ($4::uuid IS NULL OR cr.user_id = $4)
-<a href=#314 id=314 data-nosnippet>314</a>    AND (
-<a href=#315 id=315 data-nosnippet>315</a>      cardinality($5::uuid []) = 0
-<a href=#316 id=316 data-nosnippet>316</a>      OR cr.id = ANY($5::uuid [])
-<a href=#317 id=317 data-nosnippet>317</a>    )
-<a href=#318 id=318 data-nosnippet>318</a>    AND (
-<a href=#319 id=319 data-nosnippet>319</a>      $12::boolean IS NULL
-<a href=#320 id=320 data-nosnippet>320</a>      OR (
-<a href=#321 id=321 data-nosnippet>321</a>        cr.state = 'submission_uncertain'
-<a href=#322 id=322 data-nosnippet>322</a>        AND cr.submitted_attainment_id IS NULL
-<a href=#323 id=323 data-nosnippet>323</a>      ) = $12
-<a href=#324 id=324 data-nosnippet>324</a>    )
-<a href=#325 id=325 data-nosnippet>325</a>    AND (
-<a href=#326 id=326 data-nosnippet>326</a>      $6::boolean
-<a href=#327 id=327 data-nosnippet>327</a>      OR NOT EXISTS (
-<a href=#328 id=328 data-nosnippet>328</a>        SELECT 1
-<a href=#329 id=329 data-nosnippet>329</a>        FROM credit_registration_test_exclusive_holds h
-<a href=#330 id=330 data-nosnippet>330</a>        WHERE h.user_id = cr.user_id
-<a href=#331 id=331 data-nosnippet>331</a>          AND (
-<a href=#332 id=332 data-nosnippet>332</a>            h.course_id IS NULL
-<a href=#333 id=333 data-nosnippet>333</a>            OR h.course_id = cr.course_id
-<a href=#334 id=334 data-nosnippet>334</a>          )
-<a href=#335 id=335 data-nosnippet>335</a>          AND h.held_until &gt; now()
-<a href=#336 id=336 data-nosnippet>336</a>      )
-<a href=#337 id=337 data-nosnippet>337</a>    )
-<a href=#338 id=338 data-nosnippet>338</a>    AND (
-<a href=#339 id=339 data-nosnippet>339</a>      NOT $7::boolean
-<a href=#340 id=340 data-nosnippet>340</a>      OR (
-<a href=#341 id=341 data-nosnippet>341</a>        (
-<a href=#342 id=342 data-nosnippet>342</a>          cr.external_completion_id IS NULL
-<a href=#343 id=343 data-nosnippet>343</a>          OR (
-<a href=#344 id=344 data-nosnippet>344</a>            NOT s.is_withdrawn
-<a href=#345 id=345 data-nosnippet>345</a>            AND EXISTS (
-<a href=#346 id=346 data-nosnippet>346</a>              SELECT 1
-<a href=#347 id=347 data-nosnippet>347</a>              FROM external_completions ec
-<a href=#348 id=348 data-nosnippet>348</a>              WHERE ec.id = cr.external_completion_id
-<a href=#349 id=349 data-nosnippet>349</a>                AND ec.upstream_checked_at &gt; now() - $14::interval
-<a href=#350 id=350 data-nosnippet>350</a>            )
-<a href=#351 id=351 data-nosnippet>351</a>          )
-<a href=#352 id=352 data-nosnippet>352</a>        )
-<a href=#353 id=353 data-nosnippet>353</a>        AND NOT EXISTS (
-<a href=#354 id=354 data-nosnippet>354</a>          SELECT 1
-<a href=#355 id=355 data-nosnippet>355</a>          FROM credit_registrations twin
-<a href=#356 id=356 data-nosnippet>356</a>          WHERE twin.student_number = cr.student_number
-<a href=#357 id=357 data-nosnippet>357</a>            AND twin.uh_course_code = cr.uh_course_code
-<a href=#358 id=358 data-nosnippet>358</a>            AND twin.id &lt;&gt; cr.id
-<a href=#359 id=359 data-nosnippet>359</a>            AND twin.deleted_at IS NULL
-<a href=#360 id=360 data-nosnippet>360</a>            AND twin.state = ANY($10::credit_registration_state [])
-<a href=#361 id=361 data-nosnippet>361</a>        )
-<a href=#362 id=362 data-nosnippet>362</a>        -- Mirrors uq_credit_registrations_person_course_code, which moving to submitting would
-<a href=#363 id=363 data-nosnippet>363</a>        -- violate.
-<a href=#364 id=364 data-nosnippet>364</a>        AND NOT EXISTS (
-<a href=#365 id=365 data-nosnippet>365</a>          SELECT 1
-<a href=#366 id=366 data-nosnippet>366</a>          FROM credit_registrations holder
-<a href=#367 id=367 data-nosnippet>367</a>          WHERE holder.sisu_person_id = cr.sisu_person_id
-<a href=#368 id=368 data-nosnippet>368</a>            AND UPPER(TRIM(holder.uh_course_code)) = UPPER(TRIM(cr.uh_course_code))
-<a href=#369 id=369 data-nosnippet>369</a>            AND holder.id &lt;&gt; cr.id
-<a href=#370 id=370 data-nosnippet>370</a>            AND holder.deleted_at IS NULL
-<a href=#371 id=371 data-nosnippet>371</a>            AND holder.superseded_by_id IS NULL
-<a href=#372 id=372 data-nosnippet>372</a>            AND holder.pending_superseded_by_id IS NULL
-<a href=#373 id=373 data-nosnippet>373</a>            AND (
-<a href=#374 id=374 data-nosnippet>374</a>              holder.state = ANY($10::credit_registration_state [])
-<a href=#375 id=375 data-nosnippet>375</a>              OR holder.state = ANY($11::credit_registration_state [])
-<a href=#376 id=376 data-nosnippet>376</a>            )
-<a href=#377 id=377 data-nosnippet>377</a>        )
-<a href=#378 id=378 data-nosnippet>378</a>      )
-<a href=#379 id=379 data-nosnippet>379</a>    )
-<a href=#380 id=380 data-nosnippet>380</a>    AND (
-<a href=#381 id=381 data-nosnippet>381</a>      NOT $8::boolean
-<a href=#382 id=382 data-nosnippet>382</a>      OR NOT EXISTS (
-<a href=#383 id=383 data-nosnippet>383</a>        SELECT 1
-<a href=#384 id=384 data-nosnippet>384</a>        FROM credit_registrations ahead
-<a href=#385 id=385 data-nosnippet>385</a>          JOIN credit_registration_subjects ahead_s ON ahead_s.subject_id = ahead.subject_id
-<a href=#386 id=386 data-nosnippet>386</a>        WHERE ahead.user_id = cr.user_id
-<a href=#387 id=387 data-nosnippet>387</a>          -- Keyed like uq_credit_registrations_person_course_code: an attempt of another unit with
-<a href=#388 id=388 data-nosnippet>388</a>          -- the same code must be weighed against this one's outcome, or once this one registers
-<a href=#389 id=389 data-nosnippet>389</a>          -- it waits behind it in import for good. The frozen code is what an in-flight row is
-<a href=#390 id=390 data-nosnippet>390</a>          -- sent under, even after its unit's code changed.
-<a href=#391 id=391 data-nosnippet>391</a>          AND (
-<a href=#392 id=392 data-nosnippet>392</a>            ahead.credit_unit_id = cr.credit_unit_id
-<a href=#393 id=393 data-nosnippet>393</a>            OR UPPER(TRIM(ahead_s.uh_course_code)) = NULLIF(UPPER(TRIM(s.uh_course_code)), '')
-<a href=#394 id=394 data-nosnippet>394</a>            OR UPPER(TRIM(ahead.uh_course_code)) = NULLIF(UPPER(TRIM(s.uh_course_code)), '')
-<a href=#395 id=395 data-nosnippet>395</a>          )
-<a href=#396 id=396 data-nosnippet>396</a>          AND ahead.id &lt;&gt; cr.id
-<a href=#397 id=397 data-nosnippet>397</a>          AND ahead.deleted_at IS NULL
-<a href=#398 id=398 data-nosnippet>398</a>          AND ahead.superseded_by_id IS NULL
-<a href=#399 id=399 data-nosnippet>399</a>          -- failed_retryable because its backoff may resume it at checking_enrolment or later.
-<a href=#400 id=400 data-nosnippet>400</a>          AND (
-<a href=#401 id=401 data-nosnippet>401</a>            ahead.state IN (
-<a href=#402 id=402 data-nosnippet>402</a>              'resolving_enrolment',
-<a href=#403 id=403 data-nosnippet>403</a>              'checking_enrolment',
-<a href=#404 id=404 data-nosnippet>404</a>              'failed_retryable'
-<a href=#405 id=405 data-nosnippet>405</a>            )
-<a href=#406 id=406 data-nosnippet>406</a>            OR ahead.state = ANY($10::credit_registration_state [])
-<a href=#407 id=407 data-nosnippet>407</a>            OR ahead.enrolment_check_claimed_until &gt; now()
-<a href=#408 id=408 data-nosnippet>408</a>          )
-<a href=#409 id=409 data-nosnippet>409</a>      )
-<a href=#410 id=410 data-nosnippet>410</a>    )
-<a href=#411 id=411 data-nosnippet>411</a>  ORDER BY CASE
-<a href=#412 id=412 data-nosnippet>412</a>      WHEN $9 THEN cr.enrolment_check_group
-<a href=#413 id=413 data-nosnippet>413</a>    END DESC NULLS LAST,
-<a href=#414 id=414 data-nosnippet>414</a>    cr.next_attempt_at
-<a href=#415 id=415 data-nosnippet>415</a>  FOR UPDATE OF cr SKIP LOCKED
-<a href=#416 id=416 data-nosnippet>416</a>  LIMIT $2
-<a href=#417 id=417 data-nosnippet>417</a>)
-<a href=#418 id=418 data-nosnippet>418</a>UPDATE credit_registrations cr
-<a href=#419 id=419 data-nosnippet>419</a>SET last_attempt_at = now()
-<a href=#420 id=420 data-nosnippet>420</a>FROM due
-<a href=#421 id=421 data-nosnippet>421</a>WHERE cr.id = due.id
-<a href=#422 id=422 data-nosnippet>422</a>RETURNING cr.*
-<a href=#423 id=423 data-nosnippet>423</a>        "#</span>,
-<a href=#424 id=424 data-nosnippet>424</a>        states <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#425 id=425 data-nosnippet>425</a>        limit,
-<a href=#426 id=426 data-nosnippet>426</a>        scope.course_id,
-<a href=#427 id=427 data-nosnippet>427</a>        scope.user_id,
-<a href=#428 id=428 data-nosnippet>428</a>        <span class="kw-2">&amp;</span>scope.credit_registration_ids,
-<a href=#429 id=429 data-nosnippet>429</a>        ignores_test_holds,
-<a href=#430 id=430 data-nosnippet>430</a>        excludes_twins_in_flight,
-<a href=#431 id=431 data-nosnippet>431</a>        waits_behind_other_attempts,
-<a href=#432 id=432 data-nosnippet>432</a>        orders_by_check_group,
-<a href=#433 id=433 data-nosnippet>433</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::IN_FLIGHT_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#434 id=434 data-nosnippet>434</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
-<a href=#435 id=435 data-nosnippet>435</a>        only_uncertain_without_attainment_id,
-<a href=#436 id=436 data-nosnippet>436</a>        scope.external_credit_target_id,
-<a href=#437 id=437 data-nosnippet>437</a>        MOOCFI_IMPORT_MAX_CHECK_AGE <span class="kw">as </span>TimeDelta,
-<a href=#438 id=438 data-nosnippet>438</a>    )
-<a href=#439 id=439 data-nosnippet>439</a>    .fetch_all(conn)
-<a href=#440 id=440 data-nosnippet>440</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#441 id=441 data-nosnippet>441</a>    <span class="prelude-val">Ok</span>(res)
-<a href=#442 id=442 data-nosnippet>442</a>}
+<a href=#174 id=174 data-nosnippet>174</a>/// [`MOOCFI_IMPORT_MAX_CHECK_AGE`]; a stale one waits where it is for the next re-check. One whose
+<a href=#175 id=175 data-nosnippet>175</a>/// code's prerequisite the student does not have yet (`credit_registration_prerequisite_met`)
+<a href=#176 id=176 data-nosnippet>176</a>/// waits where it is too, and is claimed on the first tick after they get it.
+<a href=#177 id=177 data-nosnippet>177</a></span><span class="kw">pub async fn </span>claim_due_for_import(
+<a href=#178 id=178 data-nosnippet>178</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#179 id=179 data-nosnippet>179</a>    scope: <span class="kw-2">&amp;</span>RegistrationScope,
+<a href=#180 id=180 data-nosnippet>180</a>    limit: i64,
+<a href=#181 id=181 data-nosnippet>181</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistration&gt;&gt; {
+<a href=#182 id=182 data-nosnippet>182</a>    <span class="kw">let </span>claimed = claim(
+<a href=#183 id=183 data-nosnippet>183</a>        conn,
+<a href=#184 id=184 data-nosnippet>184</a>        <span class="kw-2">&amp;</span>[CreditRegistrationState::CheckingEnrolment],
+<a href=#185 id=185 data-nosnippet>185</a>        scope,
+<a href=#186 id=186 data-nosnippet>186</a>        limit,
+<a href=#187 id=187 data-nosnippet>187</a>        ClaimKind::Import,
+<a href=#188 id=188 data-nosnippet>188</a>    )
+<a href=#189 id=189 data-nosnippet>189</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#190 id=190 data-nosnippet>190</a>    <span class="prelude-val">Ok</span>(first_per(
+<a href=#191 id=191 data-nosnippet>191</a>        claimed,
+<a href=#192 id=192 data-nosnippet>192</a>        |row| {
+<a href=#193 id=193 data-nosnippet>193</a>            (
+<a href=#194 id=194 data-nosnippet>194</a>                row.student_number
+<a href=#195 id=195 data-nosnippet>195</a>                    .as_ref()
+<a href=#196 id=196 data-nosnippet>196</a>                    .map(|number| number.expose_secret().to_string()),
+<a href=#197 id=197 data-nosnippet>197</a>                row.uh_course_code.clone(),
+<a href=#198 id=198 data-nosnippet>198</a>            )
+<a href=#199 id=199 data-nosnippet>199</a>        },
+<a href=#200 id=200 data-nosnippet>200</a>        <span class="string">"another attempt for the same student and course code"</span>,
+<a href=#201 id=201 data-nosnippet>201</a>    ))
+<a href=#202 id=202 data-nosnippet>202</a>}
+<a href=#203 id=203 data-nosnippet>203</a>
+<a href=#204 id=204 data-nosnippet>204</a><span class="doccomment">/// The first of the claimed rows per `key`. The claim query holds back a row whose twin is already
+<a href=#205 id=205 data-nosnippet>205</a>/// in flight, but cannot see a twin claimed alongside it; the rows dropped here keep their lock
+<a href=#206 id=206 data-nosnippet>206</a>/// until the claim's transaction ends, and are claimable where they are after it.
+<a href=#207 id=207 data-nosnippet>207</a></span><span class="kw">fn </span>first_per&lt;K: Eq + std::hash::Hash&gt;(
+<a href=#208 id=208 data-nosnippet>208</a>    claimed: Vec&lt;CreditRegistration&gt;,
+<a href=#209 id=209 data-nosnippet>209</a>    key: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;</span>CreditRegistration) -&gt; K,
+<a href=#210 id=210 data-nosnippet>210</a>    twin: <span class="kw-2">&amp;</span>str,
+<a href=#211 id=211 data-nosnippet>211</a>) -&gt; Vec&lt;CreditRegistration&gt; {
+<a href=#212 id=212 data-nosnippet>212</a>    <span class="kw">let </span><span class="kw-2">mut </span>seen = std::collections::HashSet::new();
+<a href=#213 id=213 data-nosnippet>213</a>    claimed
+<a href=#214 id=214 data-nosnippet>214</a>        .into_iter()
+<a href=#215 id=215 data-nosnippet>215</a>        .filter(|row| {
+<a href=#216 id=216 data-nosnippet>216</a>            <span class="kw">let </span>is_first = seen.insert(key(row));
+<a href=#217 id=217 data-nosnippet>217</a>            <span class="kw">if </span>!is_first {
+<a href=#218 id=218 data-nosnippet>218</a>                <span class="macro">debug!</span>(
+<a href=#219 id=219 data-nosnippet>219</a>                    credit_registration_id = %row.id,
+<a href=#220 id=220 data-nosnippet>220</a>                    <span class="string">"Leaving row claimable: {twin} is already in this claim"
+<a href=#221 id=221 data-nosnippet>221</a>                </span>);
+<a href=#222 id=222 data-nosnippet>222</a>            }
+<a href=#223 id=223 data-nosnippet>223</a>            is_first
+<a href=#224 id=224 data-nosnippet>224</a>        })
+<a href=#225 id=225 data-nosnippet>225</a>        .collect()
+<a href=#226 id=226 data-nosnippet>226</a>}
+<a href=#227 id=227 data-nosnippet>227</a>
+<a href=#228 id=228 data-nosnippet>228</a><span class="doccomment">/// The states verify polls from. Withdrawal moves a row out of all of them, which is what stops the
+<a href=#229 id=229 data-nosnippet>229</a>/// polling without any query having to know about withdrawal.
+<a href=#230 id=230 data-nosnippet>230</a></span><span class="kw">const </span>VERIFY_STATES: [CreditRegistrationState; <span class="number">3</span>] = [
+<a href=#231 id=231 data-nosnippet>231</a>    CreditRegistrationState::AwaitingVerification,
+<a href=#232 id=232 data-nosnippet>232</a>    CreditRegistrationState::PartiallyRegistered,
+<a href=#233 id=233 data-nosnippet>233</a>    CreditRegistrationState::SubmissionUncertain,
+<a href=#234 id=234 data-nosnippet>234</a>];
+<a href=#235 id=235 data-nosnippet>235</a>
+<a href=#236 id=236 data-nosnippet>236</a><span class="doccomment">/// Which of verify's flows a claim is for.
+<a href=#237 id=237 data-nosnippet>237</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+<a href=#238 id=238 data-nosnippet>238</a></span><span class="kw">pub enum </span>VerifyFlow {
+<a href=#239 id=239 data-nosnippet>239</a>    <span class="doccomment">/// Rows with a submitted attainment to poll by, and `awaiting_verification` rows stuck without
+<a href=#240 id=240 data-nosnippet>240</a>    /// one.
+<a href=#241 id=241 data-nosnippet>241</a>    </span>Poll,
+<a href=#242 id=242 data-nosnippet>242</a>    <span class="doccomment">/// `submission_uncertain` rows with no submitted attainment id, looked up through
+<a href=#243 id=243 data-nosnippet>243</a>    /// resolve-enrolments instead.
+<a href=#244 id=244 data-nosnippet>244</a>    </span>UncertainRecovery,
+<a href=#245 id=245 data-nosnippet>245</a>}
+<a href=#246 id=246 data-nosnippet>246</a>
+<a href=#247 id=247 data-nosnippet>247</a><span class="doccomment">/// Claims rows for one of verify's flows. Each flow is claimed on its own, so that rows one flow
+<a href=#248 id=248 data-nosnippet>248</a>/// has no allowance to send cannot fill the other's claim.
+<a href=#249 id=249 data-nosnippet>249</a></span><span class="kw">pub async fn </span>claim_due_for_verify(
+<a href=#250 id=250 data-nosnippet>250</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#251 id=251 data-nosnippet>251</a>    flow: VerifyFlow,
+<a href=#252 id=252 data-nosnippet>252</a>    scope: <span class="kw-2">&amp;</span>RegistrationScope,
+<a href=#253 id=253 data-nosnippet>253</a>    limit: i64,
+<a href=#254 id=254 data-nosnippet>254</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistration&gt;&gt; {
+<a href=#255 id=255 data-nosnippet>255</a>    claim(conn, <span class="kw-2">&amp;</span>VERIFY_STATES, scope, limit, ClaimKind::Verify(flow)).<span class="kw">await
+<a href=#256 id=256 data-nosnippet>256</a></span>}
+<a href=#257 id=257 data-nosnippet>257</a>
+<a href=#258 id=258 data-nosnippet>258</a><span class="doccomment">/// Which caller a claim is for, which decides the rows that hold a row back and the order.
+<a href=#259 id=259 data-nosnippet>259</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+<a href=#260 id=260 data-nosnippet>260</a></span><span class="kw">enum </span>ClaimKind {
+<a href=#261 id=261 data-nosnippet>261</a>    <span class="doccomment">/// See [`claim_due_for_verify`].
+<a href=#262 id=262 data-nosnippet>262</a>    </span>Verify(VerifyFlow),
+<a href=#263 id=263 data-nosnippet>263</a>    <span class="doccomment">/// See [`claim_due_for_person_lookup`].
+<a href=#264 id=264 data-nosnippet>264</a>    </span>PersonLookup,
+<a href=#265 id=265 data-nosnippet>265</a>    <span class="doccomment">/// See [`claim_due_for_resolve`].
+<a href=#266 id=266 data-nosnippet>266</a>    </span>Resolve,
+<a href=#267 id=267 data-nosnippet>267</a>    <span class="doccomment">/// See [`claim_due_for_import`].
+<a href=#268 id=268 data-nosnippet>268</a>    </span>Import,
+<a href=#269 id=269 data-nosnippet>269</a>}
+<a href=#270 id=270 data-nosnippet>270</a>
+<a href=#271 id=271 data-nosnippet>271</a><span class="doccomment">/// Shares its eligibility filters with
+<a href=#272 id=272 data-nosnippet>272</a>/// [`count_due_enrolment_checks`](super::count_due_enrolment_checks) and
+<a href=#273 id=273 data-nosnippet>273</a>/// [`pull_forward_batched_checks`](crate::library::credit_registration::enrolment_checks::pull_forward_batched_checks);
+<a href=#274 id=274 data-nosnippet>274</a>/// change all three together.
+<a href=#275 id=275 data-nosnippet>275</a></span><span class="kw">async fn </span>claim(
+<a href=#276 id=276 data-nosnippet>276</a>    conn: <span class="kw-2">&amp;mut </span>PgConnection,
+<a href=#277 id=277 data-nosnippet>277</a>    states: <span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#278 id=278 data-nosnippet>278</a>    scope: <span class="kw-2">&amp;</span>RegistrationScope,
+<a href=#279 id=279 data-nosnippet>279</a>    limit: i64,
+<a href=#280 id=280 data-nosnippet>280</a>    kind: ClaimKind,
+<a href=#281 id=281 data-nosnippet>281</a>) -&gt; ModelResult&lt;Vec&lt;CreditRegistration&gt;&gt; {
+<a href=#282 id=282 data-nosnippet>282</a>    <span class="kw">let </span>ignores_test_holds = !scope.is_unscoped();
+<a href=#283 id=283 data-nosnippet>283</a>    <span class="kw">let </span>excludes_twins_in_flight = kind == ClaimKind::Import;
+<a href=#284 id=284 data-nosnippet>284</a>    <span class="kw">let </span>waits_behind_other_attempts = kind == ClaimKind::Resolve;
+<a href=#285 id=285 data-nosnippet>285</a>    <span class="kw">let </span>orders_by_check_group = <span class="macro">matches!</span>(kind, ClaimKind::PersonLookup | ClaimKind::Resolve);
+<a href=#286 id=286 data-nosnippet>286</a>    <span class="comment">// `Some(true)` claims only uncertain rows without a submitted attainment, `Some(false)` every
+<a href=#287 id=287 data-nosnippet>287</a>    // other verify row.
+<a href=#288 id=288 data-nosnippet>288</a>    </span><span class="kw">let </span>only_uncertain_without_attainment_id = <span class="kw">match </span>kind {
+<a href=#289 id=289 data-nosnippet>289</a>        ClaimKind::Verify(flow) =&gt; <span class="prelude-val">Some</span>(flow == VerifyFlow::UncertainRecovery),
+<a href=#290 id=290 data-nosnippet>290</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#291 id=291 data-nosnippet>291</a>    };
+<a href=#292 id=292 data-nosnippet>292</a>    <span class="kw">let </span>res = <span class="macro">sqlx::query_as!</span>(
+<a href=#293 id=293 data-nosnippet>293</a>        CreditRegistration,
+<a href=#294 id=294 data-nosnippet>294</a>        <span class="string">r#"
+<a href=#295 id=295 data-nosnippet>295</a>WITH due AS (
+<a href=#296 id=296 data-nosnippet>296</a>  SELECT cr.id
+<a href=#297 id=297 data-nosnippet>297</a>  FROM credit_registrations cr
+<a href=#298 id=298 data-nosnippet>298</a>    JOIN credit_registration_active_units au ON au.credit_unit_id = cr.credit_unit_id
+<a href=#299 id=299 data-nosnippet>299</a>    JOIN credit_registration_subjects s ON s.subject_id = cr.subject_id
+<a href=#300 id=300 data-nosnippet>300</a>  WHERE cr.deleted_at IS NULL
+<a href=#301 id=301 data-nosnippet>301</a>    AND cr.superseded_by_id IS NULL
+<a href=#302 id=302 data-nosnippet>302</a>    -- A completion opted out by hand is the pull path's again; only a row already sent carries on.
+<a href=#303 id=303 data-nosnippet>303</a>    AND (
+<a href=#304 id=304 data-nosnippet>304</a>      s.is_on_pipeline
+<a href=#305 id=305 data-nosnippet>305</a>      OR cr.submitted_at IS NOT NULL
+<a href=#306 id=306 data-nosnippet>306</a>    )
+<a href=#307 id=307 data-nosnippet>307</a>    AND cr.state = ANY($1::credit_registration_state [])
+<a href=#308 id=308 data-nosnippet>308</a>    AND cr.next_attempt_at &lt;= now()
+<a href=#309 id=309 data-nosnippet>309</a>    AND (
+<a href=#310 id=310 data-nosnippet>310</a>      cr.enrolment_check_claimed_until IS NULL
+<a href=#311 id=311 data-nosnippet>311</a>      OR cr.enrolment_check_claimed_until &lt;= now()
+<a href=#312 id=312 data-nosnippet>312</a>    )
+<a href=#313 id=313 data-nosnippet>313</a>    AND ($3::uuid IS NULL OR cr.course_id = $3)
+<a href=#314 id=314 data-nosnippet>314</a>    AND ($13::uuid IS NULL OR cr.external_credit_target_id = $13)
+<a href=#315 id=315 data-nosnippet>315</a>    AND ($4::uuid IS NULL OR cr.user_id = $4)
+<a href=#316 id=316 data-nosnippet>316</a>    AND (
+<a href=#317 id=317 data-nosnippet>317</a>      cardinality($5::uuid []) = 0
+<a href=#318 id=318 data-nosnippet>318</a>      OR cr.id = ANY($5::uuid [])
+<a href=#319 id=319 data-nosnippet>319</a>    )
+<a href=#320 id=320 data-nosnippet>320</a>    AND (
+<a href=#321 id=321 data-nosnippet>321</a>      $12::boolean IS NULL
+<a href=#322 id=322 data-nosnippet>322</a>      OR (
+<a href=#323 id=323 data-nosnippet>323</a>        cr.state = 'submission_uncertain'
+<a href=#324 id=324 data-nosnippet>324</a>        AND cr.submitted_attainment_id IS NULL
+<a href=#325 id=325 data-nosnippet>325</a>      ) = $12
+<a href=#326 id=326 data-nosnippet>326</a>    )
+<a href=#327 id=327 data-nosnippet>327</a>    AND (
+<a href=#328 id=328 data-nosnippet>328</a>      $6::boolean
+<a href=#329 id=329 data-nosnippet>329</a>      OR NOT EXISTS (
+<a href=#330 id=330 data-nosnippet>330</a>        SELECT 1
+<a href=#331 id=331 data-nosnippet>331</a>        FROM credit_registration_test_exclusive_holds h
+<a href=#332 id=332 data-nosnippet>332</a>        WHERE h.user_id = cr.user_id
+<a href=#333 id=333 data-nosnippet>333</a>          AND (
+<a href=#334 id=334 data-nosnippet>334</a>            h.course_id IS NULL
+<a href=#335 id=335 data-nosnippet>335</a>            OR h.course_id = cr.course_id
+<a href=#336 id=336 data-nosnippet>336</a>          )
+<a href=#337 id=337 data-nosnippet>337</a>          AND h.held_until &gt; now()
+<a href=#338 id=338 data-nosnippet>338</a>      )
+<a href=#339 id=339 data-nosnippet>339</a>    )
+<a href=#340 id=340 data-nosnippet>340</a>    AND (
+<a href=#341 id=341 data-nosnippet>341</a>      NOT $7::boolean
+<a href=#342 id=342 data-nosnippet>342</a>      OR (
+<a href=#343 id=343 data-nosnippet>343</a>        (
+<a href=#344 id=344 data-nosnippet>344</a>          cr.external_completion_id IS NULL
+<a href=#345 id=345 data-nosnippet>345</a>          OR (
+<a href=#346 id=346 data-nosnippet>346</a>            NOT s.is_withdrawn
+<a href=#347 id=347 data-nosnippet>347</a>            AND EXISTS (
+<a href=#348 id=348 data-nosnippet>348</a>              SELECT 1
+<a href=#349 id=349 data-nosnippet>349</a>              FROM external_completions ec
+<a href=#350 id=350 data-nosnippet>350</a>              WHERE ec.id = cr.external_completion_id
+<a href=#351 id=351 data-nosnippet>351</a>                AND ec.upstream_checked_at &gt; now() - $14::interval
+<a href=#352 id=352 data-nosnippet>352</a>            )
+<a href=#353 id=353 data-nosnippet>353</a>          )
+<a href=#354 id=354 data-nosnippet>354</a>        )
+<a href=#355 id=355 data-nosnippet>355</a>        AND NOT EXISTS (
+<a href=#356 id=356 data-nosnippet>356</a>          SELECT 1
+<a href=#357 id=357 data-nosnippet>357</a>          FROM credit_registrations twin
+<a href=#358 id=358 data-nosnippet>358</a>          WHERE twin.student_number = cr.student_number
+<a href=#359 id=359 data-nosnippet>359</a>            AND twin.uh_course_code = cr.uh_course_code
+<a href=#360 id=360 data-nosnippet>360</a>            AND twin.id &lt;&gt; cr.id
+<a href=#361 id=361 data-nosnippet>361</a>            AND twin.deleted_at IS NULL
+<a href=#362 id=362 data-nosnippet>362</a>            AND twin.state = ANY($10::credit_registration_state [])
+<a href=#363 id=363 data-nosnippet>363</a>        )
+<a href=#364 id=364 data-nosnippet>364</a>        -- Mirrors uq_credit_registrations_person_course_code, which moving to submitting would
+<a href=#365 id=365 data-nosnippet>365</a>        -- violate.
+<a href=#366 id=366 data-nosnippet>366</a>        AND NOT EXISTS (
+<a href=#367 id=367 data-nosnippet>367</a>          SELECT 1
+<a href=#368 id=368 data-nosnippet>368</a>          FROM credit_registrations holder
+<a href=#369 id=369 data-nosnippet>369</a>          WHERE holder.sisu_person_id = cr.sisu_person_id
+<a href=#370 id=370 data-nosnippet>370</a>            AND UPPER(TRIM(holder.uh_course_code)) = UPPER(TRIM(cr.uh_course_code))
+<a href=#371 id=371 data-nosnippet>371</a>            AND holder.id &lt;&gt; cr.id
+<a href=#372 id=372 data-nosnippet>372</a>            AND holder.deleted_at IS NULL
+<a href=#373 id=373 data-nosnippet>373</a>            AND holder.superseded_by_id IS NULL
+<a href=#374 id=374 data-nosnippet>374</a>            AND holder.pending_superseded_by_id IS NULL
+<a href=#375 id=375 data-nosnippet>375</a>            AND (
+<a href=#376 id=376 data-nosnippet>376</a>              holder.state = ANY($10::credit_registration_state [])
+<a href=#377 id=377 data-nosnippet>377</a>              OR holder.state = ANY($11::credit_registration_state [])
+<a href=#378 id=378 data-nosnippet>378</a>            )
+<a href=#379 id=379 data-nosnippet>379</a>        )
+<a href=#380 id=380 data-nosnippet>380</a>        AND (
+<a href=#381 id=381 data-nosnippet>381</a>          cr.external_completion_id IS NULL
+<a href=#382 id=382 data-nosnippet>382</a>          OR credit_registration_prerequisite_met(cr)
+<a href=#383 id=383 data-nosnippet>383</a>        )
+<a href=#384 id=384 data-nosnippet>384</a>      )
+<a href=#385 id=385 data-nosnippet>385</a>    )
+<a href=#386 id=386 data-nosnippet>386</a>    AND (
+<a href=#387 id=387 data-nosnippet>387</a>      NOT $8::boolean
+<a href=#388 id=388 data-nosnippet>388</a>      OR NOT EXISTS (
+<a href=#389 id=389 data-nosnippet>389</a>        SELECT 1
+<a href=#390 id=390 data-nosnippet>390</a>        FROM credit_registrations ahead
+<a href=#391 id=391 data-nosnippet>391</a>          JOIN credit_registration_subjects ahead_s ON ahead_s.subject_id = ahead.subject_id
+<a href=#392 id=392 data-nosnippet>392</a>        WHERE ahead.user_id = cr.user_id
+<a href=#393 id=393 data-nosnippet>393</a>          -- Keyed like uq_credit_registrations_person_course_code: an attempt of another unit with
+<a href=#394 id=394 data-nosnippet>394</a>          -- the same code must be weighed against this one's outcome, or once this one registers
+<a href=#395 id=395 data-nosnippet>395</a>          -- it waits behind it in import for good. The frozen code is what an in-flight row is
+<a href=#396 id=396 data-nosnippet>396</a>          -- sent under, even after its unit's code changed.
+<a href=#397 id=397 data-nosnippet>397</a>          AND (
+<a href=#398 id=398 data-nosnippet>398</a>            ahead.credit_unit_id = cr.credit_unit_id
+<a href=#399 id=399 data-nosnippet>399</a>            OR UPPER(TRIM(ahead_s.uh_course_code)) = NULLIF(UPPER(TRIM(s.uh_course_code)), '')
+<a href=#400 id=400 data-nosnippet>400</a>            OR UPPER(TRIM(ahead.uh_course_code)) = NULLIF(UPPER(TRIM(s.uh_course_code)), '')
+<a href=#401 id=401 data-nosnippet>401</a>          )
+<a href=#402 id=402 data-nosnippet>402</a>          AND ahead.id &lt;&gt; cr.id
+<a href=#403 id=403 data-nosnippet>403</a>          AND ahead.deleted_at IS NULL
+<a href=#404 id=404 data-nosnippet>404</a>          AND ahead.superseded_by_id IS NULL
+<a href=#405 id=405 data-nosnippet>405</a>          -- failed_retryable because its backoff may resume it at checking_enrolment or later.
+<a href=#406 id=406 data-nosnippet>406</a>          AND (
+<a href=#407 id=407 data-nosnippet>407</a>            ahead.state IN (
+<a href=#408 id=408 data-nosnippet>408</a>              'resolving_enrolment',
+<a href=#409 id=409 data-nosnippet>409</a>              'checking_enrolment',
+<a href=#410 id=410 data-nosnippet>410</a>              'failed_retryable'
+<a href=#411 id=411 data-nosnippet>411</a>            )
+<a href=#412 id=412 data-nosnippet>412</a>            OR ahead.state = ANY($10::credit_registration_state [])
+<a href=#413 id=413 data-nosnippet>413</a>            OR ahead.enrolment_check_claimed_until &gt; now()
+<a href=#414 id=414 data-nosnippet>414</a>          )
+<a href=#415 id=415 data-nosnippet>415</a>      )
+<a href=#416 id=416 data-nosnippet>416</a>    )
+<a href=#417 id=417 data-nosnippet>417</a>  ORDER BY CASE
+<a href=#418 id=418 data-nosnippet>418</a>      WHEN $9 THEN cr.enrolment_check_group
+<a href=#419 id=419 data-nosnippet>419</a>    END DESC NULLS LAST,
+<a href=#420 id=420 data-nosnippet>420</a>    cr.next_attempt_at
+<a href=#421 id=421 data-nosnippet>421</a>  FOR UPDATE OF cr SKIP LOCKED
+<a href=#422 id=422 data-nosnippet>422</a>  LIMIT $2
+<a href=#423 id=423 data-nosnippet>423</a>)
+<a href=#424 id=424 data-nosnippet>424</a>UPDATE credit_registrations cr
+<a href=#425 id=425 data-nosnippet>425</a>SET last_attempt_at = now()
+<a href=#426 id=426 data-nosnippet>426</a>FROM due
+<a href=#427 id=427 data-nosnippet>427</a>WHERE cr.id = due.id
+<a href=#428 id=428 data-nosnippet>428</a>RETURNING cr.*
+<a href=#429 id=429 data-nosnippet>429</a>        "#</span>,
+<a href=#430 id=430 data-nosnippet>430</a>        states <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#431 id=431 data-nosnippet>431</a>        limit,
+<a href=#432 id=432 data-nosnippet>432</a>        scope.course_id,
+<a href=#433 id=433 data-nosnippet>433</a>        scope.user_id,
+<a href=#434 id=434 data-nosnippet>434</a>        <span class="kw-2">&amp;</span>scope.credit_registration_ids,
+<a href=#435 id=435 data-nosnippet>435</a>        ignores_test_holds,
+<a href=#436 id=436 data-nosnippet>436</a>        excludes_twins_in_flight,
+<a href=#437 id=437 data-nosnippet>437</a>        waits_behind_other_attempts,
+<a href=#438 id=438 data-nosnippet>438</a>        orders_by_check_group,
+<a href=#439 id=439 data-nosnippet>439</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::IN_FLIGHT_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#440 id=440 data-nosnippet>440</a>        <span class="kw-2">&amp;</span>CreditRegistrationState::SUCCESS_STATES <span class="kw">as </span><span class="kw-2">&amp;</span>[CreditRegistrationState],
+<a href=#441 id=441 data-nosnippet>441</a>        only_uncertain_without_attainment_id,
+<a href=#442 id=442 data-nosnippet>442</a>        scope.external_credit_target_id,
+<a href=#443 id=443 data-nosnippet>443</a>        MOOCFI_IMPORT_MAX_CHECK_AGE <span class="kw">as </span>TimeDelta,
+<a href=#444 id=444 data-nosnippet>444</a>    )
+<a href=#445 id=445 data-nosnippet>445</a>    .fetch_all(conn)
+<a href=#446 id=446 data-nosnippet>446</a>    .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#447 id=447 data-nosnippet>447</a>    <span class="prelude-val">Ok</span>(res)
+<a href=#448 id=448 data-nosnippet>448</a>}
 </code></pre></div></section></main></body></html>

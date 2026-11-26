@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Lookup"],"fn":["claim_for_lookup","hold_in_flight","keep_lookups_in_flight","run","split_by_lookup"],"mod":["enrolments","persons"]};
+window.SIDEBAR_ITEMS = {"enum":["Lookup"],"fn":["claim_for_lookup","hold_in_flight","keep_lookups_in_flight","run","split_by_lookup"],"mod":["enrolments","persons","sisu_code_checks"]};

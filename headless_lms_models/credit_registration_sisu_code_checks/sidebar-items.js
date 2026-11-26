@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CHECK_MAX_AGE"],"enum":["EquivalentHolding"],"fn":["get_due","get_equivalent_holdings","record_all"],"struct":["DueCodeCheck","SisuCodeAnswer"]};

@@ -110,36 +110,38 @@
 <a href=#110 id=110 data-nosnippet>110</a>            completion_id: candidate.moocfi_completion_id,
 <a href=#111 id=111 data-nosnippet>111</a>            student_number: candidate.student_number.clone().into(),
 <a href=#112 id=112 data-nosnippet>112</a>            registration_date: candidate.registration_date,
-<a href=#113 id=113 data-nosnippet>113</a>        }],
-<a href=#114 id=114 data-nosnippet>114</a>    };
-<a href=#115 id=115 data-nosnippet>115</a>    <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = client.register_completions(<span class="kw-2">&amp;</span>request).<span class="kw">await </span>{
-<a href=#116 id=116 data-nosnippet>116</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(error.to_string()));
-<a href=#117 id=117 data-nosnippet>117</a>    }
-<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#119 id=119 data-nosnippet>119</a>    mark_reported(<span class="kw-2">&amp;mut </span>conn, candidate).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#120 id=120 data-nosnippet>120</a>    completion
-<a href=#121 id=121 data-nosnippet>121</a>        .registrations
-<a href=#122 id=122 data-nosnippet>122</a>        .push(DelegatedCompletionRegistration {
-<a href=#123 id=123 data-nosnippet>123</a>            organization_slug: <span class="prelude-val">Some</span>(delegation.organization_slug.clone()),
-<a href=#124 id=124 data-nosnippet>124</a>            registration_date: <span class="prelude-val">Some</span>(candidate.registration_date),
-<a href=#125 id=125 data-nosnippet>125</a>            created_at: chrono::Utc::now(),
-<a href=#126 id=126 data-nosnippet>126</a>        });
-<a href=#127 id=127 data-nosnippet>127</a>    <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(()))
-<a href=#128 id=128 data-nosnippet>128</a>}
-<a href=#129 id=129 data-nosnippet>129</a>
-<a href=#130 id=130 data-nosnippet>130</a><span class="doccomment">/// Whether mooc.fi holds our registration of the completion with the candidate's registration
-<a href=#131 id=131 data-nosnippet>131</a>/// date, which is unique among our registrations of the completion and in whole milliseconds, as
-<a href=#132 id=132 data-nosnippet>132</a>/// mooc.fi keeps it.
-<a href=#133 id=133 data-nosnippet>133</a></span><span class="kw">fn </span>is_on_moocfi(
-<a href=#134 id=134 data-nosnippet>134</a>    completion: <span class="kw-2">&amp;</span>DelegatedCompletion,
-<a href=#135 id=135 data-nosnippet>135</a>    candidate: <span class="kw-2">&amp;</span>MoocfiReportCandidate,
-<a href=#136 id=136 data-nosnippet>136</a>    organization_slug: <span class="kw-2">&amp;</span>str,
-<a href=#137 id=137 data-nosnippet>137</a>) -&gt; bool {
-<a href=#138 id=138 data-nosnippet>138</a>    completion.registrations.iter().any(|registration| {
-<a href=#139 id=139 data-nosnippet>139</a>        registration.organization_slug.as_deref() == <span class="prelude-val">Some</span>(organization_slug)
-<a href=#140 id=140 data-nosnippet>140</a>            &amp;&amp; registration.registration_date.is_some_and(|date| {
-<a href=#141 id=141 data-nosnippet>141</a>                date.timestamp_millis() == candidate.registration_date.timestamp_millis()
-<a href=#142 id=142 data-nosnippet>142</a>            })
-<a href=#143 id=143 data-nosnippet>143</a>    })
-<a href=#144 id=144 data-nosnippet>144</a>}
+<a href=#113 id=113 data-nosnippet>113</a>            course_code: candidate.uh_course_code.clone(),
+<a href=#114 id=114 data-nosnippet>114</a>        }],
+<a href=#115 id=115 data-nosnippet>115</a>    };
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = client.register_completions(<span class="kw-2">&amp;</span>request).<span class="kw">await </span>{
+<a href=#117 id=117 data-nosnippet>117</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(error.to_string()));
+<a href=#118 id=118 data-nosnippet>118</a>    }
+<a href=#119 id=119 data-nosnippet>119</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#120 id=120 data-nosnippet>120</a>    mark_reported(<span class="kw-2">&amp;mut </span>conn, candidate).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#121 id=121 data-nosnippet>121</a>    completion
+<a href=#122 id=122 data-nosnippet>122</a>        .registrations
+<a href=#123 id=123 data-nosnippet>123</a>        .push(DelegatedCompletionRegistration {
+<a href=#124 id=124 data-nosnippet>124</a>            organization_slug: <span class="prelude-val">Some</span>(delegation.organization_slug.clone()),
+<a href=#125 id=125 data-nosnippet>125</a>            registration_date: <span class="prelude-val">Some</span>(candidate.registration_date),
+<a href=#126 id=126 data-nosnippet>126</a>            created_at: chrono::Utc::now(),
+<a href=#127 id=127 data-nosnippet>127</a>            course_code: candidate.uh_course_code.clone(),
+<a href=#128 id=128 data-nosnippet>128</a>        });
+<a href=#129 id=129 data-nosnippet>129</a>    <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(()))
+<a href=#130 id=130 data-nosnippet>130</a>}
+<a href=#131 id=131 data-nosnippet>131</a>
+<a href=#132 id=132 data-nosnippet>132</a><span class="doccomment">/// Whether mooc.fi holds our registration of the completion with the candidate's registration
+<a href=#133 id=133 data-nosnippet>133</a>/// date, which is unique among our registrations of the completion and in whole milliseconds, as
+<a href=#134 id=134 data-nosnippet>134</a>/// mooc.fi keeps it.
+<a href=#135 id=135 data-nosnippet>135</a></span><span class="kw">fn </span>is_on_moocfi(
+<a href=#136 id=136 data-nosnippet>136</a>    completion: <span class="kw-2">&amp;</span>DelegatedCompletion,
+<a href=#137 id=137 data-nosnippet>137</a>    candidate: <span class="kw-2">&amp;</span>MoocfiReportCandidate,
+<a href=#138 id=138 data-nosnippet>138</a>    organization_slug: <span class="kw-2">&amp;</span>str,
+<a href=#139 id=139 data-nosnippet>139</a>) -&gt; bool {
+<a href=#140 id=140 data-nosnippet>140</a>    completion.registrations.iter().any(|registration| {
+<a href=#141 id=141 data-nosnippet>141</a>        registration.organization_slug.as_deref() == <span class="prelude-val">Some</span>(organization_slug)
+<a href=#142 id=142 data-nosnippet>142</a>            &amp;&amp; registration.registration_date.is_some_and(|date| {
+<a href=#143 id=143 data-nosnippet>143</a>                date.timestamp_millis() == candidate.registration_date.timestamp_millis()
+<a href=#144 id=144 data-nosnippet>144</a>            })
+<a href=#145 id=145 data-nosnippet>145</a>    })
+<a href=#146 id=146 data-nosnippet>146</a>}
 </code></pre></div></section></main></body></html>

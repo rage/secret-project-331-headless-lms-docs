@@ -42,7 +42,7 @@
 <a href=#42 id=42 data-nosnippet>42</a>    <span class="kw">pub </span>course_or_target_id: Uuid,
 <a href=#43 id=43 data-nosnippet>43</a>    <span class="doccomment">/// The completion, whichever kind it is.
 <a href=#44 id=44 data-nosnippet>44</a>    </span><span class="kw">pub </span>subject_id: Uuid,
-<a href=#45 id=45 data-nosnippet>45</a>    <span class="doccomment">/// The module or mooc.fi target, whichever kind it is.
+<a href=#45 id=45 data-nosnippet>45</a>    <span class="doccomment">/// The module or mooc.fi code, whichever kind it is.
 <a href=#46 id=46 data-nosnippet>46</a>    </span><span class="kw">pub </span>credit_unit_id: Uuid,
 <a href=#47 id=47 data-nosnippet>47</a>    <span class="kw">pub </span>completion_date: DateTime&lt;Utc&gt;,
 <a href=#48 id=48 data-nosnippet>48</a>    <span class="kw">pub </span>state: CreditRegistrationState,
@@ -61,7 +61,7 @@
 <a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">pub </span>sisu_person_id: <span class="prelude-ty">Option</span>&lt;DbSecret&gt;,
 <a href=#62 id=62 data-nosnippet>62</a>    <span class="doccomment">/// Frozen with `student_number`; `None` until then.
 <a href=#63 id=63 data-nosnippet>63</a>    </span><span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#64 id=64 data-nosnippet>64</a>    <span class="doccomment">/// The module's or mooc.fi target's code now, which a later edit can set apart from
+<a href=#64 id=64 data-nosnippet>64</a>    <span class="doccomment">/// The module's or mooc.fi code's course code now, which a later edit can set apart from
 <a href=#65 id=65 data-nosnippet>65</a>    /// `uh_course_code`.
 <a href=#66 id=66 data-nosnippet>66</a>    </span><span class="kw">pub </span>current_uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#67 id=67 data-nosnippet>67</a>    <span class="kw">pub </span>selected_enrolment_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -189,7 +189,7 @@
 <a href=#189 id=189 data-nosnippet>189</a>    <span class="kw">pub </span>error_codes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[CreditRegistrationErrorCode]&gt;,
 <a href=#190 id=190 data-nosnippet>190</a>    <span class="doccomment">/// A course, or a mooc.fi target, which the course facet lists beside the courses.
 <a href=#191 id=191 data-nosnippet>191</a>    </span><span class="kw">pub </span>course_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
-<a href=#192 id=192 data-nosnippet>192</a>    <span class="doccomment">/// A module, or a mooc.fi target.
+<a href=#192 id=192 data-nosnippet>192</a>    <span class="doccomment">/// A module, or a mooc.fi code.
 <a href=#193 id=193 data-nosnippet>193</a>    </span><span class="kw">pub </span>credit_unit_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
 <a href=#194 id=194 data-nosnippet>194</a>    <span class="kw">pub </span>user_id: <span class="prelude-ty">Option</span>&lt;Uuid&gt;,
 <a href=#195 id=195 data-nosnippet>195</a>    <span class="kw">pub </span>student_number: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
@@ -474,7 +474,7 @@
 <a href=#474 id=474 data-nosnippet>474</a>    <span class="kw">pub </span>user_id: Uuid,
 <a href=#475 id=475 data-nosnippet>475</a>    <span class="kw">pub </span>credit_registration_id: Uuid,
 <a href=#476 id=476 data-nosnippet>476</a>    <span class="kw">pub </span>created_at: DateTime&lt;Utc&gt;,
-<a href=#477 id=477 data-nosnippet>477</a>    <span class="doccomment">/// The module's or mooc.fi target's code now, trimmed and upper-cased.
+<a href=#477 id=477 data-nosnippet>477</a>    <span class="doccomment">/// The module's or mooc.fi code's course code now, trimmed and upper-cased.
 <a href=#478 id=478 data-nosnippet>478</a>    </span><span class="kw">pub </span>uh_course_code: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#479 id=479 data-nosnippet>479</a>}
 <a href=#480 id=480 data-nosnippet>480</a>
@@ -524,7 +524,7 @@
 <a href=#524 id=524 data-nosnippet>524</a>    admin_facing_page(conn, filters, sort, limit, offset).<span class="kw">await
 <a href=#525 id=525 data-nosnippet>525</a></span>}
 <a href=#526 id=526 data-nosnippet>526</a>
-<a href=#527 id=527 data-nosnippet>527</a><span class="doccomment">/// Live rows of one module or mooc.fi target at one step, with one engagement where the step waits
+<a href=#527 id=527 data-nosnippet>527</a><span class="doccomment">/// Live rows of one module or mooc.fi code at one step, with one engagement where the step waits
 <a href=#528 id=528 data-nosnippet>528</a>/// on the student.
 <a href=#529 id=529 data-nosnippet>529</a></span><span class="attr">#[derive(Debug, Clone, PartialEq)]
 <a href=#530 id=530 data-nosnippet>530</a></span><span class="kw">pub struct </span>StepCount {
@@ -534,7 +534,7 @@
 <a href=#534 id=534 data-nosnippet>534</a>    <span class="kw">pub </span>count: i64,
 <a href=#535 id=535 data-nosnippet>535</a>}
 <a href=#536 id=536 data-nosnippet>536</a>
-<a href=#537 id=537 data-nosnippet>537</a><span class="doccomment">/// Live rows per module or mooc.fi target, step and engagement: the overview's "Where registrations
+<a href=#537 id=537 data-nosnippet>537</a><span class="doccomment">/// Live rows per module or mooc.fi code, step and engagement: the overview's "Where registrations
 <a href=#538 id=538 data-nosnippet>538</a>/// stand", the Courses tab's per-unit table and the daily snapshot.
 <a href=#539 id=539 data-nosnippet>539</a>///
 <a href=#540 id=540 data-nosnippet>540</a>/// Counts exactly what [`get_admin_facing`] lists filtered to the same step, engagement and unit,

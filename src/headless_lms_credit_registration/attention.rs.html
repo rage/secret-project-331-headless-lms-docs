@@ -7,7 +7,7 @@
 <a href=#7 id=7 data-nosnippet>7</a>};
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>headless_lms_models::{
 <a href=#9 id=9 data-nosnippet>9</a>    ModelResult, course_module_suotar_configurations, credit_registration_phase_state,
-<a href=#10 id=10 data-nosnippet>10</a>    credit_registration_roster_schedules, external_credit_targets,
+<a href=#10 id=10 data-nosnippet>10</a>    credit_registration_roster_schedules, external_credit_target_codes,
 <a href=#11 id=11 data-nosnippet>11</a>};
 <a href=#12 id=12 data-nosnippet>12</a><span class="kw">use </span>sqlx::PgConnection;
 <a href=#13 id=13 data-nosnippet>13</a>
@@ -72,7 +72,7 @@
 <a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">let </span><span class="kw-2">mut </span>misconfigured_module_ids =
 <a href=#73 id=73 data-nosnippet>73</a>        course_module_suotar_configurations::get_module_ids_failing_config_check(conn).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#74 id=74 data-nosnippet>74</a>    misconfigured_module_ids
-<a href=#75 id=75 data-nosnippet>75</a>        .extend(external_credit_targets::get_ids_failing_config_check(conn).<span class="kw">await</span><span class="question-mark">?</span>);
+<a href=#75 id=75 data-nosnippet>75</a>        .extend(external_credit_target_codes::get_ids_failing_config_check(conn).<span class="kw">await</span><span class="question-mark">?</span>);
 <a href=#76 id=76 data-nosnippet>76</a>    <span class="prelude-val">Ok</span>(AttentionRules {
 <a href=#77 id=77 data-nosnippet>77</a>        thresholds: StuckThresholds::CURRENT,
 <a href=#78 id=78 data-nosnippet>78</a>        account_linking_since,
