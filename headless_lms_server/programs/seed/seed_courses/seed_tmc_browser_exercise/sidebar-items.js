@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["seed_tmc_browser_exercise_course"]};
