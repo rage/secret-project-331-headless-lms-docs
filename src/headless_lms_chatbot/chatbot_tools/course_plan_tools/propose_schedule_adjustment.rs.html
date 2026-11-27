@@ -6,13 +6,13 @@
 <a href=#6 id=6 data-nosnippet>6</a>    CourseDesignerScheduleStageInput, validate_schedule_input,
 <a href=#7 id=7 data-nosnippet>7</a>};
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>headless_lms_utils::json_schema_types::{
-<a href=#9 id=9 data-nosnippet>9</a>    ArrayItem, ArrayProperty, JSONType, Schema, SchemaPropertyType,
+<a href=#9 id=9 data-nosnippet>9</a>    ArrayItem, ArrayProperty, JSONType, Schema, SchemaPropertyType, string_property,
 <a href=#10 id=10 data-nosnippet>10</a>};
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>headless_lms_utils::strings::non_empty_trimmed;
 <a href=#12 id=12 data-nosnippet>12</a>
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use super</span>::{
 <a href=#14 id=14 data-nosnippet>14</a>    authorized_plan_id, parse_raw_arguments, parse_stage, plan_proposal_items,
-<a href=#15 id=15 data-nosnippet>15</a>    plan_tool_declaration_items, stale_proposal_error, text_property,
+<a href=#15 id=15 data-nosnippet>15</a>    plan_tool_declaration_items, stale_proposal_error,
 <a href=#16 id=16 data-nosnippet>16</a>};
 <a href=#17 id=17 data-nosnippet>17</a><span class="kw">use crate</span>::{
 <a href=#18 id=18 data-nosnippet>18</a>    azure_chatbot::azure::tools::{AzureLLMFunctionToolDefinition, LLMToolType},
@@ -54,15 +54,15 @@
 <a href=#54 id=54 data-nosnippet>54</a>            IndexMap::from([
 <a href=#55 id=55 data-nosnippet>55</a>                (
 <a href=#56 id=56 data-nosnippet>56</a>                    <span class="string">"stage"</span>.to_string(),
-<a href=#57 id=57 data-nosnippet>57</a>                    text_property(<span class="string">"analysis, design, development, implementation or evaluation."</span>),
+<a href=#57 id=57 data-nosnippet>57</a>                    string_property(<span class="string">"analysis, design, development, implementation or evaluation."</span>),
 <a href=#58 id=58 data-nosnippet>58</a>                ),
 <a href=#59 id=59 data-nosnippet>59</a>                (
 <a href=#60 id=60 data-nosnippet>60</a>                    <span class="string">"starts_on"</span>.to_string(),
-<a href=#61 id=61 data-nosnippet>61</a>                    text_property(<span class="string">"First day of the stage, YYYY-MM-DD."</span>),
+<a href=#61 id=61 data-nosnippet>61</a>                    string_property(<span class="string">"First day of the stage, YYYY-MM-DD."</span>),
 <a href=#62 id=62 data-nosnippet>62</a>                ),
 <a href=#63 id=63 data-nosnippet>63</a>                (
 <a href=#64 id=64 data-nosnippet>64</a>                    <span class="string">"ends_on"</span>.to_string(),
-<a href=#65 id=65 data-nosnippet>65</a>                    text_property(<span class="string">"Last day of the stage, YYYY-MM-DD."</span>),
+<a href=#65 id=65 data-nosnippet>65</a>                    string_property(<span class="string">"Last day of the stage, YYYY-MM-DD."</span>),
 <a href=#66 id=66 data-nosnippet>66</a>                ),
 <a href=#67 id=67 data-nosnippet>67</a>            ]),
 <a href=#68 id=68 data-nosnippet>68</a>            <span class="prelude-val">None</span>,
@@ -116,7 +116,7 @@
 <a href=#116 id=116 data-nosnippet>116</a>            description: <span class="string">"Propose new planned dates for the stages of a plan that is in progress. Give the whole schedule, all five stages in order, both as it is now and as proposed. Stages must follow each other without gaps or overlaps (each starts the day after the previous one ends), and completed stages must keep their dates, so when you move one stage, shift the later ones too. The user applies or discards it; nothing is saved before that."</span>.to_string(),
 <a href=#117 id=117 data-nosnippet>117</a>            parameters: Schema::strict_object(
 <a href=#118 id=118 data-nosnippet>118</a>                IndexMap::from([
-<a href=#119 id=119 data-nosnippet>119</a>                    (<span class="string">"reason"</span>.to_string(), text_property(<span class="string">"One short sentence in the user's language on why the schedule changes. Shown on the card."</span>)),
+<a href=#119 id=119 data-nosnippet>119</a>                    (<span class="string">"reason"</span>.to_string(), string_property(<span class="string">"One short sentence in the user's language on why the schedule changes. Shown on the card."</span>)),
 <a href=#120 id=120 data-nosnippet>120</a>                    (<span class="string">"current_schedule"</span>.to_string(), schedule_property(<span class="string">"The five stages' dates now, copied from get_course_plan. Checked before anything is saved."</span>)),
 <a href=#121 id=121 data-nosnippet>121</a>                    (<span class="string">"proposed_schedule"</span>.to_string(), schedule_property(<span class="string">"The five stages' new dates."</span>)),
 <a href=#122 id=122 data-nosnippet>122</a>                ]),

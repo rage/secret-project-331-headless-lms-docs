@@ -1,0 +1,470 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `chatbot/src/course_plan_drafting.rs`."><title>course_plan_drafting.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-0c87338a.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="headless_lms_chatbot" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.1 (58cf8f9c3 2026-10-13)" data-channel="1.99.1" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">headless_lms_chatbot/</div>course_plan_drafting.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! AI drafts of the texts a course created from a course design plan starts with: one request for
+<a href=#2 id=2 data-nosnippet>2</a>//! the course-level texts and one per planned chapter.
+<a href=#3 id=3 data-nosnippet>3</a>
+<a href=#4 id=4 data-nosnippet>4</a></span><span class="kw">use </span>std::fmt::Write;
+<a href=#5 id=5 data-nosnippet>5</a>
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>futures::{StreamExt, TryStreamExt};
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>headless_lms_base::config::ApplicationConfiguration;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>headless_lms_models::{
+<a href=#9 id=9 data-nosnippet>9</a>    application_task_default_language_models::TaskLMSpec,
+<a href=#10 id=10 data-nosnippet>10</a>    chatbot_configurations::ReasoningEffortLevel,
+<a href=#11 id=11 data-nosnippet>11</a>    chatbot_conversation_message_messages::MessageRole,
+<a href=#12 id=12 data-nosnippet>12</a>    course_designer_stage_workspace::DesignChapter,
+<a href=#13 id=13 data-nosnippet>13</a>    library::{
+<a href=#14 id=14 data-nosnippet>14</a>        course_designer::{
+<a href=#15 id=15 data-nosnippet>15</a>            ChapterDraft, CourseDraft, CourseFromPlanDrafts, CourseFromPlanSource,
+<a href=#16 id=16 data-nosnippet>16</a>            chapter_topic_titles,
+<a href=#17 id=17 data-nosnippet>17</a>        },
+<a href=#18 id=18 data-nosnippet>18</a>        course_designer_course_content::learning_objectives,
+<a href=#19 id=19 data-nosnippet>19</a>    },
+<a href=#20 id=20 data-nosnippet>20</a>};
+<a href=#21 id=21 data-nosnippet>21</a><span class="kw">use </span>headless_lms_utils::{
+<a href=#22 id=22 data-nosnippet>22</a>    json_schema_types::{
+<a href=#23 id=23 data-nosnippet>23</a>        ArrayItem, ArrayProperty, JSONType, Schema, SchemaPropertyType, string_array_property,
+<a href=#24 id=24 data-nosnippet>24</a>        string_property,
+<a href=#25 id=25 data-nosnippet>25</a>    },
+<a href=#26 id=26 data-nosnippet>26</a>    strings::non_empty_trimmed,
+<a href=#27 id=27 data-nosnippet>27</a>};
+<a href=#28 id=28 data-nosnippet>28</a><span class="kw">use </span>indexmap::IndexMap;
+<a href=#29 id=29 data-nosnippet>29</a><span class="kw">use </span>serde::de::DeserializeOwned;
+<a href=#30 id=30 data-nosnippet>30</a><span class="kw">use </span>tokio::time::Duration;
+<a href=#31 id=31 data-nosnippet>31</a>
+<a href=#32 id=32 data-nosnippet>32</a><span class="kw">use crate</span>::{
+<a href=#33 id=33 data-nosnippet>33</a>    azure_chatbot::azure::protocol::{
+<a href=#34 id=34 data-nosnippet>34</a>        InputItem, LLMRequestParams, LLMRequestResponseFormatParam, NonThinkingParams, Reasoning,
+<a href=#35 id=35 data-nosnippet>35</a>        ThinkingParams,
+<a href=#36 id=36 data-nosnippet>36</a>    },
+<a href=#37 id=37 data-nosnippet>37</a>    llm_utils::{APIInputMessage, MessageContent, model_is_thinking, request_structured_json},
+<a href=#38 id=38 data-nosnippet>38</a>    prelude::<span class="kw-2">*</span>,
+<a href=#39 id=39 data-nosnippet>39</a>};
+<a href=#40 id=40 data-nosnippet>40</a>
+<a href=#41 id=41 data-nosnippet>41</a><span class="doccomment">/// Name the course-level structured output goes by; the test-mode mock Azure API answers by it.
+<a href=#42 id=42 data-nosnippet>42</a></span><span class="kw">pub const </span>COURSE_RESPONSE_FORMAT_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"CoursePlanCourseDraft"</span>;
+<a href=#43 id=43 data-nosnippet>43</a><span class="doccomment">/// Name the per-chapter structured output goes by; the test-mode mock Azure API answers by it.
+<a href=#44 id=44 data-nosnippet>44</a></span><span class="kw">pub const </span>CHAPTER_RESPONSE_FORMAT_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"CoursePlanChapterDraft"</span>;
+<a href=#45 id=45 data-nosnippet>45</a><span class="doccomment">/// Introduces the learning goals in the course-level prompt, one [`LIST_ITEM_PREFIX`] line each.
+<a href=#46 id=46 data-nosnippet>46</a>/// The test-mode mock Azure API counts them to answer with as many headings.
+<a href=#47 id=47 data-nosnippet>47</a></span><span class="kw">pub const </span>LEARNING_GOALS_HEADING: <span class="kw-2">&amp;</span>str = <span class="string">"## Course learning goals"</span>;
+<a href=#48 id=48 data-nosnippet>48</a><span class="doccomment">/// Introduces the chapter's topics in the per-chapter prompt, one [`LIST_ITEM_PREFIX`] line each.
+<a href=#49 id=49 data-nosnippet>49</a>/// The test-mode mock Azure API counts them to answer with as many outlines.
+<a href=#50 id=50 data-nosnippet>50</a></span><span class="kw">pub const </span>TOPICS_HEADING: <span class="kw-2">&amp;</span>str = <span class="string">"## Topics of this chapter"</span>;
+<a href=#51 id=51 data-nosnippet>51</a><span class="kw">pub const </span>LIST_ITEM_PREFIX: <span class="kw-2">&amp;</span>str = <span class="string">"- "</span>;
+<a href=#52 id=52 data-nosnippet>52</a><span class="doccomment">/// Ends the sections that [`LEARNING_GOALS_HEADING`] and [`TOPICS_HEADING`] start.
+<a href=#53 id=53 data-nosnippet>53</a></span><span class="kw">pub const </span>SECTION_END: <span class="kw-2">&amp;</span>str = <span class="string">"\n## "</span>;
+<a href=#54 id=54 data-nosnippet>54</a>
+<a href=#55 id=55 data-nosnippet>55</a><span class="kw">const </span>MAX_CONCURRENT_REQUESTS: usize = <span class="number">8</span>;
+<a href=#56 id=56 data-nosnippet>56</a><span class="doccomment">/// The teacher waits in the dialog, and the endpoint's ingress allows 300 s.
+<a href=#57 id=57 data-nosnippet>57</a></span><span class="kw">const </span>DEADLINE: Duration = Duration::from_secs(<span class="number">150</span>);
+<a href=#58 id=58 data-nosnippet>58</a><span class="kw">const </span>ATTEMPTS_PER_REQUEST: usize = <span class="number">2</span>;
+<a href=#59 id=59 data-nosnippet>59</a>
+<a href=#60 id=60 data-nosnippet>60</a><span class="kw">const </span>COMMON_RULES: <span class="kw-2">&amp;</span>str = <span class="string">r#"You help a university teacher turn a course design plan into a first draft of an online course (MOOC). The teacher edits everything you write before students see it.
+<a href=#61 id=61 data-nosnippet>61</a>
+<a href=#62 id=62 data-nosnippet>62</a>Rules:
+<a href=#63 id=63 data-nosnippet>63</a>- Write in the language whose code is given as "Course language", whatever language the plan is written in.
+<a href=#64 id=64 data-nosnippet>64</a>- Use only what the plan says. Do not invent facts, numbers, names, dates, sources or claims about the course.
+<a href=#65 id=65 data-nosnippet>65</a>- Follow the plan's writing style and terminology when it gives them.
+<a href=#66 id=66 data-nosnippet>66</a>- Plain text only: no Markdown, no HTML."#</span>;
+<a href=#67 id=67 data-nosnippet>67</a>
+<a href=#68 id=68 data-nosnippet>68</a><span class="kw">const </span>COURSE_INSTRUCTIONS: <span class="kw-2">&amp;</span>str = <span class="string">r#"Draft the course-level texts:
+<a href=#69 id=69 data-nosnippet>69</a>- description: 2 to 3 sentences for the course catalog on what the course teaches and for whom.
+<a href=#70 id=70 data-nosnippet>70</a>- hero_subtitle: one short sentence under the course name on the front page.
+<a href=#71 id=71 data-nosnippet>71</a>- about_text: one paragraph for the "About this course" section of the front page.
+<a href=#72 id=72 data-nosnippet>72</a>- learning_goal_headings: one short heading (at most 6 words) per course learning goal, in the order listed, summarising that goal.
+<a href=#73 id=73 data-nosnippet>73</a>- how_to_study_paragraphs: 1 to 3 short paragraphs for the "How to study this course" page: how the course is organised into chapters and pages, the planned content formats and exercises, and that students can study at their own pace when the plan says the course is asynchronous. Do not mention workload numbers; they are listed separately."#</span>;
+<a href=#74 id=74 data-nosnippet>74</a>
+<a href=#75 id=75 data-nosnippet>75</a><span class="kw">const </span>CHATBOT_INSTRUCTIONS: <span class="kw-2">&amp;</span>str = <span class="string">r#"- chatbot: the course plans an AI chatbot. Give it a short name, a system prompt that keeps it a helpful study companion for this course's topics and learning goals without doing students' exercises for them, a short first message to students, and 3 to 4 short example messages a student could send first."#</span>;
+<a href=#76 id=76 data-nosnippet>76</a>
+<a href=#77 id=77 data-nosnippet>77</a><span class="kw">const </span>CHAPTER_INSTRUCTIONS: <span class="kw-2">&amp;</span>str = <span class="string">r#"Draft texts for one chapter of the course:
+<a href=#78 id=78 data-nosnippet>78</a>- prior_learning_heading: a short heading for a box on the chapter's introduction page that activates what students already know about the chapter's topics.
+<a href=#79 id=79 data-nosnippet>79</a>- prior_learning_questions: 2 to 3 short reflection questions for that box. They are not graded.
+<a href=#80 id=80 data-nosnippet>80</a>- topic_outlines: one outline per topic of this chapter, in the order listed. Each outline has 2 to 5 sections, each with a short heading for a part of the topic's page and 1 to 4 short points on what that part should cover. Points name what to cover; they are notes for the teacher, not finished sentences for students. Keep within the chapter's learning objectives and the topic; do not repeat other topics."#</span>;
+<a href=#81 id=81 data-nosnippet>81</a>
+<a href=#82 id=82 data-nosnippet>82</a><span class="doccomment">/// Drafts every text of a course from `source`. Fails as a whole when any request fails twice or
+<a href=#83 id=83 data-nosnippet>83</a>/// the deadline passes, so a course is never created from partial drafts.
+<a href=#84 id=84 data-nosnippet>84</a></span><span class="kw">pub async fn </span>draft_course_from_plan(
+<a href=#85 id=85 data-nosnippet>85</a>    app_config: <span class="kw-2">&amp;</span>ApplicationConfiguration,
+<a href=#86 id=86 data-nosnippet>86</a>    task_lm: <span class="kw-2">&amp;</span>TaskLMSpec,
+<a href=#87 id=87 data-nosnippet>87</a>    source: <span class="kw-2">&amp;</span>CourseFromPlanSource,
+<a href=#88 id=88 data-nosnippet>88</a>) -&gt; ChatbotResult&lt;CourseFromPlanDrafts&gt; {
+<a href=#89 id=89 data-nosnippet>89</a>    <span class="kw">let </span>plan_text = plan_text(source);
+<a href=#90 id=90 data-nosnippet>90</a>    <span class="kw">let </span>drafting = <span class="kw">async </span>{
+<a href=#91 id=91 data-nosnippet>91</a>        <span class="kw">let </span>course = draft_course(app_config, task_lm, source, <span class="kw-2">&amp;</span>plan_text);
+<a href=#92 id=92 data-nosnippet>92</a>        <span class="kw">let </span>chapters = futures::stream::iter(<span class="kw-2">&amp;</span>source.design.chapters)
+<a href=#93 id=93 data-nosnippet>93</a>            .map(|chapter| draft_chapter(app_config, task_lm, <span class="kw-2">&amp;</span>plan_text, chapter))
+<a href=#94 id=94 data-nosnippet>94</a>            .buffered(MAX_CONCURRENT_REQUESTS - <span class="number">1</span>)
+<a href=#95 id=95 data-nosnippet>95</a>            .try_collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#96 id=96 data-nosnippet>96</a>        futures::future::try_join(course, chapters).<span class="kw">await
+<a href=#97 id=97 data-nosnippet>97</a>    </span>};
+<a href=#98 id=98 data-nosnippet>98</a>    <span class="kw">let </span>(course, chapters) = tokio::time::timeout(DEADLINE, drafting)
+<a href=#99 id=99 data-nosnippet>99</a>        .<span class="kw">await
+<a href=#100 id=100 data-nosnippet>100</a>        </span>.map_err(|<span class="kw">_</span>| {
+<a href=#101 id=101 data-nosnippet>101</a>            <span class="macro">chatbot_err!</span>(
+<a href=#102 id=102 data-nosnippet>102</a>                FailedAzureResponse,
+<a href=#103 id=103 data-nosnippet>103</a>                <span class="string">"Drafting the course with AI took too long."</span>.to_string()
+<a href=#104 id=104 data-nosnippet>104</a>            )
+<a href=#105 id=105 data-nosnippet>105</a>        })<span class="question-mark">??</span>;
+<a href=#106 id=106 data-nosnippet>106</a>    <span class="prelude-val">Ok</span>(CourseFromPlanDrafts { course, chapters })
+<a href=#107 id=107 data-nosnippet>107</a>}
+<a href=#108 id=108 data-nosnippet>108</a>
+<a href=#109 id=109 data-nosnippet>109</a><span class="kw">async fn </span>draft_course(
+<a href=#110 id=110 data-nosnippet>110</a>    app_config: <span class="kw-2">&amp;</span>ApplicationConfiguration,
+<a href=#111 id=111 data-nosnippet>111</a>    task_lm: <span class="kw-2">&amp;</span>TaskLMSpec,
+<a href=#112 id=112 data-nosnippet>112</a>    source: <span class="kw-2">&amp;</span>CourseFromPlanSource,
+<a href=#113 id=113 data-nosnippet>113</a>    plan_text: <span class="kw-2">&amp;</span>str,
+<a href=#114 id=114 data-nosnippet>114</a>) -&gt; ChatbotResult&lt;CourseDraft&gt; {
+<a href=#115 id=115 data-nosnippet>115</a>    <span class="kw">let </span>has_chatbot = source.has_planned_chatbot();
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">let </span><span class="kw-2">mut </span>instructions = COURSE_INSTRUCTIONS.to_string();
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="kw">if </span>has_chatbot {
+<a href=#118 id=118 data-nosnippet>118</a>        <span class="kw">let _ </span>= <span class="macro">write!</span>(instructions, <span class="string">"\n{CHATBOT_INSTRUCTIONS}"</span>);
+<a href=#119 id=119 data-nosnippet>119</a>    }
+<a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">let </span>goal_count = source.learning_goals().len();
+<a href=#121 id=121 data-nosnippet>121</a>    request_with_retry(
+<a href=#122 id=122 data-nosnippet>122</a>        app_config,
+<a href=#123 id=123 data-nosnippet>123</a>        task_lm,
+<a href=#124 id=124 data-nosnippet>124</a>        <span class="kw-2">&amp;</span>instructions,
+<a href=#125 id=125 data-nosnippet>125</a>        plan_text,
+<a href=#126 id=126 data-nosnippet>126</a>        course_format(has_chatbot),
+<a href=#127 id=127 data-nosnippet>127</a>        |draft: <span class="kw-2">&amp;</span>CourseDraft| {
+<a href=#128 id=128 data-nosnippet>128</a>            <span class="kw">if </span>draft.learning_goal_headings.len() != goal_count {
+<a href=#129 id=129 data-nosnippet>129</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(
+<a href=#130 id=130 data-nosnippet>130</a>                    <span class="string">"Expected {goal_count} learning goal headings, got {}."</span>,
+<a href=#131 id=131 data-nosnippet>131</a>                    draft.learning_goal_headings.len()
+<a href=#132 id=132 data-nosnippet>132</a>                ));
+<a href=#133 id=133 data-nosnippet>133</a>            }
+<a href=#134 id=134 data-nosnippet>134</a>            <span class="kw">if </span>has_chatbot &amp;&amp; draft.chatbot.is_none() {
+<a href=#135 id=135 data-nosnippet>135</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="string">"The chatbot draft is missing."</span>.to_string());
+<a href=#136 id=136 data-nosnippet>136</a>            }
+<a href=#137 id=137 data-nosnippet>137</a>            <span class="prelude-val">Ok</span>(())
+<a href=#138 id=138 data-nosnippet>138</a>        },
+<a href=#139 id=139 data-nosnippet>139</a>    )
+<a href=#140 id=140 data-nosnippet>140</a>    .<span class="kw">await
+<a href=#141 id=141 data-nosnippet>141</a></span>}
+<a href=#142 id=142 data-nosnippet>142</a>
+<a href=#143 id=143 data-nosnippet>143</a><span class="kw">async fn </span>draft_chapter(
+<a href=#144 id=144 data-nosnippet>144</a>    app_config: <span class="kw-2">&amp;</span>ApplicationConfiguration,
+<a href=#145 id=145 data-nosnippet>145</a>    task_lm: <span class="kw-2">&amp;</span>TaskLMSpec,
+<a href=#146 id=146 data-nosnippet>146</a>    plan_text: <span class="kw-2">&amp;</span>str,
+<a href=#147 id=147 data-nosnippet>147</a>    chapter: <span class="kw-2">&amp;</span>DesignChapter,
+<a href=#148 id=148 data-nosnippet>148</a>) -&gt; ChatbotResult&lt;ChapterDraft&gt; {
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">let </span>topics = chapter_topic_titles(chapter);
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="kw">let </span><span class="kw-2">mut </span>prompt = <span class="macro">format!</span>(
+<a href=#151 id=151 data-nosnippet>151</a>        <span class="string">"{plan_text}\n## This chapter\nTitle: {}\nLearning objectives:\n"</span>,
+<a href=#152 id=152 data-nosnippet>152</a>        chapter.title.trim()
+<a href=#153 id=153 data-nosnippet>153</a>    );
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">for </span>objective <span class="kw">in </span>learning_objectives(chapter) {
+<a href=#155 id=155 data-nosnippet>155</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(prompt, <span class="string">"{LIST_ITEM_PREFIX}{objective}"</span>);
+<a href=#156 id=156 data-nosnippet>156</a>    }
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">let _ </span>= <span class="macro">writeln!</span>(prompt, <span class="string">"\n{TOPICS_HEADING}"</span>);
+<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">for </span>topic <span class="kw">in </span><span class="kw-2">&amp;</span>topics {
+<a href=#159 id=159 data-nosnippet>159</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(prompt, <span class="string">"{LIST_ITEM_PREFIX}{topic}"</span>);
+<a href=#160 id=160 data-nosnippet>160</a>    }
+<a href=#161 id=161 data-nosnippet>161</a>    request_with_retry(
+<a href=#162 id=162 data-nosnippet>162</a>        app_config,
+<a href=#163 id=163 data-nosnippet>163</a>        task_lm,
+<a href=#164 id=164 data-nosnippet>164</a>        CHAPTER_INSTRUCTIONS,
+<a href=#165 id=165 data-nosnippet>165</a>        <span class="kw-2">&amp;</span>prompt,
+<a href=#166 id=166 data-nosnippet>166</a>        chapter_format(),
+<a href=#167 id=167 data-nosnippet>167</a>        |draft: <span class="kw-2">&amp;</span>ChapterDraft| {
+<a href=#168 id=168 data-nosnippet>168</a>            <span class="kw">if </span>draft.topic_outlines.len() == topics.len() {
+<a href=#169 id=169 data-nosnippet>169</a>                <span class="prelude-val">Ok</span>(())
+<a href=#170 id=170 data-nosnippet>170</a>            } <span class="kw">else </span>{
+<a href=#171 id=171 data-nosnippet>171</a>                <span class="prelude-val">Err</span>(<span class="macro">format!</span>(
+<a href=#172 id=172 data-nosnippet>172</a>                    <span class="string">"Expected {} topic outlines, got {}."</span>,
+<a href=#173 id=173 data-nosnippet>173</a>                    topics.len(),
+<a href=#174 id=174 data-nosnippet>174</a>                    draft.topic_outlines.len()
+<a href=#175 id=175 data-nosnippet>175</a>                ))
+<a href=#176 id=176 data-nosnippet>176</a>            }
+<a href=#177 id=177 data-nosnippet>177</a>        },
+<a href=#178 id=178 data-nosnippet>178</a>    )
+<a href=#179 id=179 data-nosnippet>179</a>    .<span class="kw">await
+<a href=#180 id=180 data-nosnippet>180</a></span>}
+<a href=#181 id=181 data-nosnippet>181</a>
+<a href=#182 id=182 data-nosnippet>182</a><span class="doccomment">/// Sends the request up to [`ATTEMPTS_PER_REQUEST`] times, until an answer parses as `T` and
+<a href=#183 id=183 data-nosnippet>183</a>/// passes `validate`.
+<a href=#184 id=184 data-nosnippet>184</a></span><span class="kw">async fn </span>request_with_retry&lt;T: DeserializeOwned&gt;(
+<a href=#185 id=185 data-nosnippet>185</a>    app_config: <span class="kw-2">&amp;</span>ApplicationConfiguration,
+<a href=#186 id=186 data-nosnippet>186</a>    task_lm: <span class="kw-2">&amp;</span>TaskLMSpec,
+<a href=#187 id=187 data-nosnippet>187</a>    instructions: <span class="kw-2">&amp;</span>str,
+<a href=#188 id=188 data-nosnippet>188</a>    prompt: <span class="kw-2">&amp;</span>str,
+<a href=#189 id=189 data-nosnippet>189</a>    format: LLMRequestResponseFormatParam,
+<a href=#190 id=190 data-nosnippet>190</a>    validate: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), String&gt;,
+<a href=#191 id=191 data-nosnippet>191</a>) -&gt; ChatbotResult&lt;T&gt; {
+<a href=#192 id=192 data-nosnippet>192</a>    <span class="kw">let </span><span class="kw-2">mut </span>last_error = <span class="prelude-val">None</span>;
+<a href=#193 id=193 data-nosnippet>193</a>    <span class="kw">for _ in </span><span class="number">0</span>..ATTEMPTS_PER_REQUEST {
+<a href=#194 id=194 data-nosnippet>194</a>        <span class="kw">let </span>answer: ChatbotResult&lt;T&gt; =
+<a href=#195 id=195 data-nosnippet>195</a>            request(app_config, task_lm, instructions, prompt, format.clone()).<span class="kw">await</span>;
+<a href=#196 id=196 data-nosnippet>196</a>        <span class="kw">match </span>answer {
+<a href=#197 id=197 data-nosnippet>197</a>            <span class="prelude-val">Ok</span>(answer) =&gt; <span class="kw">match </span>validate(<span class="kw-2">&amp;</span>answer) {
+<a href=#198 id=198 data-nosnippet>198</a>                <span class="prelude-val">Ok</span>(()) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(answer),
+<a href=#199 id=199 data-nosnippet>199</a>                <span class="prelude-val">Err</span>(message) =&gt; {
+<a href=#200 id=200 data-nosnippet>200</a>                    <span class="macro">warn!</span>(<span class="string">"Course plan drafting answer was invalid: {message}"</span>);
+<a href=#201 id=201 data-nosnippet>201</a>                    last_error = <span class="prelude-val">Some</span>(<span class="macro">chatbot_err!</span>(FailedAzureResponse, message));
+<a href=#202 id=202 data-nosnippet>202</a>                }
+<a href=#203 id=203 data-nosnippet>203</a>            },
+<a href=#204 id=204 data-nosnippet>204</a>            <span class="prelude-val">Err</span>(e) =&gt; {
+<a href=#205 id=205 data-nosnippet>205</a>                <span class="macro">warn!</span>(<span class="string">"Course plan drafting request failed: {e}"</span>);
+<a href=#206 id=206 data-nosnippet>206</a>                last_error = <span class="prelude-val">Some</span>(e);
+<a href=#207 id=207 data-nosnippet>207</a>            }
+<a href=#208 id=208 data-nosnippet>208</a>        }
+<a href=#209 id=209 data-nosnippet>209</a>    }
+<a href=#210 id=210 data-nosnippet>210</a>    <span class="prelude-val">Err</span>(last_error.unwrap_or_else(|| {
+<a href=#211 id=211 data-nosnippet>211</a>        <span class="macro">chatbot_err!</span>(
+<a href=#212 id=212 data-nosnippet>212</a>            FailedAzureResponse,
+<a href=#213 id=213 data-nosnippet>213</a>            <span class="string">"Course plan drafting made no request."</span>.to_string()
+<a href=#214 id=214 data-nosnippet>214</a>        )
+<a href=#215 id=215 data-nosnippet>215</a>    }))
+<a href=#216 id=216 data-nosnippet>216</a>}
+<a href=#217 id=217 data-nosnippet>217</a>
+<a href=#218 id=218 data-nosnippet>218</a><span class="kw">async fn </span>request&lt;T: DeserializeOwned&gt;(
+<a href=#219 id=219 data-nosnippet>219</a>    app_config: <span class="kw-2">&amp;</span>ApplicationConfiguration,
+<a href=#220 id=220 data-nosnippet>220</a>    task_lm: <span class="kw-2">&amp;</span>TaskLMSpec,
+<a href=#221 id=221 data-nosnippet>221</a>    instructions: <span class="kw-2">&amp;</span>str,
+<a href=#222 id=222 data-nosnippet>222</a>    prompt: <span class="kw-2">&amp;</span>str,
+<a href=#223 id=223 data-nosnippet>223</a>    format: LLMRequestResponseFormatParam,
+<a href=#224 id=224 data-nosnippet>224</a>) -&gt; ChatbotResult&lt;T&gt; {
+<a href=#225 id=225 data-nosnippet>225</a>    <span class="kw">let </span>input = <span class="macro">vec!</span>[
+<a href=#226 id=226 data-nosnippet>226</a>        APIInputMessage {
+<a href=#227 id=227 data-nosnippet>227</a>            message_type: InputItem::Message {
+<a href=#228 id=228 data-nosnippet>228</a>                role: MessageRole::System,
+<a href=#229 id=229 data-nosnippet>229</a>                content: MessageContent::Text(<span class="macro">format!</span>(<span class="string">"{COMMON_RULES}\n\n{instructions}"</span>)),
+<a href=#230 id=230 data-nosnippet>230</a>            },
+<a href=#231 id=231 data-nosnippet>231</a>        },
+<a href=#232 id=232 data-nosnippet>232</a>        APIInputMessage {
+<a href=#233 id=233 data-nosnippet>233</a>            message_type: InputItem::Message {
+<a href=#234 id=234 data-nosnippet>234</a>                role: MessageRole::User,
+<a href=#235 id=235 data-nosnippet>235</a>                content: MessageContent::Text(prompt.to_string()),
+<a href=#236 id=236 data-nosnippet>236</a>            },
+<a href=#237 id=237 data-nosnippet>237</a>        },
+<a href=#238 id=238 data-nosnippet>238</a>    ];
+<a href=#239 id=239 data-nosnippet>239</a>    <span class="kw">let </span>(params, max_output_tokens) = <span class="kw">if </span>model_is_thinking(task_lm.model_type) {
+<a href=#240 id=240 data-nosnippet>240</a>        (
+<a href=#241 id=241 data-nosnippet>241</a>            LLMRequestParams::GPTThinking(ThinkingParams {
+<a href=#242 id=242 data-nosnippet>242</a>                reasoning: <span class="prelude-val">Some</span>(Reasoning {
+<a href=#243 id=243 data-nosnippet>243</a>                    effort: ReasoningEffortLevel::Low,
+<a href=#244 id=244 data-nosnippet>244</a>                    summary: <span class="prelude-val">None</span>,
+<a href=#245 id=245 data-nosnippet>245</a>                    context: <span class="prelude-val">None</span>,
+<a href=#246 id=246 data-nosnippet>246</a>                }),
+<a href=#247 id=247 data-nosnippet>247</a>            }),
+<a href=#248 id=248 data-nosnippet>248</a>            <span class="prelude-val">Some</span>(<span class="number">16000</span>),
+<a href=#249 id=249 data-nosnippet>249</a>        )
+<a href=#250 id=250 data-nosnippet>250</a>    } <span class="kw">else </span>{
+<a href=#251 id=251 data-nosnippet>251</a>        (
+<a href=#252 id=252 data-nosnippet>252</a>            LLMRequestParams::GPTNonThinking(NonThinkingParams {
+<a href=#253 id=253 data-nosnippet>253</a>                temperature: <span class="prelude-val">None</span>,
+<a href=#254 id=254 data-nosnippet>254</a>                top_p: <span class="prelude-val">None</span>,
+<a href=#255 id=255 data-nosnippet>255</a>                frequency_penalty: <span class="prelude-val">None</span>,
+<a href=#256 id=256 data-nosnippet>256</a>                presence_penalty: <span class="prelude-val">None</span>,
+<a href=#257 id=257 data-nosnippet>257</a>            }),
+<a href=#258 id=258 data-nosnippet>258</a>            <span class="prelude-val">Some</span>(<span class="number">8000</span>),
+<a href=#259 id=259 data-nosnippet>259</a>        )
+<a href=#260 id=260 data-nosnippet>260</a>    };
+<a href=#261 id=261 data-nosnippet>261</a>    request_structured_json(
+<a href=#262 id=262 data-nosnippet>262</a>        input,
+<a href=#263 id=263 data-nosnippet>263</a>        task_lm.model.to_owned(),
+<a href=#264 id=264 data-nosnippet>264</a>        params,
+<a href=#265 id=265 data-nosnippet>265</a>        max_output_tokens,
+<a href=#266 id=266 data-nosnippet>266</a>        format,
+<a href=#267 id=267 data-nosnippet>267</a>        app_config,
+<a href=#268 id=268 data-nosnippet>268</a>        || {
+<a href=#269 id=269 data-nosnippet>269</a>            <span class="macro">chatbot_err!</span>(
+<a href=#270 id=270 data-nosnippet>270</a>                FailedAzureResponse,
+<a href=#271 id=271 data-nosnippet>271</a>                <span class="string">"Invalidly structured response from Azure"
+<a href=#272 id=272 data-nosnippet>272</a>            </span>)
+<a href=#273 id=273 data-nosnippet>273</a>        },
+<a href=#274 id=274 data-nosnippet>274</a>    )
+<a href=#275 id=275 data-nosnippet>275</a>    .<span class="kw">await
+<a href=#276 id=276 data-nosnippet>276</a></span>}
+<a href=#277 id=277 data-nosnippet>277</a>
+<a href=#278 id=278 data-nosnippet>278</a><span class="doccomment">/// The plan as the prompts present it. Blank fields are left out.
+<a href=#279 id=279 data-nosnippet>279</a></span><span class="kw">fn </span>plan_text(source: <span class="kw-2">&amp;</span>CourseFromPlanSource) -&gt; String {
+<a href=#280 id=280 data-nosnippet>280</a>    <span class="kw">let </span>analysis = <span class="kw-2">&amp;</span>source.analysis;
+<a href=#281 id=281 data-nosnippet>281</a>    <span class="kw">let </span>design = <span class="kw-2">&amp;</span>source.design;
+<a href=#282 id=282 data-nosnippet>282</a>    <span class="kw">let </span>style = <span class="kw-2">&amp;</span>design.style_guide;
+<a href=#283 id=283 data-nosnippet>283</a>    <span class="kw">let </span><span class="kw-2">mut </span>text = String::new();
+<a href=#284 id=284 data-nosnippet>284</a>    <span class="kw">let </span><span class="kw-2">mut </span>field = |label: <span class="kw-2">&amp;</span>str, value: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;| {
+<a href=#285 id=285 data-nosnippet>285</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.and_then(non_empty_trimmed) {
+<a href=#286 id=286 data-nosnippet>286</a>            <span class="kw">let _ </span>= <span class="macro">writeln!</span>(text, <span class="string">"{label}: {value}"</span>);
+<a href=#287 id=287 data-nosnippet>287</a>        }
+<a href=#288 id=288 data-nosnippet>288</a>    };
+<a href=#289 id=289 data-nosnippet>289</a>    field(<span class="string">"Course name"</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>source.course_name));
+<a href=#290 id=290 data-nosnippet>290</a>    field(<span class="string">"Course language"</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>source.language_code));
+<a href=#291 id=291 data-nosnippet>291</a>    field(<span class="string">"Target group"</span>, analysis.target_group.as_deref());
+<a href=#292 id=292 data-nosnippet>292</a>    field(
+<a href=#293 id=293 data-nosnippet>293</a>        <span class="string">"Students' background"</span>,
+<a href=#294 id=294 data-nosnippet>294</a>        analysis.students_demographic_data.as_deref(),
+<a href=#295 id=295 data-nosnippet>295</a>    );
+<a href=#296 id=296 data-nosnippet>296</a>    field(
+<a href=#297 id=297 data-nosnippet>297</a>        <span class="string">"Topics students wished for"</span>,
+<a href=#298 id=298 data-nosnippet>298</a>        analysis.wishes_topics.as_deref(),
+<a href=#299 id=299 data-nosnippet>299</a>    );
+<a href=#300 id=300 data-nosnippet>300</a>    field(
+<a href=#301 id=301 data-nosnippet>301</a>        <span class="string">"The team's vision for the course"</span>,
+<a href=#302 id=302 data-nosnippet>302</a>        source.great_mooc_vision.as_deref(),
+<a href=#303 id=303 data-nosnippet>303</a>    );
+<a href=#304 id=304 data-nosnippet>304</a>    field(<span class="string">"Must-know content"</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>design.core_content_must_know));
+<a href=#305 id=305 data-nosnippet>305</a>    field(
+<a href=#306 id=306 data-nosnippet>306</a>        <span class="string">"Should-know content"</span>,
+<a href=#307 id=307 data-nosnippet>307</a>        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>design.core_content_should_know),
+<a href=#308 id=308 data-nosnippet>308</a>    );
+<a href=#309 id=309 data-nosnippet>309</a>    field(
+<a href=#310 id=310 data-nosnippet>310</a>        <span class="string">"Nice-to-know content"</span>,
+<a href=#311 id=311 data-nosnippet>311</a>        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>design.core_content_nice_to_know),
+<a href=#312 id=312 data-nosnippet>312</a>    );
+<a href=#313 id=313 data-nosnippet>313</a>    field(<span class="string">"Exercise plan"</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>design.exercise_notes));
+<a href=#314 id=314 data-nosnippet>314</a>    field(<span class="string">"Writing style"</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>style.writing_style));
+<a href=#315 id=315 data-nosnippet>315</a>    field(<span class="string">"Active or passive voice"</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>style.active_passive_voice));
+<a href=#316 id=316 data-nosnippet>316</a>    field(
+<a href=#317 id=317 data-nosnippet>317</a>        <span class="string">"Terminology and acronyms"</span>,
+<a href=#318 id=318 data-nosnippet>318</a>        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>style.terminology_and_acronyms),
+<a href=#319 id=319 data-nosnippet>319</a>    );
+<a href=#320 id=320 data-nosnippet>320</a>    <span class="kw">let </span>formats = <span class="kw-2">&amp;</span>design.planned_content_formats;
+<a href=#321 id=321 data-nosnippet>321</a>    <span class="kw">let </span>planned_formats: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = [
+<a href=#322 id=322 data-nosnippet>322</a>        (formats.text, <span class="string">"text"</span>),
+<a href=#323 id=323 data-nosnippet>323</a>        (formats.infographics, <span class="string">"infographics"</span>),
+<a href=#324 id=324 data-nosnippet>324</a>        (formats.photos, <span class="string">"photos"</span>),
+<a href=#325 id=325 data-nosnippet>325</a>        (formats.videos, <span class="string">"videos"</span>),
+<a href=#326 id=326 data-nosnippet>326</a>        (formats.podcast, <span class="string">"podcasts"</span>),
+<a href=#327 id=327 data-nosnippet>327</a>        (formats.thinglink, <span class="string">"ThingLink"</span>),
+<a href=#328 id=328 data-nosnippet>328</a>        (formats.simulations, <span class="string">"simulations"</span>),
+<a href=#329 id=329 data-nosnippet>329</a>        (formats.chatbots, <span class="string">"AI chatbot"</span>),
+<a href=#330 id=330 data-nosnippet>330</a>    ]
+<a href=#331 id=331 data-nosnippet>331</a>    .into_iter()
+<a href=#332 id=332 data-nosnippet>332</a>    .filter_map(|(is_planned, name)| is_planned.then_some(name))
+<a href=#333 id=333 data-nosnippet>333</a>    .collect();
+<a href=#334 id=334 data-nosnippet>334</a>    <span class="kw">if </span>!planned_formats.is_empty() {
+<a href=#335 id=335 data-nosnippet>335</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(
+<a href=#336 id=336 data-nosnippet>336</a>            text,
+<a href=#337 id=337 data-nosnippet>337</a>            <span class="string">"Planned content formats: {}"</span>,
+<a href=#338 id=338 data-nosnippet>338</a>            planned_formats.join(<span class="string">", "</span>)
+<a href=#339 id=339 data-nosnippet>339</a>        );
+<a href=#340 id=340 data-nosnippet>340</a>    }
+<a href=#341 id=341 data-nosnippet>341</a>    <span class="kw">let </span>study_modes: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = [
+<a href=#342 id=342 data-nosnippet>342</a>        (analysis.mode_synchronous, <span class="string">"synchronous"</span>),
+<a href=#343 id=343 data-nosnippet>343</a>        (analysis.mode_asynchronous, <span class="string">"asynchronous"</span>),
+<a href=#344 id=344 data-nosnippet>344</a>    ]
+<a href=#345 id=345 data-nosnippet>345</a>    .into_iter()
+<a href=#346 id=346 data-nosnippet>346</a>    .filter_map(|(is_planned, name)| is_planned.then_some(name))
+<a href=#347 id=347 data-nosnippet>347</a>    .collect();
+<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">if </span>!study_modes.is_empty() {
+<a href=#349 id=349 data-nosnippet>349</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(text, <span class="string">"Study mode: {}"</span>, study_modes.join(<span class="string">", "</span>));
+<a href=#350 id=350 data-nosnippet>350</a>    }
+<a href=#351 id=351 data-nosnippet>351</a>
+<a href=#352 id=352 data-nosnippet>352</a>    <span class="kw">let _ </span>= <span class="macro">writeln!</span>(text, <span class="string">"\n{LEARNING_GOALS_HEADING}"</span>);
+<a href=#353 id=353 data-nosnippet>353</a>    <span class="kw">for </span>goal <span class="kw">in </span>source.learning_goals() {
+<a href=#354 id=354 data-nosnippet>354</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(text, <span class="string">"{LIST_ITEM_PREFIX}{goal}"</span>);
+<a href=#355 id=355 data-nosnippet>355</a>    }
+<a href=#356 id=356 data-nosnippet>356</a>    <span class="kw">let _ </span>= <span class="macro">writeln!</span>(text, <span class="string">"\n## Chapters"</span>);
+<a href=#357 id=357 data-nosnippet>357</a>    <span class="kw">for </span>(index, chapter) <span class="kw">in </span>design.chapters.iter().enumerate() {
+<a href=#358 id=358 data-nosnippet>358</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(text, <span class="string">"{}. {}"</span>, index + <span class="number">1</span>, chapter.title.trim());
+<a href=#359 id=359 data-nosnippet>359</a>        <span class="kw">let </span>topics = chapter_topic_titles(chapter);
+<a href=#360 id=360 data-nosnippet>360</a>        <span class="kw">if </span>!topics.is_empty() {
+<a href=#361 id=361 data-nosnippet>361</a>            <span class="kw">let _ </span>= <span class="macro">writeln!</span>(text, <span class="string">"   Topics: {}"</span>, topics.join(<span class="string">"; "</span>));
+<a href=#362 id=362 data-nosnippet>362</a>        }
+<a href=#363 id=363 data-nosnippet>363</a>    }
+<a href=#364 id=364 data-nosnippet>364</a>    text
+<a href=#365 id=365 data-nosnippet>365</a>}
+<a href=#366 id=366 data-nosnippet>366</a>
+<a href=#367 id=367 data-nosnippet>367</a><span class="doccomment">/// Mirrors [`CourseDraft`]; `chatbot` is asked for only when the course plans one.
+<a href=#368 id=368 data-nosnippet>368</a></span><span class="kw">fn </span>course_format(has_chatbot: bool) -&gt; LLMRequestResponseFormatParam {
+<a href=#369 id=369 data-nosnippet>369</a>    <span class="kw">let </span><span class="kw-2">mut </span>properties = IndexMap::from([
+<a href=#370 id=370 data-nosnippet>370</a>        (
+<a href=#371 id=371 data-nosnippet>371</a>            <span class="string">"description"</span>.to_string(),
+<a href=#372 id=372 data-nosnippet>372</a>            string_property(<span class="string">"Catalog description."</span>),
+<a href=#373 id=373 data-nosnippet>373</a>        ),
+<a href=#374 id=374 data-nosnippet>374</a>        (
+<a href=#375 id=375 data-nosnippet>375</a>            <span class="string">"hero_subtitle"</span>.to_string(),
+<a href=#376 id=376 data-nosnippet>376</a>            string_property(<span class="string">"Front page subtitle."</span>),
+<a href=#377 id=377 data-nosnippet>377</a>        ),
+<a href=#378 id=378 data-nosnippet>378</a>        (
+<a href=#379 id=379 data-nosnippet>379</a>            <span class="string">"about_text"</span>.to_string(),
+<a href=#380 id=380 data-nosnippet>380</a>            string_property(<span class="string">"About this course paragraph."</span>),
+<a href=#381 id=381 data-nosnippet>381</a>        ),
+<a href=#382 id=382 data-nosnippet>382</a>        (
+<a href=#383 id=383 data-nosnippet>383</a>            <span class="string">"learning_goal_headings"</span>.to_string(),
+<a href=#384 id=384 data-nosnippet>384</a>            string_array_property(<span class="prelude-val">Some</span>(<span class="string">"One heading per learning goal, in order."</span>)),
+<a href=#385 id=385 data-nosnippet>385</a>        ),
+<a href=#386 id=386 data-nosnippet>386</a>        (
+<a href=#387 id=387 data-nosnippet>387</a>            <span class="string">"how_to_study_paragraphs"</span>.to_string(),
+<a href=#388 id=388 data-nosnippet>388</a>            string_array_property(<span class="prelude-val">Some</span>(<span class="string">"Paragraphs of the How to study page."</span>)),
+<a href=#389 id=389 data-nosnippet>389</a>        ),
+<a href=#390 id=390 data-nosnippet>390</a>    ]);
+<a href=#391 id=391 data-nosnippet>391</a>    <span class="kw">if </span>has_chatbot {
+<a href=#392 id=392 data-nosnippet>392</a>        properties.insert(
+<a href=#393 id=393 data-nosnippet>393</a>            <span class="string">"chatbot"</span>.to_string(),
+<a href=#394 id=394 data-nosnippet>394</a>            SchemaPropertyType::Object(Schema::strict_object(
+<a href=#395 id=395 data-nosnippet>395</a>                IndexMap::from([
+<a href=#396 id=396 data-nosnippet>396</a>                    (<span class="string">"name"</span>.to_string(), string_property(<span class="string">"Chatbot name."</span>)),
+<a href=#397 id=397 data-nosnippet>397</a>                    (
+<a href=#398 id=398 data-nosnippet>398</a>                        <span class="string">"prompt"</span>.to_string(),
+<a href=#399 id=399 data-nosnippet>399</a>                        string_property(<span class="string">"Chatbot system prompt."</span>),
+<a href=#400 id=400 data-nosnippet>400</a>                    ),
+<a href=#401 id=401 data-nosnippet>401</a>                    (
+<a href=#402 id=402 data-nosnippet>402</a>                        <span class="string">"initial_message"</span>.to_string(),
+<a href=#403 id=403 data-nosnippet>403</a>                        string_property(<span class="string">"First message to students."</span>),
+<a href=#404 id=404 data-nosnippet>404</a>                    ),
+<a href=#405 id=405 data-nosnippet>405</a>                    (
+<a href=#406 id=406 data-nosnippet>406</a>                        <span class="string">"suggested_messages"</span>.to_string(),
+<a href=#407 id=407 data-nosnippet>407</a>                        string_array_property(<span class="prelude-val">Some</span>(<span class="string">"Example first messages from a student."</span>)),
+<a href=#408 id=408 data-nosnippet>408</a>                    ),
+<a href=#409 id=409 data-nosnippet>409</a>                ]),
+<a href=#410 id=410 data-nosnippet>410</a>                <span class="prelude-val">None</span>,
+<a href=#411 id=411 data-nosnippet>411</a>            )),
+<a href=#412 id=412 data-nosnippet>412</a>        );
+<a href=#413 id=413 data-nosnippet>413</a>    }
+<a href=#414 id=414 data-nosnippet>414</a>    LLMRequestResponseFormatParam::JsonSchema {
+<a href=#415 id=415 data-nosnippet>415</a>        name: COURSE_RESPONSE_FORMAT_NAME.to_string(),
+<a href=#416 id=416 data-nosnippet>416</a>        schema: Schema::strict_object(properties, <span class="prelude-val">None</span>),
+<a href=#417 id=417 data-nosnippet>417</a>        strict: <span class="bool-val">true</span>,
+<a href=#418 id=418 data-nosnippet>418</a>    }
+<a href=#419 id=419 data-nosnippet>419</a>}
+<a href=#420 id=420 data-nosnippet>420</a>
+<a href=#421 id=421 data-nosnippet>421</a><span class="doccomment">/// Mirrors [`ChapterDraft`].
+<a href=#422 id=422 data-nosnippet>422</a></span><span class="kw">fn </span>chapter_format() -&gt; LLMRequestResponseFormatParam {
+<a href=#423 id=423 data-nosnippet>423</a>    <span class="kw">let </span>section = Schema::strict_object(
+<a href=#424 id=424 data-nosnippet>424</a>        IndexMap::from([
+<a href=#425 id=425 data-nosnippet>425</a>            (<span class="string">"heading"</span>.to_string(), string_property(<span class="string">"Section heading."</span>)),
+<a href=#426 id=426 data-nosnippet>426</a>            (
+<a href=#427 id=427 data-nosnippet>427</a>                <span class="string">"points"</span>.to_string(),
+<a href=#428 id=428 data-nosnippet>428</a>                string_array_property(<span class="prelude-val">Some</span>(<span class="string">"What the section should cover."</span>)),
+<a href=#429 id=429 data-nosnippet>429</a>            ),
+<a href=#430 id=430 data-nosnippet>430</a>        ]),
+<a href=#431 id=431 data-nosnippet>431</a>        <span class="prelude-val">None</span>,
+<a href=#432 id=432 data-nosnippet>432</a>    );
+<a href=#433 id=433 data-nosnippet>433</a>    <span class="kw">let </span>outline = Schema::strict_object(
+<a href=#434 id=434 data-nosnippet>434</a>        IndexMap::from([(
+<a href=#435 id=435 data-nosnippet>435</a>            <span class="string">"sections"</span>.to_string(),
+<a href=#436 id=436 data-nosnippet>436</a>            SchemaPropertyType::ArrayProperty(ArrayProperty {
+<a href=#437 id=437 data-nosnippet>437</a>                type_field: JSONType::Array,
+<a href=#438 id=438 data-nosnippet>438</a>                items: ArrayItem::Schema(section),
+<a href=#439 id=439 data-nosnippet>439</a>                description: <span class="prelude-val">None</span>,
+<a href=#440 id=440 data-nosnippet>440</a>            }),
+<a href=#441 id=441 data-nosnippet>441</a>        )]),
+<a href=#442 id=442 data-nosnippet>442</a>        <span class="prelude-val">None</span>,
+<a href=#443 id=443 data-nosnippet>443</a>    );
+<a href=#444 id=444 data-nosnippet>444</a>    LLMRequestResponseFormatParam::JsonSchema {
+<a href=#445 id=445 data-nosnippet>445</a>        name: CHAPTER_RESPONSE_FORMAT_NAME.to_string(),
+<a href=#446 id=446 data-nosnippet>446</a>        schema: Schema::strict_object(
+<a href=#447 id=447 data-nosnippet>447</a>            IndexMap::from([
+<a href=#448 id=448 data-nosnippet>448</a>                (
+<a href=#449 id=449 data-nosnippet>449</a>                    <span class="string">"prior_learning_heading"</span>.to_string(),
+<a href=#450 id=450 data-nosnippet>450</a>                    string_property(<span class="string">"Heading of the prior learning box."</span>),
+<a href=#451 id=451 data-nosnippet>451</a>                ),
+<a href=#452 id=452 data-nosnippet>452</a>                (
+<a href=#453 id=453 data-nosnippet>453</a>                    <span class="string">"prior_learning_questions"</span>.to_string(),
+<a href=#454 id=454 data-nosnippet>454</a>                    string_array_property(<span class="prelude-val">Some</span>(<span class="string">"Reflection questions."</span>)),
+<a href=#455 id=455 data-nosnippet>455</a>                ),
+<a href=#456 id=456 data-nosnippet>456</a>                (
+<a href=#457 id=457 data-nosnippet>457</a>                    <span class="string">"topic_outlines"</span>.to_string(),
+<a href=#458 id=458 data-nosnippet>458</a>                    SchemaPropertyType::ArrayProperty(ArrayProperty {
+<a href=#459 id=459 data-nosnippet>459</a>                        type_field: JSONType::Array,
+<a href=#460 id=460 data-nosnippet>460</a>                        items: ArrayItem::Schema(outline),
+<a href=#461 id=461 data-nosnippet>461</a>                        description: <span class="prelude-val">Some</span>(<span class="string">"One outline per topic, in order."</span>.to_string()),
+<a href=#462 id=462 data-nosnippet>462</a>                    }),
+<a href=#463 id=463 data-nosnippet>463</a>                ),
+<a href=#464 id=464 data-nosnippet>464</a>            ]),
+<a href=#465 id=465 data-nosnippet>465</a>            <span class="prelude-val">None</span>,
+<a href=#466 id=466 data-nosnippet>466</a>        ),
+<a href=#467 id=467 data-nosnippet>467</a>        strict: <span class="bool-val">true</span>,
+<a href=#468 id=468 data-nosnippet>468</a>    }
+<a href=#469 id=469 data-nosnippet>469</a>}
+</code></pre></div></section></main></body></html>

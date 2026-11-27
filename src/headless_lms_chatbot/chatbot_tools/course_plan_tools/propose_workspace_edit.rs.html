@@ -8,13 +8,13 @@
 <a href=#8 id=8 data-nosnippet>8</a>    AnalysisWorkspaceV1, CourseDesignerStageWorkspace, DesignWorkspaceV1,
 <a href=#9 id=9 data-nosnippet>9</a>};
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>headless_lms_utils::json_schema_types::{
-<a href=#11 id=11 data-nosnippet>11</a>    ArrayItem, ArrayProperty, JSONType, Schema, SchemaPropertyType,
+<a href=#11 id=11 data-nosnippet>11</a>    ArrayItem, ArrayProperty, JSONType, Schema, SchemaPropertyType, string_property,
 <a href=#12 id=12 data-nosnippet>12</a>};
 <a href=#13 id=13 data-nosnippet>13</a>
 <a href=#14 id=14 data-nosnippet>14</a><span class="kw">use </span><span class="kw">super</span>::workspace_json::{fill_ids, keeps_proposed, resolve_field, same_content};
 <a href=#15 id=15 data-nosnippet>15</a><span class="kw">use super</span>::{
 <a href=#16 id=16 data-nosnippet>16</a>    authorized_plan_id, parse_raw_arguments, parse_stage, plan_proposal_items,
-<a href=#17 id=17 data-nosnippet>17</a>    plan_tool_declaration_items, stale_proposal_error, text_property, updated_plan_payload,
+<a href=#17 id=17 data-nosnippet>17</a>    plan_tool_declaration_items, stale_proposal_error, updated_plan_payload,
 <a href=#18 id=18 data-nosnippet>18</a>};
 <a href=#19 id=19 data-nosnippet>19</a><span class="kw">use crate</span>::{
 <a href=#20 id=20 data-nosnippet>20</a>    azure_chatbot::azure::tools::{AzureLLMFunctionToolDefinition, LLMToolType},
@@ -71,11 +71,11 @@
 <a href=#71 id=71 data-nosnippet>71</a>                IndexMap::from([
 <a href=#72 id=72 data-nosnippet>72</a>                    (
 <a href=#73 id=73 data-nosnippet>73</a>                        <span class="string">"stage"</span>.to_string(),
-<a href=#74 id=74 data-nosnippet>74</a>                        text_property(<span class="string">"'analysis' or 'design'."</span>),
+<a href=#74 id=74 data-nosnippet>74</a>                        string_property(<span class="string">"'analysis' or 'design'."</span>),
 <a href=#75 id=75 data-nosnippet>75</a>                    ),
 <a href=#76 id=76 data-nosnippet>76</a>                    (
 <a href=#77 id=77 data-nosnippet>77</a>                        <span class="string">"summary"</span>.to_string(),
-<a href=#78 id=78 data-nosnippet>78</a>                        text_property(<span class="string">"One short sentence in the user's language saying what the changes do. Shown as the card's heading."</span>),
+<a href=#78 id=78 data-nosnippet>78</a>                        string_property(<span class="string">"One short sentence in the user's language saying what the changes do. Shown as the card's heading."</span>),
 <a href=#79 id=79 data-nosnippet>79</a>                    ),
 <a href=#80 id=80 data-nosnippet>80</a>                    (
 <a href=#81 id=81 data-nosnippet>81</a>                        <span class="string">"changes"</span>.to_string(),
@@ -85,15 +85,15 @@
 <a href=#85 id=85 data-nosnippet>85</a>                                IndexMap::from([
 <a href=#86 id=86 data-nosnippet>86</a>                                    (
 <a href=#87 id=87 data-nosnippet>87</a>                                        <span class="string">"field"</span>.to_string(),
-<a href=#88 id=88 data-nosnippet>88</a>                                        text_property(<span class="string">"Path of the field, e.g. style_guide.font or chapters.&lt;chapter id&gt;.topics."</span>),
+<a href=#88 id=88 data-nosnippet>88</a>                                        string_property(<span class="string">"Path of the field, e.g. style_guide.font or chapters.&lt;chapter id&gt;.topics."</span>),
 <a href=#89 id=89 data-nosnippet>89</a>                                    ),
 <a href=#90 id=90 data-nosnippet>90</a>                                    (
 <a href=#91 id=91 data-nosnippet>91</a>                                        <span class="string">"current_value_json"</span>.to_string(),
-<a href=#92 id=92 data-nosnippet>92</a>                                        text_property(<span class="string">"The field's current value as JSON, copied from get_course_plan (e.g. \"\\\"Old text\\\"\", \"[]\", \"null\"). Checked against the plan before anything is saved."</span>),
+<a href=#92 id=92 data-nosnippet>92</a>                                        string_property(<span class="string">"The field's current value as JSON, copied from get_course_plan (e.g. \"\\\"Old text\\\"\", \"[]\", \"null\"). Checked against the plan before anything is saved."</span>),
 <a href=#93 id=93 data-nosnippet>93</a>                                    ),
 <a href=#94 id=94 data-nosnippet>94</a>                                    (
 <a href=#95 id=95 data-nosnippet>95</a>                                        <span class="string">"proposed_value_json"</span>.to_string(),
-<a href=#96 id=96 data-nosnippet>96</a>                                        text_property(<span class="string">"The new value as JSON of the same type, e.g. \"\\\"New text\\\"\", \"true\", \"[\\\"Goal 1\\\", \\\"Goal 2\\\"]\"."</span>),
+<a href=#96 id=96 data-nosnippet>96</a>                                        string_property(<span class="string">"The new value as JSON of the same type, e.g. \"\\\"New text\\\"\", \"true\", \"[\\\"Goal 1\\\", \\\"Goal 2\\\"]\"."</span>),
 <a href=#97 id=97 data-nosnippet>97</a>                                    ),
 <a href=#98 id=98 data-nosnippet>98</a>                                ]),
 <a href=#99 id=99 data-nosnippet>99</a>                                <span class="prelude-val">None</span>,

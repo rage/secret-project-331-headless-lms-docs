@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["seed_course_designer_plans"]};
+window.SIDEBAR_ITEMS = {"fn":["seed_course_designer_plans","seed_plan_with_course"]};

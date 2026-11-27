@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ArrayItem","JSONType","SchemaPropertyType"],"fn":["nullable_string_property","string_array_property"],"struct":["ArrayProperty","JsonItem","NullableJsonItem","Schema"]};
+window.SIDEBAR_ITEMS = {"enum":["ArrayItem","JSONType","SchemaPropertyType"],"fn":["nullable_string_property","string_array_property","string_property"],"struct":["ArrayProperty","JsonItem","NullableJsonItem","Schema"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["AI_OUTLINE_CLASS_NAME","PAGE_TITLE_BLOCKS","TEXT_BLOCKS"],"enum":["CourseDesignerUnfilledPageReason"],"fn":["count_passed_checks","get_for_plan","get_for_plans","unfilled_reason","visit_blocks"],"struct":["CourseDesignerChapterWithoutExercises","CourseDesignerCourseStatus","CourseDesignerUnfilledPage"]};
